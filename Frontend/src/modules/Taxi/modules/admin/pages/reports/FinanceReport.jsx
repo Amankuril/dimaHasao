@@ -93,22 +93,22 @@ const FinanceReport = () => {
     [transportTypes],
   );
 
-  const inputClass = 'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors appearance-none shadow-sm';
-  const labelClass = 'block text-[13px] font-bold text-gray-600 mb-2';
+  const inputClass = 'w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors appearance-none shadow-sm';
+  const labelClass = 'block text-[13px] font-medium text-neutral-600 mb-2';
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-8">
       <div className="mb-8">
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3 font-medium">
-          <span>Finance Report</span>
+        <div className="flex items-center gap-2 text-xs text-neutral-500 mb-3">
+          <span>Finance report</span>
           <ChevronRight size={14} className="opacity-50" />
-          <span className="text-gray-600 font-semibold italic">Finance Report</span>
+          <span className="text-neutral-600 font-medium">Finance report</span>
         </div>
-        <div className="flex items-center justify-between border-b border-gray-100 pb-5">
-          <h1 className="text-2xl font-bold text-[#334155] tracking-tight uppercase">Finance Report</h1>
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-5">
+          <h1 className="text-2xl font-medium text-[#334155]">Finance report</h1>
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-900/[0.08] rounded-xl hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} strokeWidth={2.5} /> Back
           </button>
@@ -119,11 +119,11 @@ const FinanceReport = () => {
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-gray-100 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+          className="bg-white rounded-xl border border-neutral-900/[0.08] p-8 overflow-hidden"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
             <div className="space-y-1">
-              <label className={labelClass}>Select Transport Type</label>
+              <label className={labelClass}>Select transport type</label>
               <div className="relative">
                 <select
                   value={filters.transport_type}
@@ -141,14 +141,14 @@ const FinanceReport = () => {
                     );
                   })}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className={labelClass}>Select Vehicle Type</label>
+              <label className={labelClass}>Select vehicle type</label>
               <div className="relative">
                 <select
                   value={filters.vehicle_type}
@@ -166,14 +166,14 @@ const FinanceReport = () => {
                     );
                   })}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className={labelClass}>Trip Status</label>
+              <label className={labelClass}>Trip status</label>
               <div className="flex items-center gap-8 py-2 px-1">
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
@@ -182,9 +182,9 @@ const FinanceReport = () => {
                     value="completed"
                     checked={filters.status === 'completed'}
                     onChange={(e) => updateFilter('status', e.target.value)}
-                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                    className="w-4 h-4 text-[#0a4d2b] focus:ring-[#0a4d2b]/30 border-neutral-300"
                   />
-                  <span className="text-sm font-bold text-gray-700">Completed</span>
+                  <span className="text-sm font-medium text-neutral-700">Completed</span>
                 </label>
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
@@ -193,15 +193,15 @@ const FinanceReport = () => {
                     value="cancelled"
                     checked={filters.status === 'cancelled'}
                     onChange={(e) => updateFilter('status', e.target.value)}
-                    className="w-4 h-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                    className="w-4 h-4 text-[#0a4d2b] focus:ring-[#0a4d2b]/30 border-neutral-300"
                   />
-                  <span className="text-sm font-bold text-gray-700">Cancelled</span>
+                  <span className="text-sm font-medium text-neutral-700">Cancelled</span>
                 </label>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className={labelClass}>Payment Type</label>
+              <label className={labelClass}>Payment type</label>
               <div className="relative">
                 <select
                   value={filters.payment_type}
@@ -212,7 +212,7 @@ const FinanceReport = () => {
                   <option value="cash">Cash Payment</option>
                   <option value="online">Card / Online</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -220,7 +220,7 @@ const FinanceReport = () => {
 
             <div className="space-y-1">
               <label className={labelClass}>
-                Date Option <span className="text-rose-500">*</span>
+                Date option <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <select
@@ -236,7 +236,7 @@ const FinanceReport = () => {
                   <option value="this_year">This Year</option>
                   <option value="range">Date Range</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -245,11 +245,11 @@ const FinanceReport = () => {
             {filters.date_option === 'range' ? (
               <>
                 <div className="space-y-1">
-                  <label className={labelClass}>From Date <span className="text-rose-500">*</span></label>
+                  <label className={labelClass}>From date <span className="text-rose-500">*</span></label>
                   <input type="date" value={filters.from_date || ''} onChange={(e) => updateFilter('from_date', e.target.value)} className={inputClass} />
                 </div>
                 <div className="space-y-1">
-                  <label className={labelClass}>To Date <span className="text-rose-500">*</span></label>
+                  <label className={labelClass}>To date <span className="text-rose-500">*</span></label>
                   <input type="date" value={filters.to_date || ''} onChange={(e) => updateFilter('to_date', e.target.value)} className={inputClass} />
                 </div>
               </>
@@ -257,7 +257,7 @@ const FinanceReport = () => {
 
             <div className="space-y-1">
               <label className={labelClass}>
-                File Format <span className="text-rose-500">*</span>
+                File format <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <select
@@ -269,7 +269,7 @@ const FinanceReport = () => {
                   <option value="csv">CSV</option>
                   <option value="excel">Excel</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -280,10 +280,10 @@ const FinanceReport = () => {
             <button
               onClick={handleDownload}
               disabled={!isFormValid || isDownloading}
-              className={`flex items-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-bold tracking-wide transition-all active:scale-95 shadow-lg ${
+              className={`flex items-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-medium  transition-colors  shadow-sm ${
                 (!isFormValid || isDownloading)
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                  : 'bg-[#4338CA] text-white hover:bg-[#3730A3] shadow-indigo-200'
+                  ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed shadow-none'
+                  : 'bg-[#171717] text-white hover:bg-[#262626]'
               }`}
             >
               {isDownloading ? (

@@ -93,40 +93,40 @@ const UserReferralSettings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="animate-spin text-yellow-500" size={32} />
-          <span className="text-sm text-gray-500 font-medium">Loading settings...</span>
+          <Loader2 className="animate-spin text-[#0a4d2b]" size={32} />
+          <span className="text-sm text-neutral-500">Loading settings...</span>
         </div>
       </div>
     );
   }
 
-  const labelClass = "block text-sm font-semibold text-gray-700 mb-1.5";
-  const inputClass = "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors";
+  const labelClass = "block text-sm font-medium text-neutral-700 mb-1.5";
+  const inputClass = "w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-900 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors";
 
   const isConditional = settings.type?.includes('conditional');
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans">
 
       <div className="max-w-4xl space-y-4">
         {/* FORM CARD */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
           {/* Main Toggle Section */}
-          <div className="p-4 border-b border-gray-50 flex items-center justify-between bg-gray-50/50">
+          <div className="p-4 border-b border-neutral-50 flex items-center justify-between bg-neutral-50/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                 <UserCheck size={20} />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-gray-900">User Referral Earnings Setup</h3>
-                <p className="text-xs text-gray-500 mt-0.5 font-medium">Invite others to use our app with your unique referral code and earn exciting rewards!</p>
+                <h3 className="text-sm font-medium text-neutral-900">User referral earnings setup</h3>
+                <p className="text-xs text-neutral-500 mt-0.5">Invite others to use our app with your unique referral code and earn exciting rewards</p>
               </div>
             </div>
             <button 
               onClick={() => handleToggle(!settings.enabled)}
-              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${settings.enabled ? 'bg-yellow-400' : 'bg-gray-200'}`}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${settings.enabled ? 'bg-[#0a4d2b] text-white' : 'bg-neutral-200'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.enabled ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
@@ -136,7 +136,7 @@ const UserReferralSettings = () => {
             {/* Referral Type Selection */}
             <div className="w-full lg:w-2/3">
               <label className={labelClass}>
-                Referral Commission Type <Info size={14} className="inline ml-1 text-gray-400 cursor-help" />
+                Referral commission type <Info size={14} className="inline ml-1 text-neutral-500 cursor-help" />
               </label>
               <div className="relative">
                 <select
@@ -149,7 +149,7 @@ const UserReferralSettings = () => {
                     <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={16} className="rotate-90" />
                 </div>
               </div>
@@ -157,20 +157,20 @@ const UserReferralSettings = () => {
 
             {/* Referral Info Card Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl border border-dashed border-gray-200 p-5 flex items-center gap-4 transition-all hover:border-yellow-300">
-                <div className="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 shadow-sm shrink-0">
+              <div className="bg-white rounded-xl border border-dashed border-neutral-200 p-5 flex items-center gap-4 transition-colors hover:border-yellow-300">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-neutral-100 text-neutral-500">
                   <Share2 size={24} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-gray-900">Share Code To Refer User</h4>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">Offer a reward to users for each referral when they share their code.</p>
+                  <h4 className="text-sm font-medium text-neutral-900">Share code to refer user</h4>
+                  <p className="text-xs text-neutral-500 mt-1 leading-relaxed">Offer a reward to users for each referral when they share their code</p>
                 </div>
               </div>
 
               <div className="flex flex-col gap-4">
                 {isConditional && (
-                  <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-2">
-                    <label className={labelClass}>Required Ride Count</label>
+                  <div className="bg-neutral-50 rounded-xl border border-neutral-100 p-4 space-y-2">
+                    <label className={labelClass}>Required ride count</label>
                     <input
                       type="number"
                       value={settings.ride_count}
@@ -178,11 +178,11 @@ const UserReferralSettings = () => {
                       className={inputClass}
                       placeholder="e.g. 5"
                     />
-                    <p className="text-xs text-gray-500 font-medium">Number of rides required before earning rewards.</p>
+                    <p className="text-xs text-neutral-500">Number of rides required before earning rewards</p>
                   </div>
                 )}
 
-                <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 space-y-2">
+                <div className="bg-neutral-50 rounded-xl border border-neutral-100 p-4 space-y-2">
                   <label className={labelClass}>Earnings per Referral (₹)</label>
                   <input
                     type="number"
@@ -191,18 +191,18 @@ const UserReferralSettings = () => {
                     className={inputClass}
                     placeholder="e.g. 100"
                   />
-                  <p className="text-xs text-gray-500 font-medium">Amount users earn for each successful referral.</p>
+                  <p className="text-xs text-neutral-500">Amount users earn for each successful referral</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Action Footer */}
-          <div className="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 bg-neutral-50 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-4">
             <button
               onClick={handleUpdate}
               disabled={saving}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-yellow-400 text-black text-sm font-bold rounded-lg hover:bg-yellow-500 transition-colors shadow-sm disabled:opacity-50"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-[#0a4d2b] text-white text-sm font-medium rounded-lg hover:bg-[#06381e] transition-colors shadow-sm disabled:opacity-50"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               Update Referral Settings
@@ -213,8 +213,8 @@ const UserReferralSettings = () => {
                 <div className="w-5 h-5 rounded-full bg-yellow-200 flex items-center justify-center">
                   <ChevronRight size={12} className="rotate-45" />
                 </div>
-                <span className="text-xs font-bold">Referral settings updated!</span>
-                <button onClick={() => setShowSuccess(false)} className="ml-auto text-yellow-600 hover:text-black">
+                <span className="text-xs font-medium">Referral settings updated</span>
+                <button onClick={() => setShowSuccess(false)} className="ml-auto text-[#0a4d2b] hover:text-black">
                   <span className="text-lg">×</span>
                 </button>
               </div>

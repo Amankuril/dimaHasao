@@ -392,8 +392,8 @@ const EditDriver = () => {
   };
 
   // --- Shared input class ---
-  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors";
-  const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5";
+  const inputClass = "w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors";
+  const labelClass = "block text-xs font-medium text-neutral-500 mb-1.5";
   const visibleZones = zones.filter((zone) => {
     if (!formData.area) return true;
     const zoneServiceLocationId = zone?.service_location_id?._id || zone?.service_location_id || '';
@@ -402,31 +402,31 @@ const EditDriver = () => {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          <p className="text-sm text-gray-500">Loading driver details...</p>
+          <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+          <p className="text-sm text-neutral-500">Loading driver details...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans">
       {/* Breadcrumb & Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
           <span>Drivers</span>
           <ChevronRight size={12} />
           <span>{backRoute.includes('/pending') ? 'Pending' : 'Approved'}</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">Edit Driver</span>
+          <span className="text-neutral-700">Edit driver</span>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-xl text-gray-900 font-bold">Edit Driver</h1>
+          <h1 className="text-xl text-neutral-900 font-medium">Edit driver</h1>
           <button 
             onClick={() => navigate(backRoute)}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} />
             Back
@@ -439,22 +439,22 @@ const EditDriver = () => {
         <div className="xl:col-span-2 space-y-6">
 
           {/* Identity Section */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                 <User size={18} />
               </div>
               <div>
-                <h3 className="text-sm text-gray-900 font-bold">Identity Details</h3>
-                <p className="text-xs text-gray-400">Personal & contact information</p>
+                <h3 className="text-sm text-neutral-900 font-medium">Identity details</h3>
+                <p className="text-xs text-neutral-500">Personal & contact information</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>
-                  <MapPin size={12} className="inline mr-1 text-gray-400" />
-                  Assigned Zone
+                  <MapPin size={12} className="inline mr-1 text-neutral-500" />
+                  Assigned zone
                 </label>
                 <select
                   name="zoneId"
@@ -473,7 +473,7 @@ const EditDriver = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Globe size={12} className="inline mr-1 text-gray-400" />
+                  <Globe size={12} className="inline mr-1 text-neutral-500" />
                   Country *
                 </label>
                 <select 
@@ -492,7 +492,7 @@ const EditDriver = () => {
 
               <div>
                 <label className={labelClass}>
-                  <User size={12} className="inline mr-1 text-gray-400" />
+                  <User size={12} className="inline mr-1 text-neutral-500" />
                   Name *
                 </label>
                 <input 
@@ -508,7 +508,7 @@ const EditDriver = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Phone size={12} className="inline mr-1 text-gray-400" />
+                  <Phone size={12} className="inline mr-1 text-neutral-500" />
                   Mobile *
                 </label>
                 <input 
@@ -524,7 +524,7 @@ const EditDriver = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Users size={12} className="inline mr-1 text-gray-400" />
+                  <Users size={12} className="inline mr-1 text-neutral-500" />
                   Gender *
                 </label>
                 <select 
@@ -542,7 +542,7 @@ const EditDriver = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Mail size={12} className="inline mr-1 text-gray-400" />
+                  <Mail size={12} className="inline mr-1 text-neutral-500" />
                   Email *
                 </label>
                 <input 
@@ -559,14 +559,14 @@ const EditDriver = () => {
           </div>
 
           {/* Vehicle Section */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                 <Car size={18} />
               </div>
               <div>
-                <h3 className="text-sm text-gray-900 font-bold">Vehicle Information</h3>
-                <p className="text-xs text-gray-400">Assigned vehicle specifications</p>
+                <h3 className="text-sm text-neutral-900 font-medium">Vehicle information</h3>
+                <p className="text-xs text-neutral-500">Assigned vehicle specifications</p>
               </div>
             </div>
 
@@ -588,8 +588,8 @@ const EditDriver = () => {
               </div>
 
               <div className="md:col-span-2">
-                <label className={labelClass}>Service Categories</label>
-                <div className="flex flex-wrap gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <label className={labelClass}>Service categories</label>
+                <div className="flex flex-wrap gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
                   {serviceCategoryOptions.map((option) => {
                     const selected = formData.serviceCategories.includes(option.value);
                     return (
@@ -597,10 +597,10 @@ const EditDriver = () => {
                         key={option.value}
                         type="button"
                         onClick={() => toggleServiceCategory(option.value)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                           selected
-                            ? 'bg-yellow-400 text-black'
-                            : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-100'
+                            ? 'bg-[#0a4d2b] text-white text-white'
+                            : 'bg-white text-neutral-700 border border-neutral-200 hover:bg-neutral-100'
                         }`}
                       >
                         {option.label}
@@ -608,8 +608,8 @@ const EditDriver = () => {
                     );
                   })}
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Matches the service selection used during driver onboarding.
+                <p className="mt-1 text-xs text-neutral-500">
+                  Matches the service selection used during driver onboarding
                 </p>
               </div>
 
@@ -639,7 +639,7 @@ const EditDriver = () => {
                   type="text" 
                   name="vehicleMake"
                   required
-                  placeholder="e.g. Maruti Suzuki"
+                  placeholder="e.g. Maruti suzuki"
                   value={formData.vehicleMake}
                   onChange={handleChange}
                   className={inputClass}
@@ -652,7 +652,7 @@ const EditDriver = () => {
                   type="text" 
                   name="vehicleModel"
                   required
-                  placeholder="e.g. Swift Dzire"
+                  placeholder="e.g. Swift dzire"
                   value={formData.vehicleModel}
                   onChange={handleChange}
                   className={inputClass}
@@ -710,18 +710,18 @@ const EditDriver = () => {
         {/* RIGHT: Sidebar */}
         <div className="space-y-6">
           {/* Photo Upload */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-sm text-gray-900 mb-4 font-bold">Profile Photo</h3>
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <h3 className="text-sm text-neutral-900 mb-4 font-medium">Profile photo</h3>
             <div className="relative group cursor-pointer">
-              <div className="w-full aspect-square rounded-xl bg-gray-50 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center overflow-hidden transition-colors group-hover:border-yellow-400 group-hover:bg-yellow-50/30">
+              <div className="w-full aspect-square rounded-xl bg-neutral-50 border-2 border-dashed border-neutral-200 flex flex-col items-center justify-center overflow-hidden transition-colors group-hover:border-[#0a4d2b] group-hover:bg-yellow-50/30">
                 {imagePreview ? (
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 ) : (
-                  <div className="flex flex-col items-center text-gray-400 gap-2">
-                    <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-semibold text-lg">
+                  <div className="flex flex-col items-center text-neutral-500 gap-2">
+                    <div className="w-14 h-14 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 font-medium text-lg">
                       {formData.name ? formData.name.charAt(0).toUpperCase() : 'D'}
                     </div>
-                    <p className="text-xs text-gray-400">Click to upload photo</p>
+                    <p className="text-xs text-neutral-500">Click to upload photo</p>
                   </div>
                 )}
               </div>
@@ -732,15 +732,15 @@ const EditDriver = () => {
                 className="absolute inset-0 opacity-0 cursor-pointer" 
               />
             </div>
-            <p className="text-[10px] text-gray-400 text-center mt-3">Allowed updates twice every 30 days.</p>
+            <p className="text-xs text-neutral-500 text-center mt-3">Allowed updates twice every 30 days</p>
           </div>
 
           {/* Actions */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6 space-y-3">
             <button 
               type="submit"
               disabled={isLoading || success}
-              className="w-full py-3 bg-yellow-400 text-black rounded-lg text-sm font-bold shadow-sm hover:bg-yellow-500 active:bg-yellow-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+              className="w-full py-3 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium shadow-sm hover:bg-[#06381e] active:bg-[#0a4d2b] transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {isLoading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -755,32 +755,32 @@ const EditDriver = () => {
             <button 
               type="button"
               onClick={() => navigate('/taxi/admin/drivers')}
-              className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              className="w-full py-3 bg-neutral-50 text-neutral-600 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors"
             >
               Cancel
             </button>
 
-            <div className="pt-3 border-t border-gray-100">
+            <div className="pt-3 border-t border-neutral-100">
               <button 
                 type="button"
                 className="w-full py-2.5 text-red-500 bg-red-50 border border-red-100 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors flex items-center justify-center gap-1.5"
               >
                 <AlertCircle size={13} />
-                Disable Account
+                Disable account
               </button>
             </div>
           </div>
 
           {/* Metadata */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <p className="text-xs font-semibold text-gray-500 mb-3">Metadata</p>
+          <div className="bg-white rounded-xl border border-neutral-200 p-5">
+            <p className="text-xs text-neutral-500 mb-3">Metadata</p>
             <div className="space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-gray-400">Driver ID</span>
-                <span className="text-gray-700 font-medium">DRV-{id?.substring(0, 8).toUpperCase() || 'NEW'}</span>
+                <span className="text-neutral-500">Driver ID</span>
+                <span className="text-neutral-700 font-medium">DRV-{id?.substring(0, 8).toUpperCase() || 'NEW'}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Status</span>
+                <span className="text-neutral-500">Status</span>
                 <span className="text-emerald-600 font-medium">Active</span>
               </div>
             </div>
@@ -789,7 +789,7 @@ const EditDriver = () => {
           {/* Status Messages */}
           {success && (
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
-              <p className="text-xs text-emerald-700 text-center font-medium">Driver profile updated successfully.</p>
+              <p className="text-xs text-emerald-700 text-center font-medium">Driver profile updated successfully</p>
             </div>
           )}
 

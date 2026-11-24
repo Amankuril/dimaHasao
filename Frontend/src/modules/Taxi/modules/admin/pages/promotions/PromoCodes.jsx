@@ -36,8 +36,8 @@ const PROMO_TRANSPORT_OPTIONS = [
 ];
 
 const inputClass =
-  'w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:border-[#FFC400] focus:ring-1 focus:ring-[#FFC400] outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed';
-const labelClass = 'block text-xs font-medium text-gray-500 mb-1.5';
+  'w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors disabled:bg-neutral-50 disabled:text-neutral-500 disabled:cursor-not-allowed';
+const labelClass = 'block text-xs text-neutral-500 mb-1.5';
 
 const createInitialFormData = () => ({
   service_location_id: '',
@@ -127,18 +127,18 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
   return (
     <div className="relative" ref={wrapperRef}>
       <div 
-        className="min-h-[42px] w-full border border-gray-200 rounded-lg px-3 py-2 bg-white flex flex-wrap gap-2 cursor-pointer focus-within:border-[#FFC400] focus-within:ring-1 focus-within:ring-[#FFC400] transition-colors"
+        className="min-h-[42px] w-full border border-neutral-200 rounded-lg px-3 py-2 bg-white flex flex-wrap gap-2 cursor-pointer focus-within:border-[#0a4d2b] focus-within:ring-1 focus-within:ring-[#0a4d2b]/30 transition-colors"
         onClick={() => setIsOpen(true)}
       >
         {selectedIds.length === 0 && (
-          <span className="text-gray-400 text-sm py-0.5">Select service locations...</span>
+          <span className="text-neutral-500 text-sm py-0.5">Select service locations...</span>
         )}
         {selectedIds.map(id => {
           const loc = locations.find(l => String(l._id) === String(id));
           return loc ? (
-            <span key={id} className="inline-flex items-center gap-1.5 bg-[#FFC400]/10 text-[#0B1220] px-2.5 py-1 rounded-md text-xs font-medium border border-[#FFC400]/20 transition-colors hover:bg-[#FFC400]/20">
+            <span key={id} className="inline-flex items-center gap-1.5 bg-[#0a4d2b]/10 text-[#0a4d2b] px-2.5 py-1 rounded-md text-xs font-medium border border-[#0a4d2b] transition-colors hover:bg-[#0a4d2b]/10">
               {loc.service_location_name || loc.name}
-              <button type="button" onClick={(e) => removeLocation(e, id)} className="text-[#0B1220]/50 hover:text-[#0B1220] focus:outline-none">
+              <button type="button" onClick={(e) => removeLocation(e, id)} className="text-neutral-900/50 hover:text-neutral-900 focus:outline-none">
                 <X size={12} strokeWidth={3} />
               </button>
             </span>
@@ -154,9 +154,9 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-sm max-h-60 overflow-y-auto">
           {filteredLocations.length === 0 ? (
-            <div className="p-3 text-sm text-gray-500 text-center">No locations found.</div>
+            <div className="p-3 text-sm text-neutral-500 text-center">No locations found</div>
           ) : (
             filteredLocations.map(loc => {
               const isSelected = selectedIds.includes(String(loc._id));
@@ -164,10 +164,10 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
                 <div 
                   key={loc._id} 
                   onClick={() => toggleSelection(String(loc._id))}
-                  className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0"
+                  className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 cursor-pointer border-b border-neutral-50 last:border-0"
                 >
-                  <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 text-[#0B1220] rounded border-gray-300 focus:ring-[#FFC400] cursor-pointer" />
-                  <span className="text-sm text-gray-700">{loc.service_location_name || loc.name}</span>
+                  <input type="checkbox" checked={isSelected} readOnly className="w-4 h-4 text-neutral-900 rounded border-neutral-300 focus:ring-[#0a4d2b]/30 cursor-pointer" />
+                  <span className="text-sm text-neutral-700">{loc.service_location_name || loc.name}</span>
                 </div>
               );
             })
@@ -179,21 +179,21 @@ const LocationMultiSelect = ({ locations, selectedIds, onChange }) => {
 };
 
 const HeaderBlock = ({ isCreateRoute, isEditRoute, onBack }) => {
-  const title = isEditRoute ? 'Edit Promo Code' : isCreateRoute ? 'Create Promo Code' : 'Promo Code';
+  const title = isEditRoute ? 'Edit promo code' : isCreateRoute ? 'Create promo code' : 'Promo codes';
   return (
     <div className="mb-4">
-      <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+      <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
         <span>Promotions</span>
         <ChevronRight size={12} />
-        <span className="text-gray-700">{title}</span>
+        <span className="text-neutral-700">{title}</span>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl text-gray-900 font-bold">{title}</h1>
+        <h1 className="text-xl text-neutral-900 font-medium">{title}</h1>
         {isCreateRoute || isEditRoute ? (
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
         >
           <ArrowLeft size={16} /> Back
         </button>
@@ -204,14 +204,14 @@ const HeaderBlock = ({ isCreateRoute, isEditRoute, onBack }) => {
 };
 
 const SectionCard = ({ icon: Icon, title, description, children }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-4">
-    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-gray-100">
-      <div className="w-9 h-9 rounded-lg bg-[#FFC400]/10 flex items-center justify-center text-[#0B1220]">
+  <div className="bg-white rounded-xl border border-neutral-200 p-4">
+    <div className="flex items-center gap-3 mb-4 pb-3 border-b border-neutral-100">
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
         <Icon size={18} />
       </div>
       <div>
-        <h3 className="text-sm text-gray-900 font-bold">{title}</h3>
-        <p className="text-xs text-gray-400">{description}</p>
+        <h3 className="text-sm text-neutral-900 font-medium">{title}</h3>
+        <p className="text-xs text-neutral-500">{description}</p>
       </div>
     </div>
     {children}
@@ -220,7 +220,7 @@ const SectionCard = ({ icon: Icon, title, description, children }) => (
 
 const FieldLabel = ({ icon: Icon, children, required = false }) => (
   <label className={labelClass}>
-    <Icon size={12} className="inline mr-1 text-gray-400" />
+    <Icon size={12} className="inline mr-1 text-neutral-500" />
     {children}
     {required ? ' *' : ''}
   </label>
@@ -242,12 +242,12 @@ const formatDate = (dateString) => {
 };
 
 const getStatusInfo = (promo) => {
-  if (!promo.active) return { label: 'Disabled', color: 'bg-gray-100 text-gray-600 border border-gray-200' };
+  if (!promo.active) return { label: 'Disabled', color: 'bg-neutral-100 text-neutral-600 border border-neutral-200' };
   const now = new Date();
   const from = new Date(promo.from);
   const to = new Date(promo.to);
 
-  if (now < from) return { label: 'Scheduled', color: 'bg-[#FFC400]/10 text-[#0B1220] border border-[#FFC400]/30' };
+  if (now < from) return { label: 'Scheduled', color: 'bg-[#0a4d2b]/10 text-[#0a4d2b] border border-[#0a4d2b]' };
   if (now > to) return { label: 'Expired', color: 'bg-rose-50 text-rose-700 border border-rose-200' };
   return { label: 'Active', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' };
 };
@@ -486,7 +486,7 @@ const PromoCodes = () => {
   };
 
   return (
-    <div className="min-h-full bg-gray-50 text-gray-900">
+    <div className="min-h-full bg-neutral-50 text-neutral-900">
       <HeaderBlock
         isCreateRoute={isCreateRoute}
         isEditRoute={isEditRoute}
@@ -502,35 +502,35 @@ const PromoCodes = () => {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-4"
           >
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="bg-white rounded-xl border border-neutral-200 p-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                  <span className="font-medium text-gray-600">Promo codes management</span>
-                  <span className="hidden sm:inline text-gray-300">|</span>
+                <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-500">
+                  <span className="font-medium text-neutral-600">Promo codes management</span>
+                  <span className="hidden sm:inline text-neutral-300">|</span>
                   <span>Total: {filteredPromos.length}</span>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     type="button"
                     onClick={() => setIsFilterOpen((current) => !current)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                   >
                     <Filter size={16} /> {isFilterOpen ? 'Hide Filters' : 'Filters'}
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate(CREATE_PATH)}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#FFC400] border border-[#FFC400] rounded-lg hover:bg-[#E5B000] transition-colors"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0a4d2b] border border-[#0a4d2b] rounded-lg hover:bg-[#E5B000] transition-colors"
                   >
-                    <Plus size={16} /> Add Promo Code
+                    <Plus size={16} /> Add promo code
                   </button>
                 </div>
               </div>
 
               {isFilterOpen ? (
-                <div className="mt-5 grid grid-cols-1 gap-4 border-t border-gray-100 pt-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
+                <div className="mt-5 grid grid-cols-1 gap-4 border-t border-neutral-100 pt-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
                   <div>
-                    <label className={labelClass}>Service Location</label>
+                    <label className={labelClass}>Service location</label>
                     <select
                       value={filters.service_location_id}
                       onChange={(event) => handleFilterChange('service_location_id', event.target.value)}
@@ -546,7 +546,7 @@ const PromoCodes = () => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Transport Type</label>
+                    <label className={labelClass}>Transport type</label>
                     <select
                       value={filters.transport_type}
                       onChange={(event) => handleFilterChange('transport_type', event.target.value)}
@@ -580,7 +580,7 @@ const PromoCodes = () => {
                     <button
                       type="button"
                       onClick={clearFilters}
-                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 md:w-auto"
+                      className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-50 md:w-auto"
                     >
                       Reset
                     </button>
@@ -589,25 +589,25 @@ const PromoCodes = () => {
               ) : null}
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-gray-50">
-                    <tr className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <thead className="bg-neutral-50">
+                    <tr className="text-xs text-neutral-500">
                       <th className="px-3 py-2">Code</th>
-                      <th className="px-3 py-2">Transport Type</th>
-                      <th className="px-3 py-2">Service Location</th>
+                      <th className="px-3 py-2">Transport type</th>
+                      <th className="px-3 py-2">Service location</th>
                       <th className="px-3 py-2">From - To Date</th>
                       <th className="px-3 py-2">Status</th>
                       <th className="px-3 py-2 text-right">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-neutral-100">
                     {isLoading ? (
                       <tr>
-                        <td colSpan="6" className="px-6 py-16 text-center text-sm font-medium text-gray-500">
+                        <td colSpan="6" className="px-6 py-16 text-center text-sm text-neutral-500">
                           <div className="flex items-center justify-center gap-3">
-                            <Loader2 className="animate-spin text-[#FFC400]" size={24} />
+                            <Loader2 className="animate-spin text-[#0a4d2b]" size={24} />
                             Loading Promo Codes...
                           </div>
                         </td>
@@ -615,13 +615,13 @@ const PromoCodes = () => {
                     ) : filteredPromos.length === 0 ? (
                       <tr>
                         <td colSpan="6" className="px-6 py-16 text-center">
-                          <div className="flex flex-col items-center gap-3 text-gray-400">
-                            <Ticket size={44} strokeWidth={1.5} className="text-gray-300" />
-                            <p className="text-sm font-medium text-gray-500">No promo codes found.</p>
+                          <div className="flex flex-col items-center gap-3 text-neutral-500">
+                            <Ticket size={44} strokeWidth={1.5} className="text-neutral-300" />
+                            <p className="text-sm text-neutral-500">No promo codes found</p>
                             <button
                               type="button"
                               onClick={() => navigate(CREATE_PATH)}
-                              className="mt-2 text-sm font-medium text-[#0B1220] hover:text-[#0B1220] hover:underline"
+                              className="mt-2 text-sm font-medium text-neutral-900 hover:text-neutral-900 hover:underline"
                             >
                               + Add your first promo code
                             </button>
@@ -630,17 +630,17 @@ const PromoCodes = () => {
                       </tr>
                     ) : (
                       filteredPromos.map((promo) => (
-                        <tr key={promo._id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-2 whitespace-nowrap text-[13px] font-semibold text-gray-900">
+                        <tr key={promo._id} className="hover:bg-neutral-50 transition-colors">
+                          <td className="px-4 py-2 whitespace-nowrap text-[13px] font-medium text-neutral-900">
                             {promo.code}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-[13px] text-gray-600">
+                          <td className="px-4 py-2 whitespace-nowrap text-[13px] text-neutral-600">
                             {getTransportTypeLabel(promo.transport_type)}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-[13px] text-gray-600 max-w-[200px] truncate">
+                          <td className="px-4 py-2 whitespace-nowrap text-[13px] text-neutral-600 max-w-[200px] truncate">
                             {getPromoLocationLabel(promo)}
                           </td>
-                          <td className="px-4 py-2 whitespace-nowrap text-[13px] text-gray-600">
+                          <td className="px-4 py-2 whitespace-nowrap text-[13px] text-neutral-600">
                             {formatDate(promo.from)} - {formatDate(promo.to)}
                           </td>
                           <td className="px-4 py-2 whitespace-nowrap">
@@ -648,7 +648,7 @@ const PromoCodes = () => {
                               const statusInfo = getStatusInfo(promo);
                               return (
                                 <span
-                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold ${statusInfo.color}`}
+                                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}
                                 >
                                   {statusInfo.label}
                                 </span>
@@ -671,7 +671,7 @@ const PromoCodes = () => {
                               <button
                                 type="button"
                                 onClick={() => navigate(`/taxi/admin/promotions/promo-codes/edit/${promo._id}`)}
-                                className="p-1.5 text-[#0B1220] bg-[#FFC400]/10 rounded hover:bg-[#FFC400]/20 transition-colors"
+                                className="p-1.5 text-[#0a4d2b] bg-[#0a4d2b]/10 rounded hover:bg-[#0a4d2b]/10 transition-colors"
                                 title="Edit"
                               >
                                 <Pencil size={16} />
@@ -704,11 +704,11 @@ const PromoCodes = () => {
             className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-4"
           >
             <div className="space-y-4">
-              <SectionCard icon={Ticket} title="Promo Details" description="Enter the basic promo code details">
+              <SectionCard icon={Ticket} title="Promo details" description="Enter the basic promo code details">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <FieldLabel icon={MapPin} required>
-                      Service Locations
+                      Service locations
                     </FieldLabel>
                     <LocationMultiSelect 
                       locations={locations} 
@@ -719,7 +719,7 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={Zap} required>
-                      Transport Type
+                      Transport type
                     </FieldLabel>
                     <select
                       required
@@ -757,17 +757,17 @@ const PromoCodes = () => {
                   </div>
 
                   <div>
-                    <FieldLabel icon={ShieldCheck}>User Specific</FieldLabel>
-                    <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 cursor-pointer">
+                    <FieldLabel icon={ShieldCheck}>User specific</FieldLabel>
+                    <label className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.user_specific}
                         onChange={(e) => handleUserSpecificChange(e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#0B1220] focus:ring-[#FFC400] cursor-pointer"
+                        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-[#0a4d2b]/30 cursor-pointer"
                       />
                       <div>
-                        <p className="text-sm font-medium text-gray-800">Apply for selected user only</p>
-                        <p className="text-xs text-gray-400">Unchecked rehne par promo all users ke liye available rahega.</p>
+                        <p className="text-sm font-medium text-neutral-800">Apply for selected user only</p>
+                        <p className="text-xs text-neutral-500">Unchecked rehne par promo all users ke liye available rahega</p>
                       </div>
                     </label>
                   </div>
@@ -778,7 +778,7 @@ const PromoCodes = () => {
                     </FieldLabel>
                     <input
                       type="text"
-                      placeholder="Enter Code"
+                      placeholder="Enter code"
                       required
                       value={formData.code}
                       onChange={(e) => handleFieldChange('code', e.target.value.toUpperCase())}
@@ -788,13 +788,13 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={IndianRupee} required>
-                      Minimum Trip Amount
+                      Minimum trip amount
                     </FieldLabel>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      placeholder="Enter Minimum Trip Amount"
+                      placeholder="Enter minimum trip amount"
                       required
                       value={formData.minimum_trip_amount}
                       onChange={(e) => handleFieldChange('minimum_trip_amount', e.target.value)}
@@ -804,13 +804,13 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={IndianRupee} required>
-                      Maximum Discount Amount
+                      Maximum discount amount
                     </FieldLabel>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      placeholder="Enter Maximum Discount Amount"
+                      placeholder="Enter maximum discount amount"
                       required
                       value={formData.maximum_discount_amount}
                       onChange={(e) => handleFieldChange('maximum_discount_amount', e.target.value)}
@@ -820,13 +820,13 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={IndianRupee} required>
-                      Cumulative Maximum Discount Amount
+                      Cumulative maximum discount amount
                     </FieldLabel>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      placeholder="Enter Cumulative Maximum Discount Amount"
+                      placeholder="Enter cumulative maximum discount amount"
                       required
                       value={formData.cumulative_max_discount_amount}
                       onChange={(e) => handleFieldChange('cumulative_max_discount_amount', e.target.value)}
@@ -836,13 +836,13 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={Percent} required>
-                      Discount Percentage
+                      Discount percentage
                     </FieldLabel>
                     <input
                       type="number"
                       min="0"
                       step="0.01"
-                      placeholder="Enter Discount Percentage"
+                      placeholder="Enter discount percentage"
                       required
                       value={formData.discount_percentage}
                       onChange={(e) => handleFieldChange('discount_percentage', e.target.value)}
@@ -852,7 +852,7 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={Calendar} required>
-                      From Date
+                      From date
                     </FieldLabel>
                     <input
                       type="date"
@@ -865,7 +865,7 @@ const PromoCodes = () => {
 
                   <div>
                     <FieldLabel icon={Calendar} required>
-                      To Date
+                      To date
                     </FieldLabel>
                     <input
                       type="date"
@@ -892,17 +892,17 @@ const PromoCodes = () => {
                   </div>
 
                   <div className="md:col-span-2">
-                    <FieldLabel icon={ShieldCheck}>Promo Status</FieldLabel>
-                    <label className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 cursor-pointer">
+                    <FieldLabel icon={ShieldCheck}>Promo status</FieldLabel>
+                    <label className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-white px-4 py-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formData.active}
                         onChange={(e) => handleFieldChange('active', e.target.checked)}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#0B1220] focus:ring-[#FFC400] cursor-pointer"
+                        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-neutral-900 focus:ring-[#0a4d2b]/30 cursor-pointer"
                       />
                       <div>
-                        <p className="text-sm font-medium text-gray-800">Promo is active</p>
-                        <p className="text-xs text-gray-400">Uncheck to save this promo in deactivated state.</p>
+                        <p className="text-sm font-medium text-neutral-800">Promo is active</p>
+                        <p className="text-xs text-neutral-500">Uncheck to save this promo in deactivated state</p>
                       </div>
                     </label>
                   </div>
@@ -911,11 +911,11 @@ const PromoCodes = () => {
             </div>
 
             <div className="space-y-4">
-              <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+              <div className="bg-white rounded-xl border border-neutral-200 p-4 space-y-3">
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full py-3 bg-[#FFC400] text-white rounded-lg text-sm font-medium hover:bg-[#E5B000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium hover:bg-[#E5B000] transition-colors disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
                 >
                   {submitting ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                   {isEditRoute ? 'Update Promo Code' : 'Save Promo Code'}
@@ -923,16 +923,16 @@ const PromoCodes = () => {
                 <button
                   type="button"
                   onClick={() => navigate(LIST_PATH)}
-                  className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                  className="w-full py-3 bg-neutral-50 text-neutral-600 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors"
                 >
                   Cancel
                 </button>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-200 p-4">
-                <h3 className="text-sm text-gray-900 mb-2 font-bold">How It Works</h3>
-                <p className="text-xs leading-5 text-gray-500">
-                  Service location, transport module, discount limits, end-of-day expiry, status control, and uses-per-user sab fields active hain.
+              <div className="bg-white rounded-xl border border-neutral-200 p-4">
+                <h3 className="text-sm text-neutral-900 mb-2 font-medium">How it works</h3>
+                <p className="text-xs leading-5 text-neutral-500">
+                  Service location, transport module, discount limits, end-of-day expiry, status control, and uses-per-user sab fields active hain
                 </p>
               </div>
             </div>

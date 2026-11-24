@@ -255,23 +255,23 @@ const BannerImage = () => {
   };
 
   return (
-    <div className="space-y-6 p-1 animate-in fade-in duration-500 font-sans text-gray-950 pb-20">
+    <div className="space-y-6 p-1 animate-in fade-in duration-500 font-sans text-neutral-950 pb-20">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-[17px] font-black text-[#2D3A6E] uppercase tracking-tight italic leading-none mb-1">
+          <h1 className="text-[17px] font-medium text-[#2D3A6E] leading-none mb-1">
             {isCreateRoute ? 'CREATE' : 'BANNER IMAGE'}
           </h1>
-          <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none">
-            <span>Banner Image</span>
+          <div className="flex items-center gap-2 text-xs text-neutral-500 leading-none">
+            <span>Banner image</span>
             <ChevronRight size={12} className="opacity-50" />
-            <span className="text-gray-900">{isCreateRoute ? 'Create' : 'Banner Image'}</span>
+            <span className="text-neutral-900">{isCreateRoute ? 'Create' : 'Banner Image'}</span>
           </div>
         </div>
         {isCreateRoute ? (
           <button
             type="button"
             onClick={() => navigate(LIST_PATH)}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} /> Back
           </button>
@@ -287,11 +287,11 @@ const BannerImage = () => {
             exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-            <div className="bg-white rounded-[22px] border border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-6 flex items-center justify-between border-b border-gray-100">
-                <div className="flex items-center gap-3 text-sm text-gray-500">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+              <div className="p-6 flex items-center justify-between border-b border-neutral-100">
+                <div className="flex items-center gap-3 text-sm text-neutral-500">
                   <span>show</span>
-                  <select className="bg-white border border-gray-200 rounded-md px-2 py-1 text-[13px] font-medium outline-none">
+                  <select className="bg-white border border-neutral-200 rounded-md px-2 py-1 text-[13px] font-medium outline-none">
                     <option>10</option>
                     <option>25</option>
                     <option>50</option>
@@ -302,40 +302,40 @@ const BannerImage = () => {
                 <button
                   type="button"
                   onClick={() => navigate(CREATE_PATH)}
-                  className="bg-[#2D3A6E] text-white h-10 px-5 rounded-lg flex items-center gap-2 text-[13px] font-bold hover:bg-[#1d2756] transition-all"
+                  className="bg-[#2D3A6E] text-white h-10 px-5 rounded-lg flex items-center gap-2 text-[13px] font-medium hover:bg-[#1d2756] transition-colors"
                 >
                   <Plus size={16} />
-                  Add Banner Image
+                  Add banner image
                 </button>
               </div>
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-gray-50">
-                    <tr className="text-[13px] font-bold text-gray-700">
+                  <thead className="bg-neutral-50">
+                    <tr className="text-[13px] font-medium text-neutral-700">
                       <th className="px-6 py-4">Icon</th>
                       <th className="px-6 py-4">Status</th>
                       <th className="px-6 py-4">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-neutral-100">
                     {loading ? (
                       <tr>
-                        <td colSpan="3" className="px-6 py-14 text-center text-sm text-gray-400">
+                        <td colSpan="3" className="px-6 py-14 text-center text-sm text-neutral-500">
                           Loading banners...
                         </td>
                       </tr>
                     ) : rows.length === 0 ? (
                       <tr>
-                        <td colSpan="3" className="px-6 py-14 text-center text-sm text-gray-400">
-                          No banners found.
+                        <td colSpan="3" className="px-6 py-14 text-center text-sm text-neutral-500">
+                          No banners found
                         </td>
                       </tr>
                     ) : (
                       rows.map((item) => (
                         <tr key={item._id || item.id}>
                           <td className="px-6 py-4">
-                            <div className="h-10 w-52 overflow-hidden rounded border border-gray-200 bg-white">
+                            <div className="h-10 w-52 overflow-hidden rounded border border-neutral-200 bg-white">
                               {item.image ? (
                                 <img
                                   src={resolveImageUrl(item.image)}
@@ -343,7 +343,7 @@ const BannerImage = () => {
                                   className="h-full w-full object-cover"
                                 />
                               ) : (
-                                <div className="h-full w-full flex items-center justify-center text-gray-300">
+                                <div className="h-full w-full flex items-center justify-center text-neutral-300">
                                   <ImageIcon size={16} />
                                 </div>
                               )}
@@ -353,7 +353,7 @@ const BannerImage = () => {
                             <button
                               type="button"
                               onClick={() => toggleStatus(item)}
-                              className={`inline-flex rounded px-2.5 py-1 text-[11px] font-bold uppercase ${
+                              className={`inline-flex rounded px-2.5 py-1 text-xs font-medium  ${
                                 item.active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-600'
                               }`}
                             >
@@ -365,7 +365,7 @@ const BannerImage = () => {
                               <button
                                 type="button"
                                 onClick={() => handleDelete(item._id || item.id)}
-                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-rose-600"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:bg-neutral-50 hover:text-rose-600"
                               >
                                 <Trash2 size={16} />
                               </button>
@@ -378,16 +378,16 @@ const BannerImage = () => {
                 </table>
               </div>
 
-              <div className="p-6 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+              <div className="p-6 border-t border-neutral-100 flex items-center justify-between text-sm text-neutral-500">
                 <span>
                   Showing {rows.length > 0 ? 1 : 0} to {rows.length} of {rows.length} entries
                 </span>
                 <div className="flex items-center gap-2">
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-400" disabled>
+                  <button className="px-4 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-500" disabled>
                     Prev
                   </button>
                   <button className="px-4 py-2 rounded-lg bg-[#2D3A6E] text-white">1</button>
-                  <button className="px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-400" disabled>
+                  <button className="px-4 py-2 rounded-lg border border-neutral-200 bg-white text-neutral-500" disabled>
                     Next
                   </button>
                 </div>
@@ -401,22 +401,22 @@ const BannerImage = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white rounded-[22px] border border-gray-200 shadow-sm p-8"
+            className="bg-white rounded-xl border border-neutral-900/[0.08] p-8"
           >
             <div className="space-y-6 max-w-3xl">
               <div>
-                <label className="block text-[14px] font-semibold text-gray-900 mb-3">
-                  Banner Image<span className="text-rose-500">*</span>
-                  <span className="text-gray-400 font-medium">(500px x 100px)</span>
+                <label className="block text-[14px] font-medium text-neutral-900 mb-3">
+                  Banner image<span className="text-rose-500">*</span>
+                  <span className="text-neutral-500">(500px x 100px)</span>
                 </label>
 
-                <div className="rounded-xl border-2 border-dashed border-gray-300 bg-white p-4">
+                <div className="rounded-xl border-2 border-dashed border-neutral-300 bg-white p-4">
                   {imagePreview ? (
                     <div className="space-y-4">
                       <img
                         src={imagePreview}
                         alt="Banner preview"
-                        className="h-28 w-full rounded-lg border border-gray-200 object-contain bg-gray-50"
+                        className="h-28 w-full rounded-lg border border-neutral-200 object-contain bg-neutral-50"
                       />
                       <button
                         type="button"
@@ -424,19 +424,19 @@ const BannerImage = () => {
                           setImagePreview(null);
                           setFormData((current) => ({ ...current, image: null }));
                         }}
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                       >
-                        Remove Image
+                        Remove image
                       </button>
                     </div>
                   ) : (
                     <label className="flex cursor-pointer flex-col items-center justify-center gap-3 py-6 text-center">
                       <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
-                      <span className="text-[22px] text-gray-500">
+                      <span className="text-[22px] text-neutral-500">
                         <Upload size={28} />
                       </span>
                       <div>
-                        <p className="text-[15px] font-medium text-gray-900">Upload Image</p>
+                        <p className="text-[15px] font-medium text-neutral-900">Upload image</p>
                       </div>
                     </label>
                   )}
@@ -444,7 +444,7 @@ const BannerImage = () => {
               </div>
 
               <div className="space-y-3">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-800">
+                <label className="inline-flex items-center gap-2 text-sm text-neutral-800">
                   <input
                     type="checkbox"
                     checked={formData.use_url}
@@ -459,19 +459,19 @@ const BannerImage = () => {
                         setImagePreview(null);
                       }
                     }}
-                    className="rounded border-gray-300 text-[#2D3A6E] focus:ring-[#2D3A6E]"
+                    className="rounded border-neutral-300 text-[#2D3A6E] focus:ring-[#2D3A6E]"
                   />
                   <span>Use image URL</span>
                 </label>
 
                 {formData.use_url ? (
                   <div>
-                    <label className="block text-[14px] font-semibold text-gray-900 mb-2">Image URL</label>
+                    <label className="block text-[14px] font-medium text-neutral-900 mb-2">Image URL</label>
                     <input
                       type="url"
                       value={formData.image_url}
                       onChange={(e) => setFormData((current) => ({ ...current, image_url: e.target.value }))}
-                      className="w-full max-w-xl border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+                      className="w-full max-w-xl border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors"
                       placeholder="https://example.com/banner.jpg"
                     />
                   </div>
@@ -483,7 +483,7 @@ const BannerImage = () => {
               <button
                 type="submit"
                 disabled={saving}
-                className="h-10 px-6 bg-[#2D3A6E] text-white rounded-lg text-[13px] font-bold hover:bg-[#1d2756] transition-all inline-flex items-center gap-2 disabled:opacity-60"
+                className="h-10 px-6 bg-[#2D3A6E] text-white rounded-lg text-[13px] font-medium hover:bg-[#1d2756] transition-colors inline-flex items-center gap-2 disabled:opacity-60"
               >
                 {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
                 Save

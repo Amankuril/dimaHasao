@@ -16,7 +16,7 @@ const AdminSplashScreen = () => {
     >
       {/* Subtle Yellow Glow Background */}
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
-        <div className="w-[600px] h-[600px] bg-yellow-400/10 rounded-full blur-[100px] opacity-70 animate-pulse" />
+        <div className="w-[600px] h-[600px] bg-[#0a4d2b]/10 rounded-full blur-[100px] opacity-70 animate-pulse text-white" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center">
@@ -27,12 +27,12 @@ const AdminSplashScreen = () => {
           transition={{ duration: 0.7, ease: 'easeOut' }}
           className="relative mb-6"
         >
-          <div className="absolute inset-0 bg-yellow-400/20 blur-2xl rounded-full scale-150 animate-pulse" />
-          <div className="relative flex items-center justify-center w-28 h-28 bg-white rounded-3xl shadow-xl shadow-yellow-900/5 border border-yellow-100 p-4">
+          <div className="absolute inset-0 bg-[#0a4d2b]/10 blur-2xl rounded-full scale-150 animate-pulse text-white" />
+          <div className="relative flex items-center justify-center w-28 h-28 bg-white rounded-xl border border-yellow-100 p-4">
             {logoUrl ? (
               <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
             ) : (
-              <ShieldCheck size={56} className="text-yellow-500" />
+              <ShieldCheck size={56} className="text-[#0a4d2b]" />
             )}
           </div>
         </motion.div>
@@ -44,8 +44,8 @@ const AdminSplashScreen = () => {
           transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
           className="text-center"
         >
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Admin Panel</h1>
-          <p className="text-sm font-semibold text-gray-500 mt-1.5">Platform Management System</p>
+          <h1 className="text-2xl font-medium text-neutral-900">Admin panel</h1>
+          <p className="text-sm text-neutral-500 mt-1.5">Platform management system</p>
         </motion.div>
 
         {/* Loader Animation */}
@@ -55,7 +55,7 @@ const AdminSplashScreen = () => {
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-12 flex flex-col items-center"
         >
-          <Loader2 size={24} className="animate-spin text-yellow-500" />
+          <Loader2 size={24} className="animate-spin text-[#0a4d2b]" />
         </motion.div>
       </div>
     </motion.div>

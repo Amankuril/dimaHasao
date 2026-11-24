@@ -67,27 +67,27 @@ const SWITCH_FIELDS = [
 const isEnabled = (value) => ['1', 'true', 'yes', 'on'].includes(String(value ?? '1').trim().toLowerCase());
 
 const Stat = ({ label, value, tone = 'gray' }) => {
-  const toneClass = tone === 'green' ? 'text-green-700 bg-green-50' : 'text-gray-900 bg-gray-100';
+  const toneClass = tone === 'green' ? 'text-green-700 bg-green-50' : 'text-neutral-900 bg-neutral-100';
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4">
-      <p className="text-xs font-semibold text-gray-500">{label}</p>
-      <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-bold ${toneClass}`}>{value}</p>
+    <div className="rounded-2xl border border-neutral-100 bg-white p-4">
+      <p className="text-xs text-neutral-500">{label}</p>
+      <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-sm font-medium ${toneClass}`}>{value}</p>
     </div>
   );
 };
 
 const AmountField = ({ field, value, onChange }) => (
-  <label className="block rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-    <span className="text-sm font-bold text-gray-900">{field.label}</span>
-    <span className="mt-1 block text-xs font-medium leading-relaxed text-gray-500">{field.help}</span>
+  <label className="block rounded-xl border border-neutral-900/[0.08] bg-white p-4">
+    <span className="text-sm font-medium text-neutral-900">{field.label}</span>
+    <span className="mt-1 block text-xs leading-relaxed text-neutral-500">{field.help}</span>
     <input
       type="number"
       name={field.name}
       value={value ?? ''}
       onChange={(event) => onChange(field.name, event.target.value)}
       placeholder={field.placeholder}
-      className="mt-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-900 outline-none transition focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 focus:bg-white"
+      className="mt-4 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm font-medium text-neutral-900 outline-none transition focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 focus:bg-white"
     />
   </label>
 );
@@ -96,13 +96,13 @@ const SwitchField = ({ field, checked, onToggle }) => (
   <button
     type="button"
     onClick={() => onToggle(field.name)}
-    className="flex w-full items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm hover:bg-gray-50 transition-colors"
+    className="flex w-full items-center justify-between gap-4 rounded-xl border border-neutral-900/[0.08] bg-white p-4 text-left hover:bg-neutral-50 transition-colors"
   >
     <span>
-      <span className="block text-sm font-bold text-gray-900">{field.label}</span>
-      <span className="mt-1 block text-xs font-medium leading-relaxed text-gray-500">{field.help}</span>
+      <span className="block text-sm font-medium text-neutral-900">{field.label}</span>
+      <span className="mt-1 block text-xs leading-relaxed text-neutral-500">{field.help}</span>
     </span>
-    <span className={`relative flex items-center h-7 w-12 shrink-0 rounded-full p-1 transition-colors ${checked ? 'bg-yellow-400' : 'bg-gray-300'}`}>
+    <span className={`relative flex items-center h-7 w-12 shrink-0 rounded-full p-1 transition-colors ${checked ? 'bg-[#0a4d2b] text-white' : 'bg-neutral-300'}`}>
       <span className={`h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
     </span>
   </button>
@@ -164,27 +164,27 @@ const WalletSettings = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <Loader2 className="h-10 w-10 animate-spin text-gray-900" />
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <Loader2 className="h-10 w-10 animate-spin text-neutral-900" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans">
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500 mb-2">
-            <span>App Settings</span>
+          <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
+            <span>App settings</span>
             <ChevronRight size={14} />
-            <span className="text-gray-900">Wallet Settings</span>
+            <span className="text-neutral-900">Wallet settings</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Wallet Settings</h1>
+          <h1 className="text-2xl font-medium text-neutral-900">Wallet settings</h1>
         </div>
         <button
           onClick={handleUpdate}
           disabled={saving}
-          className="flex h-11 w-full lg:w-auto min-w-[120px] items-center justify-center gap-2 rounded-lg bg-yellow-400 px-6 text-sm font-bold text-black shadow-sm transition-colors hover:bg-yellow-500 disabled:opacity-60"
+          className="flex h-11 w-full lg:w-auto min-w-[120px] items-center justify-center gap-2 rounded-lg bg-[#0a4d2b] px-6 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#06381e] disabled:opacity-60"
         >
           {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
           {saving ? 'Saving...' : 'Save'}
@@ -193,14 +193,14 @@ const WalletSettings = () => {
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.25fr_0.75fr] pb-10">
         <section className="space-y-6">
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-5">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 text-gray-900">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
                 <Wallet size={20} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-gray-900">Amounts</h2>
-                <p className="text-xs text-gray-500">These numbers directly control driver wallet behavior.</p>
+                <h2 className="text-base font-medium text-neutral-900">Amounts</h2>
+                <p className="text-xs text-neutral-500">These numbers directly control driver wallet behavior</p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -210,14 +210,14 @@ const WalletSettings = () => {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-5">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-600">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
                 <ShieldCheck size={20} />
               </div>
               <div>
-                <h2 className="text-base font-bold text-gray-900">Feature Controls</h2>
-                <p className="text-xs text-gray-500">Switch wallet features on or off without touching code.</p>
+                <h2 className="text-base font-medium text-neutral-900">Feature controls</h2>
+                <p className="text-xs text-neutral-500">Switch wallet features on or off without touching code</p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -229,12 +229,12 @@ const WalletSettings = () => {
         </section>
 
         <div className="space-y-6">
-          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-            <p className="text-sm font-bold text-gray-900">Driver Preview</p>
-            <div className="mt-4 rounded-2xl bg-yellow-50 p-5 text-gray-900 border border-yellow-100">
-              <p className="text-xs font-semibold text-gray-600">Sample Wallet Balance</p>
-              <h3 className="mt-2 text-3xl font-black">₹{preview.sampleBalance.toFixed(2)}</h3>
-              <p className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${preview.canReceiveOrders ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+          <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-5">
+            <p className="text-sm font-medium text-neutral-900">Driver preview</p>
+            <div className="mt-4 rounded-2xl bg-yellow-50 p-5 text-neutral-900 border border-yellow-100">
+              <p className="text-xs font-medium text-neutral-600">Sample wallet balance</p>
+              <h3 className="mt-2 text-3xl font-medium">₹{preview.sampleBalance.toFixed(2)}</h3>
+              <p className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-medium ${preview.canReceiveOrders ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                 {preview.canReceiveOrders ? 'Ready for orders' : 'Top up to receive orders'}
               </p>
             </div>
@@ -246,7 +246,7 @@ const WalletSettings = () => {
           </div>
 
           <div className="rounded-2xl border border-yellow-100 bg-yellow-50/50 p-5">
-            <p className="text-sm font-bold text-yellow-900">How driver control works</p>
+            <p className="text-sm font-medium text-yellow-900">How driver control works</p>
             <p className="mt-2 text-xs font-medium leading-relaxed text-yellow-800">
               The driver wallet page reads these settings from the backend. Top-up minimum is enforced by the API, and order eligibility uses the driver minimum balance.
             </p>

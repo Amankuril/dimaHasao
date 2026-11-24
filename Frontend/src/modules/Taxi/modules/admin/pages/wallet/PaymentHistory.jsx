@@ -8,18 +8,18 @@ const PaymentHistory = () => {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-slate-400">Wallet</p>
-        <h1 className="mt-1 text-[22px] font-black tracking-tight text-slate-900">PAYMENT HISTORY</h1>
+        <p className="text-xs font-medium text-neutral-400">Wallet</p>
+        <h1 className="mt-1 text-[22px] font-medium text-neutral-900">Payment history</h1>
       </div>
 
-      <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-5">
         <div className="grid gap-4 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
           <div className="space-y-2">
-            <label className="text-[13px] font-medium text-slate-900">Select Role</label>
+            <label className="text-[13px] font-medium text-neutral-900">Select role</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-800 outline-none"
+              className="h-12 w-full rounded-xl border-2 border-neutral-200 bg-white px-4 text-[14px] font-medium text-neutral-800 outline-none"
             >
               <option>Select</option>
               <option>User</option>
@@ -29,11 +29,11 @@ const PaymentHistory = () => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[13px] font-medium text-slate-900">Select Month</label>
+            <label className="text-[13px] font-medium text-neutral-900">Select month</label>
             <select
               value={month}
               onChange={(e) => setMonth(e.target.value)}
-              className="h-12 w-full rounded-xl border-2 border-slate-200 bg-white px-4 text-[14px] font-medium text-slate-800 outline-none"
+              className="h-12 w-full rounded-xl border-2 border-neutral-200 bg-white px-4 text-[14px] font-medium text-neutral-800 outline-none"
             >
               <option>April 2026</option>
               <option>March 2026</option>
@@ -42,39 +42,39 @@ const PaymentHistory = () => {
             </select>
           </div>
 
-          <button className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#4054b2] px-5 text-[13px] font-black uppercase tracking-[0.2em] text-white">
+          <button className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#4054b2] px-5 text-[13px] font-medium text-white">
             <Wallet size={16} />
-            View Wallet
+            View wallet
           </button>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Role</p>
-            <p className="mt-2 text-[16px] font-black text-slate-900">{role}</p>
+          <div className="rounded-2xl bg-neutral-50 p-4">
+            <p className="text-xs font-medium text-neutral-400">Role</p>
+            <p className="mt-2 text-[16px] font-medium text-neutral-900">{role}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Selected Month</p>
-            <p className="mt-2 text-[16px] font-black text-slate-900">{month}</p>
+          <div className="rounded-2xl bg-neutral-50 p-4">
+            <p className="text-xs font-medium text-neutral-400">Selected month</p>
+            <p className="mt-2 text-[16px] font-medium text-neutral-900">{month}</p>
           </div>
-          <div className="rounded-2xl bg-slate-50 p-4">
-            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-400">Action</p>
-            <p className="mt-2 text-[16px] font-black text-slate-900">Open payment ledger</p>
+          <div className="rounded-2xl bg-neutral-50 p-4">
+            <p className="text-xs font-medium text-neutral-400">Action</p>
+            <p className="mt-2 text-[16px] font-medium text-neutral-900">Open payment ledger</p>
           </div>
         </div>
 
-        <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-4">
+        <div className="mt-6 rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 px-5 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#4054b2] shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 text-neutral-500">
               <CreditCard size={18} />
             </div>
             <div>
-              <p className="text-[13px] font-black uppercase tracking-[0.18em] text-slate-900">Payment History</p>
-              <p className="text-[12px] font-medium text-slate-500">
-                This screen is ready for wallet transactions, balance checks, and role-based payment filters.
+              <p className="text-[13px] font-medium text-neutral-900">Payment history</p>
+              <p className="text-[12px] font-medium text-neutral-500">
+                This screen is ready for wallet transactions, balance checks, and role-based payment filters
               </p>
             </div>
-            <button className="ml-auto inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-[12px] font-black uppercase tracking-[0.18em] text-slate-700">
+            <button className="ml-auto inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2 text-[12px] font-medium text-neutral-700">
               Next <ArrowRight size={14} />
             </button>
           </div>

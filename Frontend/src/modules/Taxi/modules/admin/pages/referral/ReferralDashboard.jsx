@@ -13,32 +13,32 @@ import {
 } from 'lucide-react';
 
 const StatCard = ({ title, value, change, icon: Icon, color }) => (
-  <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full group">
+  <div className="bg-white rounded-xl p-8 border border-neutral-900/[0.08] hover:shadow-md transition-colors duration-300 flex flex-col justify-between h-full group">
     <div className="flex items-start justify-between">
-      <div className={`p-4 rounded-2xl ${color} bg-opacity-10 group-hover:scale-110 transition-transform duration-500`}>
+      <div className={`p-4 rounded-2xl ${color} bg-opacity-10  transition-transform duration-500`}>
         <Icon size={24} className={`${color.replace('bg-', 'text-')}`} />
       </div>
       <div className="flex flex-col items-end">
-        <div className="flex items-center gap-1 text-[11px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 px-2.5 py-1 rounded-full">
+        <div className="flex items-center gap-1 text-xs font-medium text-emerald-500 bg-emerald-50 px-2.5 py-1 rounded-full">
           <ArrowUpRight size={14} /> {change}%
         </div>
       </div>
     </div>
     <div className="mt-8">
-      <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none mb-3">{title}</p>
-      <h3 className="text-4xl font-black text-gray-950 tracking-tighter leading-none">{value}</h3>
+      <p className="text-xs text-neutral-500 leading-none mb-3">{title}</p>
+      <h3 className="text-4xl font-medium text-neutral-950 leading-none">{value}</h3>
     </div>
   </div>
 );
 
 const ChartSection = ({ title, children }) => (
-  <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
-    <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
-      <h3 className="text-[13px] font-black text-gray-950 uppercase tracking-widest flex items-center gap-3">
-        <div className="w-2 h-2 bg-indigo-600 rounded-full" />
+  <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden flex flex-col h-full">
+    <div className="px-8 py-6 border-b border-neutral-50 flex items-center justify-between bg-neutral-50/30">
+      <h3 className="text-[13px] font-medium text-neutral-950 flex items-center gap-3">
+        <div className="w-2 h-2 bg-neutral-900 rounded-full" />
         {title}
       </h3>
-      <button className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-indigo-600 transition-colors flex items-center gap-1">
+      <button className="text-xs text-neutral-500 hover:text-[#0a4d2b] transition-colors flex items-center gap-1">
         Details <ArrowRight size={14} />
       </button>
     </div>
@@ -74,32 +74,32 @@ const ReferralDashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/30 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50/30 p-8">
         <div className="flex flex-col items-center gap-6">
-          <div className="w-16 h-16 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-[14px] font-black text-gray-400 uppercase tracking-widest animate-pulse">Syncing Viral Growth Metrics...</p>
+          <div className="w-16 h-16 border-4 border-neutral-200 border-t-[#0a4d2b] rounded-full animate-spin"></div>
+          <p className="text-[14px] text-neutral-500 animate-pulse">Syncing Viral Growth Metrics...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 p-2 animate-in fade-in zoom-in-95 duration-700 font-sans text-gray-950">
+    <div className="space-y-12 p-2 animate-in fade-in zoom-in-95 duration-700 font-sans text-neutral-950">
       {/* HEADER */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-6xl font-black tracking-tighter text-gray-950 mb-3 uppercase leading-none">Referral<span className="text-indigo-600">.</span></h1>
-          <div className="flex items-center gap-3 text-[12px] font-black text-gray-400">
-            <span className="bg-gray-100 text-gray-950 px-3 py-1 rounded-full uppercase tracking-widest text-[10px]">Referral Dashboard</span>
+          <h1 className="text-6xl font-medium text-neutral-950 mb-3 leading-none">Referral<span className="text-[#0a4d2b]">.</span></h1>
+          <div className="flex items-center gap-3 text-[12px] text-neutral-500">
+            <span className="bg-neutral-100 text-neutral-950 px-3 py-1 rounded-full text-xs">Referral dashboard</span>
             <ChevronRight size={14} />
-            <span className="uppercase tracking-widest text-[10px]">Analytics Overview</span>
+            <span className="text-xs">Analytics overview</span>
           </div>
         </div>
         <div className="flex items-center gap-4">
-           <div className="bg-white px-6 py-3 rounded-full border border-gray-100 shadow-sm flex items-center gap-3">
-              <Activity size={18} className="text-indigo-600" />
-              <span className="text-[11px] font-black uppercase tracking-widest text-gray-400">Live Status:</span>
-              <span className="text-[11px] font-black uppercase tracking-widest text-emerald-500">Active</span>
+           <div className="bg-white px-6 py-3 rounded-full border border-neutral-100 shadow-sm flex items-center gap-3">
+              <Activity size={18} className="text-[#0a4d2b]" />
+              <span className="text-xs text-neutral-500">Live Status:</span>
+              <span className="text-xs font-medium text-emerald-500">Active</span>
            </div>
         </div>
       </div>
@@ -107,28 +107,28 @@ const ReferralDashboard = () => {
       {/* STATS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
-          title="Total Drivers" 
+          title="Total drivers" 
           value={data?.total_drivers || "0"} 
           change="12" 
           icon={Users} 
-          color="bg-indigo-600" 
+          color="bg-neutral-900" 
         />
         <StatCard 
-          title="Total Users" 
+          title="Total users" 
           value={data?.total_users || "0"} 
           change="8" 
           icon={UserCheck} 
           color="bg-rose-500" 
         />
         <StatCard 
-          title="Active Referrals" 
+          title="Active referrals" 
           value={data?.active_referrals || "0"} 
           change="24" 
           icon={Zap} 
-          color="bg-amber-400" 
+          color="bg-[#0a4d2b] text-white" 
         />
         <StatCard 
-          title="Referral Earnings" 
+          title="Referral earnings" 
           value={data?.referral_earning ? `₹${data.referral_earning}` : "₹ 0"} 
           change="18" 
           icon={IndianRupee} 
@@ -138,49 +138,49 @@ const ReferralDashboard = () => {
 
       {/* CHARTS ROW - USER REFERRALS */}
       <div className="space-y-6">
-         <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-            <h2 className="text-[15px] font-black uppercase tracking-[0.2em] text-gray-400">User Referrals Overview</h2>
+         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+            <h2 className="text-[15px] text-neutral-500">User referrals overview</h2>
          </div>
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[500px]">
            <div className="lg:col-span-4">
-              <ChartSection title="User Distribution">
-                 <div className="relative w-64 h-64 rounded-full border-[1.5em] border-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-100 transform hover:rotate-6 transition-transform duration-700">
+              <ChartSection title="User distribution">
+                 <div className="relative w-64 h-64 rounded-full border-[1.5em] border-[#0a4d2b] flex items-center justify-center shadow-2xl transform transition-transform duration-700">
                     <div className="absolute inset-0 rounded-full border-[1.5em] border-rose-500 border-t-transparent border-l-transparent -rotate-45"></div>
                     <div className="text-center">
-                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Ratio</p>
-                       <p className="text-4xl font-black text-gray-950 tracking-tighter">72/28</p>
+                       <p className="text-xs text-neutral-500 mb-1">Ratio</p>
+                       <p className="text-4xl font-medium text-neutral-950">72/28</p>
                     </div>
                  </div>
                  <div className="mt-12 flex flex-col gap-4 w-full">
-                    <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
+                    <div className="flex items-center justify-between p-4 bg-neutral-50/50 rounded-2xl border border-neutral-50">
                        <div className="flex items-center gap-3">
-                         <div className="w-3 h-3 bg-indigo-600 rounded-full shadow-lg shadow-indigo-200"></div>
-                         <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">Normal User</span>
+                         <div className="w-3 h-3 bg-neutral-900 rounded-full shadow-sm"></div>
+                         <span className="text-xs text-neutral-500">Normal user</span>
                        </div>
-                       <span className="text-[13px] font-black text-gray-950">1,240</span>
+                       <span className="text-[13px] font-medium text-neutral-950">1,240</span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-2xl border border-gray-50">
+                    <div className="flex items-center justify-between p-4 bg-neutral-50/50 rounded-2xl border border-neutral-50">
                        <div className="flex items-center gap-3">
-                         <div className="w-3 h-3 bg-rose-500 rounded-full shadow-lg shadow-rose-200"></div>
-                         <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">Referral User</span>
+                         <div className="w-3 h-3 bg-rose-500 rounded-full shadow-sm shadow-rose-200"></div>
+                         <span className="text-xs text-neutral-500">Referral user</span>
                        </div>
-                       <span className="text-[13px] font-black text-gray-950">460</span>
+                       <span className="text-[13px] font-medium text-neutral-950">460</span>
                     </div>
                  </div>
               </ChartSection>
            </div>
            
            <div className="lg:col-span-8">
-              <ChartSection title="Monthly Growth Trend">
+              <ChartSection title="Monthly growth trend">
                  <div className="w-full flex-1 flex flex-col justify-end gap-12">
                    <div className="h-full flex items-end justify-between gap-4 px-4">
                       {[30, 45, 60, 40, 80, 55, 90, 70, 85, 50, 65, 75].map((val, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-4 group">
                            <div 
-                             className="w-full bg-indigo-600 rounded-t-2xl shadow-xl shadow-indigo-100 group-hover:bg-rose-500 transition-all duration-500 transform group-hover:scale-y-105 origin-bottom"
+                             className="w-full bg-neutral-900 rounded-t-2xl shadow-xl group-hover:bg-rose-500 transition-colors duration-500 transform origin-bottom"
                              style={{ height: `${val}%` }}
                            ></div>
-                           <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest transform -rotate-45 lg:rotate-0 mt-4 group-hover:text-indigo-600 transition-colors">
+                           <span className="text-xs font-medium text-neutral-300 transform -rotate-45 lg:rotate-0 mt-4 group-hover:text-[#0a4d2b] transition-colors">
                              {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][idx]}
                            </span>
                         </div>
@@ -193,49 +193,49 @@ const ReferralDashboard = () => {
       </div>
 
       {/* DRIVER REFERRALS ROW */}
-      <div className="space-y-6 opacity-80 filter grayscale hover:grayscale-0 transition-all duration-700">
-         <div className="flex items-center justify-between border-b border-gray-100 pb-4">
-            <h2 className="text-[15px] font-black uppercase tracking-[0.2em] text-gray-400">Driver Referrals Overview</h2>
+      <div className="space-y-6 opacity-80 filter grayscale hover:grayscale-0 transition-colors duration-700">
+         <div className="flex items-center justify-between border-b border-neutral-100 pb-4">
+            <h2 className="text-[15px] text-neutral-500">Driver referrals overview</h2>
          </div>
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[500px]">
            <div className="lg:col-span-4">
-              <ChartSection title="Driver Segmentation">
-                 <div className="relative w-64 h-64 rounded-full border-[1.5em] border-indigo-950 flex items-center justify-center transform hover:-rotate-12 transition-transform duration-1000">
-                    <div className="absolute inset-0 rounded-full border-[1.5em] border-indigo-400 border-t-transparent border-r-transparent rotate-45"></div>
+              <ChartSection title="Driver segmentation">
+                 <div className="relative w-64 h-64 rounded-full border-[1.5em] border-[#0a4d2b] flex items-center justify-center transform transition-transform duration-1000">
+                    <div className="absolute inset-0 rounded-full border-[1.5em] border-neutral-200 border-t-transparent border-r-transparent rotate-45"></div>
                     <div className="text-center">
-                       <p className="text-[10px] font-black text-white/50 uppercase tracking-widest mb-1">Segments</p>
-                       <p className="text-4xl font-black text-gray-950 tracking-tighter">54 : 46</p>
+                       <p className="text-xs font-medium text-white/50 mb-1">Segments</p>
+                       <p className="text-4xl font-medium text-neutral-950">54 : 46</p>
                     </div>
                  </div>
                  <div className="mt-12 flex flex-col gap-4 w-full">
-                    <div className="flex items-center justify-between p-4 bg-indigo-950 rounded-2xl">
+                    <div className="flex items-center justify-between p-4 bg-neutral-900 rounded-2xl">
                        <div className="flex items-center gap-3">
                          <div className="w-3 h-3 bg-white rounded-full"></div>
-                         <span className="text-[11px] font-black uppercase tracking-widest text-white/70">Master Drivers</span>
+                         <span className="text-xs font-medium text-white/70">Master drivers</span>
                        </div>
-                       <span className="text-[13px] font-black text-white">820</span>
+                       <span className="text-[13px] font-medium text-white">820</span>
                     </div>
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-2xl border border-neutral-100">
                        <div className="flex items-center gap-3">
-                         <div className="w-3 h-3 bg-indigo-400 rounded-full"></div>
-                         <span className="text-[11px] font-black uppercase tracking-widest text-gray-500">Referral Network</span>
+                         <div className="w-3 h-3 bg-neutral-200 rounded-full"></div>
+                         <span className="text-xs text-neutral-500">Referral network</span>
                        </div>
-                       <span className="text-[13px] font-black text-gray-950">695</span>
+                       <span className="text-[13px] font-medium text-neutral-950">695</span>
                     </div>
                  </div>
               </ChartSection>
            </div>
            
            <div className="lg:col-span-8">
-              <ChartSection title="Operational Trajectory">
+              <ChartSection title="Operational trajectory">
                  <div className="w-full h-full flex flex-col">
                     <div className="flex-1 flex items-center justify-center p-12">
                        <div className="w-full h-full flex items-end">
                           <svg className="w-full h-full" viewBox="0 0 1000 300">
                              <defs>
                                 <linearGradient id="lineGrad" x1="0" y1="0" x2="0" y2="1">
-                                   <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.2" />
-                                   <stop offset="100%" stopColor="#4F46E5" stopOpacity="0" />
+                                   <stop offset="0%" stopColor="#0a4d2b" stopOpacity="0.2" />
+                                   <stop offset="100%" stopColor="#0a4d2b" stopOpacity="0" />
                                 </linearGradient>
                              </defs>
                              <path 
@@ -245,7 +245,7 @@ const ReferralDashboard = () => {
                              <path 
                                d="M0,250 Q100,200 200,220 T400,150 T600,100 T800,120 T1000,50" 
                                fill="none" 
-                               stroke="#4F46E5" 
+                               stroke="#0a4d2b" 
                                strokeWidth="8" 
                                strokeLinecap="round"
                              />
@@ -254,7 +254,7 @@ const ReferralDashboard = () => {
                     </div>
                     <div className="grid grid-cols-12 px-8 mb-10 gap-4">
                       {['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'].map((m) => (
-                        <div key={m} className="text-center text-[11px] font-black text-gray-300 uppercase tracking-widest hover:text-indigo-600 transition-colors cursor-help">{m}</div>
+                        <div key={m} className="text-center text-xs font-medium text-neutral-300 hover:text-[#0a4d2b] transition-colors cursor-help">{m}</div>
                       ))}
                     </div>
                  </div>

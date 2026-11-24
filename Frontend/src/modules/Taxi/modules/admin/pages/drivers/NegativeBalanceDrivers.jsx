@@ -73,29 +73,29 @@ const NegativeBalanceDrivers = () => {
   const showingTo = totalEntries === 0 ? 0 : Math.min(startIndex + rows.length, totalEntries);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8 font-sans text-gray-900">
+    <div className="min-h-screen bg-neutral-50 p-6 lg:p-8 font-sans text-neutral-900">
       <div className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <span>Driver Wallet</span>
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
+          <span>Driver wallet</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">Negative Balance Drivers</span>
+          <span className="text-neutral-700">Negative balance drivers</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl text-gray-900 font-bold">Negative Balance Drivers</h1>
-          <div className="text-sm text-gray-500">
-            Total Outstanding: <span className="font-semibold text-rose-600">₹ {Number(summary.total_outstanding || 0).toFixed(2)}</span>
+          <h1 className="text-xl text-neutral-900 font-medium">Negative balance drivers</h1>
+          <div className="text-sm text-neutral-500">
+            Total Outstanding: <span className="font-medium text-rose-600">₹ {Number(summary.total_outstanding || 0).toFixed(2)}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200">
+      <div className="bg-white rounded-xl border border-neutral-200">
         <div className="p-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-neutral-500">
             <span>Show</span>
             <select
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(Number(e.target.value) || 10)}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+              className="border border-neutral-200 rounded-lg px-3 py-2 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors"
             >
               {[10, 25, 50, 100].map((n) => (
                 <option key={n} value={n}>
@@ -107,62 +107,62 @@ const NegativeBalanceDrivers = () => {
           </div>
 
           <div className="relative w-full md:w-72">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search..."
-              className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+              placeholder="Search"
+              className="w-full border border-neutral-200 rounded-lg pl-9 pr-3 py-2 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors"
             />
           </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left">            <thead className="bg-gray-50">
-              <tr className="text-xs font-semibold text-gray-500">
+          <table className="w-full text-left">            <thead className="bg-neutral-50">
+              <tr className="text-xs text-neutral-500">
                 <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">Driver Code</th>
-                <th className="px-6 py-4">Service Location</th>
+                <th className="px-6 py-4">Driver code</th>
+                <th className="px-6 py-4">Service location</th>
                 <th className="px-6 py-4">Email</th>
-                <th className="px-6 py-4">Mobile Number</th>
-                <th className="px-6 py-4">Transport Type</th>
-                <th className="px-6 py-4">Approved Status</th>
+                <th className="px-6 py-4">Mobile number</th>
+                <th className="px-6 py-4">Transport type</th>
+                <th className="px-6 py-4">Approved status</th>
                 <th className="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-neutral-100">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center text-sm text-gray-400">
+                  <td colSpan={8} className="px-6 py-16 text-center text-sm text-neutral-500">
                     Loading...
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                    <div className="flex flex-col items-center gap-3 text-neutral-500">
                       <FileSearch size={44} strokeWidth={1.5} />
-                      <p className="text-sm font-medium">No Data Found</p>
+                      <p className="text-sm font-medium">No data found</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 rows.map((item) => (
-                  <tr key={item._id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-800">{item.name || 'Unknown'}</td>
+                  <tr key={item._id} className="hover:bg-neutral-50 transition-colors">
+                    <td className="px-6 py-4 text-sm text-neutral-800">{item.name || 'Unknown'}</td>
                     <td className="px-6 py-4 text-sm font-medium">
-                      <span className="font-mono font-semibold text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded shadow-sm border border-indigo-100">
+                      <span className="font-mono font-medium text-xs text-[#0a4d2b] bg-neutral-50 px-2 py-1 rounded shadow-sm border border-neutral-200">
                         {item.driver_code || item.referralCode || (item.mobile ? `DRV${String(item.mobile).slice(-4)}${String(item._id || '').slice(-6).toUpperCase()}`.replace(/\W/g, '') : 'N/A')}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.service_location_name || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.email || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600">{item.mobile || '-'}</td>
-                    <td className="px-6 py-4 text-sm text-gray-600 capitalize">{item.transport_type || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{item.service_location_name || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{item.email || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600">{item.mobile || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-neutral-600 capitalize">{item.transport_type || '-'}</td>
                     <td className="px-6 py-4 text-sm">
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
                           item.approve ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                         }`}
                       >
@@ -177,7 +177,7 @@ const NegativeBalanceDrivers = () => {
                             e.stopPropagation();
                             setActiveMenuId((current) => (current === item._id ? null : item._id));
                           }}
-                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-800 transition-colors"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800 transition-colors"
                           title="Actions"
                         >
                           <MoreHorizontal size={16} />
@@ -185,7 +185,7 @@ const NegativeBalanceDrivers = () => {
  
                         {activeMenuId === item._id ? (
                           <div
-                            className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50"
+                            className="absolute right-0 top-full mt-2 w-44 bg-white rounded-xl border border-neutral-900/[0.08] py-2 z-50"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <button
@@ -194,9 +194,9 @@ const NegativeBalanceDrivers = () => {
                                 setActiveMenuId(null);
                                 navigate(`/taxi/admin/drivers/${item._id}`);
                               }}
-                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                              className="w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 flex items-center gap-3 transition-colors"
                             >
-                              <Eye size={16} className="text-indigo-600" />
+                              <Eye size={16} className="text-[#0a4d2b]" />
                               View
                             </button>
                           </div>
@@ -210,7 +210,7 @@ const NegativeBalanceDrivers = () => {
           </table>
         </div>
 
-        <div className="p-4 border-t border-gray-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
+        <div className="p-4 border-t border-neutral-100 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between text-sm text-neutral-500">
           <div>
             Showing {showingFrom} to {showingTo} of {totalEntries} entries
           </div>
@@ -219,16 +219,16 @@ const NegativeBalanceDrivers = () => {
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={safePage <= 1}
-              className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Prev
             </button>
-            <span className="px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm">{safePage}</span>
+            <span className="px-3 py-2 bg-neutral-900 text-white rounded-lg text-sm">{safePage}</span>
             <button
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={safePage >= totalPages}
-              className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-3 py-2 bg-white border border-neutral-200 rounded-lg text-sm text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               Next
             </button>

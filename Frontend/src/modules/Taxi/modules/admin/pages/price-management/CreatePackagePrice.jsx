@@ -7,8 +7,8 @@ import { adminService } from '../../services/adminService';
 import { Autocomplete } from '@react-google-maps/api';
 import { useAppGoogleMapsLoader, HAS_VALID_GOOGLE_MAPS_KEY } from '../../utils/googleMaps';
 
-const inputClass = 'w-full rounded-md border border-gray-200 px-2.5 py-1.5 text-xs text-slate-800 outline-none transition-all shadow-sm hover:border-amber-300 focus:border-amber-400 focus:ring-1 focus:ring-amber-400';
-const labelClass = 'mb-0.5 block text-xs font-semibold text-slate-800';
+const inputClass = 'w-full rounded-md border border-neutral-200 px-2.5 py-1.5 text-xs text-neutral-800 outline-none transition-colors shadow-sm hover:border-amber-300 focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30';
+const labelClass = 'mb-0.5 block text-xs font-medium text-neutral-800';
 const selectWrapClass = 'relative';
 
 const createVehiclePriceRow = () => ({
@@ -214,22 +214,22 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
 
   return (
     <div className="min-h-screen bg-[#F8F9FD] p-3 lg:p-4 font-sans">
-      <div className="flex flex-col gap-3 border-b border-gray-100 pb-2 mb-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 border-b border-neutral-100 pb-2 mb-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#1E293B]" style={{ fontFamily: '"Times New Roman", Times, serif' }}>{isEdit ? 'Edit Package Pricing' : 'Create Package Pricing'}</h1>
-          <p className="mt-1 text-xs text-slate-500">Use a simple package form and set a different price block for each vehicle.</p>
+          <h1 className="text-2xl font-medium text-[#1E293B]" style={{ fontFamily: '"Times New Roman", Times, serif' }}>{isEdit ? 'Edit Package Pricing' : 'Create Package Pricing'}</h1>
+          <p className="mt-1 text-xs text-neutral-500">Use a simple package form and set a different price block for each vehicle</p>
         </div>
-        <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium tracking-tight">
-          <span className="hover:text-slate-600 transition-colors cursor-pointer" onClick={() => navigate('/taxi/admin/pricing/package-pricing')}>Package Pricing</span>
-          <ChevronRight size={10} className="text-slate-300" />
-          <span className="text-slate-800 font-bold">{isEdit ? 'Edit' : 'Create'}</span>
+        <div className="flex items-center gap-1.5 text-xs text-neutral-400 font-medium">
+          <span className="hover:text-neutral-600 transition-colors cursor-pointer" onClick={() => navigate('/taxi/admin/pricing/package-pricing')}>Package pricing</span>
+          <ChevronRight size={10} className="text-neutral-300" />
+          <span className="text-neutral-800 font-medium">{isEdit ? 'Edit' : 'Create'}</span>
         </div>
       </div>
 
-      <div className="relative rounded-[28px] border border-gray-100 bg-white shadow-sm">
+      <div className="relative rounded-xl border border-neutral-900/[0.08] bg-white">
         {loading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[28px] bg-white/80">
-            <Loader2 className="h-8 w-8 animate-spin text-amber-500" />
+          <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-white/80">
+            <Loader2 className="h-8 w-8 animate-spin text-[#0a4d2b]" />
           </div>
         )}
 
@@ -238,19 +238,19 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
             <button
               type="button"
               onClick={() => navigate('/taxi/admin/pricing/package-pricing')}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-800"
+              className="inline-flex items-center gap-2 text-sm font-medium text-neutral-500 transition hover:text-neutral-800"
             >
               <ArrowLeft size={16} />
-              Back to Package Pricing
+              Back to package pricing
             </button>
-            <button type="button" onClick={() => setShowHowItWorks(true)} className="text-[11px] font-bold text-amber-500 underline decoration-dotted underline-offset-4">
-              How It Works
+            <button type="button" onClick={() => setShowHowItWorks(true)} className="text-xs font-medium text-[#0a4d2b] underline decoration-dotted underline-offset-4">
+              How it works
             </button>
           </div>
 
-          <div className="grid grid-cols-1 gap-x-4 gap-y-3 border-b border-dashed border-gray-200 pb-4 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-x-4 gap-y-3 border-b border-dashed border-neutral-200 pb-4 md:grid-cols-3">
             <div>
-              <label className={labelClass}>Package Type <span className="text-rose-500">*</span></label>
+              <label className={labelClass}>Package type <span className="text-rose-500">*</span></label>
               <div className={selectWrapClass}>
                 <select
                   value={formData.package_type_id}
@@ -271,16 +271,16 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
               </div>
               {!packageTypes.length && (
                 <p className="mt-1 text-xs text-amber-700">
                   Create one first under{' '}
                   <Link
                     to="/taxi/admin/pricing/rental-packages/create"
-                    className="font-semibold underline underline-offset-2"
+                    className="font-medium underline underline-offset-2"
                   >
-                    Rental Package Types
+                    Rental package types
                   </Link>
                   , then come back here.
                 </p>
@@ -304,10 +304,10 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                       value={formData.package_destination}
                       onChange={(event) => updateTopLevel('package_destination', event.target.value)}
                       className={`${inputClass} pl-10`}
-                      placeholder="Search destination city (India)"
+                      placeholder="Search destination city (india)"
                       required
                     />
-                    <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
                   </div>
                 </Autocomplete>
               ) : (
@@ -322,7 +322,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
             </div>
 
             <div>
-              <label className={labelClass}>Available In</label>
+              <label className={labelClass}>Available in</label>
               <div className={selectWrapClass}>
                 <select
                   value={formData.service_location_id}
@@ -336,7 +336,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
               </div>
             </div>
 
@@ -352,7 +352,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                     <option value="available">Available</option>
                     <option value="unavailable">Unavailable</option>
                   </select>
-                  <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
                 </div>
               </div>
               <div>
@@ -370,7 +370,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                     <option value={1}>Active</option>
                     <option value={0}>Inactive</option>
                   </select>
-                  <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
                 </div>
               </div>
             </div>
@@ -379,42 +379,42 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
           <div className="mt-4 space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Vehicle-wise Pricing</h2>
-                <p className="mt-1 text-sm text-slate-500">Each vehicle can have its own package amount and commission setup.</p>
+                <h2 className="text-base font-medium text-neutral-900">Vehicle-wise Pricing</h2>
+                <p className="mt-1 text-sm text-neutral-500">Each vehicle can have its own package amount and commission setup</p>
               </div>
               <button
                 type="button"
                 onClick={addRow}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-600 transition hover:bg-amber-100"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-600 transition hover:bg-amber-100"
               >
                 <Plus size={14} />
-                Add Vehicle Price
+                Add vehicle price
               </button>
             </div>
 
             {formData.package_vehicle_prices.length === 0 ? (
-              <div className="rounded-3xl border border-dashed border-gray-300 bg-gray-50/50 p-6 text-center">
-                <p className="text-sm font-bold text-slate-500">No vehicle pricing added yet.</p>
+              <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/50 p-6 text-center">
+                <p className="text-sm font-medium text-neutral-500">No vehicle pricing added yet</p>
                 <button
                   type="button"
                   onClick={addRow}
-                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-sm font-bold text-slate-900 transition hover:bg-amber-500"
+                  className="mt-4 inline-flex items-center justify-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#06381e]"
                 >
-                  <Plus size={16} /> Add Vehicle Price
+                  <Plus size={16} /> Add vehicle price
                 </button>
               </div>
             ) : (
               formData.package_vehicle_prices.map((row, index) => (
-                <div key={row.id} className="rounded-xl border border-gray-200 bg-[#FCFCFD] p-3 lg:p-4">
+                <div key={row.id} className="rounded-xl border border-neutral-200 bg-[#FCFCFD] p-3 lg:p-4">
                   <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm font-semibold text-amber-500">Vehicle Pricing {index + 1}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{vehicleLabelMap[row.vehicle_type] || 'Choose vehicle and fill its package pricing'}</p>
+                      <p className="text-sm font-medium text-[#0a4d2b]">Vehicle pricing {index + 1}</p>
+                      <p className="mt-0.5 text-xs text-neutral-500">{vehicleLabelMap[row.vehicle_type] || 'Choose vehicle and fill its package pricing'}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => removeRow(row.id)}
-                      className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-100"
+                      className="inline-flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100"
                     >
                       <Trash2 size={14} />
                       Remove
@@ -423,7 +423,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
 
                 <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-3 lg:grid-cols-4">
                   <div>
-                    <label className={labelClass}>Vehicle Type <span className="text-rose-500">*</span></label>
+                    <label className={labelClass}>Vehicle type <span className="text-rose-500">*</span></label>
                     <div className={selectWrapClass}>
                       <select
                         value={row.vehicle_type}
@@ -440,16 +440,16 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                           </option>
                         ))}
                       </select>
-                      <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
                     </div>
                     {!vehicleTypes.length && (
                       <p className="mt-1 text-xs text-amber-700">
                         Add one under{' '}
                         <Link
                           to="/taxi/admin/pricing/vehicle-type/create"
-                          className="font-semibold underline underline-offset-2"
+                          className="font-medium underline underline-offset-2"
                         >
-                          Vehicle Type
+                          Vehicle type
                         </Link>
                         .
                       </p>
@@ -458,58 +458,58 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
 
                   <div>
                     <label className={labelClass}>Base Price Inclusive of tax <span className="text-rose-500">*</span></label>
-                    <input type="number" value={row.base_price} onChange={(event) => updateRow(row.id, 'base_price', event.target.value)} className={inputClass} placeholder="Enter Base Price Inclusive of tax" required />
+                    <input type="number" value={row.base_price} onChange={(event) => updateRow(row.id, 'base_price', event.target.value)} className={inputClass} placeholder="Enter base price inclusive of tax" required />
                   </div>
 
                   <div>
                     <label className={labelClass}>Free Distance (Kilometers) <span className="text-rose-500">*</span></label>
-                    <input type="number" value={row.free_distance} onChange={(event) => updateRow(row.id, 'free_distance', event.target.value)} className={inputClass} placeholder="Enter Free Distance" required />
+                    <input type="number" value={row.free_distance} onChange={(event) => updateRow(row.id, 'free_distance', event.target.value)} className={inputClass} placeholder="Enter free distance" required />
                   </div>
 
                   <div>
-                    <label className={labelClass}>Distance Price <span className="text-rose-500">*</span></label>
-                    <input type="number" value={row.distance_price} onChange={(event) => updateRow(row.id, 'distance_price', event.target.value)} className={inputClass} placeholder="Enter Price Per Distance" required />
+                    <label className={labelClass}>Distance price <span className="text-rose-500">*</span></label>
+                    <input type="number" value={row.distance_price} onChange={(event) => updateRow(row.id, 'distance_price', event.target.value)} className={inputClass} placeholder="Enter price per distance" required />
                   </div>
 
                   <div>
-                    <label className={labelClass}>Free Time in Minute</label>
-                    <input type="number" value={row.free_time} onChange={(event) => updateRow(row.id, 'free_time', event.target.value)} className={inputClass} placeholder="Enter Free minute" />
+                    <label className={labelClass}>Free time in minute</label>
+                    <input type="number" value={row.free_time} onChange={(event) => updateRow(row.id, 'free_time', event.target.value)} className={inputClass} placeholder="Enter free minute" />
                   </div>
 
                   <div>
-                    <label className={labelClass}>Time Price in Minute <span className="text-rose-500">*</span></label>
-                    <input type="number" value={row.time_price} onChange={(event) => updateRow(row.id, 'time_price', event.target.value)} className={inputClass} placeholder="Enter Time Price" required />
+                    <label className={labelClass}>Time price in minute <span className="text-rose-500">*</span></label>
+                    <input type="number" value={row.time_price} onChange={(event) => updateRow(row.id, 'time_price', event.target.value)} className={inputClass} placeholder="Enter time price" required />
                   </div>
 
                   <div>
-                    <label className={labelClass}>Admin Commission Type From Customer <span className="text-rose-500">*</span></label>
+                    <label className={labelClass}>Admin commission type from customer <span className="text-rose-500">*</span></label>
                     <div className={selectWrapClass}>
                       <select value={row.admin_commision_type} onChange={(event) => updateRow(row.id, 'admin_commision_type', event.target.value)} className={`${inputClass} appearance-none`} required>
                         <option value="1">Percentage</option>
                         <option value="2">Fixed</option>
                       </select>
-                      <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
                     </div>
                   </div>
 
                   <div>
-                    <label className={labelClass}>Admin Commission From Customer <span className="text-rose-500">*</span></label>
+                    <label className={labelClass}>Admin commission from customer <span className="text-rose-500">*</span></label>
                     <input type="number" value={row.admin_commision} onChange={(event) => updateRow(row.id, 'admin_commision', event.target.value)} className={inputClass} placeholder="0" required />
                   </div>
 
                   <div>
-                    <label className={labelClass}>Admin Commission Type From Driver <span className="text-rose-500">*</span></label>
+                    <label className={labelClass}>Admin commission type from driver <span className="text-rose-500">*</span></label>
                     <div className={selectWrapClass}>
                       <select value={row.admin_commission_type_from_driver} onChange={(event) => updateRow(row.id, 'admin_commission_type_from_driver', event.target.value)} className={`${inputClass} appearance-none`} required>
                         <option value="1">Percentage</option>
                         <option value="2">Fixed</option>
                       </select>
-                      <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <ChevronDown size={14} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400" />
                     </div>
                   </div>
 
                   <div>
-                    <label className={labelClass}>Admin Commission From Driver <span className="text-rose-500">*</span></label>
+                    <label className={labelClass}>Admin commission from driver <span className="text-rose-500">*</span></label>
                     <input type="number" value={row.admin_commission_from_driver} onChange={(event) => updateRow(row.id, 'admin_commission_from_driver', event.target.value)} className={inputClass} placeholder="0" required />
                   </div>
 
@@ -519,8 +519,8 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Cancellation Fee <span className="text-rose-500">*</span></label>
-                    <input type="number" value={row.cancellation_fee} onChange={(event) => updateRow(row.id, 'cancellation_fee', event.target.value)} className={inputClass} placeholder="Cancellation Fee" required />
+                    <label className={labelClass}>Cancellation fee <span className="text-rose-500">*</span></label>
+                    <input type="number" value={row.cancellation_fee} onChange={(event) => updateRow(row.id, 'cancellation_fee', event.target.value)} className={inputClass} placeholder="Cancellation fee" required />
                   </div>
                 </div>
               </div>
@@ -531,7 +531,7 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-yellow-400 px-8 py-3 text-sm font-bold text-black transition hover:bg-yellow-500 disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0a4d2b] px-8 py-3 text-sm font-medium text-white transition hover:bg-[#06381e] disabled:cursor-not-allowed disabled:opacity-70"
             >
               {saving ? <Loader2 size={16} className="animate-spin" /> : null}
               {isEdit ? 'Update Package Pricing' : 'Save Package Pricing'}
@@ -546,24 +546,24 @@ const CreatePackagePrice = ({ mode = 'create' }) => {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="absolute top-10 right-4 h-auto max-h-[85%] w-72 bg-white border border-gray-100 shadow-2xl z-50 p-4 rounded-xl overflow-y-auto"
+              className="absolute top-10 right-4 h-auto max-h-[85%] w-72 bg-white border border-neutral-900/[0.08] z-50 p-4 rounded-xl overflow-y-auto"
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-semibold text-[#1E293B]">How It Works</h3>
-                <button onClick={() => setShowHowItWorks(false)} className="p-1.5 text-gray-400 hover:text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors"><X size={14} /></button>
+                <h3 className="text-sm font-medium text-[#1E293B]">How it works</h3>
+                <button onClick={() => setShowHowItWorks(false)} className="p-1.5 text-neutral-500 hover:text-neutral-600 bg-neutral-50 hover:bg-neutral-100 rounded-full transition-colors"><X size={14} /></button>
               </div>
-              <div className="space-y-3 text-xs text-gray-600">
+              <div className="space-y-3 text-xs text-neutral-600">
                 <div>
-                  <p className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5"><MapPin size={12} className="text-[#00BFA5]"/> Destination</p>
-                  <p className="leading-snug text-gray-500 pl-4.5">Search and select the target city for this package pricing.</p>
+                  <p className="font-medium text-neutral-800 mb-0.5 flex items-center gap-1.5"><MapPin size={12} className="text-[#00BFA5]"/> Destination</p>
+                  <p className="leading-snug text-neutral-500 pl-4.5">Search and select the target city for this package pricing</p>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800 mb-0.5 flex items-center gap-1.5"><Car size={12} className="text-[#00BFA5]"/> Vehicle-wise Pricing</p>
-                  <p className="leading-snug text-gray-500 pl-4.5">Each vehicle added to this package gets its own base price, distance limits, and commission rules.</p>
+                  <p className="font-medium text-neutral-800 mb-0.5 flex items-center gap-1.5"><Car size={12} className="text-[#00BFA5]"/> Vehicle-wise Pricing</p>
+                  <p className="leading-snug text-neutral-500 pl-4.5">Each vehicle added to this package gets its own base price, distance limits, and commission rules</p>
                 </div>
                 <div className="bg-emerald-50 rounded p-2 border border-emerald-100">
-                  <p className="text-xs font-bold text-emerald-800 mb-1">PRO TIP</p>
-                  <p className="text-[11px] leading-tight text-emerald-600">You can add multiple vehicle pricing blocks within a single package form to save time.</p>
+                  <p className="text-xs font-medium text-emerald-800 mb-1">Pro tip</p>
+                  <p className="text-xs leading-tight text-emerald-600">You can add multiple vehicle pricing blocks within a single package form to save time</p>
                 </div>
               </div>
             </motion.div>

@@ -186,7 +186,7 @@ const normalizeCheckStatus = (value) => {
 const getCheckTone = (status = 'unknown') => {
   if (status === 'pass') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
   if (status === 'fail') return 'border-rose-200 bg-rose-50 text-rose-700';
-  return 'border-slate-200 bg-slate-50 text-slate-600';
+  return 'border-neutral-200 bg-neutral-50 text-neutral-600';
 };
 
 const getDocumentVerificationFacts = (doc = {}) => {
@@ -287,7 +287,7 @@ const getRcVerificationChecks = (doc = {}) => {
 const getProviderStatusTone = (status = '') => {
   const normalized = String(status || '').trim().toLowerCase();
   if (['verified', 'success', 'approved', 'completed'].includes(normalized)) {
-    return 'bg-sky-100 text-sky-800';
+    return 'bg-neutral-100 text-neutral-900';
   }
   if (['failed', 'invalid', 'rejected', 'declined'].includes(normalized)) {
     return 'bg-rose-100 text-rose-800';
@@ -295,7 +295,7 @@ const getProviderStatusTone = (status = '') => {
   if (['pending', 'processing', 'queued'].includes(normalized)) {
     return 'bg-amber-100 text-amber-800';
   }
-  return 'bg-slate-100 text-slate-600';
+  return 'bg-neutral-100 text-neutral-600';
 };
 
 const toTimestamp = (value) => {
@@ -652,8 +652,8 @@ const DriverDetails = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-sm text-gray-500">Loading driver profile...</p>
+          <div className="w-10 h-10 border-4 border-neutral-200 border-t-[#0a4d2b] rounded-full animate-spin"></div>
+          <p className="text-sm text-neutral-500">Loading driver profile...</p>
         </div>
       </div>
     );
@@ -663,12 +663,12 @@ const DriverDetails = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-3">
-          <p className="text-sm font-semibold text-rose-600">{error || 'Driver not found'}</p>
+          <p className="text-sm font-medium text-rose-600">{error || 'Driver not found'}</p>
           <button
             onClick={() => navigate(-1)}
-            className="px-4 py-2 text-sm text-white bg-indigo-600 rounded-lg"
+            className="px-4 py-2 text-sm text-white bg-neutral-900 rounded-lg"
           >
-            Go Back
+            Go back
           </button>
         </div>
       </div>
@@ -676,28 +676,28 @@ const DriverDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans text-gray-900">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans text-neutral-900">
       <div className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
           <span>Drivers</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">Driver Profile</span>
+          <span className="text-neutral-700">Driver profile</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl text-gray-900 font-bold">Driver Profile</h1>
+          <h1 className="text-xl text-neutral-900 font-medium">Driver profile</h1>
           <button
             onClick={() => navigate(backRoute)}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} /> Back
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+      <div className="bg-white rounded-xl border border-neutral-200 p-4 mb-4">
         <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-neutral-100 border border-neutral-200">
               {profileImage && !avatarFailed ? (
                 <img
                   src={profileImage}
@@ -706,19 +706,19 @@ const DriverDetails = () => {
                   onError={() => setAvatarFailed(true)}
                 />
               ) : (
-                <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                <div className="flex h-full w-full items-center justify-center bg-neutral-100 text-neutral-400">
                   <CircleUserRound size={32} strokeWidth={1.75} />
                 </div>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg text-gray-900 font-bold">{profile.name}</h2>
-                <span className="font-mono font-bold text-[10px] uppercase tracking-wider text-black bg-yellow-400 px-2 py-0.5 rounded shadow-sm">
+                <h2 className="text-lg text-neutral-900 font-medium">{profile.name}</h2>
+                <span className="font-mono font-medium text-xs text-white bg-[#0a4d2b] px-2 py-0.5 rounded shadow-sm">
                   {profile.driver_code || profile.referralCode || (profile.phone ? `DRV${String(profile.phone).slice(-4)}${String(profile._id || profile.id || '').slice(-6).toUpperCase()}`.replace(/\W/g, '') : 'N/A')}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-gray-500 font-medium">
+              <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-neutral-500">
                 <div className="flex items-center gap-1"><Phone size={12} /> {profile.phone || profile.mobile || 'N/A'}</div>
                 <div className="flex items-center gap-1"><Mail size={12} /> {profile.email || 'N/A'}</div>
                 <div className="flex items-center gap-1"><MapPin size={12} /> {profile.city || 'India'}</div>
@@ -726,36 +726,36 @@ const DriverDetails = () => {
             </div>
           </div>
           <div className="flex items-center gap-3 sm:ml-auto">
-             <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+             <div className="w-12 h-12 rounded-lg overflow-hidden bg-neutral-100 border border-neutral-200">
               <img
                 src={profile.vehicle_image || ''}
                 alt="Vehicle"
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="text-xs text-gray-600">
-              <p className="text-gray-900 font-bold">{profile.vehicle?.type || 'Vehicle'}</p>
+            <div className="text-xs text-neutral-600">
+              <p className="text-neutral-900 font-medium">{profile.vehicle?.type || 'Vehicle'}</p>
               <p>{profile.vehicle?.make} {profile.vehicle?.model}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-start gap-3 border-t border-gray-100 pt-4">
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${profile.isOnline ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${profile.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
+        <div className="mt-4 flex flex-wrap items-start gap-3 border-t border-neutral-100 pt-4">
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium   ${profile.isOnline ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-neutral-500'}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${profile.isOnline ? 'bg-green-500' : 'bg-neutral-400'}`} />
             {profile.isOnline ? 'Driver Online' : 'Driver Offline'}
           </span>
 
           {onlineSelfieImage ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 px-3 py-2">
+            <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50/60 px-3 py-2">
               <img
                 src={onlineSelfieImage}
                 alt={`${profile.name} online selfie`}
-                className="h-14 w-14 rounded-xl object-cover border border-indigo-100 bg-white"
+                className="h-14 w-14 rounded-xl object-cover border border-neutral-200 bg-white"
               />
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500">Daily online selfie</p>
-                <p className="break-words text-xs font-semibold leading-relaxed text-slate-700">
+                <p className="text-xs font-medium text-[#0a4d2b]">Daily online selfie</p>
+                <p className="break-words text-xs font-medium leading-relaxed text-neutral-700">
                   {profile?.online_selfie?.forDate || 'Latest check-in'}
                 </p>
               </div>
@@ -769,10 +769,10 @@ const DriverDetails = () => {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-4 py-2 text-xs font-bold rounded-full transition-colors ${
+            className={`px-4 py-2 text-xs font-medium rounded-full transition-colors ${
               activeTab === tab
-                ? 'bg-yellow-400 text-black shadow-sm'
-                : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'
+                ? 'bg-[#0a4d2b] text-white text-white shadow-sm'
+                : 'bg-white text-neutral-500 border border-neutral-200 hover:bg-neutral-50'
             }`}
           >
             {tab}
@@ -784,45 +784,45 @@ const DriverDetails = () => {
         <>
           {activeTab === 'Request List' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-neutral-200 p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Completed Rides</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stats.completed_trips || 0}</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Completed rides</p>
+                    <p className="text-2xl font-medium text-neutral-900">{stats.completed_trips || 0}</p>
                   </div>
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Acceptance Rate</p>
-                    <p className="text-2xl font-semibold text-gray-900">{acceptanceRate}%</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Acceptance rate</p>
+                    <p className="text-2xl font-medium text-neutral-900">{acceptanceRate}%</p>
                   </div>
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Cancellation Rate</p>
-                    <p className="text-2xl font-semibold text-gray-900">{cancellationRate}%</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Cancellation rate</p>
+                    <p className="text-2xl font-medium text-neutral-900">{cancellationRate}%</p>
                   </div>
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Cancelled Rides</p>
-                    <p className="text-2xl font-semibold text-gray-900">{stats.cancelled_trips || 0}</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Cancelled rides</p>
+                    <p className="text-2xl font-medium text-neutral-900">{stats.cancelled_trips || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
-                        <th className="px-6 py-3">Request Id</th>
+                      <tr className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
+                        <th className="px-6 py-3">Request id</th>
                         <th className="px-4 py-3">Date</th>
-                        <th className="px-4 py-3">User Name</th>
-                        <th className="px-4 py-3">Driver Name</th>
-                        <th className="px-4 py-3">Trip Status</th>
+                        <th className="px-4 py-3">User name</th>
+                        <th className="px-4 py-3">Driver name</th>
+                        <th className="px-4 py-3">Trip status</th>
                         <th className="px-4 py-3">Paid</th>
-                        <th className="px-4 py-3">Payment Option</th>
+                        <th className="px-4 py-3">Payment option</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                    <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
                       {requests.length === 0 ? (
                         <tr>
-                          <td colSpan="7" className="px-6 py-12 text-center text-gray-400">No data found.</td>
+                          <td colSpan="7" className="px-6 py-12 text-center text-neutral-500">No data found</td>
                         </tr>
                       ) : (
                         requests.map((item) => (
@@ -848,41 +848,41 @@ const DriverDetails = () => {
 
           {activeTab === 'Payment History' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-neutral-200 p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Total Credited</p>
-                    <p className="text-2xl font-semibold text-gray-900">₹ {wallet.total_credits || 0}</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Total credited</p>
+                    <p className="text-2xl font-medium text-neutral-900">₹ {wallet.total_credits || 0}</p>
                   </div>
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Total Debited</p>
-                    <p className="text-2xl font-semibold text-gray-900">₹ {wallet.total_debits || 0}</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Total debited</p>
+                    <p className="text-2xl font-medium text-neutral-900">₹ {wallet.total_debits || 0}</p>
                   </div>
-                  <div className="border border-gray-100 rounded-lg p-4">
-                    <p className="text-sm text-gray-500">Available Balance</p>
-                    <p className="text-2xl font-semibold text-gray-900">₹ {wallet.balance || 0}</p>
+                  <div className="border border-neutral-100 rounded-lg p-4">
+                    <p className="text-sm text-neutral-500">Available balance</p>
+                    <p className="text-2xl font-medium text-neutral-900">₹ {wallet.balance || 0}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-sm text-gray-900 mb-4 font-bold">Credit or Debit wallet</h3>
+              <div className="bg-white rounded-xl border border-neutral-200 p-6">
+                <h3 className="text-sm text-neutral-900 mb-4 font-medium">Credit or Debit wallet</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Amount *</label>
+                    <label className="block text-xs text-neutral-500 mb-1.5">Amount *</label>
                     <input
                       type="number"
                       min="0"
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
-                      placeholder="Enter Amount"
+                      className="w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors"
+                      placeholder="Enter amount"
                       value={walletForm.amount}
                       onChange={(e) => setWalletForm((prev) => ({ ...prev, amount: e.target.value }))}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1.5">Operation *</label>
+                    <label className="block text-xs text-neutral-500 mb-1.5">Operation *</label>
                     <select
-                      className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors"
+                      className="w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors"
                       value={walletForm.operation}
                       onChange={(e) => setWalletForm((prev) => ({ ...prev, operation: e.target.value }))}
                     >
@@ -919,38 +919,38 @@ const DriverDetails = () => {
                         setWalletForm((prev) => ({ ...prev, isSubmitting: false }));
                       }
                     }}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                    className="px-4 py-2 bg-neutral-900 text-white rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors"
                   >
                     {walletForm.isSubmitting ? 'Saving...' : 'Submit'}
                   </button>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100">
-                  <h3 className="text-sm text-gray-900 font-bold">Wallet Transactions</h3>
+              <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-neutral-100">
+                  <h3 className="text-sm text-neutral-900 font-medium">Wallet transactions</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+                      <tr className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
                         <th className="px-6 py-3">Date</th>
                         <th className="px-4 py-3">Type</th>
                         <th className="px-4 py-3">Amount</th>
                         <th className="px-4 py-3">Description</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                    <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
                       {walletHistory.length === 0 ? (
                         <tr>
-                          <td colSpan="4" className="px-6 py-12 text-center text-gray-400">No wallet transactions found.</td>
+                          <td colSpan="4" className="px-6 py-12 text-center text-neutral-500">No wallet transactions found</td>
                         </tr>
                       ) : (
                         walletHistory.map((item) => (
                           <tr key={item._id}>
                             <td className="px-6 py-3">{item.createdAt ? new Date(item.createdAt).toLocaleString('en-IN') : 'N/A'}</td>
                             <td className="px-4 py-3 capitalize">{String(item.type || '').replace(/_/g, ' ') || 'N/A'}</td>
-                            <td className={`px-4 py-3 font-semibold ${Number(item.amount || 0) < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            <td className={`px-4 py-3 font-medium ${Number(item.amount || 0) < 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
                               ₹ {Math.abs(Number(item.amount || 0))}
                             </td>
                             <td className="px-4 py-3">{item.description || '-'}</td>
@@ -965,23 +965,23 @@ const DriverDetails = () => {
           )}
 
           {activeTab === 'Withdrawal History' && (
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+                    <tr className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
                       <th className="px-6 py-3">Date</th>
                       <th className="px-4 py-3">Name</th>
-                      <th className="px-4 py-3">Mobile Number</th>
-                      <th className="px-4 py-3">Requested Amount</th>
+                      <th className="px-4 py-3">Mobile number</th>
+                      <th className="px-4 py-3">Requested amount</th>
                       <th className="px-4 py-3">Status</th>
                       <th className="px-4 py-3">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+                  <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
                     {withdrawals.length === 0 ? (
                       <tr>
-                        <td colSpan="6" className="px-6 py-12 text-center text-gray-400">No data found.</td>
+                        <td colSpan="6" className="px-6 py-12 text-center text-neutral-500">No data found</td>
                       </tr>
                     ) : (
                       withdrawals.map((item) => (
@@ -1002,36 +1002,36 @@ const DriverDetails = () => {
           )}
 
           {activeTab === 'Review History' && (
-            <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-sm text-gray-500">
-              No reviews found.
+            <div className="bg-white rounded-xl border border-neutral-200 p-8 text-center text-sm text-neutral-500">
+              No reviews found
             </div>
           )}
 
           {activeTab === 'Documents' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-neutral-200 p-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <h3 className="text-base text-gray-900 font-bold">Vehicle Onboarding Details</h3>
-                    <p className="mt-1 text-sm text-gray-500">
-                      These values mirror the fields collected from the driver on the vehicle setup step.
+                    <h3 className="text-base text-neutral-900 font-medium">Vehicle onboarding details</h3>
+                    <p className="mt-1 text-sm text-neutral-500">
+                      These values mirror the fields collected from the driver on the vehicle setup step
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => navigate(`/taxi/admin/drivers/edit/${id}`, { state: { from: location.pathname + location.search } })}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                    className="inline-flex items-center gap-2 rounded-lg border border-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
                   >
                     <PencilLine size={15} />
-                    Edit Driver Fields
+                    Edit driver fields
                   </button>
                 </div>
 
                 <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                   {vehicleFieldSummary.map((item) => (
-                    <div key={item.label} className="rounded-xl border border-gray-100 bg-gray-50/70 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{item.label}</p>
-                      <p className="mt-2 text-sm font-semibold text-gray-900">{item.value || 'Not set'}</p>
+                    <div key={item.label} className="rounded-xl border border-neutral-100 bg-neutral-50/70 p-4">
+                      <p className="text-xs text-neutral-500">{item.label}</p>
+                      <p className="mt-2 text-sm font-medium text-neutral-900">{item.value || 'Not set'}</p>
                     </div>
                   ))}
                 </div>
@@ -1039,16 +1039,16 @@ const DriverDetails = () => {
 
               <div className="space-y-4">
                 {documents.length === 0 ? (
-                  <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
-                    No documents found.
+                  <div className="bg-white rounded-xl border border-neutral-200 p-12 text-center text-neutral-500">
+                    No documents found
                   </div>
                 ) : (
                   documents.map((doc, idx) => (
-                    <div key={`${doc.name}-${idx}`} className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                    <div key={`${doc.name}-${idx}`} className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
                       {/* Header */}
-                      <div className="px-5 py-3 border-b border-gray-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-3">
+                      <div className="px-5 py-3 border-b border-neutral-100 bg-white flex flex-col md:flex-row md:items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
-                          <h4 className="text-sm font-semibold text-gray-900">{toTitleCase(doc.verificationLabel || doc.name)}</h4>
+                          <h4 className="text-sm font-medium text-neutral-900">{toTitleCase(doc.verificationLabel || doc.name)}</h4>
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${
                             String(doc.status || '').toLowerCase() === 'approved' 
                               ? 'bg-emerald-50 text-emerald-700' 
@@ -1066,18 +1066,18 @@ const DriverDetails = () => {
                       <div className="p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {/* Column 1: Document Details */}
                         <div>
-                          <h5 className="text-sm font-semibold text-gray-900 mb-4">Document details</h5>
+                          <h5 className="text-sm font-medium text-neutral-900 mb-4">Document details</h5>
                           <div className="space-y-3">
-                            <div className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                              <span className="text-gray-500 font-medium">Identify number</span>
-                              <span className="font-semibold text-gray-900">{doc.identify_number || '-'}</span>
+                            <div className="flex justify-between items-start text-sm border-b border-neutral-50 pb-2">
+                              <span className="text-neutral-500">Identify number</span>
+                              <span className="font-medium text-neutral-900">{doc.identify_number || '-'}</span>
                             </div>
-                            <div className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                              <span className="text-gray-500 font-medium">Expiry date</span>
-                              <span className="font-semibold text-gray-900">{doc.expiry_date || '-'}</span>
+                            <div className="flex justify-between items-start text-sm border-b border-neutral-50 pb-2">
+                              <span className="text-neutral-500">Expiry date</span>
+                              <span className="font-medium text-neutral-900">{doc.expiry_date || '-'}</span>
                             </div>
                             {doc.isReuploaded && (
-                              <div className="mt-2 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block">
+                              <div className="mt-2 text-xs font-medium text-[#0a4d2b] bg-neutral-50 px-2 py-1 rounded inline-block">
                                 Re-uploaded for review
                               </div>
                             )}
@@ -1087,8 +1087,8 @@ const DriverDetails = () => {
                               <div className="mt-4 flex items-start gap-2">
                                 <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
                                 <div>
-                                  <p className="text-sm font-semibold text-gray-900">{doc.providerMessage}</p>
-                                  {doc.verifiedAt && <p className="text-xs text-gray-500">Checked: {formatDateTime(doc.verifiedAt)}</p>}
+                                  <p className="text-sm font-medium text-neutral-900">{doc.providerMessage}</p>
+                                  {doc.verifiedAt && <p className="text-xs text-neutral-500">Checked: {formatDateTime(doc.verifiedAt)}</p>}
                                 </div>
                               </div>
                             )}
@@ -1097,14 +1097,14 @@ const DriverDetails = () => {
                             {['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) && doc.comment && (
                               <div className="mt-4 flex items-start gap-2">
                                 <div className="text-xs text-rose-600 font-medium">
-                                  <span className="font-semibold">Rejection reason:</span> {doc.comment}
+                                  <span className="font-medium">Rejection reason:</span> {doc.comment}
                                 </div>
                               </div>
                             )}
                             {!['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) && doc.comment && (
                               <div className="mt-4 flex items-start gap-2">
-                                <div className="text-xs text-gray-600 font-medium">
-                                  <span className="font-semibold">Comment:</span> {doc.comment}
+                                <div className="text-xs text-neutral-600 font-medium">
+                                  <span className="font-medium">Comment:</span> {doc.comment}
                                 </div>
                               </div>
                             )}
@@ -1113,28 +1113,28 @@ const DriverDetails = () => {
 
                         {/* Column 2: Verification Data */}
                         <div>
-                          <h5 className="text-sm font-semibold text-gray-900 mb-4">Verification details</h5>
+                          <h5 className="text-sm font-medium text-neutral-900 mb-4">Verification details</h5>
                           <div className="space-y-3">
                             {doc.verificationFacts?.map((fact) => (
-                              <div key={`${doc.sourceKey}-${fact.label}`} className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                                <span className="text-gray-500 font-medium pr-4">{toSentenceCase(fact.label)}</span>
-                                <span className="font-semibold text-gray-900 text-right">{toTitleCase(toDisplayValue(fact.value)) || '-'}</span>
+                              <div key={`${doc.sourceKey}-${fact.label}`} className="flex justify-between items-start text-sm border-b border-neutral-50 pb-2">
+                                <span className="text-neutral-500 pr-4">{toSentenceCase(fact.label)}</span>
+                                <span className="font-medium text-neutral-900 text-right">{toTitleCase(toDisplayValue(fact.value)) || '-'}</span>
                               </div>
                             ))}
                             {doc.rcChecks?.map((check) => (
-                              <div key={`${doc.sourceKey}-${check.label}`} className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                                <span className="text-gray-500 font-medium pr-4">{toSentenceCase(check.label)}</span>
-                                <span className="font-semibold text-gray-900 text-right">{toTitleCase(toDisplayValue(check.value)) || '-'}</span>
+                              <div key={`${doc.sourceKey}-${check.label}`} className="flex justify-between items-start text-sm border-b border-neutral-50 pb-2">
+                                <span className="text-neutral-500 pr-4">{toSentenceCase(check.label)}</span>
+                                <span className="font-medium text-neutral-900 text-right">{toTitleCase(toDisplayValue(check.value)) || '-'}</span>
                               </div>
                             ))}
                             {doc.verificationReferenceId && (
-                               <div className="flex justify-between items-start text-sm border-b border-gray-50 pb-2">
-                                 <span className="text-gray-500 font-medium pr-4">Verification reference</span>
-                                 <span className="font-semibold text-gray-900 text-right">{doc.verificationReferenceId}</span>
+                               <div className="flex justify-between items-start text-sm border-b border-neutral-50 pb-2">
+                                 <span className="text-neutral-500 pr-4">Verification reference</span>
+                                 <span className="font-medium text-neutral-900 text-right">{doc.verificationReferenceId}</span>
                                </div>
                             )}
                             {(!doc.verificationFacts?.length && !doc.rcChecks?.length && !doc.verificationReferenceId) && (
-                              <div className="text-sm text-gray-400 py-2">No verification data available</div>
+                              <div className="text-sm text-neutral-500 py-2">No verification data available</div>
                             )}
                           </div>
                         </div>
@@ -1142,17 +1142,17 @@ const DriverDetails = () => {
                         {/* Column 3: Activity & Actions */}
                         <div className="flex flex-col justify-between">
                           <div>
-                            <h5 className="text-sm font-semibold text-gray-900 mb-4">Activity</h5>
+                            <h5 className="text-sm font-medium text-neutral-900 mb-4">Activity</h5>
                             <div className="space-y-4">
                               {doc.uploadedAt && (
                                 <div className="flex gap-3 text-sm">
                                   <div className="flex flex-col items-center">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></div>
-                                    <div className="w-px h-full bg-gray-200 mt-1"></div>
+                                    <div className="w-px h-full bg-neutral-200 mt-1"></div>
                                   </div>
                                   <div className="pb-1">
-                                    <p className="font-semibold text-gray-900">Uploaded</p>
-                                    <p className="text-xs text-gray-500">{formatDateTime(doc.uploadedAt)}</p>
+                                    <p className="font-medium text-neutral-900">Uploaded</p>
+                                    <p className="text-xs text-neutral-500">{formatDateTime(doc.uploadedAt)}</p>
                                   </div>
                                 </div>
                               )}
@@ -1160,11 +1160,11 @@ const DriverDetails = () => {
                                 <div className="flex gap-3 text-sm">
                                   <div className="flex flex-col items-center">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></div>
-                                    <div className="w-px h-full bg-gray-200 mt-1"></div>
+                                    <div className="w-px h-full bg-neutral-200 mt-1"></div>
                                   </div>
                                   <div className="pb-1">
-                                    <p className="font-semibold text-gray-900">API Verified</p>
-                                    <p className="text-xs text-gray-500">{formatDateTime(doc.verifiedAt)}</p>
+                                    <p className="font-medium text-neutral-900">API verified</p>
+                                    <p className="text-xs text-neutral-500">{formatDateTime(doc.verifiedAt)}</p>
                                   </div>
                                 </div>
                               )}
@@ -1174,23 +1174,23 @@ const DriverDetails = () => {
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5"></div>
                                   </div>
                                   <div>
-                                    <p className="font-semibold text-gray-900">Reviewed</p>
-                                    <p className="text-xs text-gray-500">{formatDateTime(doc.reviewedAt)}</p>
+                                    <p className="font-medium text-neutral-900">Reviewed</p>
+                                    <p className="text-xs text-neutral-500">{formatDateTime(doc.reviewedAt)}</p>
                                   </div>
                                 </div>
                               )}
                               {(!doc.uploadedAt && !doc.verifiedAt && !doc.reviewedAt) && (
-                                <p className="text-xs text-gray-400">No activity logged.</p>
+                                <p className="text-xs text-neutral-500">No activity logged</p>
                               )}
                             </div>
                           </div>
                           
-                          <div className="mt-6 pt-4 border-t border-gray-100 flex gap-2 w-full">
+                          <div className="mt-6 pt-4 border-t border-neutral-100 flex gap-2 w-full">
                             <button
                                 type="button"
                                 onClick={() => doc.images?.length && window.open(doc.images[0], '_blank', 'noopener,noreferrer')}
                                 disabled={!doc.images?.length}
-                                className="flex-1 py-2 text-xs font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                                className="flex-1 py-2 text-xs font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-md transition-colors disabled:opacity-50"
                             >
                                 View doc
                             </button>
@@ -1253,11 +1253,11 @@ const DriverDetails = () => {
                                 !doc.images?.length ||
                                 String(doc.status || '').toLowerCase() === 'approved'
                               }
-                              className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors text-center ${
+                              className={`flex-1 py-2 text-xs font-medium rounded-md transition-colors text-center ${
                                 documentActionKey === `${doc.sourceKey}:approve`
                                   ? 'bg-emerald-100 text-emerald-500'
                                   : !doc.images?.length || String(doc.status || '').toLowerCase() === 'approved' || documentActionKey.length > 0
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
                                     : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
                               }`}
                             >
@@ -1326,11 +1326,11 @@ const DriverDetails = () => {
                                 !doc.images?.length ||
                                 ['rejected', 'declined'].includes(String(doc.status || '').toLowerCase())
                               }
-                              className={`flex-1 py-2 text-xs font-semibold rounded-md transition-colors text-center ${
+                              className={`flex-1 py-2 text-xs font-medium rounded-md transition-colors text-center ${
                                 documentActionKey === `${doc.sourceKey}:reject`
                                   ? 'bg-rose-100 text-rose-500'
                                   : !doc.images?.length || ['rejected', 'declined'].includes(String(doc.status || '').toLowerCase()) || documentActionKey.length > 0
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed'
                                     : 'text-rose-700 bg-rose-50 hover:bg-rose-100'
                               }`}
                             >
@@ -1349,28 +1349,28 @@ const DriverDetails = () => {
         </>
       ) : (
         <>
-          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
-            <h3 className="text-sm text-gray-900 mb-3 font-bold">Wallet Overview</h3>
+          <div className="bg-white rounded-xl border border-neutral-200 p-4 mb-4">
+            <h3 className="text-sm text-neutral-900 mb-3 font-medium">Wallet overview</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Wallet Balance</p>
-                <p className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.balance || 0}</p>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Wallet balance</p>
+                <p className="text-xl font-medium text-neutral-900 mt-1">₹ {wallet.balance || 0}</p>
               </div>
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cash Limit</p>
-                <p className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.cash_limit || 0}</p>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Cash limit</p>
+                <p className="text-xl font-medium text-neutral-900 mt-1">₹ {wallet.cash_limit || 0}</p>
               </div>
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Credited</p>
-                <p className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.total_credits || 0}</p>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Total credited</p>
+                <p className="text-xl font-medium text-neutral-900 mt-1">₹ {wallet.total_credits || 0}</p>
               </div>
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Total Debited</p>
-                <p className="text-xl font-bold text-gray-900 mt-1">₹ {wallet.total_debits || 0}</p>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Total debited</p>
+                <p className="text-xl font-medium text-neutral-900 mt-1">₹ {wallet.total_debits || 0}</p>
               </div>
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Wallet Status</p>
-                <p className={`text-xl font-bold mt-1 ${wallet.is_blocked ? 'text-red-600' : 'text-green-600'}`}>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Wallet status</p>
+                <p className={`text-xl font-medium mt-1 ${wallet.is_blocked ? 'text-red-600' : 'text-green-600'}`}>
                   {wallet.is_blocked ? 'Blocked' : 'Active'}
                 </p>
               </div>
@@ -1378,16 +1378,16 @@ const DriverDetails = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"> 
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-base text-gray-900 mb-4 font-bold">Driver Location</h3>
-              <div className="h-80 rounded-xl overflow-hidden border border-gray-100">
+            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+              <h3 className="text-base text-neutral-900 mb-4 font-medium">Driver location</h3>
+              <div className="h-80 rounded-xl overflow-hidden border border-neutral-100">
                 {loadError ? (
-                  <div className="h-full flex items-center justify-center text-sm text-gray-500 bg-gray-50">
-                    Map unavailable.
+                  <div className="h-full flex items-center justify-center text-sm text-neutral-500 bg-neutral-50">
+                    Map unavailable
                   </div>
                 ) : !profile?.location ? (
-                  <div className="h-full flex items-center justify-center text-sm text-gray-500 bg-gray-50">
-                    Live driver location is not available yet.
+                  <div className="h-full flex items-center justify-center text-sm text-neutral-500 bg-neutral-50">
+                    Live driver location is not available yet
                   </div>
                 ) : shouldLoadMap && HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
                   <GoogleMap
@@ -1399,12 +1399,12 @@ const DriverDetails = () => {
                     <MarkerF position={mapCenter} icon={vehicleMarkerIcon} />
                   </GoogleMap>
                 ) : (
-                  <div className="h-full flex items-center justify-center text-sm text-gray-500 bg-gray-50">
+                  <div className="h-full flex items-center justify-center text-sm text-neutral-500 bg-neutral-50">
                     {HAS_VALID_GOOGLE_MAPS_KEY ? 'Loading map...' : 'Configure `VITE_GOOGLE_MAPS_API_KEY` to show map.'}
                   </div>
                 )}
               </div>
-              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-gray-500">
+              <div className="mt-3 flex items-center justify-between gap-3 text-xs text-neutral-500">
                 <span>
                   {profile?.vehicle?.type || 'Vehicle'} marker
                 </span>
@@ -1416,9 +1416,9 @@ const DriverDetails = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-base text-gray-900 mb-4 font-bold">Earnings</h3>
-              <div className="h-52 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
+            <div className="bg-white rounded-xl border border-neutral-200 p-6">
+              <h3 className="text-base text-neutral-900 mb-4 font-medium">Earnings</h3>
+              <div className="h-52 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4">
                 <div className="relative h-full">
                   <ChartGrid height={170} />
                   <svg viewBox="0 0 400 170" className="absolute inset-0 w-full h-full">
@@ -1430,44 +1430,44 @@ const DriverDetails = () => {
                     />
                   </svg>
                 </div>
-                <div className="mt-3 grid grid-cols-4 text-xs text-gray-400">
+                <div className="mt-3 grid grid-cols-4 text-xs text-neutral-500">
                   {(chart.months || []).map((m) => (
                     <span key={m} className="text-center">{m}</span>
                   ))}
                 </div>
               </div>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-                <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Today Earnings</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.today_earnings || 0}</p>
+                <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                  <p className="text-xs text-neutral-500">Today earnings</p>
+                  <p className="text-lg font-medium text-neutral-900 mt-1">₹ {earnings.today_earnings || 0}</p>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Admin Commission</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.admin_commission || 0}</p>
+                <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                  <p className="text-xs text-neutral-500">Admin commission</p>
+                  <p className="text-lg font-medium text-neutral-900 mt-1">₹ {earnings.admin_commission || 0}</p>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Drivers Earnings</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.driver_earnings || 0}</p>
+                <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                  <p className="text-xs text-neutral-500">Drivers earnings</p>
+                  <p className="text-lg font-medium text-neutral-900 mt-1">₹ {earnings.driver_earnings || 0}</p>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">By Cash</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.by_cash || 0}</p>
+                <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                  <p className="text-xs text-neutral-500">By cash</p>
+                  <p className="text-lg font-medium text-neutral-900 mt-1">₹ {earnings.by_cash || 0}</p>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">By Wallet</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.by_wallet || 0}</p>
+                <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                  <p className="text-xs text-neutral-500">By wallet</p>
+                  <p className="text-lg font-medium text-neutral-900 mt-1">₹ {earnings.by_wallet || 0}</p>
                 </div>
-                <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">By Card/Online</p>
-                  <p className="text-lg font-bold text-gray-900 mt-1">₹ {earnings.by_card || 0}</p>
+                <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                  <p className="text-xs text-neutral-500">By card/online</p>
+                  <p className="text-lg font-medium text-neutral-900 mt-1">₹ {earnings.by_card || 0}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-base text-gray-900 mb-4 font-bold">Trips</h3>
-            <div className="h-52 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <h3 className="text-base text-neutral-900 mb-4 font-medium">Trips</h3>
+            <div className="h-52 rounded-xl border border-dashed border-neutral-200 bg-neutral-50 p-4">
               <div className="relative h-full">
                 <ChartGrid height={170} />
                 <svg viewBox="0 0 400 170" className="absolute inset-0 w-full h-full">
@@ -1485,12 +1485,12 @@ const DriverDetails = () => {
                   />
                 </svg>
               </div>
-              <div className="mt-3 grid grid-cols-4 text-xs text-gray-400">
+              <div className="mt-3 grid grid-cols-4 text-xs text-neutral-500">
                 {(chart.months || []).map((m) => (
                   <span key={m} className="text-center">{m}</span>
                 ))}
               </div>
-              <div className="mt-2 flex items-center gap-4 text-xs text-gray-500">
+              <div className="mt-2 flex items-center gap-4 text-xs text-neutral-500">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                   Completed
@@ -1502,13 +1502,13 @@ const DriverDetails = () => {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3 mt-4">
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Completed Trips</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">{stats.completed_trips || 0}</p>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Completed trips</p>
+                <p className="text-lg font-medium text-neutral-900 mt-1">{stats.completed_trips || 0}</p>
               </div>
-              <div className="border border-gray-100 bg-gray-50/50 rounded-xl p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cancelled Trips</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">{stats.cancelled_trips || 0}</p>
+              <div className="border border-neutral-100 bg-neutral-50/50 rounded-xl p-3">
+                <p className="text-xs text-neutral-500">Cancelled trips</p>
+                <p className="text-lg font-medium text-neutral-900 mt-1">{stats.cancelled_trips || 0}</p>
               </div>
             </div>
           </div>

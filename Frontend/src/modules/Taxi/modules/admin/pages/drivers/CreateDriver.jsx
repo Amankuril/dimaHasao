@@ -20,9 +20,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const VEHICLE_NUMBER_REGEX = /^[A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4}$/;
 
 const inputClass =
-  'w-full rounded-[1.4rem] border-2 border-slate-100 bg-slate-50 px-4 py-3.5 text-sm font-semibold text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-900/10 focus:bg-white focus:ring-0';
+  'w-full rounded-[1.4rem] border-2 border-neutral-100 bg-neutral-50 px-4 py-3.5 text-sm font-medium text-neutral-900 outline-none transition-colors placeholder:text-neutral-300 focus:border-neutral-900/10 focus:bg-white focus:ring-0';
 const selectClass = `${inputClass} appearance-none`;
-const cardClass = 'rounded-[2rem] border border-slate-100 bg-white p-6 shadow-[0_10px_40px_rgba(0,0,0,0.04)]';
+const cardClass = 'rounded-2xl border border-neutral-100 bg-white p-6 shadow-[0_10px_40px_rgba(0,0,0,0.04)]';
 
 const defaultVehicleFieldConfigs = [
   { field_key: 'locationId', name: 'Operating City', account_type: 'both', is_required: true, active: true, sort_order: 10, placeholder: '' },
@@ -655,9 +655,9 @@ const CreateDriver = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 text-slate-400">
-        <Loader2 size={34} className="animate-spin text-slate-900" />
-        <p className="text-sm font-semibold">Preparing onboarding form...</p>
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 text-neutral-400">
+        <Loader2 size={34} className="animate-spin text-neutral-900" />
+        <p className="text-sm font-medium">Preparing onboarding form...</p>
       </div>
     );
   }
@@ -673,54 +673,54 @@ const CreateDriver = () => {
 
   return (
     <div
-      className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f6efe4_0%,#fcfaf6_28%,#ffffff_100%)] px-5 pb-24 pt-8 text-slate-900"
+      className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f6efe4_0%,#fcfaf6_28%,#ffffff_100%)] px-5 pb-24 pt-8 text-neutral-900"
       style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}
     >
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400">
+            <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-neutral-400">
               <span>Drivers</span>
               <ChevronRight size={12} />
-              <span className="text-slate-700">Admin Onboarding</span>
+              <span className="text-neutral-700">Admin onboarding</span>
             </div>
-            <h1 className="font-['Outfit'] text-4xl font-black tracking-[-0.04em] text-slate-900">
-              Create Driver <span className="text-slate-400">With Full Onboarding</span>
+            <h1 className="font-['Outfit'] text-4xl font-medium text-neutral-900">
+              Create driver <span className="text-neutral-400">With full onboarding</span>
             </h1>
-            <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
-              Fill personal info, vehicle setup, and required KYC here so the driver shows up ready across the app.
+            <p className="mt-2 max-w-2xl text-sm font-medium text-neutral-500">
+              Fill personal info, vehicle setup, and required KYC here so the driver shows up ready across the app
             </p>
           </div>
           <button
             type="button"
             onClick={() => navigate('/taxi/admin/drivers')}
-            className="rounded-full border border-slate-200 bg-white px-5 py-2 text-xs font-black uppercase tracking-widest text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+            className="rounded-full border border-neutral-200 bg-white px-5 py-2 text-xs font-medium text-neutral-700 shadow-sm transition-colors hover:bg-neutral-50"
           >
-            Back To Drivers
+            Back to drivers
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-600">
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
               {error}
             </div>
           ) : null}
 
           <section className={cardClass}>
             <div className="mb-5 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-slate-900 text-white shadow-xl shadow-slate-900/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-neutral-900 text-white shadow-xl">
                 <User size={22} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Step 1</p>
-                <h2 className="text-xl font-black tracking-tight text-slate-900">Personal Info</h2>
+                <p className="text-xs font-medium text-neutral-400">Step 1</p>
+                <h2 className="text-xl font-medium text-neutral-900">Personal info</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Full Name</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Full name</label>
                 <input
                   value={formData.name}
                   onChange={(event) => setField('name', event.target.value.replace(/[^A-Za-z .'-]/g, ''))}
@@ -729,7 +729,7 @@ const CreateDriver = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Mobile Number</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Mobile number</label>
                 <input
                   value={formData.mobile}
                   onChange={(event) => setField('mobile', event.target.value.replace(/\D/g, '').slice(0, 10))}
@@ -738,7 +738,7 @@ const CreateDriver = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Email</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Email</label>
                 <input
                   type="email"
                   value={formData.email}
@@ -748,17 +748,17 @@ const CreateDriver = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Gender</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Gender</label>
                 <div className="grid grid-cols-3 gap-3">
                   {['male', 'female', 'other'].map((gender) => (
                     <button
                       key={gender}
                       type="button"
                       onClick={() => setField('gender', gender)}
-                      className={`rounded-[1.1rem] border px-4 py-3 text-xs font-black uppercase tracking-widest transition-all ${
+                      className={`rounded-[1.1rem] border px-4 py-3 text-xs font-medium   transition-colors ${
                         formData.gender === gender
-                          ? 'border-slate-900 bg-slate-900 text-white shadow-lg shadow-slate-900/10'
-                          : 'border-slate-100 bg-slate-50 text-slate-500 hover:bg-white'
+                          ? 'border-neutral-900 bg-neutral-900 text-white shadow-sm'
+                          : 'border-neutral-100 bg-neutral-50 text-neutral-500 hover:bg-white'
                       }`}
                     >
                       {gender}
@@ -767,7 +767,7 @@ const CreateDriver = () => {
                 </div>
               </div>
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Password</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Password</label>
                 <input
                   type="password"
                   value={formData.password}
@@ -777,7 +777,7 @@ const CreateDriver = () => {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Confirm Password</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Confirm password</label>
                 <input
                   type="password"
                   value={formData.password_confirmation}
@@ -789,14 +789,14 @@ const CreateDriver = () => {
             </div>
 
             <div className="mt-5 max-w-md">
-              <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Profile Image</label>
-              <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border-2 border-dashed border-slate-200 bg-slate-50 text-center transition-colors hover:border-slate-300 hover:bg-white">
+              <label className="mb-2 block text-xs font-medium text-neutral-400">Profile image</label>
+              <label className="flex min-h-[180px] cursor-pointer flex-col items-center justify-center rounded-[1.6rem] border-2 border-dashed border-neutral-200 bg-neutral-50 text-center transition-colors hover:border-neutral-300 hover:bg-white">
                 {formData.profile_picture ? (
                   <img src={formData.profile_picture} alt="Driver profile" className="h-[180px] w-full rounded-[1.4rem] object-cover" />
                 ) : (
                   <>
-                    <Camera size={26} className="mb-3 text-slate-400" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
+                    <Camera size={26} className="mb-3 text-neutral-400" />
+                    <span className="text-xs font-medium text-neutral-500">
                       {profileName || 'Upload Profile Photo'}
                     </span>
                   </>
@@ -808,19 +808,19 @@ const CreateDriver = () => {
 
           <section className={cardClass}>
             <div className="mb-5 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-slate-900 text-white shadow-xl shadow-slate-900/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-neutral-900 text-white shadow-xl">
                 <Car size={22} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Step 2</p>
-                <h2 className="text-xl font-black tracking-tight text-slate-900">Vehicle Setup</h2>
+                <p className="text-xs font-medium text-neutral-400">Step 2</p>
+                <h2 className="text-xl font-medium text-neutral-900">Vehicle setup</h2>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {shouldShowField('locationId', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{locationField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{locationField.name}</label>
                   <select value={formData.service_location_id} onChange={handleAreaChange} className={selectClass}>
                     <option value="">Select area</option>
                     {areas.map((area) => (
@@ -833,7 +833,7 @@ const CreateDriver = () => {
               ) : null}
 
               <div>
-                <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Transport Type</label>
+                <label className="mb-2 block text-xs font-medium text-neutral-400">Transport type</label>
                 <select value={formData.transport_type} onChange={handleTransportChange} className={selectClass}>
                   <option value="">Select transport type</option>
                   {transportTypes.map((type) => (
@@ -847,7 +847,7 @@ const CreateDriver = () => {
 
             {shouldShowField('serviceCategories', true) ? (
               <div className="mt-5">
-                <label className="mb-3 block text-[11px] font-black uppercase tracking-widest text-slate-400">{serviceCategoryField.name}</label>
+                <label className="mb-3 block text-xs font-medium text-neutral-400">{serviceCategoryField.name}</label>
                 <div className="flex flex-wrap gap-3">
                   {serviceCategoryChoices.map((item) => {
                     const selected = formData.service_categories.includes(item.id);
@@ -856,10 +856,10 @@ const CreateDriver = () => {
                         key={item.id}
                         type="button"
                         onClick={() => toggleServiceCategory(item.id)}
-                        className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition-all ${
+                        className={`rounded-full px-4 py-2 text-xs font-medium   transition-colors ${
                           selected
-                            ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/10'
-                            : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'
+                            ? 'bg-neutral-900 text-white shadow-sm'
+                            : 'border border-neutral-200 bg-white text-neutral-500 hover:bg-neutral-50'
                         }`}
                       >
                         {item.label}
@@ -873,7 +873,7 @@ const CreateDriver = () => {
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
               {shouldShowField('vehicleTypeId', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{vehicleTypeField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{vehicleTypeField.name}</label>
                   <select
                     value={formData.vehicle_type_id}
                     onChange={(event) => setField('vehicle_type_id', event.target.value)}
@@ -892,7 +892,7 @@ const CreateDriver = () => {
 
               {shouldShowField('make', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{makeField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{makeField.name}</label>
                   <input
                     value={formData.vehicle_make}
                     onChange={(event) => setField('vehicle_make', event.target.value)}
@@ -904,7 +904,7 @@ const CreateDriver = () => {
 
               {shouldShowField('model', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{modelField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{modelField.name}</label>
                   <input
                     value={formData.vehicle_model}
                     onChange={(event) => setField('vehicle_model', event.target.value)}
@@ -916,7 +916,7 @@ const CreateDriver = () => {
 
               {shouldShowField('year', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{yearField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{yearField.name}</label>
                   <input
                     value={formData.vehicle_year}
                     onChange={(event) => setField('vehicle_year', event.target.value.replace(/\D/g, '').slice(0, 4))}
@@ -928,7 +928,7 @@ const CreateDriver = () => {
 
               {shouldShowField('number', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{numberField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{numberField.name}</label>
                   <input
                     value={formData.vehicle_number}
                     onChange={(event) => setField('vehicle_number', normalizeVehicleNumber(event.target.value))}
@@ -940,7 +940,7 @@ const CreateDriver = () => {
 
               {shouldShowField('color', true) ? (
                 <div>
-                  <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{colorField.name}</label>
+                  <label className="mb-2 block text-xs font-medium text-neutral-400">{colorField.name}</label>
                   <input
                     value={formData.vehicle_color}
                     onChange={(event) => setField('vehicle_color', event.target.value)}
@@ -954,8 +954,8 @@ const CreateDriver = () => {
             {customVehicleFields.length > 0 ? (
               <div className="mt-6 space-y-4">
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-widest text-slate-500">Additional Fields</h3>
-                  <p className="mt-1 text-sm font-semibold text-slate-400">These are configured from admin onboarding settings.</p>
+                  <h3 className="text-sm font-medium text-neutral-500">Additional fields</h3>
+                  <p className="mt-1 text-sm font-medium text-neutral-400">These are configured from admin onboarding settings</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -968,7 +968,7 @@ const CreateDriver = () => {
                     if (fieldType === 'textarea') {
                       return (
                         <div key={fieldKey} className="md:col-span-2">
-                          <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</label>
+                          <label className="mb-2 block text-xs font-medium text-neutral-400">{field.name}</label>
                           <textarea
                             value={value}
                             onChange={(event) => handleCustomFieldChange(fieldKey, event.target.value)}
@@ -983,7 +983,7 @@ const CreateDriver = () => {
                     if (fieldType === 'select') {
                       return (
                         <div key={fieldKey}>
-                          <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</label>
+                          <label className="mb-2 block text-xs font-medium text-neutral-400">{field.name}</label>
                           <select
                             value={value}
                             onChange={(event) => handleCustomFieldChange(fieldKey, event.target.value)}
@@ -1004,7 +1004,7 @@ const CreateDriver = () => {
                       const selectedValues = Array.isArray(value) ? value : [];
                       return (
                         <div key={fieldKey} className="md:col-span-2">
-                          <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</label>
+                          <label className="mb-2 block text-xs font-medium text-neutral-400">{field.name}</label>
                           <div className="flex flex-wrap gap-3">
                             {options.map((option) => {
                               const selected = selectedValues.includes(option);
@@ -1020,10 +1020,10 @@ const CreateDriver = () => {
                                         : [...selectedValues, option],
                                     )
                                   }
-                                  className={`rounded-full px-4 py-2 text-xs font-black uppercase tracking-widest transition-all ${
+                                  className={`rounded-full px-4 py-2 text-xs font-medium   transition-colors ${
                                     selected
-                                      ? 'bg-slate-900 text-white'
-                                      : 'border border-slate-200 bg-white text-slate-500'
+                                      ? 'bg-neutral-900 text-white'
+                                      : 'border border-neutral-200 bg-white text-neutral-500'
                                   }`}
                                 >
                                   {option}
@@ -1037,7 +1037,7 @@ const CreateDriver = () => {
 
                     return (
                       <div key={fieldKey}>
-                        <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">{field.name}</label>
+                        <label className="mb-2 block text-xs font-medium text-neutral-400">{field.name}</label>
                         <input
                           type={fieldType === 'number' ? 'tel' : 'text'}
                           value={Array.isArray(value) ? value.join(', ') : value}
@@ -1062,31 +1062,31 @@ const CreateDriver = () => {
 
           <section className={cardClass}>
             <div className="mb-5 flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-slate-900 text-white shadow-xl shadow-slate-900/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-[1.2rem] bg-neutral-900 text-white shadow-xl">
                 <ShieldCheck size={22} strokeWidth={2.5} />
               </div>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Step 3</p>
-                <h2 className="text-xl font-black tracking-tight text-slate-900">Documents Vault</h2>
+                <p className="text-xs font-medium text-neutral-400">Step 3</p>
+                <h2 className="text-xl font-medium text-neutral-900">Documents vault</h2>
               </div>
             </div>
 
             <div className="space-y-6">
               {visibleDocumentTemplates.length === 0 ? (
-                <div className="rounded-[1.6rem] border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center text-sm font-semibold text-slate-400">
-                  No driver document templates are configured yet.
+                <div className="rounded-[1.6rem] border border-dashed border-neutral-200 bg-neutral-50 px-5 py-8 text-center text-sm font-medium text-neutral-400">
+                  No driver document templates are configured yet
                 </div>
               ) : (
                 visibleDocumentTemplates.map((template) => (
-                  <div key={template.id} className="rounded-[1.6rem] border border-slate-100 bg-slate-50/70 p-5">
+                  <div key={template.id} className="rounded-[1.6rem] border border-neutral-100 bg-neutral-50/70 p-5">
                     <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <h3 className="text-lg font-black tracking-tight text-slate-900">{template.name}</h3>
-                        <p className="mt-1 text-xs font-black uppercase tracking-widest text-slate-400">
+                        <h3 className="text-lg font-medium text-neutral-900">{template.name}</h3>
+                        <p className="mt-1 text-xs font-medium text-neutral-400">
                           {template.is_required ? 'Required' : 'Optional'} • {typeLabel(template.account_type || 'individual')}
                         </p>
                       </div>
-                      <div className="rounded-full bg-white px-3 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500 shadow-sm">
+                      <div className="rounded-full bg-white px-3 py-1 text-xs font-medium text-neutral-500 shadow-sm">
                         {template.fields?.length > 1 ? 'Multiple Sides' : 'Single Side'}
                       </div>
                     </div>
@@ -1097,36 +1097,36 @@ const CreateDriver = () => {
                         const isUploading = uploadingDocKey === field.key;
 
                         return (
-                          <div key={field.key} className="rounded-[1.5rem] border border-slate-100 bg-white p-4 shadow-sm">
+                          <div key={field.key} className="rounded-xl border border-neutral-900/[0.08] bg-white p-4">
                             <div className="mb-3 flex items-center justify-between gap-3">
-                              <label className="text-[11px] font-black uppercase tracking-widest text-slate-400">{field.label}</label>
-                              <span className={`rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${
+                              <label className="text-xs font-medium text-neutral-400">{field.label}</label>
+                              <span className={`rounded-full px-2.5 py-1 text-xs font-medium   ${
                                 (field.required ?? template.is_required)
                                   ? 'bg-emerald-50 text-emerald-600'
-                                  : 'bg-slate-100 text-slate-500'
+                                  : 'bg-neutral-100 text-neutral-500'
                               }`}>
                                 {(field.required ?? template.is_required) ? 'Required' : 'Optional'}
                               </span>
                             </div>
 
-                            <div className="relative mb-3 flex min-h-[180px] items-center justify-center overflow-hidden rounded-[1.2rem] border-2 border-dashed border-slate-200 bg-slate-50">
+                            <div className="relative mb-3 flex min-h-[180px] items-center justify-center overflow-hidden rounded-[1.2rem] border-2 border-dashed border-neutral-200 bg-neutral-50">
                               {isUploading ? (
                                 <div className="flex flex-col items-center gap-3">
-                                  <Loader2 size={24} className="animate-spin text-slate-500" />
-                                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Uploading</span>
+                                  <Loader2 size={24} className="animate-spin text-neutral-500" />
+                                  <span className="text-xs font-medium text-neutral-400">Uploading</span>
                                 </div>
                               ) : doc?.previewUrl ? (
                                 <img src={doc.previewUrl} alt={field.label} className="h-full w-full object-cover" />
                               ) : (
                                 <div className="text-center">
-                                  <UploadCloud size={24} className="mx-auto mb-3 text-slate-400" />
-                                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tap To Upload</p>
+                                  <UploadCloud size={24} className="mx-auto mb-3 text-neutral-400" />
+                                  <p className="text-xs font-medium text-neutral-400">Tap to upload</p>
                                 </div>
                               )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                              <label className="relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[1rem] border border-slate-200 bg-white text-[11px] font-black uppercase tracking-widest text-slate-600 transition-colors hover:bg-slate-50">
+                              <label className="relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[1rem] border border-neutral-200 bg-white text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50">
                                 <ImagePlus size={15} />
                                 Gallery
                                 <input
@@ -1136,7 +1136,7 @@ const CreateDriver = () => {
                                   onChange={(event) => handleDocumentFileChange(template.id, field.key, event)}
                                 />
                               </label>
-                              <label className="relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[1rem] bg-slate-900 text-[11px] font-black uppercase tracking-widest text-white shadow-lg shadow-slate-900/10 transition-colors hover:bg-black">
+                              <label className="relative flex h-11 cursor-pointer items-center justify-center gap-2 rounded-[1rem] bg-neutral-900 text-xs font-medium text-white shadow-sm transition-colors hover:bg-neutral-900">
                                 <Camera size={15} />
                                 Camera
                                 <input
@@ -1157,7 +1157,7 @@ const CreateDriver = () => {
                       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                         {template.has_identify_number ? (
                           <div>
-                            <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">
+                            <label className="mb-2 block text-xs font-medium text-neutral-400">
                               {typeLabel(template.identify_number_key) || `${template.name} Number`}
                             </label>
                             <input
@@ -1170,7 +1170,7 @@ const CreateDriver = () => {
                         ) : null}
                         {template.has_expiry_date ? (
                           <div>
-                            <label className="mb-2 block text-[11px] font-black uppercase tracking-widest text-slate-400">Expiry Date</label>
+                            <label className="mb-2 block text-xs font-medium text-neutral-400">Expiry date</label>
                             <input
                               type="date"
                               value={documentMeta[template.id]?.expiryDate || ''}
@@ -1191,7 +1191,7 @@ const CreateDriver = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex h-14 items-center justify-center gap-3 rounded-[1.4rem] bg-slate-900 px-8 text-sm font-black uppercase tracking-widest text-white shadow-[0_20px_40px_rgba(0,0,0,0.18)] transition-all hover:bg-black disabled:cursor-not-allowed disabled:opacity-70"
+              className="inline-flex h-14 items-center justify-center gap-3 rounded-[1.4rem] bg-neutral-900 px-8 text-sm font-medium text-white shadow-[0_20px_40px_rgba(0,0,0,0.18)] transition-colors hover:bg-neutral-900 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {submitting ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
               {submitting ? 'Creating Driver...' : 'Create Driver'}

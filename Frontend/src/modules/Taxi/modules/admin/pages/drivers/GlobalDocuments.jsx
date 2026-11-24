@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 
 const inputClass =
-  'w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm text-gray-800 outline-none transition-colors focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400';
+  'w-full rounded-lg border border-neutral-200 bg-white py-2.5 pl-10 pr-4 text-sm text-neutral-800 outline-none transition-colors focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30';
 
 const typeLabel = (value) =>
   String(value || '')
@@ -168,13 +168,13 @@ const GlobalDocuments = () => {
         aria-label={`Set ${item.name || item.field_key || 'item'} ${item.active ? 'inactive' : 'active'}`}
         disabled={isToggling}
         onClick={() => handleToggleStatus(item)}
-        className={`inline-flex items-center gap-2 rounded-full px-2 py-1 text-xs font-semibold transition whitespace-nowrap ${
+        className={`inline-flex items-center gap-2 rounded-full px-2 py-1 text-xs font-medium transition whitespace-nowrap ${
           isToggling ? 'cursor-wait opacity-60' : 'cursor-pointer'
         }`}
       >
         <span
           className={`relative shrink-0 flex items-center h-6 w-11 rounded-full p-0.5 transition-colors ${
-            item.active ? 'bg-yellow-400' : 'bg-gray-300'
+            item.active ? 'bg-[#0a4d2b] text-white' : 'bg-neutral-300'
           }`}
         >
           <span
@@ -183,7 +183,7 @@ const GlobalDocuments = () => {
             }`}
           />
         </span>
-        <span className={item.active ? 'text-gray-900' : 'text-gray-500'}>
+        <span className={item.active ? 'text-neutral-900' : 'text-neutral-500'}>
           {isToggling ? 'Saving...' : item.active ? 'Active' : 'Inactive'}
         </span>
       </button>
@@ -195,14 +195,14 @@ const GlobalDocuments = () => {
       <button
         type="button"
         onClick={() => navigate(`/taxi/admin/drivers/documents/edit/${item.id || item._id}?type=${templateType}`)}
-        className="rounded-lg border border-gray-200 p-2 text-yellow-600 transition-colors hover:bg-yellow-50"
+        className="rounded-lg border border-neutral-200 p-2 text-[#0a4d2b] transition-colors hover:bg-yellow-50"
       >
         <PencilLine size={16} />
       </button>
       <button
         type="button"
         onClick={() => handleDelete(item.id || item._id, templateType === 'vehicle_field' ? 'vehicle field' : 'document')}
-        className="rounded-lg border border-gray-200 p-2 text-rose-600 transition-colors hover:bg-rose-50"
+        className="rounded-lg border border-neutral-200 p-2 text-rose-600 transition-colors hover:bg-rose-50"
       >
         <Trash2 size={16} />
       </button>
@@ -210,49 +210,49 @@ const GlobalDocuments = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-3 lg:p-4 font-sans text-gray-900">
+    <div className="min-h-screen bg-neutral-50 p-3 lg:p-4 font-sans text-neutral-900">
       <div className="mb-4">
-        <div className="mb-1 flex items-center gap-1.5 text-[11px] text-gray-500">
+        <div className="mb-1 flex items-center gap-1.5 text-xs text-neutral-500">
           <span>Masters</span>
           <ChevronRight size={10} />
-          <span className="text-gray-700">Driver Onboarding Config</span>
+          <span className="text-neutral-700">Driver onboarding config</span>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-base text-gray-900 font-bold">Driver Onboarding Config</h1>
-            <p className="mt-0.5 text-xs text-gray-500">
-              Manage both driver document templates and the dynamic fields shown on the vehicle onboarding step.
+            <h1 className="text-base text-neutral-900 font-medium">Driver onboarding config</h1>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              Manage both driver document templates and the dynamic fields shown on the vehicle onboarding step
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => navigate('/taxi/admin/drivers/documents/create?type=document')}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-400 px-3 py-1.5 text-xs font-bold text-black transition-colors hover:bg-yellow-500 shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[#0a4d2b] px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-[#06381e] shadow-sm"
             >
               <Plus size={14} />
-              Add Document
+              Add document
             </button>
             <button
               type="button"
               onClick={() => navigate('/taxi/admin/drivers/documents/create?type=vehicle_field')}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-black transition-colors hover:bg-gray-50 shadow-sm"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-black transition-colors hover:bg-neutral-50 shadow-sm"
             >
               <Plus size={14} />
-              Add Vehicle Field
+              Add vehicle field
             </button>
           </div>
         </div>
       </div>
 
-      <div className="mb-4 rounded-lg border border-gray-200 bg-white p-4">
+      <div className="mb-4 rounded-lg border border-neutral-200 bg-white p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-neutral-500">
             <span>Show</span>
             <select
               value={pageSize}
               onChange={(event) => setPageSize(Number(event.target.value))}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-800 outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+              className="rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-800 outline-none focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30"
             >
               <option value={10}>10</option>
               <option value={25}>25</option>
@@ -262,12 +262,12 @@ const GlobalDocuments = () => {
           </div>
 
           <div className="relative w-full lg:max-w-sm">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
             <input
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Filter documents or fields..."
+              placeholder="Filter documents or fields"
               className={inputClass}
             />
           </div>
@@ -281,39 +281,39 @@ const GlobalDocuments = () => {
       ) : null}
 
       <div className="space-y-4">
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-100 px-4 py-3">
-            <h2 className="text-sm text-gray-900 font-bold">Driver Needed Documents</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
+        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="border-b border-neutral-100 px-4 py-3">
+            <h2 className="text-sm text-neutral-900 font-medium">Driver needed documents</h2>
+            <p className="mt-0.5 text-xs text-neutral-500">
               Templates used by the documents step of onboarding. Turn a document inactive here to hide it from `/taxi/driver/step-documents`.
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Name</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Account Type</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Image Type</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Status</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600">Action</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Name</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Account type</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Image type</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Status</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-neutral-600">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 whitespace-nowrap">
+              <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-16 text-center text-sm text-gray-500">Loading document templates...</td>
+                    <td colSpan="5" className="px-6 py-16 text-center text-sm text-neutral-500">Loading document templates...</td>
                   </tr>
                 ) : paginatedDocuments.length === 0 ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-16 text-center text-sm text-gray-500">No document templates found.</td>
+                    <td colSpan="5" className="px-6 py-16 text-center text-sm text-neutral-500">No document templates found</td>
                   </tr>
                 ) : (
                   paginatedDocuments.map((item) => (
-                    <tr key={item.id || item._id} className="hover:bg-gray-50/70 text-xs">
-                      <td className="px-4 py-2 font-semibold text-gray-900">{item.name}</td>
-                      <td className="px-4 py-2 text-gray-700">{typeLabel(item.account_type)}</td>
-                      <td className="px-4 py-2 text-gray-700">{typeLabel(item.image_type)}</td>
+                    <tr key={item.id || item._id} className="hover:bg-neutral-50/70 text-xs">
+                      <td className="px-4 py-2 font-medium text-neutral-900">{item.name}</td>
+                      <td className="px-4 py-2 text-neutral-700">{typeLabel(item.account_type)}</td>
+                      <td className="px-4 py-2 text-neutral-700">{typeLabel(item.image_type)}</td>
                       <td className="px-4 py-2">{renderStatusToggle(item)}</td>
                       <td className="px-4 py-2">{renderActions(item, 'document')}</td>
                     </tr>
@@ -324,50 +324,50 @@ const GlobalDocuments = () => {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="border-b border-gray-100 px-4 py-3">
-            <h2 className="text-sm text-gray-900 font-bold">Vehicle Step Fields</h2>
-            <p className="mt-0.5 text-xs text-gray-500">
-              These control which fields appear on `/taxi/driver/step-vehicle`, their labels, placeholders, order, and required state.
+        <div className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+          <div className="border-b border-neutral-100 px-4 py-3">
+            <h2 className="text-sm text-neutral-900 font-medium">Vehicle step fields</h2>
+            <p className="mt-0.5 text-xs text-neutral-500">
+              These control which fields appear on `/taxi/driver/step-vehicle`, their labels, placeholders, order, and required state
             </p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full">
-              <thead className="bg-gray-50">
+              <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Label</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Field Key</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Field Type</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Account Type</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Order</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Required</th>
-                  <th className="px-4 py-2.5 text-left text-xs font-bold text-gray-600">Status</th>
-                  <th className="px-4 py-2.5 text-right text-xs font-bold text-gray-600">Action</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Label</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Field key</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Field type</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Account type</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Order</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Required</th>
+                  <th className="px-4 py-2.5 text-left text-xs font-medium text-neutral-600">Status</th>
+                  <th className="px-4 py-2.5 text-right text-xs font-medium text-neutral-600">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 whitespace-nowrap">
+              <tbody className="divide-y divide-neutral-100 whitespace-nowrap">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-16 text-center text-sm text-gray-500">Loading vehicle fields...</td>
+                    <td colSpan="8" className="px-6 py-16 text-center text-sm text-neutral-500">Loading vehicle fields...</td>
                   </tr>
                 ) : paginatedVehicleFields.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-16 text-center text-sm text-gray-500">No vehicle fields found.</td>
+                    <td colSpan="8" className="px-6 py-16 text-center text-sm text-neutral-500">No vehicle fields found</td>
                   </tr>
                 ) : (
                   paginatedVehicleFields.map((item, index) => (
-                    <tr key={item.id || item._id} className="hover:bg-gray-50/70 text-xs">
+                    <tr key={item.id || item._id} className="hover:bg-neutral-50/70 text-xs">
                       <td className="px-4 py-2">
-                        <div className="font-semibold text-gray-900">{item.name}</div>
-                        {item.placeholder ? <div className="mt-0.5 text-[10px] text-gray-500">{item.placeholder}</div> : null}
+                        <div className="font-medium text-neutral-900">{item.name}</div>
+                        {item.placeholder ? <div className="mt-0.5 text-xs text-neutral-500">{item.placeholder}</div> : null}
                       </td>
-                      <td className="px-4 py-2 text-gray-700">{item.field_key}</td>
-                      <td className="px-4 py-2 text-gray-700">{typeLabel(item.field_type)}</td>
-                      <td className="px-4 py-2 text-gray-700">{typeLabel(item.account_type)}</td>
-                      <td className="px-4 py-2 text-gray-700">{index + 1}</td>
+                      <td className="px-4 py-2 text-neutral-700">{item.field_key}</td>
+                      <td className="px-4 py-2 text-neutral-700">{typeLabel(item.field_type)}</td>
+                      <td className="px-4 py-2 text-neutral-700">{typeLabel(item.account_type)}</td>
+                      <td className="px-4 py-2 text-neutral-700">{index + 1}</td>
                       <td className="px-4 py-2">
-                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                          item.is_required ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600'
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.is_required ? 'bg-amber-100 text-amber-700' : 'bg-neutral-100 text-neutral-600'
                         }`}>
                           {item.is_required ? 'Required' : 'Optional'}
                         </span>

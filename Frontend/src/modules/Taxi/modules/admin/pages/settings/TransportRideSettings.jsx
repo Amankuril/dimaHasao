@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 
 const InputField = ({ label, name, value, onChange, placeholder, type = "text" }) => (
   <div className="space-y-1.5 w-full">
-    <label className="text-sm font-medium text-gray-700 block ml-0.5">
+    <label className="text-sm font-medium text-neutral-700 block ml-0.5">
       {label}
     </label>
     <input
@@ -19,7 +19,7 @@ const InputField = ({ label, name, value, onChange, placeholder, type = "text" }
       value={value || ''}
       onChange={(e) => onChange(name, e.target.value)}
       placeholder={placeholder}
-      className="w-full bg-white border border-gray-200 rounded-lg py-2.5 px-4 text-sm text-gray-900 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all outline-none shadow-sm"
+      className="w-full bg-white border border-neutral-200 rounded-lg py-2.5 px-4 text-sm text-neutral-900 focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 transition-colors outline-none shadow-sm"
     />
   </div>
 );
@@ -50,7 +50,7 @@ const TransportRideSettings = () => {
     try {
       setSaving(true);
       await api.patch('/admin/general-settings/transport-ride', { settings });
-      toast.success('Transport settings updated successfully!');
+      toast.success('Transport settings updated successfully');
     } catch (err) {
       console.error('Update error:', err);
       toast.error('Failed to save changes');
@@ -65,39 +65,39 @@ const TransportRideSettings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-yellow-500 animate-spin" />
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Loading Settings...</p>
+          <Loader2 className="w-10 h-10 text-[#0a4d2b] animate-spin" />
+          <p className="text-xs text-neutral-500">Loading Settings...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-sans pb-32">
+    <div className="min-h-screen bg-neutral-50 p-4 sm:p-6 lg:p-8 font-sans pb-32">
       <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in duration-700">
         
         {/* Header Breadcrumb */}
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-end gap-4">
-           <div className="flex items-center gap-1.5 text-xs font-medium text-gray-500">
-             <span>Transport Ride Settings</span>
+           <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+             <span>Transport ride settings</span>
              <ChevronRight size={14} />
-             <span className="text-gray-900">Transport Ride Settings</span>
+             <span className="text-neutral-900">Transport ride settings</span>
            </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-           <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/30">
-              <div className="w-1 h-5 bg-yellow-400 rounded-full"></div>
-              <h3 className="text-[13px] font-bold text-gray-700 uppercase tracking-tight">Transport Ride Settings</h3>
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+           <div className="px-6 py-4 border-b border-neutral-100 flex items-center gap-3 bg-neutral-50/30">
+              <div className="w-1 h-5 bg-[#0a4d2b] rounded-full text-white"></div>
+              <h3 className="text-[13px] font-medium text-neutral-700">Transport ride settings</h3>
            </div>
            
            <div className="p-6 pb-8">
-             <div className="mb-8 rounded-xl border border-gray-200 bg-gray-50/50 px-5 py-4">
-               <p className="text-sm font-semibold text-gray-900">Regular ride search behavior is controlled from this page.</p>
-               <p className="mt-1 text-sm text-gray-500">
-                 Only the settings below are currently wired into the live dispatch flow.
+             <div className="mb-8 rounded-xl border border-neutral-200 bg-neutral-50/50 px-5 py-4">
+               <p className="text-sm font-medium text-neutral-900">Regular ride search behavior is controlled from this page</p>
+               <p className="mt-1 text-sm text-neutral-500">
+                 Only the settings below are currently wired into the live dispatch flow
                </p>
              </div>
              
@@ -105,11 +105,11 @@ const TransportRideSettings = () => {
                 {/* Left Column */}
                 <div className="space-y-6">
                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-gray-700 block ml-0.5">Trip Dispatch Type</label>
+                      <label className="text-sm font-medium text-neutral-700 block ml-0.5">Trip dispatch type</label>
                       <select 
                        value={settings.trip_dispatch_type || '1'} 
                        onChange={(e) => handleChange('trip_dispatch_type', e.target.value)}
-                       className="w-full bg-white border border-gray-200 rounded-lg py-2.5 px-4 text-sm text-gray-900 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all outline-none shadow-sm"
+                       className="w-full bg-white border border-neutral-200 rounded-lg py-2.5 px-4 text-sm text-neutral-900 focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 transition-colors outline-none shadow-sm"
                       >
                          <option value="1">One By One</option>
                          <option value="2">Broadcast</option>
@@ -144,11 +144,11 @@ const TransportRideSettings = () => {
                    />
 
                    <div className="space-y-1.5">
-                      <label className="text-sm font-medium text-gray-700 block ml-0.5">Require Admin Approval to End Rental</label>
+                      <label className="text-sm font-medium text-neutral-700 block ml-0.5">Require admin approval to end rental</label>
                       <select 
                        value={settings.require_admin_approval_to_end_rental || '0'} 
                        onChange={(e) => handleChange('require_admin_approval_to_end_rental', e.target.value)}
-                       className="w-full bg-white border border-gray-200 rounded-lg py-2.5 px-4 text-sm text-gray-900 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 transition-all outline-none shadow-sm"
+                       className="w-full bg-white border border-neutral-200 rounded-lg py-2.5 px-4 text-sm text-neutral-900 focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 transition-colors outline-none shadow-sm"
                       >
                          <option value="0">No (Auto-complete ride)</option>
                          <option value="1">Yes (Awaiting confirmation)</option>
@@ -157,11 +157,11 @@ const TransportRideSettings = () => {
                 </div>
              </div>
 
-             <div className="mt-10 flex justify-end pt-6 border-t border-gray-100">
+             <div className="mt-10 flex justify-end pt-6 border-t border-neutral-100">
                 <button 
                   onClick={handleUpdate}
                   disabled={saving}
-                  className="bg-yellow-400 text-black px-8 py-2.5 rounded-lg text-sm font-semibold shadow-sm flex items-center gap-2 hover:bg-yellow-500 active:scale-95 transition-all disabled:opacity-50"
+                  className="bg-[#0a4d2b] text-white px-8 py-2.5 rounded-lg text-sm font-medium shadow-sm flex items-center gap-2 hover:bg-[#06381e] transition-colors disabled:opacity-50"
                 >
                   {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                   {saving ? 'Saving...' : 'Update Settings'}
@@ -174,7 +174,7 @@ const TransportRideSettings = () => {
       {/* Floating Scroll Top */}
       <button
          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-         className="fixed bottom-10 right-10 bg-white text-gray-600 border border-gray-200 w-12 h-12 rounded-full flex items-center justify-center shadow-md hover:bg-gray-50 hover:text-black transition-all z-50 hover:-translate-y-1"
+         className="fixed bottom-10 right-10 bg-white text-neutral-600 border border-neutral-200 w-12 h-12 rounded-full flex items-center justify-center shadow-sm hover:bg-neutral-50 hover:text-black transition-colors z-50 hover:-translate-y-1"
       >
          <ChevronUp size={20} />
       </button>

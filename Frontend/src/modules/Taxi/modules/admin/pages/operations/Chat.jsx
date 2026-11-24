@@ -2,7 +2,7 @@ import React from 'react';
 import SupportChatPanel from '../../../shared/components/SupportChatPanel';
 
 const Chat = () => (
-  <div className="h-[calc(100vh-7.5rem)] min-h-[36rem] min-w-0 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+  <div className="h-[calc(100vh-7.5rem)] min-h-[36rem] min-w-0 overflow-hidden rounded-xl border border-neutral-900/[0.08] bg-white">
     <SupportChatPanel
       mode="admin"
       title="Chats"

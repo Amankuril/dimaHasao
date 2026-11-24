@@ -67,23 +67,23 @@ const DriverDutyReport = () => {
 
   const isFormValid = filters.service_location_id && filters.driver_id && filters.date_option && filters.file_format && (filters.date_option !== 'range' || (filters.from_date && filters.to_date));
 
-  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors appearance-none shadow-sm";
-  const labelClass = "block text-[13px] font-bold text-gray-600 mb-2";
+  const inputClass = "w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors appearance-none shadow-sm";
+  const labelClass = "block text-[13px] font-medium text-neutral-600 mb-2";
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-8">
       {/* Header Block */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3 font-medium">
-          <span>Driver Duty Report</span>
+        <div className="flex items-center gap-2 text-xs text-neutral-500 mb-3">
+          <span>Driver duty report</span>
           <ChevronRight size={14} className="opacity-50" />
-          <span className="text-gray-600 font-semibold italic">Driver Duty Report</span>
+          <span className="text-neutral-600 font-medium">Driver duty report</span>
         </div>
-        <div className="flex items-center justify-between border-b border-gray-100 pb-5">
-          <h1 className="text-2xl font-bold text-[#334155] tracking-tight uppercase">Driver Duty Report</h1>
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-5">
+          <h1 className="text-2xl font-medium text-[#334155]">Driver duty report</h1>
           <button 
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-900/[0.08] rounded-xl hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} strokeWidth={2.5} /> Back
           </button>
@@ -95,13 +95,13 @@ const DriverDutyReport = () => {
         <motion.div 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-gray-100 p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden"
+          className="bg-white rounded-xl border border-neutral-900/[0.08] p-8 overflow-hidden"
         >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
             {/* Service Location */}
             <div className="space-y-1">
               <label className={labelClass}>
-                Service Location <span className="text-rose-500">*</span>
+                Service location <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <select 
@@ -114,7 +114,7 @@ const DriverDutyReport = () => {
                     <option key={loc._id} value={loc._id}>{loc.name}</option>
                   ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -136,7 +136,7 @@ const DriverDutyReport = () => {
                     <option key={d._id} value={d._id}>{d.name} ({d.mobile})</option>
                   ))}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -145,7 +145,7 @@ const DriverDutyReport = () => {
             {/* Date Option */}
             <div className="space-y-1">
               <label className={labelClass}>
-                Date Option <span className="text-rose-500">*</span>
+                Date option <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <select 
@@ -161,7 +161,7 @@ const DriverDutyReport = () => {
                   <option value="this_year">This Year</option>
                   <option value="range">Date Range</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -170,18 +170,18 @@ const DriverDutyReport = () => {
             {filters.date_option === 'range' && (
               <>
                 <div className="space-y-1">
-                  <label className={labelClass}>From Date <span className="text-rose-500">*</span></label>
+                  <label className={labelClass}>From date <span className="text-rose-500">*</span></label>
                   <input type="date" value={filters.from_date || ''} onChange={(e) => updateFilter('from_date', e.target.value)} className={inputClass} />
                 </div>
                 <div className="space-y-1">
-                  <label className={labelClass}>To Date <span className="text-rose-500">*</span></label>
+                  <label className={labelClass}>To date <span className="text-rose-500">*</span></label>
                   <input type="date" value={filters.to_date || ''} onChange={(e) => updateFilter('to_date', e.target.value)} className={inputClass} />
                 </div>
               </>
             )}
 
             <div className="space-y-1">
-              <label className={labelClass}>Ride Status</label>
+              <label className={labelClass}>Ride status</label>
               <div className="relative">
                 <select
                   value={filters.status}
@@ -194,7 +194,7 @@ const DriverDutyReport = () => {
                   <option value="accepted">Accepted</option>
                   <option value="ongoing">Ongoing</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -203,7 +203,7 @@ const DriverDutyReport = () => {
             {/* File Format */}
             <div className="space-y-1">
               <label className={labelClass}>
-                File Format <span className="text-rose-500">*</span>
+                File format <span className="text-rose-500">*</span>
               </label>
               <div className="relative">
                 <select 
@@ -215,7 +215,7 @@ const DriverDutyReport = () => {
                   <option value="csv">CSV</option>
                   <option value="excel">Excel</option>
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
                   <ChevronRight size={18} className="rotate-90 opacity-60" />
                 </div>
               </div>
@@ -226,10 +226,10 @@ const DriverDutyReport = () => {
             <button 
               onClick={handleDownload}
               disabled={!isFormValid || isDownloading}
-              className={`flex items-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-bold tracking-wide transition-all active:scale-95 shadow-lg ${
+              className={`flex items-center gap-3 px-8 py-3.5 rounded-xl text-[15px] font-medium  transition-colors  shadow-sm ${
                 (!isFormValid || isDownloading)
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none'
-                : 'bg-[#4338CA] text-white hover:bg-[#3730A3] shadow-indigo-200'
+                ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed shadow-none'
+                : 'bg-[#171717] text-white hover:bg-[#262626]'
               }`}
             >
               {isDownloading ? (

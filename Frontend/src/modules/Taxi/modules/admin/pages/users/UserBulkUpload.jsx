@@ -355,20 +355,20 @@ const UserBulkUpload = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6">
       <div className="mb-4">
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
           <span>Users</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700 font-medium">Bulk Upload</span>
+          <span className="text-neutral-700 font-medium">Bulk upload</span>
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-lg text-gray-900 font-bold">Bulk Upload</h1>
+          <h1 className="text-lg text-neutral-900 font-medium">Bulk upload</h1>
           <button
             type="button"
             onClick={() => navigate("/taxi/admin/users")}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors">
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg shadow-sm hover:bg-neutral-50 transition-colors">
             <ArrowLeft size={16} /> Back
           </button>
         </div>
@@ -376,17 +376,17 @@ const UserBulkUpload = () => {
 
       <div>
         <div>
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-gray-100 md:flex-row md:items-center md:justify-between">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-neutral-100 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                   <UploadCloud size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm text-gray-900 font-bold">
-                    Upload Customer File
+                  <h3 className="text-sm text-neutral-900 font-medium">
+                    Upload customer file
                   </h3>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-neutral-500">
                     File columns: {USER_IMPORT_COLUMNS.join(", ")}
                   </p>
                 </div>
@@ -395,8 +395,8 @@ const UserBulkUpload = () => {
               <button
                 type="button"
                 onClick={() => navigate("/user-import/create")}
-                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-yellow-400 px-4 py-2 text-sm font-semibold text-black shadow-sm transition-colors hover:bg-yellow-500">
-                <UploadCloud size={16} /> Select Files
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#0a4d2b] px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#06381e]">
+                <UploadCloud size={16} /> Select files
               </button>
             </div>
 
@@ -407,27 +407,27 @@ const UserBulkUpload = () => {
               onDrop={handleDrop}
               className={`rounded-lg border transition-colors ${
                 dragActive
-                  ? "border-indigo-500 bg-indigo-50"
-                  : "border-gray-200 bg-white"
+                  ? "border-[#0a4d2b] bg-neutral-50"
+                  : "border-neutral-200 bg-white"
               }`}>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-left">
                   <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="px-4 py-3 text-xs font-semibold text-gray-900">
+                    <tr className="border-b border-neutral-100 bg-neutral-50">
+                      <th className="px-4 py-3 text-xs font-medium text-neutral-900">
                         File
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900">
+                      <th className="px-4 py-3 text-right text-xs font-medium text-neutral-900">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-neutral-100">
                     {files.length === 0 ? (
                       <tr>
                         <td
                           colSpan="2"
-                          className="px-4 py-14 text-center text-sm font-medium text-gray-400">
+                          className="px-4 py-14 text-center text-sm text-neutral-500">
                           No files selected. Use Select Files above to create a
                           new upload.
                         </td>
@@ -436,17 +436,17 @@ const UserBulkUpload = () => {
                       files.map((selectedFile, index) => (
                         <tr
                           key={`${selectedFile.name}-${selectedFile.lastModified}-${index}`}
-                          className="hover:bg-gray-50/60 transition-colors">
+                          className="hover:bg-neutral-50 transition-colors">
                           <td className="px-4 py-3">
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
                                 <FileText size={18} />
                               </div>
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-medium text-gray-900">
+                                <p className="truncate text-sm font-medium text-neutral-900">
                                   {selectedFile.name}
                                 </p>
-                                <p className="mt-0.5 text-xs text-gray-400">
+                                <p className="mt-0.5 text-xs text-neutral-500">
                                   {formatFileSize(selectedFile.size)}
                                 </p>
                               </div>
@@ -461,7 +461,7 @@ const UserBulkUpload = () => {
                                 }
                                 title="Import"
                                 disabled={importingIndex !== null}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60">
+                                className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600 disabled:cursor-not-allowed disabled:opacity-60">
                                 {importingIndex === index ? (
                                   <Loader2 size={16} className="animate-spin" />
                                 ) : (
@@ -472,7 +472,7 @@ const UserBulkUpload = () => {
                                 type="button"
                                 onClick={() => handleDownload(selectedFile)}
                                 title="Download"
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-indigo-50 hover:text-indigo-600">
+                                className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-[#0a4d2b]">
                                 <Download size={16} />
                               </button>
                               <button
@@ -480,7 +480,7 @@ const UserBulkUpload = () => {
                                 onClick={() => handleReupload(index)}
                                 title="Re-upload"
                                 disabled={importingIndex !== null}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600">
+                                className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-emerald-50 hover:text-emerald-600">
                                 <RefreshCw size={16} />
                               </button>
                               <button
@@ -488,7 +488,7 @@ const UserBulkUpload = () => {
                                 onClick={() => removeFile(index)}
                                 title="Remove"
                                 disabled={importingIndex !== null}
-                                className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-rose-50 hover:text-rose-600">
+                                className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-rose-50 hover:text-rose-600">
                                 <X size={16} />
                               </button>
                             </div>
@@ -500,9 +500,9 @@ const UserBulkUpload = () => {
                 </table>
               </div>
 
-              <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+              <div className="border-t border-neutral-100 bg-neutral-50 px-4 py-3 text-sm text-neutral-500">
                 Existing import files will appear here with download and
-                re-upload actions.
+                re-upload actions
               </div>
 
               {error && (

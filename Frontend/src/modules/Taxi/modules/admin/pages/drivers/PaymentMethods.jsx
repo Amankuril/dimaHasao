@@ -13,8 +13,8 @@ import {
 const BASE = () => `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/payment-methods`;
 
 const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+  'w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors';
+const labelClass = 'block text-xs text-neutral-500 mb-1.5';
 
 const buildField = () => ({
   id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -184,41 +184,41 @@ const PaymentMethods = () => {
 
   if (view === 'form') {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans text-gray-900">
+      <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans text-neutral-900">
         <div className="mb-6">
-          <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-            <span>Driver Management</span>
+          <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
+            <span>Driver management</span>
             <ChevronRight size={12} />
-            <span className="text-gray-700">Payment Methods</span>
+            <span className="text-neutral-700">Payment methods</span>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-xl text-gray-900 font-bold">
+            <h1 className="text-xl text-neutral-900 font-medium">
               {editingId ? 'Edit Payment Method' : 'Add Payment Method'}
             </h1>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setView('list')}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
               >
                 <ArrowLeft size={16} /> Back
               </button>
               <button
                 onClick={handleAddField}
-                className="flex items-center gap-2 px-4 py-2 text-sm text-black font-bold bg-yellow-400 border border-yellow-400 rounded-lg hover:bg-yellow-500 shadow-sm transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm text-white font-medium bg-[#0a4d2b] border border-[#0a4d2b] rounded-lg hover:bg-[#06381e] shadow-sm transition-colors"
               >
-                <Plus size={16} /> Add New Field
+                <Plus size={16} /> Add new field
               </button>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-6">
+        <div className="bg-white rounded-xl border border-neutral-200 p-6 space-y-6">
           <div className="max-w-lg">
             <label className={labelClass}>Method Name *</label>
             <input
               type="text"
               className={inputClass}
-              placeholder="Method Name"
+              placeholder="Method name"
               value={formData.methodName}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, methodName: e.target.value }))
@@ -230,11 +230,11 @@ const PaymentMethods = () => {
             {formData.fields.map((field) => (
               <div
                 key={field.id}
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4"
+                className="bg-neutral-50 border border-neutral-200 rounded-xl p-4"
               >
                 <div className="flex flex-wrap items-end gap-4">
                   <div className="w-full md:w-48">
-                    <label className={labelClass}>Input Field Type</label>
+                    <label className={labelClass}>Input field type</label>
                     <div className="relative">
                       <select
                         value={field.type}
@@ -250,16 +250,16 @@ const PaymentMethods = () => {
                       </select>
                       <ChevronDown
                         size={14}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500"
                       />
                     </div>
                   </div>
                   <div className="w-full md:w-56">
-                    <label className={labelClass}>Input Field Name</label>
+                    <label className={labelClass}>Input field name</label>
                     <input
                       type="text"
                       className={inputClass}
-                      placeholder="Input Field Name"
+                      placeholder="Input field name"
                       value={field.name}
                       onChange={(e) =>
                         handleFieldChange(field.id, 'name', e.target.value)
@@ -271,21 +271,21 @@ const PaymentMethods = () => {
                     <input
                       type="text"
                       className={inputClass}
-                      placeholder="Enter Your Placeholder"
+                      placeholder="Enter your placeholder"
                       value={field.placeholder}
                       onChange={(e) =>
                         handleFieldChange(field.id, 'placeholder', e.target.value)
                       }
                     />
                   </div>
-                  <label className="flex items-center gap-2 text-sm text-gray-600">
+                  <label className="flex items-center gap-2 text-sm text-neutral-600">
                     <input
                       type="checkbox"
                       checked={field.isRequired}
                       onChange={() =>
                         handleFieldChange(field.id, 'isRequired', !field.isRequired)
                       }
-                      className="h-4 w-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400"
+                      className="h-4 w-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                     />
                     Is Required?
                   </label>
@@ -303,13 +303,13 @@ const PaymentMethods = () => {
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setView('list')}
-              className="px-5 py-2.5 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-5 py-2.5 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSubmit}
-              className="px-6 py-2.5 text-sm font-bold text-black bg-yellow-400 rounded-lg shadow-sm hover:bg-yellow-500 transition-colors disabled:opacity-70"
+              className="px-6 py-2.5 text-sm font-medium text-white bg-[#0a4d2b] rounded-lg shadow-sm hover:bg-[#06381e] transition-colors disabled:opacity-70"
               disabled={saving}
             >
               {saving ? 'Saving...' : 'Submit'}
@@ -321,30 +321,30 @@ const PaymentMethods = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans text-gray-900">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans text-neutral-900">
       <div className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
-          <span>Driver Management</span>
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
+          <span>Driver management</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">Payment Methods</span>
+          <span className="text-neutral-700">Payment methods</span>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-xl text-gray-900 font-bold">Payment Methods</h1>
+          <h1 className="text-xl text-neutral-900 font-medium">Payment methods</h1>
           <button
             onClick={startAdd}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-black bg-yellow-400 shadow-sm rounded-lg hover:bg-yellow-500 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-[#0a4d2b] shadow-sm rounded-lg hover:bg-[#06381e] transition-colors"
           >
             <Plus size={16} /> Add
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+      <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden">
+        <div className="p-4 border-b border-neutral-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs text-neutral-500">
             <span>Show</span>
             <select
-              className="border border-gray-200 rounded px-2 py-1 text-xs bg-white"
+              className="border border-neutral-200 rounded px-2 py-1 text-xs bg-white"
               value={itemsPerPage}
               onChange={(e) => setItemsPerPage(e.target.value)}
             >
@@ -357,14 +357,14 @@ const PaymentMethods = () => {
             <div className="relative">
               <Search
                 size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"
               />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg w-56 focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors"
+                className="pl-9 pr-4 py-2 text-sm border border-neutral-200 rounded-lg w-56 focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors"
               />
             </div>
           </div>
@@ -373,31 +373,31 @@ const PaymentMethods = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs text-gray-500">
+              <tr className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
                 <th className="px-6 py-3 text-left">Method</th>
                 <th className="px-4 py-3 text-left">Fields</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 text-sm text-gray-700">
+            <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700">
               {loading ? (
                 <tr>
                   <td colSpan="4" className="py-10 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-yellow-500 mx-auto" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[#0a4d2b] mx-auto" />
                   </td>
                 </tr>
               ) : filteredMethods.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="py-10 text-center text-gray-400">
-                    No payment methods found.
+                  <td colSpan="4" className="py-10 text-center text-neutral-500">
+                    No payment methods found
                   </td>
                 </tr>
               ) : (
                 filteredMethods.map((method) => (
-                  <tr key={method._id} className="hover:bg-gray-50/50">
+                  <tr key={method._id} className="hover:bg-neutral-50/50">
                     <td className="px-6 py-3 font-medium">{method.name}</td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 text-neutral-500">
                       {(method.fields || [])
                         .map((field) => field.name)
                         .filter(Boolean)
@@ -411,20 +411,20 @@ const PaymentMethods = () => {
                           checked={method.active !== false}
                           onChange={() => handleToggleStatus(method)}
                         />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
+                        <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500" />
                       </label>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <div className="inline-flex items-center gap-2">
                         <button
                           onClick={() => startEdit(method)}
-                          className="p-2 rounded-lg border border-gray-200 text-amber-500 hover:bg-amber-50"
+                          className="p-2 rounded-lg border border-neutral-200 text-[#0a4d2b] hover:bg-amber-50"
                         >
                           <Edit2 size={14} />
                         </button>
                         <button
                           onClick={() => handleDelete(method._id)}
-                          className="p-2 rounded-lg border border-gray-200 text-rose-500 hover:bg-rose-50"
+                          className="p-2 rounded-lg border border-neutral-200 text-rose-500 hover:bg-rose-50"
                         >
                           <Trash2 size={14} />
                         </button>

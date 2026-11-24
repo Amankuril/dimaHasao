@@ -4,9 +4,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 
 const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
-const selectPlaceholderClass = 'text-gray-400';
+  'w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors';
+const labelClass = 'block text-xs text-neutral-500 mb-1.5';
+const selectPlaceholderClass = 'text-neutral-500';
 const customVehicleFieldSentinel = '__custom__';
 
 const initialDocumentForm = {
@@ -352,28 +352,28 @@ const DriverDocumentForm = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
-        <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500">Loading configuration...</div>
+      <div className="min-h-screen bg-neutral-50 p-6 lg:p-8">
+        <div className="rounded-xl border border-neutral-200 bg-white p-6 text-sm text-neutral-500">Loading configuration...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] p-4 lg:p-6 font-sans">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6 font-sans">
       <div className="mb-6">
-        <div className="mb-2 flex items-center gap-1.5 text-xs text-gray-400">
-          <span>Driver Onboarding Config</span>
+        <div className="mb-2 flex items-center gap-1.5 text-xs text-neutral-500">
+          <span>Driver onboarding config</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">{isEditMode ? 'Edit' : 'Create'}</span>
+          <span className="text-neutral-700">{isEditMode ? 'Edit' : 'Create'}</span>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h1 className="text-xl text-gray-900 font-bold">
+          <h1 className="text-xl text-neutral-900 font-medium">
             {isEditMode ? 'Edit' : 'Create'} {templateType === 'vehicle_field' ? 'Vehicle Field' : 'Document'}
           </h1>
           <button
             type="button"
             onClick={() => navigate('/taxi/admin/drivers/documents')}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} />
             Back
@@ -381,7 +381,7 @@ const DriverDocumentForm = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="rounded-xl border border-gray-200 bg-white p-6">
+      <form onSubmit={handleSubmit} className="rounded-xl border border-neutral-200 bg-white p-6">
         {!isEditMode ? (
           <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
@@ -400,32 +400,32 @@ const DriverDocumentForm = () => {
 
         {templateType === 'vehicle_field' ? (
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="md:col-span-2 rounded-xl border border-gray-200 bg-gray-50/70 p-4">
+            <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-neutral-50/70 p-4">
               <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
                   onClick={() => handleVehicleFieldChange('field_key', customVehicleFieldSentinel)}
-                  className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                     isCustomVehicleField
-                      ? 'bg-yellow-400 text-black shadow-sm'
-                      : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#0a4d2b] text-white text-white shadow-sm'
+                      : 'border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
                   }`}
                 >
-                  Create Custom Field
+                  Create custom field
                 </button>
                 <button
                   type="button"
                   onClick={() => handleVehicleFieldChange('field_key', vehicleFieldOptions[0]?.value || '')}
-                  className={`rounded-lg px-4 py-2 text-sm font-bold transition-colors ${
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                     !isCustomVehicleField
-                      ? 'bg-yellow-400 text-black shadow-sm'
-                      : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#0a4d2b] text-white text-white shadow-sm'
+                      : 'border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50'
                   }`}
                 >
                   Use Built-in Field
                 </button>
               </div>
-              <p className="mt-3 text-xs text-gray-500">
+              <p className="mt-3 text-xs text-neutral-500">
                 Create Custom Field adds a brand new field key for the vehicle step. Use Built-in Field when you only want to rename or reconfigure one of the existing onboarding fields.
               </p>
             </div>
@@ -436,7 +436,7 @@ const DriverDocumentForm = () => {
                 <input
                   type="text"
                   value="Custom Field"
-                  className={`${inputClass} bg-gray-50 text-gray-500`}
+                  className={`${inputClass} bg-neutral-50 text-neutral-500`}
                   readOnly
                 />
               ) : (
@@ -500,7 +500,7 @@ const DriverDocumentForm = () => {
             </div>
 
             <div>
-              <label className={labelClass}>Field Type</label>
+              <label className={labelClass}>Field type</label>
               <select
                 value={vehicleFieldForm.field_type}
                 onChange={(event) => handleVehicleFieldChange('field_type', event.target.value)}
@@ -515,7 +515,7 @@ const DriverDocumentForm = () => {
             </div>
 
             <div>
-              <label className={labelClass}>Field Group</label>
+              <label className={labelClass}>Field group</label>
               <input
                 type="text"
                 value={vehicleFieldForm.field_group}
@@ -549,7 +549,7 @@ const DriverDocumentForm = () => {
             </div>
 
             <div className="md:col-span-2">
-              <label className={labelClass}>Help Text</label>
+              <label className={labelClass}>Help text</label>
               <input
                 type="text"
                 value={vehicleFieldForm.help_text}
@@ -570,30 +570,30 @@ const DriverDocumentForm = () => {
               />
             </div>
 
-            <div className="md:col-span-2 rounded-xl border border-gray-200 bg-gray-50/70 p-4">
+            <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-neutral-50/70 p-4">
               <div className="flex flex-wrap gap-6">
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                     checked={vehicleFieldForm.is_editable}
                     onChange={(event) => handleVehicleFieldChange('is_editable', event.target.checked)}
                   />
                   Is Editable?
                 </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm font-medium text-neutral-800 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                     checked={vehicleFieldForm.is_required}
                     onChange={(event) => handleVehicleFieldChange('is_required', event.target.checked)}
                   />
                   Is Required?
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                     checked={vehicleFieldForm.active}
                     onChange={(event) => handleVehicleFieldChange('active', event.target.checked)}
                   />
@@ -601,12 +601,12 @@ const DriverDocumentForm = () => {
                 </label>
               </div>
               {selectedVehicleField ? (
-                <p className="mt-3 text-xs text-gray-500">
+                <p className="mt-3 text-xs text-neutral-500">
                   Default mapping: {selectedVehicleField.label} will be shown in the {selectedVehicleField.field_group || 'selected'} group.
                 </p>
               ) : isCustomVehicleField ? (
-                <p className="mt-3 text-xs text-gray-500">
-                  Custom fields are saved as dynamic vehicle-step data and will appear in the Additional Details section for the selected account type.
+                <p className="mt-3 text-xs text-neutral-500">
+                  Custom fields are saved as dynamic vehicle-step data and will appear in the Additional Details section for the selected account type
                 </p>
               ) : null}
             </div>
@@ -619,7 +619,7 @@ const DriverDocumentForm = () => {
                 type="text"
                 value={documentForm.name}
                 onChange={(event) => handleDocumentChange('name', event.target.value)}
-                placeholder="Enter Name"
+                placeholder="Enter name"
                 className={inputClass}
                 required
               />
@@ -643,7 +643,7 @@ const DriverDocumentForm = () => {
             </div>
 
             <div>
-              <label className={labelClass}>Verification Mapping</label>
+              <label className={labelClass}>Verification mapping</label>
               <select
                 value={documentForm.verification_type}
                 onChange={(event) => handleDocumentChange('verification_type', event.target.value)}
@@ -710,12 +710,12 @@ const DriverDocumentForm = () => {
 
             {documentForm.has_identify_number === '1' ? (
               <div>
-                <label className={labelClass}>Identify Number Key</label>
+                <label className={labelClass}>Identify number key</label>
                 <input
                   type="text"
                   value={documentForm.identify_number_key}
                   onChange={(event) => handleDocumentChange('identify_number_key', event.target.value)}
-                  placeholder="Enter Identify Number Key"
+                  placeholder="Enter identify number key"
                   className={inputClass}
                 />
               </div>
@@ -723,40 +723,40 @@ const DriverDocumentForm = () => {
               <div />
             )}
 
-            <div className="md:col-span-2 rounded-xl border border-gray-200 bg-gray-50/70 p-4">
+            <div className="md:col-span-2 rounded-xl border border-neutral-200 bg-neutral-50/70 p-4">
               <div className="flex flex-wrap gap-6">
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                     checked={documentForm.is_editable}
                     onChange={(event) => handleDocumentChange('is_editable', event.target.checked)}
                   />
                   Is Editable?
                 </label>
-                <label className="flex items-center gap-2 text-sm font-semibold text-gray-800 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm font-medium text-neutral-800 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                     checked={documentForm.is_required}
                     onChange={(event) => handleDocumentChange('is_required', event.target.checked)}
                   />
                   Is Required?
                 </label>
-                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-yellow-500 border-gray-300 rounded focus:ring-yellow-400 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                     checked={documentForm.active}
                     onChange={(event) => handleDocumentChange('active', event.target.checked)}
                   />
                   Active?
                 </label>
               </div>
-              <p className="mt-3 text-xs text-gray-500">
-                When required is enabled, this document must be completed in the signup flow before registration can finish.
+              <p className="mt-3 text-xs text-neutral-500">
+                When required is enabled, this document must be completed in the signup flow before registration can finish
               </p>
-              <p className="mt-2 text-xs text-gray-500">
+              <p className="mt-2 text-xs text-neutral-500">
                 Pick a verification mapping for documents like Driving License, PAN, GST, or RC so the driver app shows the matching RechargeKit verify action automatically.
               </p>
             </div>
@@ -771,7 +771,7 @@ const DriverDocumentForm = () => {
           <button
             type="submit"
             disabled={submitting}
-            className="px-6 py-2.5 bg-yellow-400 text-black rounded-lg text-sm font-bold shadow-sm hover:bg-yellow-500 transition-colors disabled:opacity-60"
+            className="px-6 py-2.5 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium shadow-sm hover:bg-[#06381e] transition-colors disabled:opacity-60"
           >
             {submitting ? 'Saving...' : 'Save'}
           </button>

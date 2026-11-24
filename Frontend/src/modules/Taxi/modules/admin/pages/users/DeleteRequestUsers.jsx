@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 import { adminService } from '../../services/adminService';
 
 const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors';
+  'w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors';
 
 const formatDate = (date) => {
   if (!date) return 'Unknown';
@@ -112,27 +112,27 @@ const DeleteRequestUsers = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <Loader2 className="w-7 h-7 text-indigo-600 animate-spin" />
-        <p className="text-sm text-gray-400">Loading delete requests...</p>
+        <Loader2 className="w-7 h-7 text-[#0a4d2b] animate-spin" />
+        <p className="text-sm text-neutral-500">Loading delete requests...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6">
       <div className="mb-4">
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-1">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-1">
           <span>Users</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700 font-medium">Delete Requests</span>
+          <span className="text-neutral-700 font-medium">Delete requests</span>
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-lg text-gray-900 font-bold">Delete Requests</h1>
+          <h1 className="text-lg text-neutral-900 font-medium">Delete requests</h1>
           <button
             type="button"
             onClick={() => navigate('/taxi/admin/users')}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg shadow-sm hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} /> Back
           </button>
@@ -147,23 +147,23 @@ const DeleteRequestUsers = () => {
 
       <div>
         <div>
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <div className="flex flex-col gap-4 border-b border-gray-100 pb-4 md:flex-row md:items-center md:justify-between">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
+            <div className="flex flex-col gap-4 border-b border-neutral-100 pb-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                   <Trash2 size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm text-gray-900 font-bold">Pending Requests</h3>
-                  <p className="text-xs text-gray-400">Review customer account deletion requests</p>
+                  <h3 className="text-sm text-neutral-900 font-medium">Pending requests</h3>
+                  <p className="text-xs text-neutral-500">Review customer account deletion requests</p>
                 </div>
               </div>
 
               <div className="relative w-full md:w-80">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                 <input
                   type="text"
-                  placeholder="Search delete requests..."
+                  placeholder="Search delete requests"
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
                   className={`${inputClass} pl-10`}
@@ -174,50 +174,50 @@ const DeleteRequestUsers = () => {
             <div className="mt-5 overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900">User</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900">Reason</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900">Requested Date</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900">Status</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900">Action</th>
+                  <tr className="bg-neutral-50 border-b border-neutral-100">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-900">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-900">Reason</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-900">Requested date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-900">Status</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-neutral-900">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-neutral-50">
                   {filteredUsers.length === 0 ? (
                     <tr>
-                      <td colSpan="5" className="px-4 py-14 text-center text-sm font-medium text-gray-400">
-                        No pending delete requests found.
+                      <td colSpan="5" className="px-4 py-14 text-center text-sm text-neutral-500">
+                        No pending delete requests found
                       </td>
                     </tr>
                   ) : (
                     filteredUsers.map((user) => (
-                      <tr key={user._id} className="hover:bg-gray-50/50 transition-colors">
+                      <tr key={user._id} className="hover:bg-neutral-50/50 transition-colors">
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-gray-100 text-gray-600 font-medium text-xs flex items-center justify-center">
+                            <div className="w-9 h-9 rounded-lg bg-neutral-100 text-neutral-600 font-medium text-xs flex items-center justify-center">
                               {getInitials(user.name || user.user_id?.name)}
                             </div>
                             <div>
                               <button
                                 type="button"
                                 onClick={() => navigate(`/taxi/admin/users/${user._id}`)}
-                                className="text-left text-sm font-medium text-gray-900 hover:text-indigo-600 hover:underline transition-colors"
+                                className="text-left text-sm font-medium text-neutral-900 hover:text-[#0a4d2b] hover:underline transition-colors"
                               >
                                 {user.name || user.user_id?.name || 'Unknown'}
                               </button>
-                              <p className="text-xs text-gray-400">{user.email || user.user_id?.email || 'N/A'}</p>
+                              <p className="text-xs text-neutral-500">{user.email || user.user_id?.email || 'N/A'}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-4 text-sm text-gray-700">
+                        <td className="px-4 py-4 text-sm text-neutral-700">
                           <span className="block max-w-[220px] truncate">{user.deletionRequest?.reason || 'N/A'}</span>
                         </td>
-                        <td className="px-4 py-4 text-sm text-gray-500">
+                        <td className="px-4 py-4 text-sm text-neutral-500">
                           {formatDate(user.deletionRequest?.requestedAt)}
                         </td>
                         <td className="px-4 py-4">
                           <span className="inline-flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#0a4d2b] text-white" />
                             Pending
                           </span>
                         </td>
@@ -227,8 +227,8 @@ const DeleteRequestUsers = () => {
                               type="button"
                               disabled={isSubmitting}
                               onClick={() => navigate(`/taxi/admin/users/${user._id}`)}
-                              title="View Customer Profile"
-                              className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-50"
+                              title="View customer profile"
+                              className="p-2 text-neutral-500 hover:text-[#0a4d2b] hover:bg-neutral-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <Eye size={16} />
                             </button>
@@ -236,8 +236,8 @@ const DeleteRequestUsers = () => {
                               type="button"
                               disabled={isSubmitting}
                               onClick={() => handleReject(user._id)}
-                              title="Reject Request"
-                              className="p-2 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
+                              title="Reject request"
+                              className="p-2 text-neutral-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <XCircle size={16} />
                             </button>
@@ -245,8 +245,8 @@ const DeleteRequestUsers = () => {
                               type="button"
                               disabled={isSubmitting}
                               onClick={() => handleApprove(user._id)}
-                              title="Approve Request"
-                              className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                              title="Approve request"
+                              className="p-2 text-neutral-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
                             >
                               <CheckCircle2 size={16} />
                             </button>
@@ -259,18 +259,18 @@ const DeleteRequestUsers = () => {
               </table>
             </div>
 
-            <div className="mt-5 flex flex-col gap-3 border-t border-gray-100 pt-4 text-sm text-gray-500 md:flex-row md:items-center md:justify-between">
+            <div className="mt-5 flex flex-col gap-3 border-t border-neutral-100 pt-4 text-sm text-neutral-500 md:flex-row md:items-center md:justify-between">
               <span>
                 Showing {filteredUsers.length ? 1 : 0} to {filteredUsers.length} of {filteredUsers.length} entries
               </span>
               <div className="flex items-center gap-2">
-                <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-lg disabled:opacity-50" disabled>
+                <button className="px-4 py-2 text-sm text-neutral-500 bg-white border border-neutral-200 rounded-lg disabled:opacity-50" disabled>
                   Prev
                 </button>
-                <button className="px-4 py-2 text-sm text-white bg-indigo-600 border border-indigo-600 rounded-lg">
+                <button className="px-4 py-2 text-sm text-white bg-neutral-900 border border-[#0a4d2b] rounded-lg">
                   1
                 </button>
-                <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-200 rounded-lg disabled:opacity-50" disabled>
+                <button className="px-4 py-2 text-sm text-neutral-500 bg-white border border-neutral-200 rounded-lg disabled:opacity-50" disabled>
                   Next
                 </button>
               </div>

@@ -21,8 +21,8 @@ const roleOptions = [
 ];
 
 const inputClass =
-  'w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400';
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+  'w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors disabled:bg-neutral-50 disabled:text-neutral-500';
+const labelClass = 'block text-xs text-neutral-500 mb-1.5';
 
 const WalletPayment = () => {
   const [role, setRole] = useState('');
@@ -110,17 +110,17 @@ const WalletPayment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 lg:p-6">
+    <div className="min-h-screen bg-neutral-50 p-4 lg:p-6">
       <div className="mb-4">
-        <div className="mb-2 flex items-center gap-1.5 text-xs text-gray-400">
+        <div className="mb-2 flex items-center gap-1.5 text-xs text-neutral-500">
           <span>Wallet</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700 font-medium">Wallet Payment</span>
+          <span className="text-neutral-700 font-medium">Wallet payment</span>
         </div>
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-lg text-gray-900 font-bold">Wallet Payment</h1>
-            <p className="mt-1 text-sm text-gray-500">
+            <h1 className="text-lg text-neutral-900 font-medium">Wallet payment</h1>
+            <p className="mt-1 text-sm text-neutral-500">
               Manage and adjust balances for Users, Drivers, and Fleet Owners
             </p>
           </div>
@@ -129,14 +129,14 @@ const WalletPayment = () => {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <div className="space-y-6 lg:col-span-5">
-          <div className="rounded-xl border border-gray-200 bg-white p-6">
-            <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="rounded-xl border border-neutral-200 bg-white p-6">
+            <div className="mb-6 flex items-center gap-3 border-b border-neutral-100 pb-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
                 <Search size={18} />
               </div>
               <div>
-                <h2 className="text-sm text-gray-900 font-bold">Select Account</h2>
-                <p className="text-xs text-gray-400">
+                <h2 className="text-sm text-neutral-900 font-medium">Select account</h2>
+                <p className="text-xs text-neutral-500">
                   Choose role and search account before wallet adjustment
                 </p>
               </div>
@@ -144,7 +144,7 @@ const WalletPayment = () => {
 
             <div className="space-y-5">
               <div>
-                <label className={labelClass}>Select Role</label>
+                <label className={labelClass}>Select role</label>
                 <div className="grid grid-cols-3 gap-2">
                   {roleOptions.map((roleOption) => (
                     <button
@@ -160,8 +160,8 @@ const WalletPayment = () => {
                       }}
                       className={`flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
                         role === roleOption.id
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-                          : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                          ? 'border-[#0a4d2b] bg-neutral-50 text-[#0a4d2b]'
+                          : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
                       }`}
                     >
                       <roleOption.icon size={15} />
@@ -172,9 +172,9 @@ const WalletPayment = () => {
               </div>
 
               <div className="relative">
-                <label className={labelClass}>Search Account</label>
+                <label className={labelClass}>Search account</label>
                 <div className="relative">
-                  <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  <div className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500">
                     {searching ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
                   </div>
                   <input
@@ -194,7 +194,7 @@ const WalletPayment = () => {
                         setHistory([]);
                         setBalance(0);
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-500 hover:bg-gray-50"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-neutral-200 bg-white px-2 py-1 text-xs text-neutral-500 hover:bg-neutral-50"
                     >
                       Clear
                     </button>
@@ -202,26 +202,26 @@ const WalletPayment = () => {
                 </div>
 
                 {searchResults.length > 0 && (
-                  <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-lg border border-neutral-200 bg-white p-1 shadow-sm">
                     {searchResults.map((item) => (
                       <button
                         key={item._id}
                         type="button"
                         onClick={() => handleSelectEntity(item)}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-gray-50"
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-neutral-50"
                       >
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-700">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-xs font-medium text-neutral-700">
                           {(item.name || item.owner_name || '?')[0].toUpperCase()}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-gray-900">
+                          <p className="truncate text-sm font-medium text-neutral-900">
                             {item.name || item.owner_name}
                           </p>
-                          <p className="truncate text-xs text-gray-500">
+                          <p className="truncate text-xs text-neutral-500">
                             {item.phone || item.mobile || item.email}
                           </p>
                         </div>
-                        <ChevronRight size={14} className="text-gray-300" />
+                        <ChevronRight size={14} className="text-neutral-300" />
                       </button>
                     ))}
                   </div>
@@ -229,7 +229,7 @@ const WalletPayment = () => {
               </div>
 
               {selectedEntity && (
-                <form onSubmit={handleSubmit} className="space-y-4 border-t border-gray-100 pt-5">
+                <form onSubmit={handleSubmit} className="space-y-4 border-t border-neutral-100 pt-5">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className={labelClass}>Amount (INR)</label>
@@ -259,7 +259,7 @@ const WalletPayment = () => {
                   <div>
                     <label className={labelClass}>Description</label>
                     <textarea
-                      placeholder="Reason for adjustment..."
+                      placeholder="Reason for adjustment"
                       rows={2}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -270,7 +270,7 @@ const WalletPayment = () => {
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {submitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
                     Submit Adjustment
@@ -283,69 +283,69 @@ const WalletPayment = () => {
 
         <div className="space-y-6 lg:col-span-7">
           {selectedEntity && (
-            <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <div className="rounded-xl border border-neutral-200 bg-white p-6">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Current Balance
+                  <p className="text-xs text-neutral-500">
+                    Current balance
                   </p>
-                  <h3 className="mt-2 text-3xl text-gray-900 font-bold">
+                  <h3 className="mt-2 text-3xl text-neutral-900 font-medium">
                     INR{' '}
                     {Number(balance || 0).toLocaleString('en-IN', {
                       minimumFractionDigits: 2,
                     })}
                   </h3>
                 </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
                   <Wallet size={18} />
                 </div>
               </div>
-              <div className="mt-4 flex items-center gap-3 rounded-lg bg-gray-50 p-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-xs font-semibold text-gray-700">
+              <div className="mt-4 flex items-center gap-3 rounded-lg bg-neutral-50 p-3">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-200 text-xs font-medium text-neutral-700">
                     {(selectedEntity.name || selectedEntity.owner_name || '?')[0].toUpperCase()}
                   </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-neutral-900">
                     {selectedEntity.name || selectedEntity.owner_name}
                   </p>
-                  <p className="text-xs text-gray-500">{selectedEntity.phone || selectedEntity.mobile}</p>
+                  <p className="text-xs text-neutral-500">{selectedEntity.phone || selectedEntity.mobile}</p>
                 </div>
               </div>
             </div>
           )}
 
-          <div className="min-h-[420px] rounded-xl border border-gray-200 bg-white p-6">
-            <div className="mb-5 flex items-center justify-between border-b border-gray-100 pb-4">
-              <h2 className="flex items-center gap-2 text-sm text-gray-900 font-bold">
-                <Clock size={16} className="text-gray-400" /> Transaction History
+          <div className="min-h-[420px] rounded-xl border border-neutral-200 bg-white p-6">
+            <div className="mb-5 flex items-center justify-between border-b border-neutral-100 pb-4">
+              <h2 className="flex items-center gap-2 text-sm text-neutral-900 font-medium">
+                <Clock size={16} className="text-neutral-500" /> Transaction history
               </h2>
-              {loadingHistory && <Loader2 className="animate-spin text-indigo-500" size={16} />}
+              {loadingHistory && <Loader2 className="animate-spin text-[#0a4d2b]" size={16} />}
             </div>
 
             {!selectedEntity ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-gray-300">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
                   <Search size={26} />
                 </div>
-                <h3 className="text-sm text-gray-900 font-bold">No Account Selected</h3>
-                <p className="mt-1 max-w-xs text-xs text-gray-500">
-                  Select a role and search an account to view wallet transactions.
+                <h3 className="text-sm text-neutral-900 font-medium">No account selected</h3>
+                <p className="mt-1 max-w-xs text-xs text-neutral-500">
+                  Select a role and search an account to view wallet transactions
                 </p>
               </div>
             ) : history.length === 0 && !loadingHistory ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-50 text-gray-300">
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-neutral-100 text-neutral-500">
                   <History size={26} />
                 </div>
-                <h3 className="text-sm text-gray-900 font-bold">No Transactions Found</h3>
-                <p className="mt-1 text-xs text-gray-500">This account has no wallet entries yet.</p>
+                <h3 className="text-sm text-neutral-900 font-medium">No transactions found</h3>
+                <p className="mt-1 text-xs text-neutral-500">This account has no wallet entries yet</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {history.map((tx) => (
                   <div
                     key={tx._id}
-                    className="flex items-center justify-between rounded-lg border border-gray-100 px-4 py-3 transition-colors hover:bg-gray-50"
+                    className="flex items-center justify-between rounded-lg border border-neutral-100 px-4 py-3 transition-colors hover:bg-neutral-50"
                   >
                     <div className="flex items-center gap-4">
                       <div
@@ -358,10 +358,10 @@ const WalletPayment = () => {
                         {tx.type === 'credit' ? <ArrowUpRight size={18} /> : <ArrowDownLeft size={18} />}
                       </div>
                       <div className="min-w-0">
-                        <h4 className="truncate text-sm text-gray-900 font-bold">
+                        <h4 className="truncate text-sm text-neutral-900 font-medium">
                           {tx.description || 'Wallet adjustment'}
                         </h4>
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-neutral-500">
                           {new Date(tx.createdAt).toLocaleDateString()} {' • '}
                           {new Date(tx.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
@@ -372,13 +372,13 @@ const WalletPayment = () => {
                     </div>
                     <div className="text-right">
                       <p
-                        className={`text-sm font-semibold ${
+                        className={`text-sm font-medium ${
                           tx.type === 'credit' ? 'text-emerald-600' : 'text-rose-600'
                         }`}
                       >
                         {tx.type === 'credit' ? '+' : '-'} INR {Number(tx.amount || 0).toLocaleString('en-IN')}
                       </p>
-                      <p className="mt-0.5 text-[11px] uppercase text-gray-400">{tx.type}</p>
+                      <p className="mt-0.5 text-xs text-neutral-500">{tx.type}</p>
                     </div>
                   </div>
                 ))}

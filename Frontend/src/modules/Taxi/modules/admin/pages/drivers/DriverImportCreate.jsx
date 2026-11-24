@@ -9,7 +9,7 @@ import {
   validateDriverImportFile,
 } from './driverImportSchema';
 
-const labelClass = 'block text-xs font-semibold text-gray-500 mb-1.5';
+const labelClass = 'block text-xs text-neutral-500 mb-1.5';
 
 const formatFileSize = (size = 0) => `${(size / (1024 * 1024)).toFixed(2)} MB`;
 
@@ -102,22 +102,22 @@ const DriverImportCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+    <div className="min-h-screen bg-neutral-50 p-6 lg:p-8">
       <div className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
           <span>Drivers</span>
           <ChevronRight size={12} />
-          <span>Bulk Upload</span>
+          <span>Bulk upload</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">Create Import</span>
+          <span className="text-neutral-700">Create import</span>
         </div>
 
         <div className="flex items-center justify-between gap-4">
-          <h1 className="text-xl text-gray-900 font-bold">Create Import</h1>
+          <h1 className="text-xl text-neutral-900 font-medium">Create import</h1>
           <button
             type="button"
             onClick={goBack}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} /> Back
           </button>
@@ -125,14 +125,14 @@ const DriverImportCreate = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="bg-white rounded-xl border border-gray-200 p-6">
-          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+        <div className="bg-white rounded-xl border border-neutral-200 p-6">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
               <UploadCloud size={18} />
             </div>
             <div>
-              <h3 className="text-sm text-gray-900 font-bold">Driver Import File</h3>
-              <p className="text-xs text-gray-400">
+              <h3 className="text-sm text-neutral-900 font-medium">Driver import file</h3>
+              <p className="text-xs text-neutral-500">
                 Use only these columns: {DRIVER_IMPORT_COLUMNS.join(', ')}
               </p>
             </div>
@@ -150,17 +150,17 @@ const DriverImportCreate = () => {
                 onDrop={handleDrop}
                 className={`flex min-h-[220px] w-full flex-col items-center justify-center rounded-lg border border-dashed px-6 py-8 text-center transition-colors ${
                   dragActive
-                    ? 'border-indigo-500 bg-indigo-50'
-                    : 'border-gray-200 bg-gray-50 hover:border-indigo-300 hover:bg-white'
+                    ? 'border-[#0a4d2b] bg-neutral-50'
+                    : 'border-neutral-200 bg-neutral-50 hover:border-neutral-200 hover:bg-white'
                 }`}
               >
-                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-white text-indigo-600 border border-gray-200">
+                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-white text-[#0a4d2b] border border-neutral-200">
                   <UploadCloud size={22} />
                 </span>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-medium text-neutral-900">
                   {selectedFile ? 'Replace selected file' : 'Select file'}
                 </span>
-                <span className="mt-1 text-xs text-gray-500">
+                <span className="mt-1 text-xs text-neutral-500">
                   CSV or XLSX files only, with no extra columns
                 </span>
               </button>
@@ -174,14 +174,14 @@ const DriverImportCreate = () => {
             </div>
 
             {selectedFile && (
-              <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3">
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
                     <FileText size={18} />
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-gray-900">{selectedFile.name}</p>
-                    <p className="mt-0.5 text-xs text-gray-400">{formatFileSize(selectedFile.size)}</p>
+                    <p className="truncate text-sm font-medium text-neutral-900">{selectedFile.name}</p>
+                    <p className="mt-0.5 text-xs text-neutral-500">{formatFileSize(selectedFile.size)}</p>
                   </div>
                 </div>
                 <button
@@ -190,7 +190,7 @@ const DriverImportCreate = () => {
                     setSelectedFile(null);
                     setError('');
                   }}
-                  className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                  className="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-rose-50 hover:text-rose-600"
                   title="Remove"
                 >
                   <X size={16} />
@@ -198,13 +198,13 @@ const DriverImportCreate = () => {
               </div>
             )}
 
-            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
-              <p className="text-xs font-semibold text-gray-500 mb-2">Required Excel Columns</p>
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
+              <p className="text-xs text-neutral-500 mb-2">Required excel columns</p>
               <div className="flex flex-wrap gap-2">
                 {DRIVER_IMPORT_COLUMNS.map((column) => (
                   <span
                     key={column}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-800"
+                    className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-800"
                   >
                     {column}
                   </span>
@@ -220,10 +220,10 @@ const DriverImportCreate = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 self-start">
+        <div className="bg-white rounded-xl border border-neutral-200 p-6 space-y-3 self-start">
           <button
             type="submit"
-            className="w-full py-3 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:cursor-not-allowed disabled:bg-indigo-200"
+            className="w-full py-3 bg-neutral-900 text-white rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors disabled:cursor-not-allowed disabled:bg-neutral-200"
             disabled={!selectedFile || isSubmitting}
           >
             {isSubmitting ? 'Importing...' : 'Create Import'}
@@ -231,7 +231,7 @@ const DriverImportCreate = () => {
           <button
             type="button"
             onClick={goBack}
-            className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+            className="w-full py-3 bg-neutral-50 text-neutral-600 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors"
           >
             Cancel
           </button>

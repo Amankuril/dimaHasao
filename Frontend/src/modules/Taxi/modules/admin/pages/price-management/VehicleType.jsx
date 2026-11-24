@@ -40,8 +40,8 @@ import trucksImg from '@/assets/images/delivery/trucks.png';
 import bikeImg from '@/assets/images/delivery/bike.png';
 import moversImg from '@/assets/images/delivery/movers.png';
 
-const inputClass = 'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition-all focus:border-yellow-400 focus:ring-2 focus:ring-yellow-100';
-const labelClass = 'mb-2 block text-[12px] font-bold text-slate-700';
+const inputClass = 'w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-800 outline-none transition-colors focus:border-[#0a4d2b] focus:ring-2 focus:ring-yellow-100';
+const labelClass = 'mb-2 block text-[12px] font-medium text-neutral-700';
 
 const iconMap = {
   car: CarIcon,
@@ -316,9 +316,9 @@ const StatusToggle = ({ active, onToggle }) => (
       e.stopPropagation();
       onToggle();
     }}
-    className={`relative h-6 w-12 rounded-full transition-all ${active ? 'bg-yellow-400' : 'bg-slate-300'}`}
+    className={`relative h-6 w-12 rounded-full transition-colors ${active ? 'bg-[#0a4d2b] text-white' : 'bg-neutral-300'}`}
   >
-    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-all ${active ? 'left-7' : 'left-1'}`} />
+    <span className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-colors ${active ? 'left-7' : 'left-1'}`} />
   </button>
 );
 
@@ -344,12 +344,12 @@ const VehicleMultiSelect = ({
   return (
     <div>
       <label className={labelClass}>{label}</label>
-      <div className="rounded-xl border border-slate-200 bg-white p-3">
+      <div className="rounded-xl border border-neutral-200 bg-white p-3">
         <div className="mb-3 flex flex-wrap gap-2">
           {selectedItems.length ? selectedItems.map((item) => (
             <span
               key={String(item.id || item._id)}
-              className="inline-flex items-center gap-2 rounded-full bg-slate-700 px-3 py-1.5 text-[12px] font-semibold text-black"
+              className="inline-flex items-center gap-2 rounded-full bg-neutral-700 px-3 py-1.5 text-[12px] font-medium text-black"
             >
               {item.name}
               <button
@@ -361,7 +361,7 @@ const VehicleMultiSelect = ({
               </button>
             </span>
           )) : (
-            <p className="text-[12px] text-slate-400">{placeholder}</p>
+            <p className="text-[12px] text-neutral-400">{placeholder}</p>
           )}
         </div>
         <select value="" onChange={handleSelect} className={inputClass}>
@@ -646,59 +646,59 @@ const VehicleType = ({ mode: propMode }) => {
 
   if (!isEditor) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+      <div className="min-h-screen bg-neutral-50 p-6 lg:p-8">
         <div className="mb-6">
-          <div className="mb-2 flex items-center gap-1.5 text-xs text-slate-400">
+          <div className="mb-2 flex items-center gap-1.5 text-xs text-neutral-400">
             <span>Pricing</span>
             <ChevronRight size={12} />
-            <span className="text-slate-700">Vehicle Type</span>
+            <span className="text-neutral-700">Vehicle type</span>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Vehicle Type</h1>
-              <p className="mt-1 text-sm text-slate-500">Manage the ride and delivery vehicle catalog.</p>
+              <h1 className="text-2xl font-medium text-neutral-900">Vehicle type</h1>
+              <p className="mt-1 text-sm text-neutral-500">Manage the ride and delivery vehicle catalog</p>
             </div>
             <button
               onClick={() => navigate('/taxi/admin/pricing/vehicle-type/create')}
-              className="inline-flex items-center gap-2 rounded-xl bg-yellow-400 px-4 py-3 text-sm font-semibold text-black shadow-lg shadow-orange-200 transition hover:bg-yellow-500"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-4 py-3 text-sm font-medium text-white shadow-sm transition hover:bg-[#06381e]"
             >
               <Plus size={18} />
-              Add Vehicle
+              Add vehicle
             </button>
           </div>
         </div>
 
         <div className="mb-6 grid grid-cols-1 gap-5 md:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-50 text-orange-500">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
                 <Car size={20} />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Total Types</p>
-                <p className="text-2xl font-bold text-slate-900">{vehicles.length}</p>
+                <p className="text-sm font-medium text-neutral-500">Total types</p>
+                <p className="text-2xl font-medium text-neutral-900">{vehicles.length}</p>
               </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
                 <Activity size={20} />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Active</p>
-                <p className="text-2xl font-bold text-slate-900">{vehicles.filter((item) => item.active !== false).length}</p>
+                <p className="text-sm font-medium text-neutral-500">Active</p>
+                <p className="text-2xl font-medium text-neutral-900">{vehicles.filter((item) => item.active !== false).length}</p>
               </div>
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-5">
+          <div className="rounded-2xl border border-neutral-200 bg-white p-5">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-neutral-500">
                 <Package size={20} />
               </div>
               <div>
-                <p className="text-sm font-medium text-slate-500">Delivery Types</p>
-                <p className="text-2xl font-bold text-slate-900">{vehicles.filter((item) => ['delivery', 'both'].includes(String(item.transport_type || '').toLowerCase())).length}</p>
+                <p className="text-sm font-medium text-neutral-500">Delivery types</p>
+                <p className="text-2xl font-medium text-neutral-900">{vehicles.filter((item) => ['delivery', 'both'].includes(String(item.transport_type || '').toLowerCase())).length}</p>
               </div>
             </div>
           </div>
@@ -710,52 +710,52 @@ const VehicleType = ({ mode: propMode }) => {
           </div>
         ) : null}
 
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-neutral-900/[0.08] bg-white">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-slate-50">
+              <thead className="bg-neutral-50">
                 <tr>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600">Vehicle</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600">Transport</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600">Dispatch</th>
-                  <th className="px-6 py-4 text-sm font-semibold text-slate-600">Active</th>
-                  <th className="px-6 py-4 text-right text-sm font-semibold text-slate-600">Action</th>
+                  <th className="px-6 py-4 text-sm font-medium text-neutral-600">Vehicle</th>
+                  <th className="px-6 py-4 text-sm font-medium text-neutral-600">Transport</th>
+                  <th className="px-6 py-4 text-sm font-medium text-neutral-600">Dispatch</th>
+                  <th className="px-6 py-4 text-sm font-medium text-neutral-600">Active</th>
+                  <th className="px-6 py-4 text-right text-sm font-medium text-neutral-600">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-20 text-center text-sm text-slate-400">Loading vehicle types...</td>
+                    <td colSpan="5" className="px-6 py-20 text-center text-sm text-neutral-400">Loading vehicle types...</td>
                   </tr>
                 ) : !vehicles.length ? (
                   <tr>
-                    <td colSpan="5" className="px-6 py-20 text-center text-sm text-slate-400">No vehicle types found.</td>
+                    <td colSpan="5" className="px-6 py-20 text-center text-sm text-neutral-400">No vehicle types found</td>
                   </tr>
                 ) : vehicles.map((vehicle) => (
-                  <tr key={vehicle.id} className="border-t border-slate-100">
+                  <tr key={vehicle.id} className="border-t border-neutral-100">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-50">
                           <img src={vehicle.image || vehicle.map_icon || vehicle.icon || iconMap[normalizeIconType(vehicle.icon_types)] || CarIcon} alt={vehicle.name} className="h-10 w-10 object-contain" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">{vehicle.name}</p>
-                          <p className="text-xs text-slate-500">{vehicle.short_description || vehicle.description || 'No description added'}</p>
+                          <p className="text-sm font-medium text-neutral-900">{vehicle.name}</p>
+                          <p className="text-xs text-neutral-500">{vehicle.short_description || vehicle.description || 'No description added'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
                         String(vehicle.transport_type || '').toLowerCase() === 'delivery'
                           ? 'bg-orange-50 text-orange-600'
                           : String(vehicle.transport_type || '').toLowerCase() === 'both'
                             ? 'bg-emerald-50 text-emerald-600'
-                            : 'bg-blue-50 text-blue-600'
+                            : 'bg-neutral-50 text-[#0a4d2b]'
                       }`}>
                         {vehicle.transport_type}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-sm font-medium text-slate-700">{vehicle.trip_dispatch_type || vehicle.dispatch_type || 'normal'}</td>
+                    <td className="px-6 py-5 text-sm font-medium text-neutral-700">{vehicle.trip_dispatch_type || vehicle.dispatch_type || 'normal'}</td>
                     <td className="px-6 py-5">
                       <StatusToggle active={vehicle.active !== false} onToggle={() => {}} />
                     </td>
@@ -763,13 +763,13 @@ const VehicleType = ({ mode: propMode }) => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => navigate(`/taxi/admin/pricing/vehicle-type/edit/${vehicle.id}`)}
-                          className="rounded-xl p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600"
+                          className="rounded-xl p-2 text-neutral-400 transition hover:bg-neutral-50 hover:text-[#0a4d2b]"
                         >
                           <Edit2 size={15} />
                         </button>
                         <button
                           onClick={() => handleDelete(vehicle.id)}
-                          className="rounded-xl p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                          className="rounded-xl p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
                         >
                           <Trash2 size={15} />
                         </button>
@@ -786,22 +786,22 @@ const VehicleType = ({ mode: propMode }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+    <div className="min-h-screen bg-neutral-50 p-6 lg:p-8">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <div className="mb-2 flex items-center gap-1.5 text-xs text-slate-400">
+          <div className="mb-2 flex items-center gap-1.5 text-xs text-neutral-400">
             <span>Pricing</span>
             <ChevronRight size={12} />
-            <span className="text-slate-700">Vehicle Type</span>
+            <span className="text-neutral-700">Vehicle type</span>
             <ChevronRight size={12} />
-            <span className="text-slate-700">{id ? 'Edit' : 'Create'}</span>
+            <span className="text-neutral-700">{id ? 'Edit' : 'Create'}</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">{id ? 'Edit Vehicle Type' : 'Create Vehicle Type'}</h1>
-          <p className="mt-1 text-sm text-slate-500">Update the live vehicle catalog with real transport, icon, dispatch, and compatibility data.</p>
+          <h1 className="text-2xl font-medium text-neutral-900">{id ? 'Edit Vehicle Type' : 'Create Vehicle Type'}</h1>
+          <p className="mt-1 text-sm text-neutral-500">Update the live vehicle catalog with real transport, icon, dispatch, and compatibility data</p>
         </div>
         <button
           onClick={() => navigate('/taxi/admin/pricing/vehicle-type')}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-700 transition hover:bg-neutral-50"
         >
           <ArrowLeft size={16} />
           Back
@@ -814,7 +814,7 @@ const VehicleType = ({ mode: propMode }) => {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-neutral-900/[0.08] bg-white">
         <div className="grid grid-cols-1 gap-8 p-6 lg:grid-cols-2 lg:p-8">
           <div>
             <label className={labelClass}>Transport Type *</label>
@@ -832,10 +832,10 @@ const VehicleType = ({ mode: propMode }) => {
                 className={`${inputClass} flex min-h-[76px] items-center justify-between text-left`}
               >
                 <div>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-sm font-medium text-neutral-900">
                     {selectedTransportTypeOption?.display_name || 'Select Transport Type'}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-neutral-500">
                     {selectedTransportTypeOption
                       ? getTransportTypeOptionDescription(selectedTransportTypeOption.name, formData.name)
                       : 'Choose where this vehicle name should appear.'}
@@ -843,11 +843,11 @@ const VehicleType = ({ mode: propMode }) => {
                 </div>
                 <ChevronDown
                   size={18}
-                  className={`shrink-0 text-slate-400 transition-transform ${isTransportTypeMenuOpen ? 'rotate-180' : ''}`}
+                  className={`shrink-0 text-neutral-400 transition-transform ${isTransportTypeMenuOpen ? 'rotate-180' : ''}`}
                 />
               </button>
               {isTransportTypeMenuOpen ? (
-                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-xl border border-neutral-900/[0.08] bg-white">
                   {transportTypeOptions.map((t) => {
                     const selected = t.name === formData.transport_type;
 
@@ -865,14 +865,14 @@ const VehicleType = ({ mode: propMode }) => {
                           setIsTransportTypeMenuOpen(false);
                         }}
                         className={`flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition ${
-                          selected ? 'bg-orange-50' : 'bg-white hover:bg-slate-50'
+                          selected ? 'bg-orange-50' : 'bg-white hover:bg-neutral-50'
                         }`}
                       >
                         <div>
-                          <p className={`text-sm font-bold ${selected ? 'text-orange-600' : 'text-slate-900'}`}>
+                          <p className={`text-sm font-medium ${selected ? 'text-orange-600' : 'text-neutral-900'}`}>
                             {t.display_name}
                           </p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs text-neutral-500">
                             {getTransportTypeOptionDescription(t.name, formData.name)}
                           </p>
                         </div>
@@ -887,8 +887,8 @@ const VehicleType = ({ mode: propMode }) => {
                 </div>
               ) : null}
             </div>
-            <p className="mt-2 text-xs text-slate-500">
-              Choose `Both` for vehicle types like bikes that can handle ride and parcel flows.
+            <p className="mt-2 text-xs text-neutral-500">
+              Choose `Both` for vehicle types like bikes that can handle ride and parcel flows
             </p>
           </div>
 
@@ -922,22 +922,22 @@ const VehicleType = ({ mode: propMode }) => {
                       key={option.id}
                       type="button"
                       onClick={() => updateForm('delivery_category', option.id)}
-                      className={`rounded-[24px] border p-4 text-left transition-all ${
+                      className={`rounded-2xl border p-4 text-left transition-colors ${
                         selected
-                          ? 'border-[#0047AB] bg-[#EEF4FF] shadow-md'
-                          : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                          ? 'border-[#0047AB] bg-[#EEF4FF] shadow-sm'
+                          : 'border-neutral-200 bg-white hover:border-neutral-300 hover:shadow-sm'
                       }`}
                     >
-                      <div className="rounded-[20px] bg-slate-50 p-3">
+                      <div className="rounded-[20px] bg-neutral-50 p-3">
                         <img src={option.image} alt={option.title} className="mx-auto h-24 w-full object-contain" />
                       </div>
                       <div className="mt-4 flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-black text-slate-900">{option.title}</p>
-                          <p className="mt-1 text-xs font-medium leading-5 text-slate-500">{option.description}</p>
+                          <p className="text-sm font-medium text-neutral-900">{option.title}</p>
+                          <p className="mt-1 text-xs font-medium leading-5 text-neutral-500">{option.description}</p>
                         </div>
                         <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                          selected ? 'border-[#0047AB] bg-[#0047AB] text-white' : 'border-slate-300 bg-white'
+                          selected ? 'border-[#0047AB] bg-[#0047AB] text-white' : 'border-neutral-300 bg-white'
                         }`}>
                           {selected ? <CheckCircle2 size={12} /> : null}
                         </span>
@@ -946,22 +946,22 @@ const VehicleType = ({ mode: propMode }) => {
                   );
                 })}
               </div>
-              <p className="mt-2 text-xs text-slate-500">
-                This decides which delivery card this vehicle type appears under in the user parcel flow.
+              <p className="mt-2 text-xs text-neutral-500">
+                This decides which delivery card this vehicle type appears under in the user parcel flow
               </p>
             </div>
           ) : null}
 
           {showsDeliveryCategorySelector ? (
-            <div className="lg:col-span-2 rounded-[28px] border border-slate-200 bg-slate-50/70 p-5">
+            <div className="lg:col-span-2 rounded-2xl border border-neutral-200 bg-neutral-50/70 p-5">
               <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <label className={labelClass}>Delivery Distance Based Charges</label>
-                  <p className="text-xs text-slate-500">
-                    Enable quick parcel pricing defaults for this delivery-enabled vehicle type.
+                  <label className={labelClass}>Delivery distance based charges</label>
+                  <p className="text-xs text-neutral-500">
+                    Enable quick parcel pricing defaults for this delivery-enabled vehicle type
                   </p>
                 </div>
-                <label className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700">
+                <label className="inline-flex items-center gap-3 rounded-full border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700">
                   <input
                     type="checkbox"
                     checked={Boolean(formData.delivery_distance_pricing?.enabled)}
@@ -969,7 +969,7 @@ const VehicleType = ({ mode: propMode }) => {
                       ...formData.delivery_distance_pricing,
                       enabled: e.target.checked,
                     })}
-                    className="h-4 w-4 rounded border-slate-300"
+                    className="h-4 w-4 rounded border-neutral-300"
                   />
                   Enable distance based charges
                 </label>
@@ -977,7 +977,7 @@ const VehicleType = ({ mode: propMode }) => {
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
                 <div>
-                  <label className={labelClass}>Base Price</label>
+                  <label className={labelClass}>Base price</label>
                   <input
                     type="number"
                     min="0"
@@ -1006,13 +1006,13 @@ const VehicleType = ({ mode: propMode }) => {
                     placeholder="2"
                     disabled={!formData.delivery_distance_pricing?.enabled}
                   />
-                  <p className="mt-2 text-[11px] font-medium text-slate-400">
-                    Distance covered by the base price before per-km charges begin.
+                  <p className="mt-2 text-xs font-medium text-neutral-400">
+                    Distance covered by the base price before per-km charges begin
                   </p>
                 </div>
 
                 <div>
-                  <label className={labelClass}>Distance Price</label>
+                  <label className={labelClass}>Distance price</label>
                   <input
                     type="number"
                     min="0"
@@ -1037,8 +1037,8 @@ const VehicleType = ({ mode: propMode }) => {
                     className={inputClass}
                     placeholder="5"
                   />
-                  <p className="mt-2 text-[11px] font-medium text-slate-400">
-                    Added on top of the delivery fare shown to the user.
+                  <p className="mt-2 text-xs font-medium text-neutral-400">
+                    Added on top of the delivery fare shown to the user
                   </p>
                 </div>
 
@@ -1046,7 +1046,7 @@ const VehicleType = ({ mode: propMode }) => {
 
               <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 <div>
-                  <label className={labelClass}>Admin Commission Type From Driver</label>
+                  <label className={labelClass}>Admin commission type from driver</label>
                   <select
                     value={formData.admin_commission_type_from_driver}
                     onChange={(e) => updateForm('admin_commission_type_from_driver', e.target.value)}
@@ -1058,7 +1058,7 @@ const VehicleType = ({ mode: propMode }) => {
                 </div>
 
                 <div>
-                  <label className={labelClass}>Admin Commission From Driver</label>
+                  <label className={labelClass}>Admin commission from driver</label>
                   <input
                     type="number"
                     min="0"
@@ -1070,16 +1070,16 @@ const VehicleType = ({ mode: propMode }) => {
                 </div>
               </div>
 
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-neutral-500">
                 This section only appears when the vehicle supports `Delivery` or `Both`.
               </p>
             </div>
           ) : null}
 
           <div>
-            <label className={labelClass}>Preview Image</label>
-            <div className="rounded-2xl border border-dashed border-slate-300 p-4">
-              <div className="group relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-2xl bg-slate-50">
+            <label className={labelClass}>Preview image</label>
+            <div className="rounded-2xl border border-dashed border-neutral-300 p-4">
+              <div className="group relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-2xl bg-neutral-50">
                 {previewImage ? (
                   <>
                     <img src={previewImage} alt="Vehicle preview" className="max-h-[280px] w-full object-contain p-4" />
@@ -1097,16 +1097,16 @@ const VehicleType = ({ mode: propMode }) => {
                     <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-orange-500 shadow-sm">
                       <Upload size={20} />
                     </span>
-                    <span className="text-sm font-semibold text-slate-700">Upload preview image</span>
-                    <span className="text-xs text-slate-400">This shows in the user vehicle selection card</span>
+                    <span className="text-sm font-medium text-neutral-700">Upload preview image</span>
+                    <span className="text-xs text-neutral-400">This shows in the user vehicle selection card</span>
                   </label>
                 )}
               </div>
             </div>
-            <div className="mt-4 rounded-[24px] border border-orange-100 bg-gradient-to-r from-white via-orange-50/30 to-white p-3 shadow-sm">
-              <p className="mb-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">User Card Preview</p>
+            <div className="mt-4 rounded-2xl border border-orange-100 p-3 shadow-sm">
+              <p className="mb-2 text-xs font-medium text-neutral-400">User card preview</p>
               <div className="flex items-center gap-3 rounded-[20px] border border-orange-400 bg-white px-3 py-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-neutral-100">
                   <img
                     src={previewImage || mapIconPreview}
                     alt="User card vehicle preview"
@@ -1115,35 +1115,35 @@ const VehicleType = ({ mode: propMode }) => {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="truncate text-sm font-black text-slate-900">{formData.name || 'Taxi'}</p>
-                    <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[7px] font-black text-black">FASTEST</span>
+                    <p className="truncate text-sm font-medium text-neutral-900">{formData.name || 'Taxi'}</p>
+                    <span className="rounded bg-orange-500 px-1.5 py-0.5 text-xs font-medium text-black">Fastest</span>
                   </div>
-                  <p className="truncate text-[11px] font-bold text-slate-500">{formData.short_description || formData.description || 'Closest driver 940 m away'}</p>
+                  <p className="truncate text-xs font-medium text-neutral-500">{formData.short_description || formData.description || 'Closest driver 940 m away'}</p>
                   {showsDeliveryCategorySelector ? (
-                    <p className="mt-1 text-[10px] font-black uppercase tracking-wide text-slate-400">
+                    <p className="mt-1 text-xs font-medium text-neutral-400">
                       Includes {Number(formData.service_tax || 0).toFixed(2)}% service tax
                     </p>
                   ) : null}
                 </div>
-                <p className="text-sm font-black text-slate-900">₹31</p>
+                <p className="text-sm font-medium text-neutral-900">₹31</p>
               </div>
             </div>
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+            <div className="rounded-2xl border border-neutral-100 bg-neutral-50/70 p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">Live Map Icon Preview</p>
-                  <p className="text-[11px] font-medium text-slate-500">This uploaded icon is saved to the DB and used on app maps.</p>
+                  <p className="text-sm font-medium text-neutral-800">Live map icon preview</p>
+                  <p className="text-xs font-medium text-neutral-500">This uploaded icon is saved to the DB and used on app maps</p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-3 py-2 text-[11px] font-bold text-slate-700 shadow-sm transition hover:text-orange-500">
+                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-medium text-neutral-700 shadow-sm transition hover:text-orange-500">
                   <Upload size={14} />
                   Change
                   <input type="file" accept="image/*" className="hidden" onChange={(event) => handleImageChange(event, 'map_icon')} />
                 </label>
               </div>
-              <div className="relative h-[228px] overflow-hidden rounded-2xl border border-slate-200 bg-white">
+              <div className="relative h-[228px] overflow-hidden rounded-2xl border border-neutral-200 bg-white">
                 <img src={MapBackground} alt="Map preview" className="absolute inset-0 h-full w-full object-cover opacity-25" />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <img src={mapIconPreview} alt="Icon preview" className="h-16 w-16 object-contain drop-shadow-xl" />
@@ -1153,7 +1153,7 @@ const VehicleType = ({ mode: propMode }) => {
                 <button
                   type="button"
                   onClick={() => updateForm('map_icon', '')}
-                  className="mt-3 text-[11px] font-bold text-red-500 transition hover:text-red-600"
+                  className="mt-3 text-xs font-medium text-red-500 transition hover:text-red-600"
                 >
                   Remove uploaded map icon and use the selected icon type fallback
                 </button>
@@ -1178,7 +1178,7 @@ const VehicleType = ({ mode: propMode }) => {
                 value={formData.short_description}
                 onChange={(e) => updateForm('short_description', e.target.value)}
                 className={inputClass}
-                placeholder="Normal Delivery"
+                placeholder="Normal delivery"
               />
             </div>
           </div>
@@ -1230,7 +1230,7 @@ const VehicleType = ({ mode: propMode }) => {
               value={formData.description}
               onChange={(e) => updateForm('description', e.target.value)}
               className={inputClass}
-              placeholder="Parcel Delivery"
+              placeholder="Parcel delivery"
             />
           </div>
 
@@ -1255,7 +1255,7 @@ const VehicleType = ({ mode: propMode }) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 border-t border-slate-100 bg-slate-50/50 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="grid grid-cols-1 gap-4 border-t border-neutral-100 bg-neutral-50/50 p-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-3">
             <div className="flex items-start gap-3 rounded-2xl bg-amber-50 px-4 py-3">
               <Info size={16} className="mt-0.5 shrink-0 text-amber-600" />
@@ -1263,16 +1263,16 @@ const VehicleType = ({ mode: propMode }) => {
                 This form is fully dynamic from your DB. Transport type, icon type, supported vehicles, and preferences all save to the real vehicle catalog.
               </p>
             </div>
-            <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+            <label className="flex items-center gap-3 text-sm font-medium text-neutral-700">
               <input
                 type="checkbox"
                 checked={formData.is_accept_share_ride === 1}
                 onChange={(e) => updateForm('is_accept_share_ride', e.target.checked ? 1 : 0)}
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 rounded border-neutral-300"
               />
               Accept share ride
             </label>
-            <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+            <label className="flex items-center gap-3 text-sm font-medium text-neutral-700">
               <input
                 type="checkbox"
                 checked={formData.active}
@@ -1280,7 +1280,7 @@ const VehicleType = ({ mode: propMode }) => {
                   updateForm('active', e.target.checked);
                   updateForm('status', e.target.checked ? 1 : 0);
                 }}
-                className="h-4 w-4 rounded border-slate-300"
+                className="h-4 w-4 rounded border-neutral-300"
               />
               Active vehicle type
             </label>
@@ -1290,14 +1290,14 @@ const VehicleType = ({ mode: propMode }) => {
             <button
               onClick={handleSave}
               disabled={isSaving || loading}
-              className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-xl bg-yellow-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-yellow-500 disabled:opacity-60"
+              className="inline-flex min-w-[180px] items-center justify-center gap-2 rounded-xl bg-[#0a4d2b] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#06381e] disabled:opacity-60"
             >
               <Save size={16} />
               {isSaving ? 'Saving...' : id ? 'Update' : 'Create'}
             </button>
             <button
               onClick={() => navigate('/taxi/admin/pricing/vehicle-type')}
-              className="text-sm font-medium text-slate-500 transition hover:text-slate-700"
+              className="text-sm font-medium text-neutral-500 transition hover:text-neutral-700"
             >
               Cancel
             </button>

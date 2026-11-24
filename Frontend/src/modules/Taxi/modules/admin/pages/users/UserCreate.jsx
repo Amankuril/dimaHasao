@@ -27,8 +27,8 @@ const initialFormData = {
   profileImage: '',
 };
 
-const inputClass = 'admin-user-field w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm font-medium bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors';
-const labelClass = 'block text-xs font-semibold text-black mb-1.5';
+const inputClass = 'admin-user-field w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm font-medium bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors';
+const labelClass = 'block text-xs font-medium text-black mb-1.5';
 
 const UserCreate = () => {
   const navigate = useNavigate();
@@ -110,20 +110,20 @@ const UserCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8">
+    <div className="min-h-screen bg-neutral-50 p-6 lg:p-8">
       <div className="mb-6">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
           <span>Users</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">Create User</span>
+          <span className="text-neutral-700">Create user</span>
         </div>
 
         <div className="flex items-center justify-between">
-          <h1 className="text-xl text-gray-900 font-bold">Add User</h1>
+          <h1 className="text-xl text-neutral-900 font-medium">Add user</h1>
           <button
             type="button"
             onClick={() => navigate('/taxi/admin/users')}
-            className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
           >
             <ArrowLeft size={16} /> Back
           </button>
@@ -132,21 +132,21 @@ const UserCreate = () => {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-gray-900 border border-yellow-100">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center border bg-neutral-100 text-neutral-500">
                 <User size={18} />
               </div>
               <div>
-                <h3 className="text-sm text-gray-900 font-bold">User Details</h3>
-                <p className="text-xs text-gray-400">Customer identity and login information</p>
+                <h3 className="text-sm text-neutral-900 font-medium">User details</h3>
+                <p className="text-xs text-neutral-500">Customer identity and login information</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>
-                  <User size={12} className="inline mr-1 text-gray-400" />
+                  <User size={12} className="inline mr-1 text-neutral-500" />
                   Name *
                 </label>
                 <input
@@ -162,7 +162,7 @@ const UserCreate = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Users size={12} className="inline mr-1 text-gray-400" />
+                  <Users size={12} className="inline mr-1 text-neutral-500" />
                   Select Gender *
                 </label>
                 <select
@@ -181,7 +181,7 @@ const UserCreate = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Phone size={12} className="inline mr-1 text-gray-400" />
+                  <Phone size={12} className="inline mr-1 text-neutral-500" />
                   Mobile *
                 </label>
                 <input
@@ -197,7 +197,7 @@ const UserCreate = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Mail size={12} className="inline mr-1 text-gray-400" />
+                  <Mail size={12} className="inline mr-1 text-neutral-500" />
                   Email *
                 </label>
                 <input
@@ -213,7 +213,7 @@ const UserCreate = () => {
 
               <div>
                 <label className={labelClass}>
-                  <Lock size={12} className="inline mr-1 text-gray-400" />
+                  <Lock size={12} className="inline mr-1 text-neutral-500" />
                   Password *
                 </label>
                 <input
@@ -229,7 +229,7 @@ const UserCreate = () => {
 
               <div>
                 <label className={labelClass}>
-                  <CheckCircle2 size={12} className="inline mr-1 text-gray-400" />
+                  <CheckCircle2 size={12} className="inline mr-1 text-neutral-500" />
                   Confirm Password *
                 </label>
                 <input
@@ -247,46 +247,46 @@ const UserCreate = () => {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-              <div className="w-9 h-9 rounded-lg bg-yellow-50 flex items-center justify-center text-gray-900 border border-yellow-100">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center border bg-neutral-100 text-neutral-500">
                 <ImagePlus size={18} />
               </div>
               <div>
-                <h3 className="text-sm text-gray-900 font-bold">Profile Picture</h3>
-                <p className="text-xs text-gray-400">Optional user photo</p>
+                <h3 className="text-sm text-neutral-900 font-medium">Profile picture</h3>
+                <p className="text-xs text-neutral-500">Optional user photo</p>
               </div>
             </div>
 
             <label className="group relative block cursor-pointer">
-              <div className="flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-gray-200 bg-gray-50 transition-colors group-hover:border-yellow-400 group-hover:bg-yellow-50">
+              <div className="flex aspect-square w-full flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed border-neutral-200 bg-neutral-50 transition-colors group-hover:border-[#0a4d2b] group-hover:bg-yellow-50">
                 {imagePreview || formData.profileImage ? (
                   <img src={imagePreview || formData.profileImage} alt="Profile preview" className="h-full w-full object-cover" />
                 ) : (
-                  <div className="flex flex-col items-center text-gray-400">
+                  <div className="flex flex-col items-center text-neutral-500">
                     <ImagePlus size={34} strokeWidth={1.5} className="mb-3" />
-                    <p className="text-xs font-bold">Upload image</p>
+                    <p className="text-xs font-medium">Upload image</p>
                   </div>
                 )}
                 {imageUploading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-white/70">
-                    <Loader2 className="animate-spin text-yellow-500" size={28} />
+                    <Loader2 className="animate-spin text-[#0a4d2b]" size={28} />
                   </div>
                 )}
               </div>
               <input type="file" accept="image/*" onChange={handleFileChange} disabled={imageUploading} className="absolute inset-0 opacity-0" />
             </label>
 
-            <p className="mt-4 text-center text-xs text-gray-400">
+            <p className="mt-4 text-center text-xs text-neutral-500">
               Supported formats: JPG, PNG, WEBP
             </p>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 shadow-sm">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 space-y-3">
             <button
               type="submit"
               disabled={isSubmitting || imageUploading || success}
-              className="w-full py-3 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-900 transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-3 bg-neutral-900 text-white rounded-lg text-sm font-medium hover:bg-neutral-900 transition-colors disabled:opacity-60 flex items-center justify-center gap-2 shadow-sm"
             >
               {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : success ? <CheckCircle2 size={16} /> : <Save size={16} />}
               {success ? 'User Created' : isSubmitting ? 'Saving...' : 'Create User'}
@@ -295,14 +295,14 @@ const UserCreate = () => {
             <button
               type="button"
               onClick={() => navigate('/taxi/admin/users')}
-              className="w-full py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm font-bold hover:bg-gray-100 transition-colors"
+              className="w-full py-3 bg-neutral-50 text-neutral-700 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors"
             >
               Cancel
             </button>
 
             {error && (
               <div className="rounded-lg border border-rose-100 bg-rose-50 px-4 py-3">
-                <p className="text-sm font-semibold text-rose-600">{error}</p>
+                <p className="text-sm font-medium text-rose-600">{error}</p>
               </div>
             )}
           </div>

@@ -18,15 +18,15 @@ import { adminService } from '../../services/adminService';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from "framer-motion";
 
-const inputClass = "w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 font-semibold bg-white focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-colors shadow-sm";
-const labelClass = "block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide";
-const selectClass = "w-full border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-800 font-semibold bg-white focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M6%209L12%2015L18%209%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:18px] bg-[right_12px_center] bg-no-repeat shadow-sm";
+const inputClass = "w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 font-medium bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors shadow-sm";
+const labelClass = "block text-xs font-medium text-neutral-500 mb-1.5  ";
+const selectClass = "w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 font-medium bg-white focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition-colors appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cpath%20d%3D%22M6%209L12%2015L18%209%22%20stroke%3D%22%2364748B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/svg%3E')] bg-[length:18px] bg-[right_12px_center] bg-no-repeat shadow-sm";
 
 const StatusToggle = ({ active, onToggle }) => (
   <button
     type="button"
     onClick={(e) => { e.stopPropagation(); onToggle(); }}
-    className={`w-12 h-6.5 rounded-full transition-colors relative flex items-center px-1 ${active ? 'bg-[#10B981]' : 'bg-gray-300'}`}
+    className={`w-12 h-6.5 rounded-full transition-colors relative flex items-center px-1 ${active ? 'bg-[#10B981]' : 'bg-neutral-300'}`}
   >
     <div className={`w-4.5 h-4.5 rounded-full bg-white shadow-sm transition-transform ${active ? 'translate-x-5.5' : 'translate-x-0'}`} />
   </button>
@@ -159,12 +159,12 @@ const RentalPackageTypes = ({ mode: propMode }) => {
     return (
       <div className="min-h-screen bg-[#F3F4F9] animate-in fade-in duration-500 font-sans flex flex-col">
         {/* Header Section */}
-        <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm relative z-10">
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">Rental Packages</h1>
-          <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400">
+        <div className="bg-white border-b border-neutral-100 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm relative z-10">
+          <h1 className="text-xl font-medium text-neutral-800">Rental packages</h1>
+          <div className="flex items-center gap-2 text-xs text-neutral-500">
             <span>Pricing</span>
             <ChevronRight size={12} className="opacity-30" />
-            <span className="text-gray-500">Rental Packages</span>
+            <span className="text-neutral-500">Rental packages</span>
           </div>
         </div>
 
@@ -173,14 +173,14 @@ const RentalPackageTypes = ({ mode: propMode }) => {
             key="list" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
             className="max-w-7xl mx-auto"
           >
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden min-h-[200px]">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden min-h-[200px]">
               {/* Toolbar */}
               <div className="p-4 lg:px-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center gap-3 text-[13px] text-gray-400 font-medium">
+                <div className="flex items-center gap-3 text-[13px] text-neutral-500">
                   <span>show</span>
                   <select 
                     value={entriesPerPage} onChange={(e) => setEntriesPerPage(Number(e.target.value))}
-                    className="bg-white border border-gray-300 rounded-md px-2 py-1 text-slate-700 outline-none focus:border-indigo-500"
+                    className="bg-white border border-neutral-300 rounded-md px-2 py-1 text-neutral-700 outline-none focus:border-neutral-400"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
@@ -191,21 +191,21 @@ const RentalPackageTypes = ({ mode: propMode }) => {
 
                 <div className="flex flex-wrap items-center gap-3 relative">
                   <div className="relative hidden md:block">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" size={16} />
                     <input 
                       type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search packages..."
-                      className="pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-1 focus:ring-amber-400 focus:border-amber-400 outline-none transition-all w-64 shadow-sm font-semibold"
+                      placeholder="Search packages"
+                      className="pl-10 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:ring-1 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] outline-none transition-colors w-64 shadow-sm font-medium"
                     />
                   </div>
-                  <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-bold shadow-sm transition-colors ${showFilters ? 'bg-slate-800 text-white border-transparent' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+                  <button onClick={() => setShowFilters(!showFilters)} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium shadow-sm transition-colors ${showFilters ? 'bg-neutral-800 text-white border-transparent' : 'bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50'}`}>
                     <Filter size={16} /> Filters
                   </button>
                   <button 
                     onClick={() => navigate("create")}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-amber-400 text-slate-900 rounded-lg text-[13px] font-bold shadow-sm hover:bg-amber-500 transition-colors"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-[#0a4d2b] text-white rounded-lg text-[13px] font-medium shadow-sm hover:bg-[#06381e] transition-colors"
                   >
-                    <Plus size={18} /> Add Package
+                    <Plus size={18} /> Add package
                   </button>
 
                   {/* Filter Dropdown */}
@@ -213,32 +213,32 @@ const RentalPackageTypes = ({ mode: propMode }) => {
                     {showFilters && (
                       <motion.div 
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
-                        className="absolute top-full mt-2 right-0 w-80 bg-white rounded-xl shadow-xl border border-slate-100 p-4 z-20"
+                        className="absolute top-full mt-2 right-0 w-80 bg-white rounded-xl border border-neutral-900/[0.08] p-4 z-20"
                       >
                         <div className="space-y-4">
                           <div className="md:hidden">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Search</label>
-                            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search packages..." className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400" />
+                            <label className="block text-xs font-medium text-neutral-500 mb-1">Search</label>
+                            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search packages" className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30" />
                           </div>
                           <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Transport Type</label>
-                            <select value={filterTransport} onChange={(e) => setFilterTransport(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400">
+                            <label className="block text-xs font-medium text-neutral-500 mb-1">Transport type</label>
+                            <select value={filterTransport} onChange={(e) => setFilterTransport(e.target.value)} className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30">
                               <option value="all">All Types</option>
                               <option value="taxi">Taxi / Ride-Hailing</option>
                               <option value="delivery">Logistics / Delivery</option>
                             </select>
                           </div>
                           <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Status</label>
-                            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400">
+                            <label className="block text-xs font-medium text-neutral-500 mb-1">Status</label>
+                            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="w-full border border-neutral-200 rounded-lg px-3 py-2 text-sm font-medium outline-none focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30">
                               <option value="all">All Status</option>
                               <option value="active">Active</option>
                               <option value="inactive">Inactive</option>
                             </select>
                           </div>
                           <div className="flex gap-2 pt-2">
-                            <button onClick={() => { setSearchTerm(''); setFilterTransport('all'); setFilterStatus('all'); }} className="flex-1 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors">Reset</button>
-                            <button onClick={() => setShowFilters(false)} className="flex-1 px-3 py-2 bg-amber-400 text-slate-900 rounded-lg text-xs font-bold hover:bg-amber-500 transition-colors">Apply</button>
+                            <button onClick={() => { setSearchTerm(''); setFilterTransport('all'); setFilterStatus('all'); }} className="flex-1 px-3 py-2 bg-neutral-100 text-neutral-600 rounded-lg text-xs font-medium hover:bg-neutral-200 transition-colors">Reset</button>
+                            <button onClick={() => setShowFilters(false)} className="flex-1 px-3 py-2 bg-[#0a4d2b] text-white rounded-lg text-xs font-medium hover:bg-[#06381e] transition-colors">Apply</button>
                           </div>
                         </div>
                       </motion.div>
@@ -253,30 +253,30 @@ const RentalPackageTypes = ({ mode: propMode }) => {
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-[#E9E9E9]">
-                        <th className="px-4 py-3 text-[13px] font-bold text-slate-700">Name</th>
-                        <th className="px-4 py-3 text-[13px] font-bold text-slate-700">Transport Type</th>
-                        <th className="px-4 py-3 text-[13px] font-bold text-slate-700">Status</th>
-                        <th className="px-4 py-3 text-right text-[13px] font-bold text-slate-700">Action</th>
+                        <th className="px-4 py-3 text-[13px] font-medium text-neutral-700">Name</th>
+                        <th className="px-4 py-3 text-[13px] font-medium text-neutral-700">Transport type</th>
+                        <th className="px-4 py-3 text-[13px] font-medium text-neutral-700">Status</th>
+                        <th className="px-4 py-3 text-right text-[13px] font-medium text-neutral-700">Action</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-50">
+                    <tbody className="divide-y divide-neutral-50">
                       {loading ? (
                         <tr>
                           <td colSpan="4" className="py-24 text-center">
-                            <Loader2 className="animate-spin text-indigo-600 mx-auto" size={32} />
+                            <Loader2 className="animate-spin text-[#0a4d2b] mx-auto" size={32} />
                           </td>
                         </tr>
                       ) : filteredPackages.length > 0 ? (
                         filteredPackages.slice(0, entriesPerPage).map(p => (
-                          <tr key={p._id || p.id} className="hover:bg-gray-50/50 transition-colors group">
+                          <tr key={p._id || p.id} className="hover:bg-neutral-50/50 transition-colors group">
                             <td className="px-4 py-3.5">
                               <div className="flex items-center gap-3">
-                                <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg"><Clock size={16} /></div>
-                                <span className="text-[14px] font-bold text-slate-700">{p.name}</span>
+                                <div className="p-1.5 bg-neutral-50 text-[#0a4d2b] rounded-lg"><Clock size={16} /></div>
+                                <span className="text-[14px] font-medium text-neutral-700">{p.name}</span>
                               </div>
                             </td>
                             <td className="px-4 py-3.5">
-                              <span className={`px-2.5 py-1 rounded-full text-xs font-semibold capitalize ${p.transport_type === 'taxi' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${p.transport_type === 'taxi' ? 'bg-neutral-50 text-[#0a4d2b] border border-neutral-200' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
                                 {p.transport_type || 'Taxi'}
                               </span>
                             </td>
@@ -301,8 +301,8 @@ const RentalPackageTypes = ({ mode: propMode }) => {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan="4" className="py-24 text-center text-gray-400 font-medium italic">
-                            No rental packages configured in the system.
+                          <td colSpan="4" className="py-24 text-center text-neutral-500">
+                            No rental packages configured in the system
                           </td>
                         </tr>
                       )}
@@ -320,22 +320,22 @@ const RentalPackageTypes = ({ mode: propMode }) => {
   return (
     <div className="min-h-screen bg-[#F3F4F9] animate-in fade-in duration-500 font-sans flex flex-col">
       {/* Create/Edit Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm relative z-10">
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">{isEdit ? 'Edit Rental Package Type' : 'Create Rental Package Type'}</h1>
-        <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400">
-          <span className="hover:text-amber-500 cursor-pointer" onClick={() => navigate("/taxi/admin/pricing/rental-packages")}>Rental Package Types</span>
+      <div className="bg-white border-b border-neutral-200 px-4 py-3 flex items-center justify-between shrink-0 shadow-sm relative z-10">
+        <h1 className="text-2xl font-medium text-neutral-900">{isEdit ? 'Edit Rental Package Type' : 'Create Rental Package Type'}</h1>
+        <div className="flex items-center gap-2 text-xs text-neutral-500">
+          <span className="hover:text-[#0a4d2b] cursor-pointer" onClick={() => navigate("/taxi/admin/pricing/rental-packages")}>Rental package types</span>
           <ChevronRight size={12} className="opacity-50" />
-          <span className="text-slate-700 uppercase">{isEdit ? 'Edit' : 'Create'}</span>
+          <span className="text-neutral-700">{isEdit ? 'Edit' : 'Create'}</span>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 lg:p-6 shrink-0">
         <motion.div 
           key="form" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-          className="max-w-[1400px] mx-auto bg-white rounded shadow-sm border border-gray-100 mb-20 relative"
+          className="max-w-[1400px] mx-auto bg-white rounded shadow-sm border border-neutral-100 mb-20 relative"
         >
           {/* Main Content Area */}
-          <div className="p-5 lg:p-8 border-b border-gray-100 border-dashed">
+          <div className="p-5 lg:p-8 border-b border-neutral-100 border-dashed">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-1.5 font-sans">
                 <label className={labelClass}>Transport Type *</label>
@@ -348,12 +348,12 @@ const RentalPackageTypes = ({ mode: propMode }) => {
 
               <div className="space-y-1.5 font-sans">
                 <label className={labelClass}>Name *</label>
-                <input name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter Name" className={inputClass} />
+                <input name="name" value={formData.name} onChange={handleInputChange} placeholder="Enter name" className={inputClass} />
               </div>
 
               <div className="space-y-1.5 font-sans">
                 <label className={labelClass}>Short Description *</label>
-                <input name="short_description" value={formData.short_description} onChange={handleInputChange} placeholder="Enter Short Description" className={inputClass} />
+                <input name="short_description" value={formData.short_description} onChange={handleInputChange} placeholder="Enter short description" className={inputClass} />
               </div>
 
               <div className="space-y-1.5 font-sans">
@@ -363,25 +363,25 @@ const RentalPackageTypes = ({ mode: propMode }) => {
                   value={formData.description} 
                   onChange={handleInputChange} 
                   rows={2} 
-                  placeholder="Enter Description" 
+                  placeholder="Enter description" 
                   className={inputClass + " resize-none min-h-[46px] flex items-center pt-2.5"} 
                 />
               </div>
             </div>
           </div>
 
-          <div className="p-6 bg-slate-50 flex justify-end items-center gap-3 rounded-b-xl border-t border-gray-100">
+          <div className="p-6 bg-neutral-50 flex justify-end items-center gap-3 rounded-b-xl border-t border-neutral-100">
              <button 
                 onClick={() => navigate('/taxi/admin/pricing/rental-packages')}
-                className="px-6 py-2.5 bg-white text-slate-700 rounded-lg text-sm font-bold hover:bg-slate-100 transition-all active:scale-95 border border-slate-200 shadow-sm"
+                className="px-6 py-2.5 bg-white text-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors border border-neutral-200 shadow-sm"
              >
                 Cancel
              </button>
              <button 
                 onClick={handleSubmit} disabled={submitting}
-                className="px-8 py-2.5 bg-amber-400 text-slate-900 rounded-lg text-sm font-bold hover:bg-amber-500 transition-all shadow-sm active:scale-95 flex items-center gap-2 group"
+                className="px-8 py-2.5 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium hover:bg-[#06381e] transition-colors shadow-sm flex items-center gap-2 group"
               >
-                {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} className="group-hover:scale-110 transition-transform" />}
+                {submitting ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} className="transition-transform" />}
                 {isEdit ? 'Update Package' : 'Save Package'}
              </button>
           </div>

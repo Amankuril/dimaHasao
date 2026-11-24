@@ -101,32 +101,32 @@ const SMSGateways = () => {
     ]}
   ];
 
-  const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-colors";
-  const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5";
+  const inputClass = "w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-neutral-400 focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors";
+  const labelClass = "block text-xs font-medium text-neutral-500 mb-1.5";
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+      <div className="flex items-center justify-center min-h-screen bg-neutral-50">
+        <Loader2 className="animate-spin text-[#0a4d2b]" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8 font-sans">
+    <div className="min-h-screen bg-neutral-50 p-6 lg:p-8 font-sans">
       
       {/* Header Block */}
       <div className="mb-8">
-        <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+        <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
           <span>Settings</span>
           <ChevronRight size={12} />
           <span>Third-party</span>
           <ChevronRight size={12} />
-          <span className="text-gray-700">SMS Gateways</span>
+          <span className="text-neutral-700">SMS gateways</span>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-xl text-gray-900 font-bold">SMS Gateways</h1>
-          <button onClick={() => window.history.back()} className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
+          <h1 className="text-xl text-neutral-900 font-medium">SMS gateways</h1>
+          <button onClick={() => window.history.back()} className="flex items-center gap-2 px-4 py-2 text-sm text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors shadow-sm">
             <ArrowLeft size={16} /> Back
           </button>
         </div>
@@ -135,14 +135,14 @@ const SMSGateways = () => {
       <div className="space-y-8">
         
         {/* Top Feature Toggle Card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between shadow-sm">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 flex items-center justify-between">
            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                  <Smartphone size={20} />
               </div>
               <div>
-                 <h3 className="text-sm font-bold text-gray-900">Push Notifications & OTP</h3>
-                 <p className="text-xs text-gray-400">Enable Firebase OTP for user authentication</p>
+                 <h3 className="text-sm font-medium text-neutral-900">Push notifications & OTP</h3>
+                 <p className="text-xs text-neutral-500">Enable Firebase OTP for user authentication</p>
               </div>
            </div>
            <label className="relative inline-flex items-center cursor-pointer">
@@ -152,7 +152,7 @@ const SMSGateways = () => {
                  onChange={() => handleToggle('Firebase OTP', 'firebase.enabled')}
                  className="sr-only peer" 
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+              <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neutral-900"></div>
            </label>
         </div>
 
@@ -162,22 +162,22 @@ const SMSGateways = () => {
               const isEnabled = getSettingValue(provider.enableKey) === "1";
               
               return (
-                 <div key={provider.slug} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-full transform transition-all duration-200 hover:shadow-md">
+                 <div key={provider.slug} className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden flex flex-col h-full transform transition-colors duration-200 hover:shadow-md">
                     {/* Card Header */}
-                    <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white">
+                    <div className="p-6 border-b border-neutral-100 flex items-center justify-between bg-white">
                        <div className="flex items-center gap-4">
-                          <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-gray-100 bg-white p-2">
+                          <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-neutral-100 bg-white p-2">
                              <img src={provider.logo} alt={provider.name} className="w-full h-full object-contain" />
                           </div>
                           <div>
-                             <h3 className="text-sm font-bold text-gray-900 tracking-tight">{provider.name} Integration</h3>
-                             <p className="text-[11px] font-medium text-gray-400 flex items-center gap-1 mt-0.5">
+                             <h3 className="text-sm font-medium text-neutral-900">{provider.name} Integration</h3>
+                             <p className="text-xs text-neutral-500 flex items-center gap-1 mt-0.5">
                                 {isEnabled ? (
                                    <span className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-0.5 rounded-md">
                                       <CheckCircle2 size={10} /> Enabled
                                    </span>
                                 ) : (
-                                   <span className="flex items-center gap-1 text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md">
+                                   <span className="flex items-center gap-1 text-neutral-500 bg-neutral-50 px-2 py-0.5 rounded-md">
                                       <AlertCircle size={10} /> Disabled
                                    </span>
                                 )}
@@ -191,7 +191,7 @@ const SMSGateways = () => {
                              onChange={() => handleToggle(provider.name, provider.enableKey)}
                              className="sr-only peer" 
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                          <div className="w-11 h-6 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-neutral-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neutral-900"></div>
                        </label>
                     </div>
 
@@ -212,15 +212,15 @@ const SMSGateways = () => {
                     </div>
 
                     {/* Card Footer */}
-                    <div className="p-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                       <div className="flex items-center gap-2 text-[10px] text-gray-400 font-semibold uppercase tracking-widest px-2">
-                          <MessageSquare size={12} className="text-gray-300" />
-                          SMS Verified
+                    <div className="p-4 bg-neutral-50/50 border-t border-neutral-100 flex items-center justify-between">
+                       <div className="flex items-center gap-2 text-xs text-neutral-500 px-2">
+                          <MessageSquare size={12} className="text-neutral-300" />
+                          SMS verified
                        </div>
                        <button 
                           onClick={() => handleSave(provider.name, provider.slug)}
                           disabled={submitting[provider.name]}
-                          className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                          className="flex items-center gap-2 px-6 py-2.5 bg-neutral-900 text-white rounded-lg text-sm font-medium hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50"
                        >
                           {submitting[provider.name] ? (
                              <><Loader2 size={16} className="animate-spin" /> Updating...</>

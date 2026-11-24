@@ -91,8 +91,8 @@ const HeatMap = () => {
 
   const { isLoaded, loadError } = useBaseGoogleMapsLoader();
 
-  const inputClass = "w-full border border-gray-200 rounded-md px-2 py-1.5 text-xs text-gray-800 bg-white focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400 outline-none transition-colors";
-  const labelClass = "block text-[11px] font-bold text-gray-500 mb-1";
+  const inputClass = "w-full border border-neutral-200 rounded-md px-2 py-1.5 text-xs text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors";
+  const labelClass = "block text-xs font-medium text-neutral-500 mb-1";
 
   useEffect(() => {
     // Load filter options
@@ -204,33 +204,33 @@ const HeatMap = () => {
   const circleRadiusMeters = Math.max(250, radius * 140);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-3 lg:p-4 mx-auto w-full max-w-[1600px] font-sans">
+    <div className="min-h-screen bg-neutral-50/50 p-3 lg:p-4 mx-auto w-full max-w-[1600px] font-sans">
       
       {/* 1. Header Block */}
       <div className="mb-2 flex flex-col md:flex-row md:items-center justify-between gap-2">
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 mb-1">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-neutral-400 mb-1">
             <span>Geofencing</span>
-            <ChevronRight size={14} className="text-slate-300" />
-            <span className="text-slate-600">Heat Map</span>
+            <ChevronRight size={14} className="text-neutral-300" />
+            <span className="text-neutral-600">Heat map</span>
           </div>
-          <h1 className="text-base text-slate-900 font-bold">Heat Map Overlay</h1>
+          <h1 className="text-base text-neutral-900 font-medium">Heat map overlay</h1>
         </div>
         <button 
            onClick={() => navigate('/taxi/admin/dashboard')}
-           className="inline-flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-bold text-slate-600 shadow-sm border border-slate-200 transition hover:bg-slate-50"
+           className="inline-flex w-fit items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-medium text-neutral-600 border border-neutral-900/[0.08] transition hover:bg-neutral-50"
         >
-          <ArrowLeft size={16} /> Back to Dashboard
+          <ArrowLeft size={16} /> Back to dashboard
         </button>
       </div>
 
       <div className="space-y-3">
         
         {/* 2. Map Canvas Card */}
-        <div className="bg-white rounded-xl border border-slate-200 p-1.5 shadow-sm relative">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-1.5 relative">
            <div className="rounded-xl overflow-hidden relative">
               {loadError ? (
-                 <div className="h-[400px] flex items-center justify-center bg-slate-50 text-red-500 font-semibold">Map Load Error</div>
+                 <div className="h-[400px] flex items-center justify-center bg-neutral-50 text-red-500 font-medium">Map load error</div>
               ) : HAS_VALID_GOOGLE_MAPS_KEY && isLoaded ? (
                  <>
                    <GoogleMap
@@ -254,43 +254,43 @@ const HeatMap = () => {
                    </GoogleMap>
                    {requestOverlays.length === 0 && !loading && (
                      <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px] pointer-events-none">
-                       <div className="bg-white px-6 py-4 rounded-2xl shadow-lg border border-slate-100 flex flex-col items-center text-center max-w-sm">
-                         <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mb-3">
+                       <div className="bg-white px-6 py-4 rounded-xl border border-neutral-900/[0.08] flex flex-col items-center text-center max-w-sm">
+                         <div className="w-12 h-12 rounded-full flex items-center justify-center mb-3 bg-neutral-100 text-neutral-500">
                            <MapPinOff size={24} />
                          </div>
-                         <h3 className="text-base font-bold text-slate-900 mb-1">No heat activity found</h3>
-                         <p className="text-xs text-slate-500">There are no data points available for the selected source and filters in this region.</p>
+                         <h3 className="text-base font-medium text-neutral-900 mb-1">No heat activity found</h3>
+                         <p className="text-xs text-neutral-500">There are no data points available for the selected source and filters in this region</p>
                        </div>
                      </div>
                    )}
                  </>
               ) : (
-                <div className="h-[400px] flex flex-col items-center justify-center bg-slate-50 gap-4">
-                   <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-yellow-500"><MapIcon size={32} /></div>
-                   <p className="text-[10px] font-black text-slate-400 tracking-[0.2em]">MAP API KEY REQUIRED</p>
+                <div className="h-[400px] flex flex-col items-center justify-center bg-neutral-50 gap-4">
+                   <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-sm text-[#0a4d2b]"><MapIcon size={32} /></div>
+                   <p className="text-xs font-medium text-neutral-400">Map API key required</p>
                 </div>
               )}
               
               {/* Floating Action Badge */}
               <div className="absolute top-4 right-4 flex items-center gap-2">
-                 <button onClick={fetchHeatmapData} disabled={loading} className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors border border-slate-200 disabled:opacity-50">
-                    <RefreshCw size={18} className={loading ? 'animate-spin text-yellow-500' : ''} />
+                 <button onClick={fetchHeatmapData} disabled={loading} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 transition-colors border border-neutral-900/[0.08] disabled:opacity-50">
+                    <RefreshCw size={18} className={loading ? 'animate-spin text-[#0a4d2b]' : ''} />
                  </button>
               </div>
            </div>
         </div>
 
         {/* 3. Controls & Filters Section */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
            {/* Section Header */}
-           <div className="px-3 py-2.5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-2 bg-slate-50/50">
+           <div className="px-3 py-2.5 border-b border-neutral-100 flex flex-col md:flex-row md:items-center justify-between gap-2 bg-neutral-50/50">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-slate-600 shadow-sm">
+                <div className="w-8 h-8 border rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                    <Settings2 size={16} />
                 </div>
                 <div>
-                   <h3 className="text-xs font-black text-slate-900 tracking-tight">Data & Visibility</h3>
-                   <p className="text-[10px] text-slate-500 font-medium">Select source, filters & overlay</p>
+                   <h3 className="text-xs font-medium text-neutral-900">Data & visibility</h3>
+                   <p className="text-xs text-neutral-500 font-medium">Select source, filters & overlay</p>
                 </div>
               </div>
            </div>
@@ -301,7 +301,7 @@ const HeatMap = () => {
                  {/* Filters Left Column */}
                  <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-4 gap-2">
                     <div>
-                       <label className={labelClass}>Heat Source</label>
+                       <label className={labelClass}>Heat source</label>
                        <select
                          value={heatSource}
                          onChange={(e) => setHeatSource(e.target.value)}
@@ -316,7 +316,7 @@ const HeatMap = () => {
                     </div>
 
                     <div>
-                       <label className={labelClass}>Time Range</label>
+                       <label className={labelClass}>Time range</label>
                        <select
                          value={timeRange}
                          onChange={(e) => setTimeRange(e.target.value)}
@@ -329,7 +329,7 @@ const HeatMap = () => {
                     </div>
 
                     <div>
-                       <label className={labelClass}>Service Location</label>
+                       <label className={labelClass}>Service location</label>
                        <select
                          value={serviceLocation}
                          onChange={(e) => setServiceLocation(e.target.value)}
@@ -343,7 +343,7 @@ const HeatMap = () => {
                     </div>
 
                     <div>
-                       <label className={labelClass}>Vehicle Type</label>
+                       <label className={labelClass}>Vehicle type</label>
                        <select
                          value={vehicleType}
                          onChange={(e) => setVehicleType(e.target.value)}
@@ -358,28 +358,28 @@ const HeatMap = () => {
                  </div>
 
                  {/* Sliders Right Column */}
-                 <div className="lg:col-span-4 lg:border-l lg:border-slate-100 lg:pl-3 space-y-3 flex flex-col justify-center">
+                 <div className="lg:col-span-4 lg:border-l lg:border-neutral-100 lg:pl-3 space-y-3 flex flex-col justify-center">
                     <div className="space-y-1.5">
                        <div className="flex items-center justify-between">
-                          <label className={labelClass + " !mb-0"}>Layer Opacity</label>
-                          <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">{Math.round(opacity * 100)}%</span>
+                          <label className={labelClass + " !mb-0"}>Layer opacity</label>
+                          <span className="text-xs font-medium text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded">{Math.round(opacity * 100)}%</span>
                        </div>
                        <input 
                          type="range" min="0" max="1" step="0.01" value={opacity} 
                          onChange={e => setOpacity(Number(e.target.value))}
-                         className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-800"
+                         className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-slate-800"
                        />
                     </div>
 
                     <div className="space-y-1.5">
                        <div className="flex items-center justify-between">
-                          <label className={labelClass + " !mb-0"}>Gradient Radius</label>
-                          <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded font-mono">{radius}px</span>
+                          <label className={labelClass + " !mb-0"}>Gradient radius</label>
+                          <span className="text-xs font-medium text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded font-mono">{radius}px</span>
                        </div>
                        <input 
                          type="range" min="1" max="100" step="1" value={radius} 
                          onChange={e => setRadius(Number(e.target.value))}
-                         className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-800"
+                         className="w-full h-1.5 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-slate-800"
                        />
                     </div>
                  </div>
@@ -390,33 +390,33 @@ const HeatMap = () => {
 
         {/* 4. Dynamic KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-           <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3 shadow-sm hover:border-slate-300 transition-colors">
-              <div className="w-8 h-8 bg-slate-50 flex items-center justify-center rounded-md text-slate-400">
+           <div className="bg-white rounded-lg border border-neutral-200 p-3 flex items-center gap-3 shadow-sm hover:border-neutral-300 transition-colors">
+              <div className="w-8 h-8 flex items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
                  <Navigation size={16} />
               </div>
               <div>
-                 <p className="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">Coverage</p>
-                 <p className="text-base font-black text-slate-900 tracking-tight leading-none">{requestOverlays.length} Hotspots</p>
+                 <p className="text-xs font-medium text-neutral-400 mb-0.5">Coverage</p>
+                 <p className="text-base font-medium text-neutral-900 leading-none">{requestOverlays.length} Hotspots</p>
               </div>
            </div>
 
-           <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3 shadow-sm hover:border-slate-300 transition-colors">
-              <div className="w-8 h-8 bg-slate-50 flex items-center justify-center rounded-md text-slate-400">
+           <div className="bg-white rounded-lg border border-neutral-200 p-3 flex items-center gap-3 shadow-sm hover:border-neutral-300 transition-colors">
+              <div className="w-8 h-8 flex items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
                  <Activity size={16} />
               </div>
               <div>
-                 <p className="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">Live Data</p>
-                 <p className="text-base font-black text-slate-900 tracking-tight leading-none">{filteredData.length} Points</p>
+                 <p className="text-xs font-medium text-neutral-400 mb-0.5">Live data</p>
+                 <p className="text-base font-medium text-neutral-900 leading-none">{filteredData.length} Points</p>
               </div>
            </div>
 
-           <div className="bg-white rounded-lg border border-slate-200 p-3 flex items-center gap-3 shadow-sm hover:border-slate-300 transition-colors">
-              <div className="w-8 h-8 bg-slate-50 flex items-center justify-center rounded-md text-slate-400">
-                 <Zap size={16} className={loading ? "text-yellow-500 animate-pulse" : ""} />
+           <div className="bg-white rounded-lg border border-neutral-200 p-3 flex items-center gap-3 shadow-sm hover:border-neutral-300 transition-colors">
+              <div className="w-8 h-8 flex items-center justify-center rounded-md bg-neutral-100 text-neutral-500">
+                 <Zap size={16} className={loading ? "text-[#0a4d2b] animate-pulse" : ""} />
               </div>
               <div>
-                 <p className="text-[9px] font-bold text-slate-400 tracking-wider mb-0.5">Sync State</p>
-                 <p className="text-[11px] font-black text-slate-900 tracking-tight leading-tight">
+                 <p className="text-xs font-medium text-neutral-400 mb-0.5">Sync state</p>
+                 <p className="text-xs font-medium text-neutral-900 leading-tight">
                    {loading ? 'Syncing...' : lastSync ? `Synced ${lastSync.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}` : 'Pending'}
                  </p>
               </div>
