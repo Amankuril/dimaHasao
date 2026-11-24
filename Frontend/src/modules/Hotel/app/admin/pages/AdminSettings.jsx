@@ -10,19 +10,19 @@ import adminService from '../../../services/adminService';
 const ToggleSwitch = ({ enabled, onChange }) => (
     <button
         onClick={() => onChange(!enabled)}
-        className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-black' : 'bg-gray-300'}`}
+        className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-neutral-900' : 'bg-neutral-300'}`}
     >
-        <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
+        <div className={`bg-white w-4 h-4 rounded-full shadow-sm transform transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
     </button>
 );
 
 const Section = ({ title, icon: Icon, children }) => (
-    <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
-            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-700">
+    <div className="bg-white border border-neutral-900/[0.08] rounded-xl p-6">
+        <div className="flex items-center gap-2 mb-6 border-b border-neutral-100 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-neutral-50 flex items-center justify-center text-neutral-700">
                 <Icon size={18} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">{title}</h3>
+            <h3 className="text-lg font-medium text-neutral-900">{title}</h3>
         </div>
         <div className="space-y-6">
             {children}
@@ -134,39 +134,39 @@ const AdminSettings = () => {
     return (
         <div className="max-w-4xl mx-auto space-y-8 pb-20">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900">Platform Settings</h2>
-                <p className="text-gray-500 text-sm">Configure global rules, commission rates, and system preferences.</p>
+                <h2 className="text-2xl font-medium text-neutral-900">Platform settings</h2>
+                <p className="mt-1 text-sm text-neutral-500">Booking rules, commission and admin preferences</p>
             </div>
 
-            <Section title="Admin Profile" icon={Settings}>
+            <Section title="Admin profile" icon={Settings}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Full Name</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">Full name</label>
                         <input
                             type="text"
                             value={profile.name}
                             onChange={(e) => handleProfileChange('name', e.target.value)}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
-                            placeholder="Admin Name"
+                            className="w-full p-2.5 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
+                            placeholder="Admin name"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">Email</label>
                         <input
                             type="email"
                             value={profile.email}
                             onChange={(e) => handleProfileChange('email', e.target.value)}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
+                            className="w-full p-2.5 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
                             placeholder="admin@example.com"
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">Phone</label>
                         <input
                             type="tel"
                             value={profile.phone}
                             onChange={(e) => handleProfileChange('phone', e.target.value)}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
+                            className="w-full p-2.5 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
                             placeholder="10 digit number"
                         />
                     </div>
@@ -176,87 +176,87 @@ const AdminSettings = () => {
                         type="button"
                         onClick={handleSaveProfile}
                         disabled={savingProfile}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl shadow-md hover:bg-gray-900 active:scale-95 disabled:opacity-60"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-xl shadow-sm hover:bg-neutral-900 disabled:opacity-60"
                     >
                         <Save size={16} />
-                        {savingProfile ? 'Saving...' : 'Save Profile'}
+                        {savingProfile ? 'Saving...' : 'Save profile'}
                     </button>
                 </div>
             </Section>
 
-            <Section title="General Configuration" icon={Globe}>
+            <Section title="General configuration" icon={Globe}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="font-medium text-gray-900">Platform Status</p>
-                        <p className="text-sm text-gray-500">Enable or disable booking capability globally.</p>
+                        <p className="font-medium text-neutral-900">Platform status</p>
+                        <p className="text-sm text-neutral-500">Enable or disable booking capability globally.</p>
                     </div>
                     <ToggleSwitch enabled={platformOpen} onChange={setPlatformOpen} />
                 </div>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="font-medium text-gray-900">Maintenance Mode</p>
-                        <p className="text-sm text-gray-500">Show maintenance screen to all users.</p>
+                        <p className="font-medium text-neutral-900">Maintenance mode</p>
+                        <p className="text-sm text-neutral-500">Show maintenance screen to all users.</p>
                     </div>
                     <ToggleSwitch enabled={maintenance} onChange={setMaintenance} />
                 </div>
                 <div className="grid grid-cols-1 gap-4 pt-2">
                     <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">User message when booking is disabled</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">User message when booking is disabled</label>
                         <input
                             type="text"
                             value={bookingMessage}
                             onChange={(e) => setBookingMessage(e.target.value)}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
+                            className="w-full p-2.5 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
                             placeholder="Bookings are temporarily disabled. Please try again later."
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Maintenance title</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">Maintenance title</label>
                         <input
                             type="text"
                             value={maintenanceTitle}
                             onChange={(e) => setMaintenanceTitle(e.target.value)}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm"
+                            className="w-full p-2.5 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
                             placeholder="We will be back soon."
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-gray-600 mb-1">Maintenance description</label>
+                        <label className="block text-xs font-medium text-neutral-600 mb-1">Maintenance description</label>
                         <textarea
                             rows={3}
                             value={maintenanceMessage}
                             onChange={(e) => setMaintenanceMessage(e.target.value)}
-                            className="w-full p-2.5 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black text-sm resize-none"
+                            className="w-full p-2.5 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm resize-none"
                             placeholder="The platform is under scheduled maintenance. Please check back in some time."
                         />
                     </div>
                 </div>
                 <div className="mt-4">
-                    <div className="pb-4 font-bold text-lg flex items-center gap-4"><Globe size={18} />Financial Rule</div>
+                    <div className="pb-4 font-medium text-lg flex items-center gap-4"><Globe size={18} />Financial rule</div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Default Commission (%)</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-2">Default Commission (%)</label>
                             <input
                                 type="number"
                                 value={commission}
                                 onChange={(e) => setCommission(e.target.value)}
-                                className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black"
+                                className="w-full p-2 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">GST / Tax Rate (%)</label>
+                            <label className="block text-sm font-medium text-neutral-700 mb-2">GST / Tax Rate (%)</label>
                             <input
                                 type="number"
                                 value={taxRate}
                                 onChange={(e) => setTaxRate(e.target.value)}
-                                className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black"
+                                className="w-full p-2 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                             />
                         </div>
                     </div>
                     {/* <div className="flex items-center justify-between pt-2">
                     <div>
-                        <p className="font-medium text-gray-900">Automatic Payouts</p>
-                        <p className="text-sm text-gray-500">Automatically release payments to hotels every Monday.</p>
+                        <p className="font-medium text-neutral-900">Automatic payouts</p>
+                        <p className="text-sm text-neutral-500">Automatically release payments to hotels every Monday.</p>
                     </div>
                     <ToggleSwitch enabled={autoPayout} onChange={setAutoPayout} />
                 </div> */}
@@ -267,28 +267,28 @@ const AdminSettings = () => {
                         type="button"
                         onClick={handleSavePlatformSettings}
                         disabled={savingSettings || loadingSettings}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl shadow-md hover:bg-gray-900 active:scale-95 disabled:opacity-60"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-neutral-900 text-white text-sm font-medium rounded-xl shadow-sm hover:bg-neutral-900 disabled:opacity-60"
                     >
                         <Save size={16} />
-                        {savingSettings || loadingSettings ? 'Saving...' : 'Save Configuration'}
+                        {savingSettings || loadingSettings ? 'Saving...' : 'Save configuration'}
                     </button>
                 </div>
             </Section>
 
-            {/* <Section title="Security & Access" icon={Shield}>
+            {/* <Section title="Security & access" icon={Shield}>
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="font-medium text-gray-900">Two-Factor Auth (Admin)</p>
-                        <p className="text-sm text-gray-500">Force 2FA for all admin accounts.</p>
+                        <p className="font-medium text-neutral-900">Two-Factor Auth (Admin)</p>
+                        <p className="text-sm text-neutral-500">Force 2FA for all admin accounts.</p>
                     </div>
-                    <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded">ENABLED</span>
+                    <span className="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded">Enabled</span>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Admin Session Timeout (Minutes)</label>
-                    <select className="w-full p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-black bg-white">
-                        <option>15 Minutes</option>
-                        <option>30 Minutes</option>
-                        <option>1 Hour</option>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">Admin session timeout (minutes)</label>
+                    <select className="w-full p-2 border border-neutral-200 rounded-lg outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 bg-white">
+                        <option>15 minutes</option>
+                        <option>30 minutes</option>
+                        <option>1 hour</option>
                     </select>
                 </div>
             </Section> */}

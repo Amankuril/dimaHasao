@@ -1,340 +1,355 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
 import {
-    TrendingUp, Users, ShoppingBag, DollarSign, Building2,
-    ArrowUpRight, ArrowDownRight, Clock, CheckCircle, AlertCircle
-} from 'lucide-react';
-import {
-    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-    PieChart, Pie, Cell, Legend
+    AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceDot,
 } from 'recharts';
 import adminService from '../../../services/adminService';
-import toast from 'react-hot-toast';
+import StatusDot from '../components/StatusDot';
 
+const ACCENT = '#0a4d2b';
 
-const DashboardCard = ({ title, value, trend, icon: Icon, color, loading, onClick }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden h-full flex flex-col justify-between ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+const formatCurrency = (amount) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount || 0);
+
+const formatCount = (n) => new Intl.NumberFormat('en-IN').format(n || 0);
+
+const formatAxis = (value) => {
+    if (value >= 100000) return `₹${(value / 100000).toFixed(value % 100000 ? 1 : 0)}L`;
+    if (value >= 1000) return `₹${Math.round(value / 1000)}k`;
+    return `₹${value}`;
+};
+
+/** The server only returns months that had paid stays; show all six so a quiet month reads as zero, not as missing. */
+const lastSixMonths = (rows = []) => {
+    const byName = new Map(rows.map((r) => [r.name, r.value]));
+    const out = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i -= 1) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const name = d.toLocaleString('default', { month: 'short' });
+        out.push({ name, value: byName.get(name) || 0 });
+    }
+    return out;
+};
+
+const STATUS_TONE_BAR = {
+    confirmed: 'bg-green-600',
+    checked_in: 'bg-green-400',
+    checked_out: 'bg-neutral-400',
+    completed: 'bg-neutral-400',
+    pending: 'bg-amber-500',
+    cancelled: 'bg-red-500',
+    refunded: 'bg-neutral-300',
+};
+
+const Change = ({ value, what }) => {
+    if (value === undefined || value === null) return null;
+    if (Math.abs(value) < 0.05) return <p className="mt-2 text-xs text-neutral-500">No change {what}</p>;
+    const up = value > 0;
+    return (
+        <p className="mt-2 text-xs text-neutral-500">
+            <span className={`tabular-nums ${up ? 'text-green-700' : 'text-red-600'}`}>
+                {up ? '+' : '−'}{Math.abs(value).toFixed(1)}%
+            </span>{' '}
+            {what}
+        </p>
+    );
+};
+
+const StatCard = ({ label, value, change, loading, onClick }) => (
+    <button
+        type="button"
         onClick={onClick}
+        className="flex h-full flex-col rounded-xl border border-neutral-900/[0.08] bg-white p-5 text-left outline-none transition-colors duration-150 hover:border-neutral-900/[0.16] focus-visible:ring-2 focus-visible:ring-[#0a4d2b]/30"
     >
-        <div className={`absolute top-0 right-0 p-4 opacity-5 ${color}`}>
-            <Icon size={80} />
-        </div>
-
-        <div className="relative z-10">
-            <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-2xl ${color.replace('text-', 'bg-').replace('500', '100')} ${color}`}>
-                    <Icon size={24} />
-                </div>
-                {!loading && trend !== undefined && (
-                    <span className={`flex items-center text-xs font-bold px-2 py-1 rounded-full ${trend >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                        {trend >= 0 ? <ArrowUpRight size={14} className="mr-1" /> : <ArrowDownRight size={14} className="mr-1" />}
-                        {Math.abs(trend).toFixed(1)}%
-                    </span>
-                )}
-            </div>
-
-            <div>
-                <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
-                {loading ? (
-                    <div className="h-8 w-24 bg-gray-100 animate-pulse rounded-md" />
-                ) : (
-                    <h3 className="text-3xl font-bold text-gray-900 tracking-tight">{value}</h3>
-                )}
-            </div>
-        </div>
-    </motion.div>
+        <span className="text-[13px] text-neutral-500">{label}</span>
+        {loading ? (
+            <span className="mt-3 h-8 w-28 animate-pulse rounded-md bg-neutral-100" />
+        ) : (
+            <span className="mt-2 text-[28px] font-medium leading-9 text-neutral-900 tabular-nums">{value}</span>
+        )}
+        {!loading && change}
+    </button>
 );
+
+const Panel = ({ title, action, children, className = '' }) => (
+    <section className={`rounded-xl border border-neutral-900/[0.08] bg-white ${className}`}>
+        <header className="flex h-14 items-center justify-between px-5">
+            <h2 className="text-[15px] font-medium text-neutral-900">{title}</h2>
+            {action}
+        </header>
+        {children}
+    </section>
+);
+
+const PanelLink = ({ onClick, children }) => (
+    <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-1 rounded-md text-[13px] text-[#0a4d2b] outline-none transition-colors hover:text-[#06381e] focus-visible:ring-2 focus-visible:ring-[#0a4d2b]/30"
+    >
+        {children}
+        <ArrowRight size={14} strokeWidth={1.5} />
+    </button>
+);
+
+const RevenueTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+        <div className="rounded-lg border border-neutral-900/[0.08] bg-white px-3 py-2 shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+            <p className="text-xs text-neutral-500">{label}</p>
+            <p className="font-mono text-sm text-neutral-900 tabular-nums">{formatCurrency(payload[0].value)}</p>
+        </div>
+    );
+};
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
-
-
-    // Data States
     const [stats, setStats] = useState({
         totalRevenue: 0,
         totalBookings: 0,
         totalUsers: 0,
         pendingHotels: 0,
-        trends: { revenue: 0, bookings: 0, users: 0 }
+        trends: { revenue: 0, bookings: 0, users: 0 },
     });
     const [charts, setCharts] = useState({ revenue: [], status: [] });
     const [recentBookings, setRecentBookings] = useState([]);
     const [recentRequests, setRecentRequests] = useState([]);
 
-    const COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#6366F1'];
-
     useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true);
+                const data = await adminService.getDashboardStats();
+                if (data.success) {
+                    setStats(data.stats);
+                    setCharts(data.charts || { revenue: [], status: [] });
+                    setRecentBookings(data.recentBookings || []);
+                    setRecentRequests(data.recentPropertyRequests || []);
+                }
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchDashboardData();
     }, []);
 
-    const fetchDashboardData = async () => {
-        try {
-            setLoading(true);
-            const data = await adminService.getDashboardStats();
-            if (data.success) {
-                setStats(data.stats);
-                setCharts(data.charts || { revenue: [], status: [] });
-                setRecentBookings(data.recentBookings || []);
-                setRecentRequests(data.recentPropertyRequests || []);
-            }
-        } catch (error) {
-            console.error('Error fetching dashboard data:', error);
-            // toast.error('Failed to update dashboard');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const revenue = useMemo(() => lastSixMonths(charts.revenue), [charts.revenue]);
+    const current = revenue[revenue.length - 1];
+    const sixMonthTotal = revenue.reduce((sum, r) => sum + r.value, 0);
 
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            maximumFractionDigits: 0
-        }).format(amount);
-    };
+    const statusRows = useMemo(() => {
+        const rows = (charts.status || [])
+            .map((s) => ({ key: String(s.name || '').toLowerCase(), count: s.value || 0 }))
+            .filter((s) => s.count > 0)
+            .sort((a, b) => b.count - a.count);
+        const total = rows.reduce((sum, r) => sum + r.count, 0);
+        return { rows, total };
+    }, [charts.status]);
+
+    const monthLabel = new Date().toLocaleString('en-IN', { month: 'long', year: 'numeric' });
 
     return (
-        <div className="space-y-8 p-2 pb-10">
-
-
-            {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="space-y-6 pb-10">
+            <div className="flex items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Dashboard Overview</h1>
-                    <p className="text-gray-500 mt-1">Real-time insights into your property platform performance.</p>
+                    <h1 className="text-2xl font-medium text-neutral-900">Overview</h1>
+                    <p className="mt-1 text-sm text-neutral-500">Stays across Dima Hasao · {monthLabel}</p>
                 </div>
-
             </div>
 
-            {/* Row 1: KPI Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <DashboardCard
-                    title="Total Revenue"
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <StatCard
+                    label="Paid revenue, all time"
                     value={formatCurrency(stats.totalRevenue)}
-                    trend={stats.trends?.revenue}
-                    icon={DollarSign}
-                    color="text-amber-500"
+                    change={<Change value={stats.trends?.revenue} what="this month vs last month" />}
                     loading={loading}
                     onClick={() => navigate('/hotel/admin/finance')}
                 />
-                <DashboardCard
-                    title="Total Bookings"
-                    value={stats.totalBookings}
-                    trend={stats.trends?.bookings}
-                    icon={ShoppingBag}
-                    color="text-blue-500"
+                <StatCard
+                    label="Bookings"
+                    value={formatCount(stats.totalBookings)}
+                    change={<Change value={stats.trends?.bookings} what="this month vs last month" />}
                     loading={loading}
                     onClick={() => navigate('/hotel/admin/bookings')}
                 />
-                <DashboardCard
-                    title="Active Users"
-                    value={stats.totalUsers}
-                    trend={stats.trends?.users}
-                    icon={Users}
-                    color="text-purple-500"
+                <StatCard
+                    label="Guests registered"
+                    value={formatCount(stats.totalUsers)}
+                    change={<Change value={stats.trends?.users} what="new sign-ups vs last month" />}
                     loading={loading}
                     onClick={() => navigate('/hotel/admin/users')}
                 />
-                <DashboardCard
-                    title="Pending Reviews"
-                    value={stats.pendingHotels}
-                    // trend={0} // No trend for pending usually
-                    icon={Building2}
-                    color="text-orange-500"
+                <StatCard
+                    label="Properties awaiting approval"
+                    value={formatCount(stats.pendingHotels)}
+                    change={<p className="mt-2 text-xs text-neutral-500">{stats.pendingHotels ? 'Open the list to review' : 'Nothing waiting'}</p>}
                     loading={loading}
                     onClick={() => navigate('/hotel/admin/properties')}
                 />
             </div>
 
-            {/* Row 2: Analytics */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Revenue Analytics (Area Chart) */}
-                <div className="lg:col-span-2 bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900">Revenue Analytics</h3>
-                            <p className="text-sm text-gray-500">Monthly revenue flow over the last 6 months</p>
-                        </div>
-                    </div>
-                    <div className="h-[300px] w-full">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+                <Panel
+                    title="Paid revenue by month"
+                    className="lg:col-span-2"
+                    action={!loading && (
+                        <span className="text-[13px] text-neutral-500">
+                            Last 6 months <span className="ml-1 font-mono text-neutral-900 tabular-nums">{formatCurrency(sixMonthTotal)}</span>
+                        </span>
+                    )}
+                >
+                    <div className="h-[320px] px-2 pb-4">
                         {loading ? (
-                            <div className="h-full w-full bg-gray-50 animate-pulse rounded-xl" />
+                            <div className="mx-3 h-full animate-pulse rounded-lg bg-neutral-50" />
                         ) : (
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={charts.revenue}>
-                                    <defs>
-                                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.1} />
-                                            <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                                        </linearGradient>
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                <AreaChart data={revenue} margin={{ top: 16, right: 20, bottom: 0, left: 4 }}>
+                                    <CartesianGrid vertical={false} stroke="rgba(23,23,23,0.06)" />
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                        dy={10}
+                                        tick={{ fill: '#737373', fontSize: 12, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+                                        dy={8}
                                     />
                                     <YAxis
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                                        tickFormatter={(value) => `₹${value / 1000}k`}
-                                        dx={-10}
+                                        width={52}
+                                        tick={{ fill: '#737373', fontSize: 12, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}
+                                        tickFormatter={formatAxis}
+                                        allowDecimals={false}
+                                        domain={[0, (max) => Math.max(max, 1000)]}
                                     />
-                                    <Tooltip
-                                        formatter={(value) => formatCurrency(value)}
-                                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                                    />
+                                    <Tooltip content={<RevenueTooltip />} cursor={{ stroke: 'rgba(23,23,23,0.12)' }} />
                                     <Area
                                         type="monotone"
                                         dataKey="value"
-                                        stroke="#10B981"
-                                        strokeWidth={3}
-                                        fillOpacity={1}
-                                        fill="url(#colorValue)"
+                                        stroke={ACCENT}
+                                        strokeWidth={2}
+                                        fill={ACCENT}
+                                        fillOpacity={0.06}
+                                        activeDot={{ r: 4, fill: ACCENT, stroke: '#fff', strokeWidth: 2 }}
+                                        isAnimationActive={false}
                                     />
+                                    {current && (
+                                        <ReferenceDot x={current.name} y={current.value} r={4} fill={ACCENT} stroke="#fff" strokeWidth={2} />
+                                    )}
                                 </AreaChart>
                             </ResponsiveContainer>
                         )}
                     </div>
-                </div>
+                </Panel>
 
-                {/* Booking Status (Donut Chart) */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Booking Status</h3>
-                    <p className="text-sm text-gray-500 mb-6">Distribution of booking outcomes</p>
-
-                    <div className="flex-1 min-h-[250px] relative">
+                <Panel title="Bookings by status">
+                    <div className="px-5 pb-5">
                         {loading ? (
-                            <div className="h-full w-full bg-gray-50 animate-pulse rounded-full" />
+                            <div className="h-40 animate-pulse rounded-lg bg-neutral-50" />
+                        ) : statusRows.total === 0 ? (
+                            <p className="py-8 text-sm text-neutral-500">No bookings yet</p>
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                    <Pie
-                                        data={charts.status}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={60}
-                                        outerRadius={80}
-                                        paddingAngle={5}
-                                        dataKey="value"
-                                    >
-                                        {charts.status.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                        ))}
-                                    </Pie>
-                                    <Tooltip />
-                                    <Legend verticalAlign="bottom" height={36} iconType="circle" />
-                                </PieChart>
-                            </ResponsiveContainer>
-                        )}
-                        {/* Center Label */}
-                        {!loading && (
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-                                <div className="text-center">
-                                    <span className="block text-3xl font-bold text-gray-900">{stats.totalBookings}</span>
-                                    <span className="text-xs text-gray-500 uppercase tracking-wider">Total</span>
+                            <>
+                                <div className="flex h-2 overflow-hidden rounded-full bg-neutral-100">
+                                    {statusRows.rows.map((r) => (
+                                        <span
+                                            key={r.key}
+                                            className={`${STATUS_TONE_BAR[r.key] || 'bg-neutral-300'} h-full border-r border-white last:border-0`}
+                                            style={{ width: `${(r.count / statusRows.total) * 100}%` }}
+                                        />
+                                    ))}
                                 </div>
-                            </div>
+                                <ul className="mt-4 divide-y divide-neutral-900/[0.06]">
+                                    {statusRows.rows.map((r) => (
+                                        <li key={r.key} className="flex h-10 items-center justify-between">
+                                            <StatusDot status={r.key} />
+                                            <span className="text-[13px] text-neutral-500 tabular-nums">
+                                                <span className="font-mono text-neutral-900">{formatCount(r.count)}</span>
+                                                <span className="ml-2 inline-block w-10 text-right">{Math.round((r.count / statusRows.total) * 100)}%</span>
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </>
                         )}
                     </div>
-                </div>
+                </Panel>
             </div>
 
-            {/* Row 3: Operations (Recent Activity & Pending Actions) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Recent Bookings */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col min-h-[400px]">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <Clock size={20} className="text-gray-400" />
-                            Recent Bookings
-                        </h3>
-                        <button onClick={() => navigate('/hotel/admin/bookings')} className="text-sm font-semibold text-blue-600 hover:text-blue-700">View All</button>
-                    </div>
-
-                    <div className="flex-1 space-y-4">
-                        {loading ? (
-                            [1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-50 animate-pulse rounded-xl"></div>)
-                        ) : recentBookings.length > 0 ? (
-                            recentBookings.map((booking, i) => (
-                                <div key={i} onClick={() => navigate(`/hotel/admin/bookings/${booking._id}`)} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors cursor-pointer group">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold text-sm shadow-md group-hover:scale-105 transition-transform">
-                                            {booking.userId?.name?.charAt(0) || 'U'}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900">{booking.userId?.name || 'Guest User'}</p>
-                                            <p className="text-xs text-gray-500">{booking.propertyId?.propertyName || 'Unknown Hotel'}</p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-sm font-bold text-gray-900">{formatCurrency(booking.totalAmount)}</p>
-                                        <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${booking.bookingStatus === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                            booking.bookingStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                                booking.bookingStatus === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'
-                                            }`}>
-                                            {booking.bookingStatus}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <Panel title="Recent bookings" action={<PanelLink onClick={() => navigate('/hotel/admin/bookings')}>All bookings</PanelLink>}>
+                    {loading ? (
+                        <div className="space-y-2 px-5 pb-5">
+                            {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded-lg bg-neutral-50" />)}
+                        </div>
+                    ) : recentBookings.length > 0 ? (
+                        <ul className="border-t border-neutral-900/[0.06]">
+                            {recentBookings.map((booking) => (
+                                <li key={booking._id}>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(`/hotel/admin/bookings/${booking._id}`)}
+                                        className="flex h-16 w-full items-center gap-4 border-b border-neutral-900/[0.06] px-5 text-left outline-none transition-colors duration-150 last:border-0 hover:bg-neutral-50 focus-visible:bg-neutral-50"
+                                    >
+                                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[13px] font-medium text-neutral-600">
+                                            {booking.userId?.name?.charAt(0)?.toUpperCase() || 'G'}
                                         </span>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                                <ShoppingBag size={48} className="mb-2 opacity-20" />
-                                <p>No recent bookings found</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block truncate text-sm text-neutral-900">{booking.userId?.name || 'Guest'}</span>
+                                            <span className="block truncate text-[13px] text-neutral-500">{booking.propertyId?.propertyName || 'Unknown property'}</span>
+                                        </span>
+                                        <span className="flex shrink-0 flex-col items-end gap-1">
+                                            <span className="font-mono text-sm text-neutral-900 tabular-nums">{formatCurrency(booking.totalAmount)}</span>
+                                            <StatusDot status={booking.bookingStatus} className="text-xs" />
+                                        </span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="px-5 pb-8 pt-2 text-sm text-neutral-500">No bookings yet</p>
+                    )}
+                </Panel>
 
-                {/* Pending Actions / Requests */}
-                <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm flex flex-col min-h-[400px]">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                            <AlertCircle size={20} className="text-orange-500" />
-                            Pending Actions
-                        </h3>
-                        <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">
-                            {recentRequests.length} Requires Action
-                        </span>
-                    </div>
-
-                    <div className="flex-1 space-y-4">
-                        {loading ? (
-                            [1, 2, 3].map(i => <div key={i} className="h-16 bg-gray-50 animate-pulse rounded-xl"></div>)
-                        ) : recentRequests.length > 0 ? (
-                            recentRequests.map((hotel, i) => (
-                                <div key={i} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors cursor-pointer group">
-                                    <div className="flex gap-4 items-center">
-                                        <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                                            <Building2 size={20} />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900">{hotel.propertyName}</p>
-                                            <p className="text-xs text-gray-500">by {hotel.partnerId?.name || 'Partner'}</p>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => navigate(`/hotel/admin/properties/${hotel._id}`)} className="text-xs font-bold text-gray-700 bg-white border border-gray-200 px-4 py-2 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
+                <Panel
+                    title="Awaiting approval"
+                    action={recentRequests.length > 0 && (
+                        <span className="text-[13px] text-neutral-500 tabular-nums">{formatCount(stats.pendingHotels || recentRequests.length)} properties</span>
+                    )}
+                >
+                    {loading ? (
+                        <div className="space-y-2 px-5 pb-5">
+                            {[1, 2, 3].map((i) => <div key={i} className="h-12 animate-pulse rounded-lg bg-neutral-50" />)}
+                        </div>
+                    ) : recentRequests.length > 0 ? (
+                        <ul className="border-t border-neutral-900/[0.06]">
+                            {recentRequests.map((hotel) => (
+                                <li key={hotel._id} className="flex h-16 items-center gap-4 border-b border-neutral-900/[0.06] px-5 last:border-0">
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-sm text-neutral-900">{hotel.propertyName}</span>
+                                        <span className="block truncate text-[13px] text-neutral-500">
+                                            {hotel.partnerId?.name || 'Partner'}
+                                            {hotel.address?.city ? ` · ${hotel.address.city}` : ''}
+                                        </span>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => navigate(`/hotel/admin/properties/${hotel._id}`)}
+                                        className="h-8 shrink-0 rounded-lg border border-neutral-900/[0.1] bg-white px-3 text-[13px] text-neutral-900 outline-none transition-colors duration-150 hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-[#0a4d2b]/30"
+                                    >
                                         Review
                                     </button>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                                <CheckCircle size={48} className="mb-2 opacity-20 text-green-500" />
-                                <p>All caught up! No pending requests.</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="px-5 pb-8 pt-2 text-sm text-neutral-500">No properties waiting for approval</p>
+                    )}
+                </Panel>
             </div>
         </div>
     );

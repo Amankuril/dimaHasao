@@ -15,7 +15,7 @@ const AdminProtectedRoute = () => {
     return (
       <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-4">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
-        <p className="text-gray-400 font-medium">Verifying Admin Access...</p>
+        <p className="text-gray-400 font-medium">Checking access</p>
       </div>
     );
   }

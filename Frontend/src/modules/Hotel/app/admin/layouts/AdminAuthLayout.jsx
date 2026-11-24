@@ -38,7 +38,7 @@ const AdminAuthLayout = ({ children, title, subtitle }) => {
                     {/* Decorative shine */}
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gray-500 to-transparent opacity-50"></div>
 
-                    <h2 className="text-2xl font-bold text-white tracking-wide uppercase">{title}</h2>
+                    <h2 className="text-2xl font-medium text-white">{title}</h2>
                     {subtitle && (
                         <p className="mt-2 text-gray-400 text-sm">{subtitle}</p>
                     )}

@@ -15,30 +15,30 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title, message, type = 
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
                     className="bg-white rounded-2xl shadow-xl max-w-sm w-full overflow-hidden"
                 >
                     <div className="p-6 text-center">
                         <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${style.bg}`}>
                             {type === 'success' ? <CheckCircle className={style.icon} size={24} /> : <AlertTriangle className={style.icon} size={24} />}
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-                        <p className="text-sm text-gray-500 mb-6">{message}</p>
+                        <h3 className="text-lg font-medium text-neutral-900 mb-2">{title}</h3>
+                        <p className="text-sm text-neutral-500 mb-6">{message}</p>
 
                         <div className="flex gap-3">
                             <button
                                 onClick={onClose}
-                                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                                className="flex-1 px-4 py-2 border border-neutral-200 rounded-lg text-neutral-700 font-medium hover:bg-neutral-50 transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => { onConfirm(); onClose(); }}
-                                className={`flex-1 px-4 py-2 text-white font-bold rounded-lg transition-colors shadow-lg ${style.button}`}
+                                className={`flex-1 px-4 py-2 text-white font-medium rounded-lg transition-colors shadow-sm ${style.button}`}
                             >
                                 {confirmText}
                             </button>

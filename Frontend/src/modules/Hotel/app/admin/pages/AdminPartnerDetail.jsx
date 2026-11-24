@@ -10,46 +10,42 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import walletService from '../../../services/walletService';
 import toast from 'react-hot-toast';
+import StatusDot from '../components/StatusDot';
 
 const PartnerPropertiesTab = ({ properties }) => (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-white border border-neutral-200 rounded-xl overflow-hidden">
         <table className="w-full text-left text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100 uppercase text-[10px] font-bold tracking-wider text-gray-500">
+            <thead className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
                 <tr>
-                    <th className="p-4 font-bold text-gray-600">Property Name</th>
-                    <th className="p-4 font-bold text-gray-600">Location</th>
-                    <th className="p-4 font-bold text-gray-600">Type</th>
-                    <th className="p-4 font-bold text-gray-600">Status</th>
-                    <th className="p-4 font-bold text-gray-600 text-right">Added On</th>
+                    <th className="p-4 font-medium text-neutral-600">Property name</th>
+                    <th className="p-4 font-medium text-neutral-600">Location</th>
+                    <th className="p-4 font-medium text-neutral-600">Type</th>
+                    <th className="p-4 font-medium text-neutral-600">Status</th>
+                    <th className="p-4 font-medium text-neutral-600 text-right">Added on</th>
                 </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-neutral-100">
                 {properties && properties.length > 0 ? (
                     properties.map((property, i) => (
-                        <tr key={i} className="hover:bg-gray-50">
-                            <td className="p-4 font-bold text-gray-900">
-                                <Link to={`/hotel/admin/properties/${property._id}`} className="hover:text-blue-600 hover:underline">
+                        <tr key={i} className="hover:bg-neutral-50">
+                            <td className="p-4 font-medium text-neutral-900">
+                                <Link to={`/hotel/admin/properties/${property._id}`} className="hover:text-[#0a4d2b] hover:underline">
                                     {property.propertyName}
                                 </Link>
                             </td>
-                            <td className="p-4 text-xs font-bold text-gray-500 uppercase">{property.address?.city}, {property.address?.state}</td>
-                            <td className="p-4 text-xs font-bold text-gray-500 uppercase">{property.propertyType}</td>
+                            <td className="p-4 text-xs text-neutral-500">{property.address?.city}, {property.address?.state}</td>
+                            <td className="p-4 text-xs text-neutral-500 capitalize">{property.propertyType}</td>
                             <td className="p-4">
-                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${property.status === 'approved' ? 'bg-green-100 text-green-700' :
-                                    property.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                        'bg-red-100 text-red-700'
-                                    }`}>
-                                    {property.status}
-                                </span>
+                                <StatusDot status={property.status} />
                             </td>
-                            <td className="p-4 text-right font-bold text-xs uppercase text-gray-400">
+                            <td className="p-4 text-right text-xs text-neutral-500">
                                 {new Date(property.createdAt).toLocaleDateString()}
                             </td>
                         </tr>
                     ))
                 ) : (
                     <tr>
-                        <td colSpan="5" className="p-8 text-center text-gray-400 text-xs font-bold uppercase">No properties listed</td>
+                        <td colSpan="5" className="p-8 text-center text-neutral-500 text-xs">No properties listed</td>
                     </tr>
                 )}
             </tbody>
@@ -59,55 +55,55 @@ const PartnerPropertiesTab = ({ properties }) => (
 
 const PartnerDocumentsTab = ({ partner }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 border border-gray-200 rounded-xl">
-            <h3 className="text-sm font-bold uppercase text-gray-500 mb-4 flex items-center gap-2">
-                <FileText size={16} /> Identity Proof (Aadhaar)
+        <div className="bg-white p-6 border border-neutral-200 rounded-xl">
+            <h3 className="text-sm text-neutral-500 mb-4 flex items-center gap-2">
+                <FileText size={16} /> Identity proof (Aadhaar)
             </h3>
             <div className="space-y-4">
                 <div>
-                    <span className="text-xs text-gray-400 font-bold uppercase block">Aadhaar Number</span>
-                    <span className="text-sm font-bold text-gray-900">{partner.aadhaarNumber || 'Not provided'}</span>
+                    <span className="text-xs text-neutral-500 block">Aadhaar number</span>
+                    <span className="text-sm font-medium text-neutral-900">{partner.aadhaarNumber || 'Not provided'}</span>
                 </div>
                 <div className="flex gap-4">
                     {partner.aadhaarFront ? (
-                        <a href={partner.aadhaarFront} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:opacity-90 transition-opacity">
+                        <a href={partner.aadhaarFront} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-neutral-100 rounded-lg overflow-hidden border border-neutral-200 hover:opacity-90 transition-opacity">
                             <img src={partner.aadhaarFront} alt="Aadhaar Front" className="w-full h-full object-cover" />
                         </a>
                     ) : (
-                        <div className="w-full h-32 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-xs font-bold text-gray-400 uppercase">
-                            Front Missing
+                        <div className="w-full h-32 bg-neutral-50 rounded-lg border border-dashed border-neutral-300 flex items-center justify-center text-xs text-neutral-500">
+                            Front missing
                         </div>
                     )}
                     {partner.aadhaarBack ? (
-                        <a href={partner.aadhaarBack} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:opacity-90 transition-opacity">
+                        <a href={partner.aadhaarBack} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-neutral-100 rounded-lg overflow-hidden border border-neutral-200 hover:opacity-90 transition-opacity">
                             <img src={partner.aadhaarBack} alt="Aadhaar Back" className="w-full h-full object-cover" />
                         </a>
                     ) : (
-                        <div className="w-full h-32 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-xs font-bold text-gray-400 uppercase">
-                            Back Missing
+                        <div className="w-full h-32 bg-neutral-50 rounded-lg border border-dashed border-neutral-300 flex items-center justify-center text-xs text-neutral-500">
+                            Back missing
                         </div>
                     )}
                 </div>
             </div>
         </div>
 
-        <div className="bg-white p-6 border border-gray-200 rounded-xl">
-            <h3 className="text-sm font-bold uppercase text-gray-500 mb-4 flex items-center gap-2">
-                <FileText size={16} /> Tax Proof (PAN)
+        <div className="bg-white p-6 border border-neutral-200 rounded-xl">
+            <h3 className="text-sm text-neutral-500 mb-4 flex items-center gap-2">
+                <FileText size={16} /> Tax proof (PAN)
             </h3>
             <div className="space-y-4">
                 <div>
-                    <span className="text-xs text-gray-400 font-bold uppercase block">PAN Number</span>
-                    <span className="text-sm font-bold text-gray-900">{partner.panNumber || 'Not provided'}</span>
+                    <span className="text-xs text-neutral-500 block">PAN number</span>
+                    <span className="text-sm font-medium text-neutral-900">{partner.panNumber || 'Not provided'}</span>
                 </div>
                 <div>
                     {partner.panCardImage ? (
-                        <a href={partner.panCardImage} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:opacity-90 transition-opacity">
+                        <a href={partner.panCardImage} target="_blank" rel="noopener noreferrer" className="block w-full h-32 bg-neutral-100 rounded-lg overflow-hidden border border-neutral-200 hover:opacity-90 transition-opacity">
                             <img src={partner.panCardImage} alt="PAN Card" className="w-full h-full object-cover" />
                         </a>
                     ) : (
-                        <div className="w-full h-32 bg-gray-50 rounded-lg border border-dashed border-gray-300 flex items-center justify-center text-xs font-bold text-gray-400 uppercase">
-                            PAN Image Missing
+                        <div className="w-full h-32 bg-neutral-50 rounded-lg border border-dashed border-neutral-300 flex items-center justify-center text-xs text-neutral-500">
+                            PAN image missing
                         </div>
                     )}
                 </div>
@@ -143,32 +139,32 @@ const PartnerTransactionsTab = ({ partnerId }) => {
         fetchWalletData();
     }, [partnerId]);
 
-    if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-gray-300" /></div>;
+    if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-neutral-300" /></div>;
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Available Balance</p>
-                    <h3 className="text-xl font-black text-gray-900">₹{wallet?.balance?.toLocaleString() || 0}</h3>
+                <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                    <p className="text-xs text-neutral-500 mb-1">Available balance</p>
+                    <h3 className="text-xl font-medium text-neutral-900">₹{wallet?.balance?.toLocaleString() || 0}</h3>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Earnings</p>
-                    <h3 className="text-xl font-black text-green-600">₹{stats?.totalEarnings?.toLocaleString() || 0}</h3>
-                    <p className="text-[10px] text-gray-400 font-bold mt-1">+₹{stats?.thisMonthEarnings?.toLocaleString() || 0} this month</p>
+                <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                    <p className="text-xs text-neutral-500 mb-1">Total earnings</p>
+                    <h3 className="text-xl font-medium text-green-600">₹{stats?.totalEarnings?.toLocaleString() || 0}</h3>
+                    <p className="text-xs text-neutral-500 mt-1">+₹{stats?.thisMonthEarnings?.toLocaleString() || 0} this month</p>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Total Payouts</p>
-                    <h3 className="text-xl font-black text-orange-600">₹{stats?.totalWithdrawals?.toLocaleString() || 0}</h3>
+                <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                    <p className="text-xs text-neutral-500 mb-1">Total payouts</p>
+                    <h3 className="text-xl font-medium text-orange-600">₹{stats?.totalWithdrawals?.toLocaleString() || 0}</h3>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Pending Clearance</p>
-                    <h3 className="text-xl font-black text-blue-600">₹{stats?.pendingClearance?.toLocaleString() || 0}</h3>
+                <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm">
+                    <p className="text-xs text-neutral-500 mb-1">Pending clearance</p>
+                    <h3 className="text-xl font-medium text-[#0a4d2b]">₹{stats?.pendingClearance?.toLocaleString() || 0}</h3>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Recent Transactions</h3>
+            <div className="bg-white border border-neutral-200 rounded-xl p-6">
+                <h3 className="text-xs text-neutral-500 mb-4">Recent transactions</h3>
                 <div className="space-y-3">
                     {transactions && transactions.length > 0 ? (
                         transactions.map((txn, i) => {
@@ -176,7 +172,7 @@ const PartnerTransactionsTab = ({ partnerId }) => {
                             const isBooking = txn.category?.includes('booking');
 
                             return (
-                                <div key={i} className="flex items-center justify-between p-4 border border-gray-100 rounded-2xl hover:bg-gray-50 transition-colors bg-white">
+                                <div key={i} className="flex items-center justify-between p-4 border border-neutral-100 rounded-2xl hover:bg-neutral-50 transition-colors bg-white">
                                     <div className="flex items-center gap-4">
                                         <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 border-2 border-white shadow-sm ${isBooking ? 'bg-orange-50 text-orange-500' :
                                             !isDebit ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'
@@ -185,8 +181,8 @@ const PartnerTransactionsTab = ({ partnerId }) => {
                                                 !isDebit ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="text-sm font-bold text-gray-900 truncate pr-2">{txn.description}</p>
-                                            <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tight">
+                                            <p className="text-sm font-medium text-neutral-900 truncate pr-2">{txn.description}</p>
+                                            <p className="text-xs text-neutral-500 mt-1">
                                                 {new Date(txn.createdAt).toLocaleDateString('en-IN', {
                                                     day: 'numeric', month: 'short', year: 'numeric'
                                                 })} • {new Date(txn.createdAt).toLocaleTimeString('en-IN', {
@@ -196,22 +192,18 @@ const PartnerTransactionsTab = ({ partnerId }) => {
                                         </div>
                                     </div>
                                     <div className="text-right shrink-0">
-                                        <p className={`text-lg font-black tracking-tight ${isDebit ? 'text-gray-900' : 'text-green-600'}`}>
+                                        <p className={`text-lg font-medium  ${isDebit ? 'text-neutral-900' : 'text-green-600'}`}>
                                             {isDebit ? '-' : '+'}₹{txn.amount?.toLocaleString()}
                                         </p>
-                                        <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase mt-1 ${txn.status === 'completed' || txn.status === 'success' ? 'bg-green-50 text-green-600' :
-                                            txn.status === 'cancelled' ? 'bg-gray-100 text-gray-500' : 'bg-amber-50 text-amber-600'
-                                            }`}>
-                                            {txn.status}
-                                        </span>
+                                        <StatusDot status={txn.status} />
                                     </div>
                                 </div>
                             );
                         })
                     ) : (
-                        <div className="p-10 text-center border-2 border-dashed border-gray-100 rounded-xl">
-                            <CreditCard size={32} className="mx-auto text-gray-300 mb-2" />
-                            <p className="text-xs font-bold uppercase text-gray-400">No transactions history</p>
+                        <div className="p-10 text-center border-2 border-dashed border-neutral-100 rounded-xl">
+                            <CreditCard size={32} className="mx-auto text-neutral-300 mb-2" />
+                            <p className="text-xs text-neutral-500">No transactions history</p>
                         </div>
                     )}
                 </div>
@@ -252,7 +244,7 @@ const AdminPartnerDetail = () => {
         const isBlocked = partner.isBlocked;
         setModalConfig({
             isOpen: true,
-            title: isBlocked ? 'Unblock Partner?' : 'Block Partner?',
+            title: isBlocked ? 'Unblock partner?' : 'Block partner?',
             message: isBlocked
                 ? `Partner ${partner.name} will regain access to their dashboard.`
                 : `Blocking ${partner.name} will prevent them from managing properties.`,
@@ -262,7 +254,7 @@ const AdminPartnerDetail = () => {
                 try {
                     const res = await adminService.updatePartnerStatus(partner._id, !isBlocked);
                     if (res.success) {
-                        toast.success(`Partner ${!isBlocked ? 'blocked' : 'unblocked'} successfully`);
+                        toast.success(`Partner ${isBlocked ?'blocked' : 'unblocked'} successfully`);
                         fetchPartnerDetails();
                     }
                 } catch {
@@ -296,8 +288,8 @@ const AdminPartnerDetail = () => {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
-                <Loader2 className="animate-spin text-gray-400" size={48} />
-                <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">Loading partner profile...</p>
+                <Loader2 className="animate-spin text-neutral-400" size={24} strokeWidth={1.5} />
+                <p className="mt-1 text-sm text-neutral-500">Loading partner</p>
             </div>
         );
     }
@@ -306,9 +298,9 @@ const AdminPartnerDetail = () => {
         return (
             <div className="text-center py-20">
                 <AlertTriangle size={48} className="mx-auto text-red-400 mb-4" />
-                <h2 className="text-2xl font-bold text-gray-900">Partner Not Found</h2>
-                <p className="text-gray-500 mt-2">The partner you're looking for doesn't exist or has been deleted.</p>
-                <Link to="/hotel/admin/partners" className="mt-6 inline-block text-black font-bold uppercase text-xs border-b-2 border-black pb-1">Back to Partners</Link>
+                <h2 className="text-2xl font-medium text-neutral-900">Partner not found</h2>
+                <p className="text-neutral-500 mt-2">The partner you're looking for doesn't exist or has been deleted.</p>
+                <Link to="/hotel/admin/partners" className="mt-6 inline-block text-black font-medium text-xs border-b-2 border-black pb-1">Back to partners</Link>
             </div>
         );
     }
@@ -327,15 +319,15 @@ const AdminPartnerDetail = () => {
                 {...modalConfig}
             />
 
-            <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-gray-500 mb-2">
+            <div className="flex items-center gap-2 text-xs text-neutral-500 mb-2">
                 <Link to="/hotel/admin/partners" className="hover:text-black transition-colors">Partners</Link>
                 <span>/</span>
                 <span className="text-black">{partner.name}</span>
             </div>
 
-            <div className={`rounded-2xl p-8 border shadow-sm flex flex-col md:flex-row gap-8 transition-colors ${partner.isBlocked ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+            <div className={`rounded-2xl p-8 border shadow-sm flex flex-col md:flex-row gap-8 transition-colors ${partner.isBlocked ? 'bg-red-50 border-red-200' : 'bg-white border-neutral-200'}`}>
                 <div className="flex flex-col items-center md:items-start gap-4 min-w-[200px]">
-                    <div className="w-24 h-24 rounded-full bg-black text-white flex items-center justify-center text-3xl font-bold border-4 border-white shadow-lg relative uppercase">
+                    <div className="w-24 h-24 rounded-full bg-neutral-900 text-white flex items-center justify-center text-3xl font-medium border-4 border-white shadow-sm relative">
                         {partner.profileImage ? (
                             <img src={partner.profileImage} alt={partner.name} className="w-full h-full object-cover rounded-full" />
                         ) : (
@@ -353,16 +345,11 @@ const AdminPartnerDetail = () => {
                         )}
                     </div>
                     <div className="text-center md:text-left">
-                        <h1 className="text-2xl font-bold text-gray-900">{partner.name}</h1>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">ID: #{partner._id.slice(-6)}</p>
+                        <h1 className="text-2xl font-medium text-neutral-900">{partner.name}</h1>
+                        <p className="text-xs text-neutral-500">ID: #{partner._id.slice(-6)}</p>
                         <div className="flex flex-col gap-1 mt-2">
-                            {partner.isBlocked && <span className="text-xs font-bold text-red-600 uppercase">ACCOUNT BLOCKED</span>}
-                            <span className={`text-xs font-bold uppercase px-2 py-0.5 rounded w-fit mx-auto md:mx-0 ${partner.partnerApprovalStatus === 'approved' ? 'bg-green-100 text-green-700' :
-                                partner.partnerApprovalStatus === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-red-100 text-red-700'
-                                }`}>
-                                {partner.partnerApprovalStatus}
-                            </span>
+                            {partner.isBlocked && <span className="text-xs font-medium text-red-600">Account blocked</span>}
+                            <StatusDot status={partner.partnerApprovalStatus} />
                         </div>
                     </div>
                 </div>
@@ -370,29 +357,29 @@ const AdminPartnerDetail = () => {
                 <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     <div className="space-y-4">
                         <div className="flex items-center gap-3 text-sm">
-                            <Mail size={16} className="text-gray-400" />
-                            <span className="text-gray-900 font-bold">{partner.email || 'N/A'}</span>
+                            <Mail size={16} className="text-neutral-500" />
+                            <span className="text-neutral-900 font-medium">{partner.email || '—'}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm">
-                            <Phone size={16} className="text-gray-400" />
-                            <span className="text-gray-900 font-bold">{partner.phone}</span>
+                            <Phone size={16} className="text-neutral-500" />
+                            <span className="text-neutral-900 font-medium">{partner.phone}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm">
-                            <User size={16} className="text-gray-400" />
-                            <span className="text-gray-900 font-bold">{partner.ownerName || 'Owner Name N/A'}</span>
+                            <User size={16} className="text-neutral-500" />
+                            <span className="text-neutral-900 font-medium">{partner.ownerName || 'Owner name not provided'}</span>
                         </div>
                         <div className="flex items-center gap-3 text-sm">
-                            <MapPin size={16} className="text-gray-400" />
-                            <span className="text-gray-900 font-bold">
+                            <MapPin size={16} className="text-neutral-500" />
+                            <span className="text-neutral-900 font-medium">
                                 {[partner.address?.city, partner.address?.state, partner.address?.country].filter(Boolean).join(', ') || 'Address N/A'}
                             </span>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
-                        <div className="p-3 bg-white/50 rounded-lg border border-gray-200/50 flex justify-between items-center">
-                            <span className="text-[10px] text-gray-500 uppercase font-bold">Total Properties</span>
-                            <span className="text-lg font-bold text-gray-900">{properties.length}</span>
+                        <div className="p-3 bg-white/50 rounded-lg border border-neutral-200/50 flex justify-between items-center">
+                            <span className="text-xs text-neutral-500">Total properties</span>
+                            <span className="text-lg font-medium text-neutral-900">{properties.length}</span>
                         </div>
                     </div>
                 </div>
@@ -400,7 +387,7 @@ const AdminPartnerDetail = () => {
                 <div className="flex flex-col gap-3 min-w-[160px]">
                     <button
                         onClick={handleBlockToggle}
-                        className={`w-full flex items-center justify-center gap-2 px-4 py-2 border rounded-lg text-xs font-bold uppercase transition-colors ${partner.isBlocked
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-2 border rounded-lg text-xs font-medium  transition-colors ${partner.isBlocked
                             ? 'bg-green-600 text-white border-green-600 hover:bg-green-700'
                             : 'bg-white text-red-600 border-red-200 hover:bg-red-50'
                             }`}
@@ -413,13 +400,13 @@ const AdminPartnerDetail = () => {
                         <>
                             <button
                                 onClick={() => handleApproval('approved')}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg text-xs font-bold uppercase transition-colors"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg text-xs font-medium transition-colors"
                             >
                                 <CheckSquare size={16} /> Approve
                             </button>
                             <button
                                 onClick={() => handleApproval('rejected')}
-                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg text-xs font-bold uppercase transition-colors"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg text-xs font-medium transition-colors"
                             >
                                 <XSquare size={16} /> Reject
                             </button>
@@ -429,12 +416,12 @@ const AdminPartnerDetail = () => {
             </div>
 
             <div>
-                <div className="flex border-b border-gray-200 mb-6 overflow-x-auto no-scrollbar">
+                <div className="flex border-b border-neutral-200 mb-6 overflow-x-auto no-scrollbar">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`flex items-center gap-2 px-6 py-4 text-xs font-bold uppercase transition-colors relative whitespace-nowrap ${activeTab === tab.id ? 'text-black' : 'text-gray-400 hover:text-gray-600'
+                            className={`flex items-center gap-2 px-6 py-4 text-xs font-medium  transition-colors relative whitespace-nowrap ${activeTab === tab.id ? 'text-black' : 'text-neutral-500 hover:text-neutral-600'
                                 }`}
                         >
                             <tab.icon size={16} />
@@ -442,7 +429,7 @@ const AdminPartnerDetail = () => {
                             {activeTab === tab.id && (
                                 <motion.div
                                     layoutId="activeTabBadgePartner"
-                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-black"
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-900"
                                 />
                             )}
                         </button>

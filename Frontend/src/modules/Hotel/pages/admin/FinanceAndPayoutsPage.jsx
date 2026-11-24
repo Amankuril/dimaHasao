@@ -43,63 +43,53 @@ const FinanceAndPayoutsPage = () => {
     );
   }
 
-  const StatCard = ({ title, value, icon: Icon, colorClass, subValue }) => (
-    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden group">
-      <div className={`absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity ${colorClass.replace('text-', 'bg-')}`}>
-        <Icon size={64} />
-      </div>
-      <div className="relative z-10">
-        <div className={`p-3 rounded-lg w-fit mb-4 ${colorClass.replace('text-', 'bg-').replace('600', '50')}`}>
-          <Icon size={24} className={colorClass} />
-        </div>
-        <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
-        <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-1">
-          <IndianRupee size={20} strokeWidth={2.5} />
-          {value.toLocaleString()}
-        </h3>
-        {subValue && <p className="text-xs text-gray-400 mt-2">{subValue}</p>}
-      </div>
+  // eslint-disable-next-line no-unused-vars
+  const StatCard = ({ title, value, icon, colorClass, subValue }) => (
+    <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-5">
+      <p className="text-[13px] text-neutral-500">{title}</p>
+      <p className="mt-2 font-mono text-[28px] font-medium leading-9 text-neutral-900 tabular-nums">{value}</p>
+      {subValue && <p className="mt-2 text-xs text-neutral-500">{subValue}</p>}
     </div>
   );
 
   return (
-    <div className="p-6 space-y-8 bg-gray-50/50 min-h-screen">
+    <div className="p-6 space-y-8 bg-neutral-50/50 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Finance & Payouts</h1>
-          <p className="text-gray-500 text-sm mt-1">Monitor platform earnings, wallet balance, and partner payouts.</p>
+          <h1 className="text-2xl font-medium text-neutral-900">Finance & payouts</h1>
+          <p className="mt-1 text-sm text-neutral-500">Monitor platform earnings, wallet balance, and partner payouts</p>
         </div>
-        <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium shadow-sm transition-colors">
+        <button className="flex items-center gap-2 bg-white border border-neutral-200 text-neutral-700 px-4 py-2 rounded-lg hover:bg-neutral-50 text-sm font-medium shadow-sm transition-colors">
           <Download size={16} />
-          Export Report
+          Export report
         </button>
       </div>
 
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="Wallet Balance"
+          title="Wallet balance"
           value={stats.adminBalance}
           icon={Wallet}
-          colorClass="text-blue-600"
+          colorClass="text-[#0a4d2b]"
           subValue="Available for withdrawal"
         />
         <StatCard
-          title="Total Commission"
+          title="Total commission"
           value={stats.totalEarnings}
           icon={TrendingUp}
           colorClass="text-green-600"
           subValue="Net platform income"
         />
         <StatCard
-          title="Gross Booking Value"
+          title="Gross booking value"
           value={stats.totalRevenue}
           icon={ArrowUpRight}
-          colorClass="text-purple-600"
+          colorClass="text-neutral-900"
           subValue="Total transaction volume"
         />
         <StatCard
-          title="Total Payouts"
+          title="Total payouts"
           value={stats.totalPayouts}
           icon={ArrowDownLeft}
           colorClass="text-orange-600"
@@ -108,63 +98,63 @@ const FinanceAndPayoutsPage = () => {
       </div>
 
       {/* Recent Transactions Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
-          <h3 className="font-bold text-gray-800 flex items-center gap-2">
-            <FileText size={18} className="text-gray-400" />
-            Recent Financial Transactions
+      <div className="bg-white rounded-xl shadow-sm border border-neutral-100 overflow-hidden">
+        <div className="px-6 py-5 border-b border-neutral-100 flex justify-between items-center bg-white">
+          <h3 className="font-medium text-neutral-800 flex items-center gap-2">
+            <FileText size={18} className="text-neutral-500" />
+            Recent financial transactions
           </h3>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100 text-xs uppercase tracking-wider text-gray-500 font-semibold">
-                <th className="px-6 py-4">Transaction / Booking ID</th>
+              <tr className="bg-neutral-50/50 border-b border-neutral-100 text-xs text-neutral-500">
+                <th className="px-6 py-4">Transaction / booking ID</th>
                 <th className="px-6 py-4">Date</th>
-                <th className="px-6 py-4">Gross Amount</th>
+                <th className="px-6 py-4">Gross amount</th>
                 <th className="px-6 py-4">Commission</th>
                 <th className="px-6 py-4">Tax</th>
-                <th className="px-6 py-4">Partner Payout</th>
+                <th className="px-6 py-4">Partner payout</th>
                 <th className="px-6 py-4">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-neutral-100">
               {transactions.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-gray-400 text-sm">
+                  <td colSpan="7" className="px-6 py-12 text-center text-neutral-500 text-sm">
                     No financial transactions found.
                   </td>
                 </tr>
               ) : (
                 transactions.map((t) => (
-                  <tr key={t._id} className="hover:bg-gray-50/50 transition-colors group">
+                  <tr key={t._id} className="hover:bg-neutral-50/50 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
-                        <span className="font-bold text-gray-700 text-sm">#{t.bookingId}</span>
-                        <span className="text-[10px] text-gray-400 mt-0.5">
-                          {t.propertyId?.propertyName || 'Unknown Property'}
+                        <span className="font-medium text-neutral-700 text-sm">#{t.bookingId}</span>
+                        <span className="text-xs text-neutral-500 mt-0.5">
+                          {t.propertyId?.propertyName || 'Unknown property'}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-neutral-600">
                       {new Date(t.createdAt).toLocaleDateString()} <br />
-                      <span className="text-[10px] text-gray-400">{new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <span className="text-xs text-neutral-500">{new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">
+                    <td className="px-6 py-4 font-medium text-neutral-900">
                       ₹{t.totalAmount?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 font-bold text-green-600">
+                    <td className="px-6 py-4 font-medium text-green-600">
                       +₹{t.adminCommission?.toLocaleString()}
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-6 py-4 text-neutral-600">
                       ₹{t.taxes?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 text-orange-600">
                       -₹{t.partnerPayout?.toLocaleString()}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium  
                                                 ${t.paymentStatus === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}
                                             `}>
                         {t.paymentStatus}

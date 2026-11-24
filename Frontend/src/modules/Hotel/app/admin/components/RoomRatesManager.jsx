@@ -153,7 +153,7 @@ const RoomRatesManager = ({ propertyId }) => {
 
     if (loading) {
         return (
-            <div className="p-12 text-center text-gray-400">
+            <div className="p-12 text-center text-neutral-500">
                 <Loader2 size={22} className="animate-spin inline" />
             </div>
         );
@@ -162,7 +162,7 @@ const RoomRatesManager = ({ propertyId }) => {
     return (
         <div className="space-y-6">
             {roomTypes.length === 0 && (
-                <div className="p-10 text-center text-gray-400 text-xs bg-white border border-gray-200 rounded-2xl">
+                <div className="p-10 text-center text-neutral-500 text-xs bg-white border border-neutral-200 rounded-2xl">
                     This property has no room types yet.
                 </div>
             )}
@@ -172,16 +172,16 @@ const RoomRatesManager = ({ propertyId }) => {
                 if (!draft) return null;
 
                 return (
-                    <div key={room._id} className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                        <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
+                    <div key={room._id} className="bg-white border border-neutral-900/[0.08] rounded-xl overflow-hidden">
+                        <div className="px-6 py-4 border-b border-neutral-100 flex flex-wrap items-center justify-between gap-3">
                             <div>
-                                <h4 className="font-bold text-gray-900">{room.name}</h4>
-                                <p className="text-[10px] uppercase tracking-wider text-gray-400">
+                                <h4 className="font-medium text-neutral-900">{room.name}</h4>
+                                <p className="text-xs text-neutral-500">
                                     {room.roomCategory || room.inventoryType} · currently {currency(room.pricePerNight)} / night
                                 </p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <label className="flex items-center gap-2 text-xs font-bold text-gray-600">
+                                <label className="flex items-center gap-2 text-xs font-medium text-neutral-600">
                                     <input
                                         type="checkbox"
                                         checked={draft.isActive}
@@ -193,7 +193,7 @@ const RoomRatesManager = ({ propertyId }) => {
                                     type="button"
                                     onClick={() => save(room._id)}
                                     disabled={savingId === room._id}
-                                    className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-lg text-xs font-bold hover:bg-neutral-800 disabled:opacity-60"
+                                    className="flex items-center gap-2 px-4 py-2 bg-neutral-950 text-white rounded-lg text-xs font-medium hover:bg-neutral-800 disabled:opacity-60"
                                 >
                                     {savingId === room._id ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                                     Save
@@ -209,13 +209,13 @@ const RoomRatesManager = ({ propertyId }) => {
                                 ['Extra child', 'extraChildPrice'],
                             ].map(([label, field]) => (
                                 <label key={field} className="block">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}</span>
+                                    <span className="text-xs text-neutral-500">{label}</span>
                                     <input
                                         type="number"
                                         min="0"
                                         value={draft[field]}
                                         onChange={(event) => patchDraft(room._id, { [field]: event.target.value })}
-                                        className="mt-1 w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-black"
+                                        className="mt-1 w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-lg text-sm font-medium outline-none focus:border-neutral-400"
                                     />
                                 </label>
                             ))}
@@ -223,20 +223,20 @@ const RoomRatesManager = ({ propertyId }) => {
 
                         <div className="px-6 pb-6">
                             <div className="flex items-center justify-between mb-3">
-                                <h5 className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                <h5 className="text-xs text-neutral-500">
                                     Seasonal rates
                                 </h5>
                                 <button
                                     type="button"
                                     onClick={() => addSeason(room._id)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-600 hover:bg-gray-100"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs font-medium text-neutral-600 hover:bg-neutral-100"
                                 >
                                     <Plus size={12} /> Add season
                                 </button>
                             </div>
 
                             {draft.seasonalRates.length === 0 ? (
-                                <p className="text-xs text-gray-400">
+                                <p className="text-xs text-neutral-500">
                                     No seasons — every night is charged at the base rate.
                                 </p>
                             ) : (
@@ -244,34 +244,34 @@ const RoomRatesManager = ({ propertyId }) => {
                                     {draft.seasonalRates.map((season, index) => (
                                         <div
                                             key={index}
-                                            className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto_auto] gap-2 items-center bg-gray-50 p-2 rounded-xl"
+                                            className="grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_auto_auto] gap-2 items-center bg-neutral-50 p-2 rounded-xl"
                                         >
                                             <input
                                                 value={season.name}
                                                 onChange={(event) => patchSeason(room._id, index, { name: event.target.value })}
                                                 placeholder="Season name"
-                                                className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-black"
+                                                className="px-3 py-2 bg-white border border-neutral-200 rounded-lg text-xs outline-none focus:border-neutral-400"
                                             />
                                             <input
                                                 type="date"
                                                 value={season.startDate}
                                                 onChange={(event) => patchSeason(room._id, index, { startDate: event.target.value })}
-                                                className="px-2 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-black"
+                                                className="px-2 py-2 bg-white border border-neutral-200 rounded-lg text-xs outline-none focus:border-neutral-400"
                                             />
                                             <input
                                                 type="date"
                                                 value={season.endDate}
                                                 onChange={(event) => patchSeason(room._id, index, { endDate: event.target.value })}
-                                                className="px-2 py-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-black"
+                                                className="px-2 py-2 bg-white border border-neutral-200 rounded-lg text-xs outline-none focus:border-neutral-400"
                                             />
                                             <input
                                                 type="number"
                                                 min="0"
                                                 value={season.pricePerNight}
                                                 onChange={(event) => patchSeason(room._id, index, { pricePerNight: event.target.value })}
-                                                className="px-2 py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold outline-none focus:border-black"
+                                                className="px-2 py-2 bg-white border border-neutral-200 rounded-lg text-xs font-medium outline-none focus:border-neutral-400"
                                             />
-                                            <label className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase">
+                                            <label className="flex items-center gap-1.5 text-xs text-neutral-500">
                                                 <input
                                                     type="checkbox"
                                                     checked={season.isActive}
@@ -296,41 +296,41 @@ const RoomRatesManager = ({ propertyId }) => {
                 );
             })}
 
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
-                    <h4 className="font-bold text-gray-900 flex items-center gap-2">
-                        <CalendarDays size={16} className="text-blue-600" /> Availability
+            <div className="bg-white border border-neutral-900/[0.08] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-neutral-100 flex flex-wrap items-center justify-between gap-3">
+                    <h4 className="font-medium text-neutral-900 flex items-center gap-2">
+                        <CalendarDays size={16} className="text-[#0a4d2b]" /> Availability
                     </h4>
                     <div className="flex items-center gap-2">
                         <input
                             type="date"
                             value={range.from}
                             onChange={(event) => setRange((r) => ({ ...r, from: event.target.value }))}
-                            className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-black"
+                            className="px-2 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs outline-none focus:border-neutral-400"
                         />
-                        <span className="text-gray-400 text-xs">to</span>
+                        <span className="text-neutral-500 text-xs">to</span>
                         <input
                             type="date"
                             value={range.to}
                             onChange={(event) => setRange((r) => ({ ...r, to: event.target.value }))}
-                            className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:border-black"
+                            className="px-2 py-1.5 bg-neutral-50 border border-neutral-200 rounded-lg text-xs outline-none focus:border-neutral-400"
                         />
                     </div>
                 </div>
 
                 {calendarLoading ? (
-                    <div className="p-10 text-center text-gray-400">
+                    <div className="p-10 text-center text-neutral-500">
                         <Loader2 size={20} className="animate-spin inline" />
                     </div>
                 ) : calendar.length === 0 ? (
-                    <p className="p-10 text-center text-xs text-gray-400">Nothing to show for this range.</p>
+                    <p className="p-10 text-center text-xs text-neutral-500">Nothing to show for this range.</p>
                 ) : (
                     <div className="p-4 space-y-5 overflow-x-auto">
                         {calendar.map((row) => (
                             <div key={row.roomTypeId}>
-                                <p className="text-xs font-bold text-gray-700 mb-2">
+                                <p className="text-xs font-medium text-neutral-700 mb-2">
                                     {row.name}{' '}
-                                    <span className="text-gray-400 font-medium">({row.totalInventory} total)</span>
+                                    <span className="text-neutral-500">({row.totalInventory} total)</span>
                                 </p>
                                 <div className="flex gap-1 min-w-max">
                                     {row.days.map((day) => {
@@ -348,11 +348,11 @@ const RoomRatesManager = ({ propertyId }) => {
                                                             : 'bg-emerald-50 border-emerald-200'
                                                 }`}
                                             >
-                                                <p className="text-[9px] font-bold text-gray-500">
+                                                <p className="text-xs text-neutral-500">
                                                     {new Date(day.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                                                 </p>
                                                 <p
-                                                    className={`text-xs font-black ${
+                                                    className={`text-xs font-medium ${
                                                         soldOut ? 'text-red-600' : partial ? 'text-amber-700' : 'text-emerald-700'
                                                     }`}
                                                 >

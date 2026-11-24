@@ -9,44 +9,22 @@ import { Link } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
+import StatusDot from '../components/StatusDot';
 
-const BookingStatusBadge = ({ status }) => {
-    const styles = {
-        confirmed: 'bg-green-100 text-green-700 border-green-200 font-bold',
-        pending: 'bg-amber-100 text-amber-700 border-amber-200 font-bold',
-        cancelled: 'bg-red-100 text-red-700 border-red-200 font-bold',
-        completed: 'bg-blue-100 text-blue-700 border-blue-200 font-bold',
-        refunded: 'bg-gray-100 text-gray-700 border-gray-200 font-bold',
-    };
-
-    const icons = {
-        confirmed: <CheckCircle size={10} className="mr-1" />,
-        pending: <Clock size={10} className="mr-1" />,
-        cancelled: <XCircle size={10} className="mr-1" />,
-        completed: <CheckCircle size={10} className="mr-1" />,
-        refunded: <ArrowRight size={10} className="mr-1" />,
-    };
-
-    return (
-        <span className={`flex items-center w-fit px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase ${styles[status] || styles.pending}`}>
-            {icons[status] || icons.pending}
-            {status}
-        </span>
-    );
-};
+const BookingStatusBadge = ({ status }) => <StatusDot status={status} />;
 
 const MetricCard = ({ label, value, subLabel, loading }) => (
-    <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex-1">
-        <p className="text-gray-500 text-[10px] font-bold uppercase tracking-wider mb-1">{label}</p>
+    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-sm flex-1">
+        <p className="text-neutral-500 text-xs mb-1">{label}</p>
         <div className="flex items-baseline gap-2">
             {loading ? (
-                <div className="h-8 w-16 bg-gray-50 animate-pulse rounded-md"></div>
+                <div className="h-8 w-16 bg-neutral-50 animate-pulse rounded-md"></div>
             ) : (
-                <h3 className="text-2xl font-bold text-gray-900 uppercase">
-                    {typeof value === 'number' && label.includes('REVENUE') ? `₹${(value ?? 0).toLocaleString()}` : (value ?? 0).toLocaleString()}
+                <h3 className="text-2xl font-medium text-neutral-900">
+                    {typeof value === 'number' && label.toLowerCase().includes('revenue') ? `₹${(value ?? 0).toLocaleString()}` : (value ?? 0).toLocaleString()}
                 </h3>
             )}
-            {subLabel && <span className="text-[10px] font-bold uppercase text-gray-400">{subLabel}</span>}
+            {subLabel && <span className="text-xs text-neutral-500">{subLabel}</span>}
         </div>
     </div>
 );
@@ -96,11 +74,16 @@ const AdminBookings = () => {
             }
 
             if (statsRes.success) {
+                // The stats endpoint has no confirmed/pending fields; its
+                // per-status breakdown (charts.status) is where those counts live.
+                const byStatus = Object.fromEntries(
+                    (statsRes.charts?.status || []).map((s) => [String(s.name).toLowerCase(), s.value || 0])
+                );
                 setGlobalStats({
-                    total: statsRes.stats.totalBookings,
-                    confirmed: statsRes.stats.confirmedBookings,
-                    completed: 0,
-                    pending: statsRes.stats.totalBookings - statsRes.stats.confirmedBookings
+                    total: statsRes.stats.totalBookings || 0,
+                    confirmed: byStatus.confirmed || 0,
+                    completed: byStatus.completed || 0,
+                    pending: byStatus.pending || 0,
                 });
             }
         } catch (error) {
@@ -142,10 +125,10 @@ const AdminBookings = () => {
         if (action === 'cancel') {
             setModalConfig({
                 isOpen: true,
-                title: 'Cancel Booking?',
+                title: 'Cancel booking?',
                 message: `Are you sure you want to cancel booking #${booking.bookingId}? This will notify both the guest and the partner.`,
                 type: 'danger',
-                confirmText: 'Cancel Booking',
+                confirmText: 'Cancel booking',
                 onConfirm: () => handleUpdateStatus(booking._id, 'cancelled')
             });
         }
@@ -163,8 +146,8 @@ const AdminBookings = () => {
             ...bookings.map(b => [
                 b._id,
                 b.bookingId,
-                `"${b.propertyId?.propertyName || 'Deleted Hotel'}"`,
-                `"${b.userId?.name || 'Guest Details Missing'}"`,
+                `"${b.propertyId?.propertyName || 'Deleted hotel'}"`,
+                `"${b.userId?.name || 'Guest details missing'}"`,
                 b.userId?.phone || 'N/A',
                 new Date(b.checkInDate).toLocaleDateString(),
                 new Date(b.checkOutDate).toLocaleDateString(),
@@ -186,7 +169,7 @@ const AdminBookings = () => {
     };
 
     return (
-        <div className="space-y-6 relative pb-10 uppercase tracking-tight" onClick={() => setActiveDropdown(null)}>
+        <div className="space-y-6 relative pb-10" onClick={() => setActiveDropdown(null)}>
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
                 onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
@@ -195,13 +178,13 @@ const AdminBookings = () => {
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 uppercase">Booking Management ({totalBookings})</h2>
-                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-tight">Monitor all reservations and their current statuses.</p>
+                    <h2 className="text-2xl font-medium text-neutral-900">Booking management ({totalBookings})</h2>
+                    <p className="mt-1 text-sm text-neutral-500">Every stay booked across the district, newest first</p>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={handleExportCSV}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-neutral-200 rounded-lg text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors shadow-sm"
                     >
                         <Download size={14} /> Export CSV
                     </button>
@@ -209,29 +192,29 @@ const AdminBookings = () => {
             </div>
 
             <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <MetricCard label="Total Bookings" value={globalStats.total} subLabel="GLOBAL" loading={loading} />
-                <MetricCard label="Confirmed" value={globalStats.confirmed} subLabel="LIVE" loading={loading} />
-                <MetricCard label="Pending Approval" value={globalStats.pending} subLabel="NEEDS ACTION" loading={loading} />
+                <MetricCard label="Total bookings" value={globalStats.total} loading={loading} />
+                <MetricCard label="Confirmed" value={globalStats.confirmed} loading={loading} />
+                <MetricCard label="Pending" value={globalStats.pending} loading={loading} />
             </div>
 
-            <div className="bg-white p-4 border border-gray-200 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
+            <div className="bg-white p-4 border border-neutral-900/[0.08] rounded-xl flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-1">
-                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                     <input
                         type="text"
-                        placeholder="Search via ID, Guest or Hotel Name..."
+                        placeholder="Search by booking ID, guest or property"
                         value={filters.search}
                         onChange={(e) => handleFilterChange('search', e.target.value)}
-                        className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-transparent rounded-xl text-xs font-bold uppercase focus:bg-white focus:border-black outline-none transition-all tracking-tight"
+                        className="w-full pl-9 pr-4 py-2 bg-neutral-50 border border-transparent rounded-lg text-sm focus:bg-white focus:border-neutral-400 outline-none transition-colors"
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <select
                         value={filters.status}
                         onChange={(e) => handleFilterChange('status', e.target.value)}
-                        className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
+                        className="px-4 py-2 bg-neutral-50 border border-transparent rounded-lg text-sm outline-none focus:bg-white focus:border-neutral-400 transition-colors"
                     >
-                        <option value="">All Status</option>
+                        <option value="">All statuses</option>
                         <option value="pending">Pending</option>
                         <option value="confirmed">Confirmed</option>
                         <option value="cancelled">Cancelled</option>
@@ -240,25 +223,25 @@ const AdminBookings = () => {
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden min-h-[400px]">
+            <div className="bg-white border border-neutral-900/[0.08] rounded-xl overflow-hidden min-h-[400px]">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
-                            <tr className="bg-gray-50 border-b border-gray-100 text-[10px] uppercase tracking-wider text-gray-500 font-bold">
+                            <tr className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
                                 <th className="p-4">Booking ID</th>
-                                <th className="p-4">Hotel Name</th>
-                                <th className="p-4">Guest Info</th>
+                                <th className="p-4">Hotel name</th>
+                                <th className="p-4">Guest info</th>
                                 <th className="p-4">Dates</th>
                                 <th className="p-4">Status</th>
                                 <th className="p-4 text-right">Amount</th>
                                 <th className="p-4 text-center">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-neutral-100">
                             {loading ? (
                                 [1, 2, 3, 4, 5].map(i => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan="7" className="p-4"><div className="h-10 bg-gray-50 rounded-lg"></div></td>
+                                        <td colSpan="7" className="p-4"><div className="h-10 bg-neutral-50 rounded-lg"></div></td>
                                     </tr>
                                 ))
                             ) : (
@@ -267,78 +250,78 @@ const AdminBookings = () => {
                                         bookings.map((booking, index) => (
                                             <motion.tr
                                                 key={booking._id}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.9 }}
-                                                transition={{ delay: index * 0.05 }}
-                                                className="hover:bg-gray-50/50 transition-colors group relative font-bold"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                transition={{ duration: 0.18 }}
+                                                className="hover:bg-neutral-50 transition-colors group relative"
                                             >
                                                 <td className="p-4">
-                                                    <Link to={`/hotel/admin/bookings/${booking._id}`} className="font-mono text-xs font-bold text-gray-900 hover:underline uppercase tracking-tight">
+                                                    <Link to={`/hotel/admin/bookings/${booking._id}`} className="font-mono text-xs font-medium text-neutral-900 hover:underline">
                                                         #{booking.bookingId || booking._id.slice(-6)}
                                                     </Link>
-                                                    <p className="text-[10px] text-gray-400 mt-0.5 font-bold">
+                                                    <p className="text-xs text-neutral-500 mt-0.5">
                                                         {new Date(booking.createdAt).toLocaleDateString()}
                                                     </p>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
-                                                        <span className="text-sm font-bold text-gray-900 uppercase tracking-tight">
-                                                            {booking.propertyId?.propertyName || 'Deleted Hotel'}
+                                                        <span className="text-sm font-medium text-neutral-900">
+                                                            {booking.propertyId?.propertyName || 'Deleted hotel'}
                                                         </span>
-                                                        <span className="text-[10px] text-gray-400 font-semibold uppercase">
-                                                            {booking.propertyId?.address?.city || 'Location N/A'}
+                                                        <span className="text-xs text-neutral-500">
+                                                            {booking.propertyId?.address?.city || 'No city'}
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
-                                                        <p className="text-sm font-bold text-gray-900 uppercase tracking-tight">
-                                                            {booking.userId?.name || 'Guest User'}
+                                                        <p className="text-sm font-medium text-neutral-900">
+                                                            {booking.userId?.name || 'Guest'}
                                                         </p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">
-                                                            {booking.userId?.email || 'No Email'}
+                                                        <p className="text-xs text-neutral-500">
+                                                            {booking.userId?.email || 'No email'}
                                                         </p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase">
-                                                            {booking.userId?.phone || 'No Phone'}
+                                                        <p className="text-xs text-neutral-500">
+                                                            {booking.userId?.phone || 'No phone'}
                                                         </p>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <div className="text-[10px] text-gray-600 flex flex-col gap-1 font-bold uppercase">
+                                                    <div className="text-xs text-neutral-600 flex flex-col gap-1 font-medium">
                                                         <span className="flex items-center gap-1">
-                                                            IN: {booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : 'N/A'}
+                                                            In {booking.checkInDate ? new Date(booking.checkInDate).toLocaleDateString() : '—'}
                                                         </span>
                                                         <span className="flex items-center gap-1">
-                                                            OUT: {booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : 'N/A'}
+                                                            Out {booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : '—'}
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
                                                     <BookingStatusBadge status={booking.bookingStatus} />
                                                 </td>
-                                                <td className="p-4 text-right font-bold text-gray-900 text-sm">
-                                                    ₹{booking.totalAmount?.toLocaleString()}
+                                                <td className="p-4 text-right font-mono text-sm text-neutral-900 tabular-nums">
+                                                    ₹{booking.totalAmount?.toLocaleString('en-IN')}
                                                 </td>
                                                 <td className="p-4 text-center relative">
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === booking._id ? null : booking._id); }}
-                                                        className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-colors"
+                                                        className="p-2 hover:bg-neutral-100 rounded-full text-neutral-500 hover:text-black transition-colors"
                                                     >
                                                         <MoreVertical size={16} />
                                                     </button>
 
                                                     {activeDropdown === booking._id && (
-                                                        <div className="absolute right-8 top-8 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1 text-left">
-                                                            <Link to={`/hotel/admin/bookings/${booking._id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-gray-700">
-                                                                <Eye size={14} /> View Details
+                                                        <div className="absolute right-8 top-8 w-48 bg-white border border-neutral-200 rounded-lg shadow-xl z-20 py-1 text-left">
+                                                            <Link to={`/hotel/admin/bookings/${booking._id}`} className="flex items-center gap-2 px-4 py-2 hover:bg-neutral-50 text-xs font-medium text-neutral-700">
+                                                                <Eye size={14} /> View details
                                                             </Link>
                                                             {(booking.bookingStatus === 'confirmed' || booking.bookingStatus === 'pending') && (
                                                                 <button
                                                                     onClick={() => handleAction('cancel', booking)}
-                                                                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-[10px] font-bold uppercase text-red-600"
+                                                                    className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-xs font-medium text-red-600"
                                                                 >
-                                                                    <XCircle size={14} /> Cancel Booking
+                                                                    <XCircle size={14} /> Cancel booking
                                                                 </button>
                                                             )}
                                                         </div>
@@ -348,8 +331,8 @@ const AdminBookings = () => {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="7" className="p-8 text-center text-gray-400 text-[10px] font-bold uppercase tracking-widest">
-                                                No bookings found matching filters.
+                                            <td colSpan="7" className="p-8 text-center text-neutral-500 text-xs">
+                                                No bookings match these filters
                                             </td>
                                         </tr>
                                     )}
@@ -361,15 +344,15 @@ const AdminBookings = () => {
 
                 {/* Pagination */}
                 {!loading && bookings.length > 0 && (
-                    <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-                        <p className="text-[10px] font-bold uppercase text-gray-500 tracking-tight">
+                    <div className="p-4 border-t border-neutral-100 flex items-center justify-between">
+                        <p className="text-xs text-neutral-500">
                             Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalBookings)} of {totalBookings} bookings
                         </p>
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
-                                className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
+                                className="p-2 border border-neutral-200 rounded-lg text-neutral-500 hover:text-black disabled:opacity-50 transition-colors"
                             >
                                 <ChevronLeft size={16} />
                             </button>
@@ -377,7 +360,7 @@ const AdminBookings = () => {
                                 <button
                                     key={i + 1}
                                     onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-10 h-10 rounded-lg text-[10px] font-bold uppercase transition-all ${currentPage === i + 1 ? 'bg-black text-white shadow-md' : 'hover:bg-gray-100 text-gray-600 border border-transparent hover:border-gray-200'}`}
+                                    className={`w-10 h-10 rounded-lg text-xs font-medium  transition-colors ${currentPage === i + 1 ? 'bg-neutral-900 text-white shadow-sm' : 'hover:bg-neutral-100 text-neutral-600 border border-transparent hover:border-neutral-200'}`}
                                 >
                                     {i + 1}
                                 </button>
@@ -385,7 +368,7 @@ const AdminBookings = () => {
                             <button
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
-                                className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
+                                className="p-2 border border-neutral-200 rounded-lg text-neutral-500 hover:text-black disabled:opacity-50 transition-colors"
                             >
                                 <ChevronRight size={16} />
                             </button>

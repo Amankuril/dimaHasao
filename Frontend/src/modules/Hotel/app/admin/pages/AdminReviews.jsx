@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
+import StatusDot from '../components/StatusDot';
 
 const StarRating = ({ rating }) => (
     <div className="flex gap-0.5">
@@ -16,34 +17,13 @@ const StarRating = ({ rating }) => (
             <Star
                 key={star}
                 size={14}
-                className={star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}
+                className={star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-300'}
             />
         ))}
     </div>
 );
 
-const StatusBadge = ({ status }) => {
-    const styles = {
-        approved: 'bg-green-100 text-green-700 border-green-200',
-        pending: 'bg-amber-100 text-amber-700 border-amber-200',
-        flagged: 'bg-red-100 text-red-700 border-red-200',
-        rejected: 'bg-gray-100 text-gray-700 border-gray-200',
-    };
-
-    const icons = {
-        approved: <CheckCircle size={10} />,
-        pending: <AlertTriangle size={10} />,
-        flagged: <Flag size={10} />,
-        rejected: <XCircle size={10} />,
-    };
-
-    return (
-        <span className={`flex items-center gap-1 w-fit px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase ${styles[status] || styles.pending}`}>
-            {icons[status] || icons.pending}
-            {status}
-        </span>
-    );
-};
+const StatusBadge = ({ status }) => <StatusDot status={status} />;
 
 const AdminReviews = () => {
     const [reviews, setReviews] = useState([]);
@@ -108,7 +88,7 @@ const AdminReviews = () => {
     const handleApprove = (review) => {
         setModalConfig({
             isOpen: true,
-            title: 'Approve Review?',
+            title: 'Approve review?',
             message: `This will make the review visible to all users.`,
             type: 'success',
             confirmText: 'Approve',
@@ -119,7 +99,7 @@ const AdminReviews = () => {
     const handleReject = (review) => {
         setModalConfig({
             isOpen: true,
-            title: 'Reject Review?',
+            title: 'Reject review?',
             message: `This review will be hidden from users.`,
             type: 'danger',
             confirmText: 'Reject',
@@ -130,10 +110,10 @@ const AdminReviews = () => {
     const handleDelete = (review) => {
         setModalConfig({
             isOpen: true,
-            title: 'Delete Review?',
+            title: 'Delete review?',
             message: `Are you sure you want to permanently delete this review? This action cannot be undone.`,
             type: 'danger',
-            confirmText: 'Delete Review',
+            confirmText: 'Delete review',
             onConfirm: async () => {
                 try {
                     const res = await adminService.deleteReview(review._id);
@@ -160,7 +140,7 @@ const AdminReviews = () => {
             ...reviews.map(r => [
                 r._id,
                 `"${r.userId?.name || 'Guest'}"`,
-                `"${r.hotelId?.name || 'Deleted Hotel'}"`,
+                `"${r.hotelId?.name || 'Deleted hotel'}"`,
                 r.rating,
                 `"${(r.comment || '').replace(/"/g, '""')}"`,
                 r.status,
@@ -183,7 +163,7 @@ const AdminReviews = () => {
     };
 
     return (
-        <div className="space-y-6 pb-10 uppercase tracking-tight" onClick={() => setActiveDropdown(null)}>
+        <div className="space-y-6 pb-10" onClick={() => setActiveDropdown(null)}>
             <ConfirmationModal
                 isOpen={modalConfig.isOpen}
                 onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
@@ -192,27 +172,27 @@ const AdminReviews = () => {
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-gray-900 uppercase">Review Management ({totalReviews})</h2>
-                    <p className="text-gray-500 text-[10px] font-bold uppercase tracking-tight">Monitor and moderate user reviews across all hotels.</p>
+                    <h2 className="text-2xl font-medium text-neutral-900">Review management ({totalReviews})</h2>
+                    <p className="mt-1 text-sm text-neutral-500">Guest reviews waiting for moderation and already published</p>
                 </div>
                 <div className="flex gap-2">
                     <button
                         onClick={handleExportCSV}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-[10px] font-bold uppercase text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-neutral-200 rounded-lg text-xs font-medium text-neutral-700 hover:bg-neutral-50 transition-colors shadow-sm"
                     >
                         <Download size={14} /> Export CSV
                     </button>
                 </div>
             </div>
 
-            <div className="bg-white p-4 border border-gray-200 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
+            <div className="bg-white p-4 border border-neutral-900/[0.08] rounded-xl flex flex-col md:flex-row gap-4 items-center">
                 <div className="flex gap-2 w-full md:w-auto">
                     <select
                         value={filters.status}
                         onChange={(e) => handleFilterChange('status', e.target.value)}
-                        className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
+                        className="px-4 py-2 bg-neutral-50 border border-transparent rounded-lg text-sm outline-none focus:bg-white focus:border-neutral-400 transition-colors"
                     >
-                        <option value="">All Status</option>
+                        <option value="">All statuses</option>
                         <option value="approved">Approved</option>
                         <option value="pending">Pending</option>
                         <option value="flagged">Flagged</option>
@@ -222,9 +202,9 @@ const AdminReviews = () => {
                     <select
                         value={filters.rating}
                         onChange={(e) => handleFilterChange('rating', e.target.value)}
-                        className="px-4 py-2 bg-gray-50 border border-transparent rounded-xl text-[10px] font-bold uppercase outline-none focus:bg-white focus:border-black transition-all"
+                        className="px-4 py-2 bg-neutral-50 border border-transparent rounded-lg text-sm outline-none focus:bg-white focus:border-neutral-400 transition-colors"
                     >
-                        <option value="">All Ratings</option>
+                        <option value="">All ratings</option>
                         <option value="5">5 Stars</option>
                         <option value="4">4 Stars</option>
                         <option value="3">3 Stars</option>
@@ -236,7 +216,7 @@ const AdminReviews = () => {
 
             <div className="space-y-4 min-h-[400px]">
                 {loading ? (
-                    [1, 2, 3].map(i => <div key={i} className="h-40 bg-gray-50 animate-pulse rounded-2xl"></div>)
+                    [1, 2, 3].map(i => <div key={i} className="h-40 bg-neutral-50 animate-pulse rounded-2xl"></div>)
                 ) : (
                     <AnimatePresence>
                         {reviews.length > 0 ? (
@@ -244,30 +224,30 @@ const AdminReviews = () => {
                                 <motion.div
                                     key={review._id}
                                     layout
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9 }}
-                                    transition={{ delay: index * 0.05 }}
-                                    className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow relative font-bold"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.18 }}
+                                    className="bg-white border border-neutral-900/[0.08] rounded-xl p-6 hover:shadow-md transition-shadow relative font-medium"
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-start justify-between mb-3">
                                                 <div>
                                                     <div className="flex items-center gap-3 mb-1">
-                                                        <h4 className="font-bold text-gray-900 uppercase tracking-tight">{review.userId?.name || 'Guest'}</h4>
+                                                        <h4 className="font-medium text-neutral-900">{review.userId?.name || 'Guest'}</h4>
                                                         <StarRating rating={review.rating} />
                                                     </div>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">
-                                                        Reviewed <Link to={`/hotel/admin/properties/${review.hotelId?._id}`} className="text-black font-bold hover:underline">{review.hotelId?.name || 'Deleted Hotel'}</Link> • {new Date(review.createdAt).toLocaleDateString()}
+                                                    <p className="text-xs text-neutral-500">
+                                                        Reviewed <Link to={`/hotel/admin/properties/${review.hotelId?._id}`} className="text-black font-medium hover:underline">{review.hotelId?.name || 'Deleted hotel'}</Link> • {new Date(review.createdAt).toLocaleDateString()}
                                                     </p>
                                                 </div>
                                                 <StatusBadge status={review.status} />
                                             </div>
 
-                                            <p className="text-sm text-gray-700 leading-relaxed mb-4 uppercase tracking-tight">{review.comment}</p>
+                                            <p className="text-sm text-neutral-700 leading-relaxed mb-4">{review.comment}</p>
 
-                                            <div className="flex items-center gap-6 text-[10px] font-bold uppercase text-gray-400">
+                                            <div className="flex items-center gap-6 text-xs text-neutral-500">
                                                 <span className="flex items-center gap-1">
                                                     <ThumbsUp size={14} />
                                                     Helpful: {review.helpful || 0}
@@ -284,17 +264,17 @@ const AdminReviews = () => {
                                         <div className="relative">
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === review._id ? null : review._id); }}
-                                                className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-black transition-colors"
+                                                className="p-2 hover:bg-neutral-100 rounded-full text-neutral-500 hover:text-black transition-colors"
                                             >
                                                 <MoreVertical size={16} />
                                             </button>
 
                                             {activeDropdown === review._id && (
-                                                <div className="absolute right-0 top-10 w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-20 py-1">
+                                                <div className="absolute right-0 top-10 w-48 bg-white border border-neutral-200 rounded-lg shadow-xl z-20 py-1">
                                                     {review.status !== 'approved' && (
                                                         <button
                                                             onClick={() => handleApprove(review)}
-                                                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-green-600"
+                                                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-neutral-50 text-xs font-medium text-green-600"
                                                         >
                                                             <CheckCircle size={14} /> Approve
                                                         </button>
@@ -302,14 +282,14 @@ const AdminReviews = () => {
                                                     {review.status !== 'rejected' && (
                                                         <button
                                                             onClick={() => handleReject(review)}
-                                                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-gray-50 text-[10px] font-bold uppercase text-amber-600"
+                                                            className="w-full flex items-center gap-2 px-4 py-2 hover:bg-neutral-50 text-xs font-medium text-amber-600"
                                                         >
                                                             <XCircle size={14} /> Reject
                                                         </button>
                                                     )}
                                                     <button
                                                         onClick={() => handleDelete(review)}
-                                                        className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-[10px] font-bold uppercase text-red-600"
+                                                        className="w-full flex items-center gap-2 px-4 py-2 hover:bg-red-50 text-xs font-medium text-red-600"
                                                     >
                                                         <Trash2 size={14} /> Delete
                                                     </button>
@@ -320,10 +300,10 @@ const AdminReviews = () => {
                                 </motion.div>
                             ))
                         ) : (
-                            <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center">
-                                <Star size={48} className="mx-auto text-gray-300 mb-4" />
-                                <h3 className="text-[10px] font-bold uppercase text-gray-900 mb-2">No Reviews Found</h3>
-                                <p className="text-[10px] font-bold uppercase text-gray-500">
+                            <div className="bg-white border border-neutral-200 rounded-2xl p-12 text-center">
+                                <Star size={48} className="mx-auto text-neutral-300 mb-4" />
+                                <h3 className="text-xs font-medium text-neutral-900 mb-2">No reviews found</h3>
+                                <p className="text-xs text-neutral-500">
                                     No reviews to display matching filters.
                                 </p>
                             </div>
@@ -334,15 +314,15 @@ const AdminReviews = () => {
 
             {/* Pagination */}
             {!loading && reviews.length > 0 && (
-                <div className="p-4 border border-gray-100 rounded-2xl bg-white flex items-center justify-between">
-                    <p className="text-[10px] font-bold uppercase text-gray-500 tracking-tight">
+                <div className="p-4 border border-neutral-100 rounded-2xl bg-white flex items-center justify-between">
+                    <p className="text-xs text-neutral-500">
                         Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalReviews)} of {totalReviews} reviews
                     </p>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
+                            className="p-2 border border-neutral-200 rounded-lg text-neutral-500 hover:text-black disabled:opacity-50 transition-colors"
                         >
                             <ChevronLeft size={16} />
                         </button>
@@ -350,7 +330,7 @@ const AdminReviews = () => {
                             <button
                                 key={i + 1}
                                 onClick={() => setCurrentPage(i + 1)}
-                                className={`w-10 h-10 rounded-lg text-[10px] font-bold uppercase transition-all ${currentPage === i + 1 ? 'bg-black text-white shadow-md' : 'hover:bg-gray-100 text-gray-600 border border-transparent hover:border-gray-200'}`}
+                                className={`w-10 h-10 rounded-lg text-xs font-medium  transition-colors ${currentPage === i + 1 ? 'bg-neutral-900 text-white shadow-sm' : 'hover:bg-neutral-100 text-neutral-600 border border-transparent hover:border-neutral-200'}`}
                             >
                                 {i + 1}
                             </button>
@@ -358,7 +338,7 @@ const AdminReviews = () => {
                         <button
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="p-2 border border-gray-200 rounded-lg text-gray-400 hover:text-black disabled:opacity-50 transition-colors"
+                            className="p-2 border border-neutral-200 rounded-lg text-neutral-500 hover:text-black disabled:opacity-50 transition-colors"
                         >
                             <ChevronRight size={16} />
                         </button>
