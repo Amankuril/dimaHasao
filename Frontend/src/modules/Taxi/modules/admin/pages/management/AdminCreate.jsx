@@ -6,8 +6,8 @@ import { adminService } from '../../services/adminService';
 import { ADMIN_PERMISSION_GROUPS } from '../../constants/adminAccess';
 
 const inputClass =
-  'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 outline-none transition-all placeholder:text-slate-400 focus:border-[#1D4ED8] focus:ring-4 focus:ring-blue-100';
-const labelClass = 'mb-2 block text-xs font-black uppercase tracking-[0.18em] text-slate-500';
+  'w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-800 outline-none transition-colors placeholder:text-neutral-400 focus:border-[#06381e] focus:ring-4 focus:ring-[#0a4d2b]/30';
+const labelClass = 'mb-2 block text-xs font-medium   text-neutral-500';
 
 const initialForm = {
   name: '',
@@ -27,16 +27,16 @@ const PermissionCheckbox = ({ checked, label, onChange }) => (
   <button
     type="button"
     onClick={onChange}
-    className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
+    className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-colors ${
       checked
-        ? 'border-blue-200 bg-blue-50 text-blue-900'
-        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+        ? 'border-neutral-200 bg-neutral-50 text-neutral-900'
+        : 'border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300'
     }`}
   >
-    <span className="text-sm font-bold">{label}</span>
+    <span className="text-sm font-medium">{label}</span>
     <span
       className={`flex h-5 w-5 items-center justify-center rounded-full border ${
-        checked ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white text-transparent'
+        checked ? 'border-[#0a4d2b] bg-neutral-900 text-white' : 'border-neutral-300 bg-white text-transparent'
       }`}
     >
       <Check size={12} />
@@ -214,10 +214,10 @@ const AdminCreate = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 size={30} className="animate-spin text-blue-600" />
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-slate-400">Preparing access form</p>
+          <Loader2 size={30} className="animate-spin text-[#0a4d2b]" />
+          <p className="text-xs font-medium text-neutral-400">Preparing access form</p>
         </div>
       </div>
     );
@@ -228,45 +228,45 @@ const AdminCreate = () => {
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.22em] text-slate-400">
-              <span>Admin Management</span>
+            <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-neutral-400">
+              <span>Admin management</span>
               <ChevronRight size={12} />
-              <span className="text-slate-700">{isEdit ? 'Edit Admin' : 'Create Subadmin'}</span>
+              <span className="text-neutral-700">{isEdit ? 'Edit Admin' : 'Create Subadmin'}</span>
             </div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-950">
+            <h1 className="text-3xl font-medium text-neutral-950">
               {isEdit ? 'Update Scoped Access' : 'Create Scoped Subadmin'}
             </h1>
-            <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-500">
-              Assign module access first, then limit the account to the right service locations and zones.
+            <p className="mt-2 max-w-2xl text-sm font-medium text-neutral-500">
+              Assign module access first, then limit the account to the right service locations and zones
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => navigate('/taxi/admin/management/admins')}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
           >
             <ArrowLeft size={16} />
-            Back to Admins
+            Back to admins
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 xl:grid-cols-12">
           <div className="space-y-6 xl:col-span-4">
-            <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
+            <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-6 shadow-neutral-200/50">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-blue-50 p-3 text-blue-700">
+                <div className="rounded-2xl bg-neutral-50 p-3 text-[#0a4d2b]">
                   <UserRound size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Identity</h3>
-                  <p className="text-xs font-semibold text-slate-500">Who will use this access profile</p>
+                  <h3 className="text-sm font-medium text-neutral-900">Identity</h3>
+                  <p className="text-xs font-medium text-neutral-500">Who will use this access profile</p>
                 </div>
               </div>
 
               <div className="space-y-5">
                 <div>
-                  <label className={labelClass}>Admin Type</label>
+                  <label className={labelClass}>Admin type</label>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { key: 'superadmin', label: 'Superadmin' },
@@ -276,10 +276,10 @@ const AdminCreate = () => {
                         key={option.key}
                         type="button"
                         onClick={() => setField('admin_type', option.key)}
-                        className={`rounded-2xl border px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-all ${
+                        className={`rounded-2xl border px-4 py-3 text-sm font-medium   transition-colors ${
                           form.admin_type === option.key
-                            ? 'border-blue-200 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 bg-white text-slate-500'
+                            ? 'border-neutral-200 bg-neutral-50 text-[#0a4d2b]'
+                            : 'border-neutral-200 bg-white text-neutral-500'
                         }`}
                       >
                         {option.label}
@@ -301,22 +301,22 @@ const AdminCreate = () => {
                   <input value={form.phone} onChange={(event) => setField('phone', event.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Role Label</label>
+                  <label className={labelClass}>Role label</label>
                   <input value={form.role} onChange={(event) => setField('role', event.target.value)} className={inputClass} />
                 </div>
                 <div>
-                  <label className={labelClass}>Account Status</label>
+                  <label className={labelClass}>Account status</label>
                   <button
                     type="button"
                     onClick={() => setField('active', !form.active)}
-                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-bold transition-all ${
+                    className={`flex w-full items-center justify-between rounded-2xl border px-4 py-3 text-sm font-medium transition-colors ${
                       form.active
                         ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
                         : 'border-rose-200 bg-rose-50 text-rose-700'
                     }`}
                   >
                     <span>{form.active ? 'Active account' : 'Inactive account'}</span>
-                    <span className="text-xs font-black uppercase tracking-[0.18em]">
+                    <span className="text-xs font-medium">
                       {form.active ? 'Enabled' : 'Disabled'}
                     </span>
                   </button>
@@ -324,14 +324,14 @@ const AdminCreate = () => {
               </div>
             </div>
 
-            <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
+            <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-6 shadow-neutral-200/50">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-slate-100 p-3 text-slate-700">
+                <div className="rounded-2xl bg-neutral-100 p-3 text-neutral-700">
                   <LockKeyhole size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Credentials</h3>
-                  <p className="text-xs font-semibold text-slate-500">
+                  <h3 className="text-sm font-medium text-neutral-900">Credentials</h3>
+                  <p className="text-xs font-medium text-neutral-500">
                     {isEdit ? 'Leave blank to keep the current password.' : 'Set initial login password.'}
                   </p>
                 </div>
@@ -348,7 +348,7 @@ const AdminCreate = () => {
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Confirm Password</label>
+                  <label className={labelClass}>Confirm password</label>
                   <input
                     type="password"
                     value={form.passwordConfirmation}
@@ -361,26 +361,26 @@ const AdminCreate = () => {
           </div>
 
           <div className="space-y-6 xl:col-span-8">
-            <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
+            <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-6 shadow-neutral-200/50">
               <div className="mb-6 flex items-center gap-3">
-                <div className="rounded-2xl bg-violet-50 p-3 text-violet-700">
+                <div className="rounded-2xl bg-neutral-50 p-3 text-[#0a4d2b]">
                   <Shield size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Sidebar Permissions</h3>
-                  <p className="text-xs font-semibold text-slate-500">Choose which menu groups and modules the admin can access.</p>
+                  <h3 className="text-sm font-medium text-neutral-900">Sidebar permissions</h3>
+                  <p className="text-xs font-medium text-neutral-500">Choose which menu groups and modules the admin can access</p>
                 </div>
               </div>
 
               {form.admin_type === 'superadmin' ? (
-                <div className="rounded-3xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-bold text-amber-800">
-                  Superadmin inherits all sidebar menus and API permissions automatically.
+                <div className="rounded-2xl border border-amber-100 bg-amber-50 px-5 py-4 text-sm font-medium text-amber-800">
+                  Superadmin inherits all sidebar menus and API permissions automatically
                 </div>
               ) : (
                 <div className="space-y-6">
                   {ADMIN_PERMISSION_GROUPS.map((group) => (
                     <div key={group.title} className="space-y-3">
-                      <div className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">{group.title}</div>
+                      <div className="text-xs font-medium text-neutral-400">{group.title}</div>
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {group.items.map((permission) => (
                           <PermissionCheckbox
@@ -397,25 +397,25 @@ const AdminCreate = () => {
               )}
             </div>
 
-            <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50">
+            <div className="rounded-xl border border-neutral-900/[0.08] bg-white p-6 shadow-neutral-200/50">
               <div className="mb-6 flex items-center gap-3">
                 <div className="rounded-2xl bg-emerald-50 p-3 text-emerald-700">
                   <MapPinned size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black uppercase tracking-[0.18em] text-slate-900">Service Location Scope</h3>
-                  <p className="text-xs font-semibold text-slate-500">Subadmins only see records inside the locations and zones selected here.</p>
+                  <h3 className="text-sm font-medium text-neutral-900">Service location scope</h3>
+                  <p className="text-xs font-medium text-neutral-500">Subadmins only see records inside the locations and zones selected here</p>
                 </div>
               </div>
 
               {form.admin_type === 'superadmin' ? (
-                <div className="rounded-3xl border border-blue-100 bg-blue-50 px-5 py-4 text-sm font-bold text-blue-800">
-                  Superadmin scope stays global, so no location or zone limits are applied.
+                <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-5 py-4 text-sm font-medium text-neutral-900">
+                  Superadmin scope stays global, so no location or zone limits are applied
                 </div>
               ) : (
                 <div className="space-y-6">
                   <div>
-                    <div className={labelClass}>Assigned Service Locations</div>
+                    <div className={labelClass}>Assigned service locations</div>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       {serviceLocations.map((location) => {
                         const value = String(location._id || location.id || '');
@@ -434,7 +434,7 @@ const AdminCreate = () => {
                   </div>
 
                   <div>
-                    <div className={labelClass}>Assigned Zones</div>
+                    <div className={labelClass}>Assigned zones</div>
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       {visibleZones.map((zone) => {
                         const value = String(zone._id || zone.id || '');
@@ -450,25 +450,25 @@ const AdminCreate = () => {
                       })}
                     </div>
                     {visibleZones.length === 0 && (
-                      <p className="text-sm font-semibold text-slate-400">Select service locations first to unlock matching zones.</p>
+                      <p className="text-sm font-medium text-neutral-400">Select service locations first to unlock matching zones</p>
                     )}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="flex flex-col gap-3 rounded-[30px] border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/50 sm:flex-row sm:justify-end">
+            <div className="flex flex-col gap-3 rounded-xl border border-neutral-900/[0.08] bg-white p-6 shadow-neutral-200/50 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={() => navigate('/taxi/admin/management/admins')}
-                className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-50"
+                className="rounded-2xl border border-neutral-200 bg-white px-5 py-3 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#1D4ED8] px-6 py-3 text-sm font-black text-white shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 hover:bg-[#1E40AF] disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#06381e] px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:-translate-y-0.5 hover:bg-[#1E40AF] disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : null}
                 {isEdit ? 'Update Admin Access' : 'Create Admin Access'}

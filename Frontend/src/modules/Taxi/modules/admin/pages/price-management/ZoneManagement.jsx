@@ -38,9 +38,9 @@ import {
   isDriverAvailable,
 } from "../../utils/mapUtils";
 
-const inputClass = "w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm text-gray-800 bg-white focus:border-[#FFC400] focus:ring-1 focus:ring-[#FFC400] outline-none transition-colors";
-const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5";
-const cardClass = "bg-white rounded-xl border border-gray-200 p-6 shadow-sm";
+const inputClass = "w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors";
+const labelClass = "block text-xs font-medium text-neutral-500 mb-1.5";
+const cardClass = "bg-white rounded-xl border border-neutral-200 p-6 shadow-sm";
 const ADMIN_LANGUAGE_OPTIONS = ['English', 'Hindi', 'Arabic', 'French', 'Spanish'];
 
 const ZoneManagement = ({ mode: initialMode = "list" }) => {
@@ -108,8 +108,10 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
         adminService.getDrivers(1, 200),
       ]);
 
+      // Declared outside the if: the edit-from-URL branch below reads it, and a
+      // block-scoped const made that throw "zoneData is not defined".
+      const zoneData = zoneRes ? (zoneRes.success ? (zoneRes.data?.results || zoneRes.data) : zoneRes) : [];
       if (zoneRes) {
-        const zoneData = zoneRes.success ? (zoneRes.data?.results || zoneRes.data) : zoneRes;
         setZones(Array.isArray(zoneData) ? zoneData : []);
       }
 
@@ -460,7 +462,7 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
   }, [selectedCountry, view]);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-8 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-neutral-50 p-6 lg:p-8 animate-in fade-in duration-500">
       <AnimatePresence mode="wait">
         {view === 'list' ? (
           <motion.div 
@@ -468,54 +470,54 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
             className="max-w-7xl mx-auto space-y-6"
           >
             <div className="mb-6">
-              <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
                 <span>Pricing</span>
                 <ChevronRight size={12} />
-                <span className="text-gray-700">Zone Management</span>
+                <span className="text-neutral-700">Zone management</span>
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-xl text-gray-900 font-bold">Zone Management</h1>
-                  <p className="text-xs text-gray-400 mt-1">Configure geofenced boundaries for operational control.</p>
+                  <h1 className="text-xl text-neutral-900 font-medium">Zone management</h1>
+                  <p className="text-xs text-neutral-500 mt-1">Configure geofenced boundaries for operational control</p>
                 </div>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate("/taxi/admin/pricing/zone/create"); }}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm relative z-50"
+                  className="flex items-center gap-2 px-4 py-2 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm relative z-50"
                 >
-                  <Plus size={16} /> Add Market Zone
+                  <Plus size={16} /> Add market zone
                 </button>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 flex items-center justify-between shadow-sm">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 flex items-center justify-between">
                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${enablePeakZoneGlobal ? 'bg-amber-50 text-amber-600' : 'bg-gray-50 text-gray-300'}`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${enablePeakZoneGlobal ? 'bg-amber-50 text-amber-600' : 'bg-neutral-50 text-neutral-300'}`}>
                      <Zap size={20} className={enablePeakZoneGlobal ? 'animate-pulse' : ''} />
                   </div>
                   <div>
-                     <h3 className="text-sm text-gray-900 font-bold">Dynamic Peak Pricing</h3>
-                     <p className="text-[11px] text-gray-400">Toggle surge modifiers across all zones globally</p>
+                     <h3 className="text-sm text-neutral-900 font-medium">Dynamic peak pricing</h3>
+                     <p className="text-xs text-neutral-500">Toggle surge modifiers across all zones globally</p>
                   </div>
                </div>
                <button 
                  onClick={() => setEnablePeakZoneGlobal(!enablePeakZoneGlobal)}
-                 className={`relative w-11 h-6 rounded-full transition-colors ${enablePeakZoneGlobal ? 'bg-[#FFC400]' : 'bg-gray-200'}`}
+                 className={`relative w-11 h-6 rounded-full transition-colors ${enablePeakZoneGlobal ? 'bg-[#0a4d2b] text-white' : 'bg-neutral-200'}`}
                >
                  <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${enablePeakZoneGlobal ? 'translate-x-5' : ''}`} />
                </button>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+              <div className="p-4 border-b border-neutral-100 bg-neutral-50/50">
                 <div className="relative w-full max-w-sm">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                   <input 
                     type="text" 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search zones..." 
-                    className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#FFC400] focus:border-[#FFC400] transition-all font-medium"
+                    placeholder="Search zones" 
+                    className="w-full pl-9 pr-4 py-2 bg-white border border-neutral-200 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] transition-colors font-medium"
                   />
                 </div>
               </div>
@@ -523,48 +525,48 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
               <div className="overflow-x-auto">
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20">
-                    <Loader2 className="animate-spin text-[#FFC400] mb-2" size={32} />
-                    <p className="text-xs text-gray-400 font-medium">Loading data...</p>
+                    <Loader2 className="animate-spin text-[#0a4d2b] mb-2" size={32} />
+                    <p className="text-xs text-neutral-500">Loading data...</p>
                   </div>
                 ) : filteredZones.length > 0 ? (
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="bg-gray-50/50 border-b border-gray-100">
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">S.No</th>
-                        <th className="px-6 py-3.5 text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest">Market Zone Identity</th>
-                        <th className="px-6 py-3.5 text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">Status</th>
-                        <th className="px-6 py-3.5 text-right text-[10px] font-bold text-gray-400 uppercase tracking-widest">Actions</th>
+                      <tr className="bg-neutral-50/50 border-b border-neutral-100">
+                        <th className="px-6 py-3.5 text-left text-xs text-neutral-500">S.No</th>
+                        <th className="px-6 py-3.5 text-left text-xs text-neutral-500">Market zone identity</th>
+                        <th className="px-6 py-3.5 text-center text-xs text-neutral-500">Status</th>
+                        <th className="px-6 py-3.5 text-right text-xs text-neutral-500">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-neutral-100">
                       {paginatedZones.map((zone, idx) => (
-                        <tr key={zone._id || zone.id} className="hover:bg-gray-50/50 transition-colors group">
-                          <td className="px-6 py-4 whitespace-nowrap text-xs font-bold text-gray-400">{(((currentPage - 1) * pageSize) + idx + 1).toString().padStart(2, '0')}</td>
+                        <tr key={zone._id || zone.id} className="hover:bg-neutral-50/50 transition-colors group">
+                          <td className="px-6 py-4 whitespace-nowrap text-xs text-neutral-500">{(((currentPage - 1) * pageSize) + idx + 1).toString().padStart(2, '0')}</td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-lg bg-[#FFC400]/10 flex items-center justify-center text-[#FFC400] shadow-sm border border-[#FFC400]/20 transition-transform group-hover:scale-105">
+                              <div className="w-9 h-9 rounded-lg flex items-center justify-center border border-[#0a4d2b] transition-transform bg-neutral-100 text-neutral-500">
                                 <Target size={16} />
                               </div>
-                              <span className="font-semibold text-gray-900">{zone.name || zone.zone_name}</span>
+                              <span className="font-medium text-neutral-900">{zone.name || zone.zone_name}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-center">
                              <button 
                                onClick={() => handleStatusToggle(zone._id || zone.id, zone.active)} 
-                               className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${zone.active ? 'bg-emerald-50 text-gray-900 border border-emerald-100' : 'bg-gray-50 text-gray-400 border border-gray-200'}`}
+                               className={`px-2.5 py-1 rounded-full text-xs font-medium  ${zone.active ? 'bg-emerald-50 text-neutral-900 border border-emerald-100' : 'bg-neutral-50 text-neutral-500 border border-neutral-200'}`}
                              >
                                {zone.active ? 'Active' : 'Inactive'}
                              </button>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right">
                              <div className="flex items-center justify-end gap-2 relative z-50">
-                               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/taxi/admin/pricing/zone/edit/${zone._id || zone.id}`); }} className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"><Edit2 size={14} /></button>
-                               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(zone._id || zone.id); }} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/taxi/admin/pricing/zone/edit/${zone._id || zone.id}`); }} className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-[#06381e] rounded-lg transition-colors"><Edit2 size={14} /></button>
+                               <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(zone._id || zone.id); }} className="p-2 text-neutral-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
                                <button
                                  type="button"
                                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleExplore(zone); }}
-                                 title="Explore Zone"
-                                 className="p-2 text-gray-400 hover:text-[#0B1220] hover:bg-[#FFC400] rounded-lg transition-colors"
+                                 title="Explore zone"
+                                 className="p-2 text-neutral-500 hover:text-neutral-900 hover:bg-[#06381e] rounded-lg transition-colors"
                                >
                                  <Globe size={14} />
                                </button>
@@ -576,23 +578,23 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                   </table>
                 ) : (
                   <div className="py-20 text-center">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center text-gray-200 mx-auto mb-4"><Navigation size={32} /></div>
-                    <h3 className="text-sm text-gray-900 mb-1 font-bold">No Zones Configured</h3>
-                    <p className="text-xs text-gray-400 max-w-xs mx-auto">Map your operational sector boundaries to initiate geofencing.</p>
+                    <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-200 mx-auto mb-4"><Navigation size={32} /></div>
+                    <h3 className="text-sm text-neutral-900 mb-1 font-medium">No zones configured</h3>
+                    <p className="text-xs text-neutral-500 max-w-xs mx-auto">Map your operational sector boundaries to initiate geofencing</p>
                   </div>
                 )}
               </div>
 
               {!loading && filteredZones.length > 0 && (
-                <div className="flex flex-col gap-4 border-t border-gray-100 bg-gray-50/40 px-4 py-4 md:flex-row md:items-center md:justify-between">
-                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                <div className="flex flex-col gap-4 border-t border-neutral-100 bg-neutral-50/40 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex items-center gap-3 text-xs text-neutral-500">
                     <span className="font-medium">
                       Showing {Math.min(((currentPage - 1) * pageSize) + 1, filteredZones.length)} to {Math.min(currentPage * pageSize, filteredZones.length)} of {filteredZones.length} zones
                     </span>
                     <select
                       value={pageSize}
                       onChange={(e) => setPageSize(Number(e.target.value))}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 outline-none transition-colors focus:border-[#FFC400]"
+                      className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700 outline-none transition-colors focus:border-[#0a4d2b]"
                     >
                       {[10, 20, 50].map((size) => (
                         <option key={size} value={size}>{size} / page</option>
@@ -605,18 +607,18 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                       type="button"
                       onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                       disabled={currentPage === 1}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-[#FFC400]/50 hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-600 transition-colors hover:border-[#0a4d2b] hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Previous
                     </button>
-                    <span className="rounded-lg bg-white px-3 py-2 text-xs font-bold text-gray-700 border border-gray-200">
+                    <span className="rounded-lg bg-white px-3 py-2 text-xs font-medium text-neutral-700 border border-neutral-200">
                       Page {currentPage} of {totalZonePages}
                     </span>
                     <button
                       type="button"
                       onClick={() => setCurrentPage((page) => Math.min(totalZonePages, page + 1))}
                       disabled={currentPage === totalZonePages}
-                      className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-600 transition-colors hover:border-[#FFC400]/50 hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
+                      className="rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-600 transition-colors hover:border-[#0a4d2b] hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       Next
                     </button>
@@ -631,19 +633,19 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
             className="max-w-7xl mx-auto space-y-6 pb-20"
           >
             <div className="mb-6">
-              <div className="flex items-center gap-1.5 text-xs text-gray-400 mb-2">
+              <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
                 <span>Pricing</span>
                 <ChevronRight size={12} />
-                <span>Zone Management</span>
+                <span>Zone management</span>
                 <ChevronRight size={12} />
-                <span className="text-gray-700">{editingId ? 'Edit' : 'Create'}</span>
+                <span className="text-neutral-700">{editingId ? 'Edit' : 'Create'}</span>
               </div>
               <div className="flex items-center justify-between">
-                <h1 className="text-xl text-gray-900 font-bold">{editingId ? 'Edit Market Zone' : 'Add Market Zone'}</h1>
+                <h1 className="text-xl text-neutral-900 font-medium">{editingId ? 'Edit Market Zone' : 'Add Market Zone'}</h1>
                 <button 
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate("/taxi/admin/pricing/zone"); setView('list'); }}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm relative z-50"
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-neutral-600 bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors shadow-sm relative z-50"
                 >
                   <ArrowLeft size={14} /> Back
                 </button>
@@ -653,20 +655,20 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
               {/* Form Section */}
               <div className="xl:col-span-4 space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                   <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-                      <div className="w-9 h-9 rounded-lg bg-[#FFC400]/10 flex items-center justify-center text-[#FFC400]">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+                   <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
                         <Tag size={18} />
                       </div>
                       <div>
-                        <h3 className="text-sm text-gray-900 font-bold">Zone Identity</h3>
-                        <p className="text-xs text-gray-400">Basic identification settings</p>
+                        <h3 className="text-sm text-neutral-900 font-medium">Zone identity</h3>
+                        <p className="text-xs text-neutral-500">Basic identification settings</p>
                       </div>
                    </div>
                    
                    <div className="space-y-5">
                       <div>
-                        <label className={labelClass}>Service Location</label>
+                        <label className={labelClass}>Service location</label>
                         <select 
                           value={formData.service_location_id}
                           onChange={(e) => {
@@ -689,17 +691,17 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                       </div>
 
                       <div>
-                        <div className="flex items-center gap-1 border-b border-gray-100 mb-4 overflow-x-auto hide-scrollbar whitespace-nowrap pb-1">
+                        <div className="flex items-center gap-1 border-b border-neutral-100 mb-4 overflow-x-auto hide-scrollbar whitespace-nowrap pb-1">
                           {ADMIN_LANGUAGE_OPTIONS.map(lang => (
                             <button
                               type="button"
                               key={lang}
                               onClick={(e) => { e.preventDefault(); setActiveTab(lang); }}
-                              className={`px-4 py-2 text-xs font-medium transition-colors relative whitespace-nowrap shrink-0 ${activeTab === lang ? 'text-[#FFC400]' : 'text-gray-400 hover:text-gray-600'}`}
+                              className={`px-4 py-2 text-xs font-medium transition-colors relative whitespace-nowrap shrink-0 ${activeTab === lang ? 'text-[#0a4d2b]' : 'text-neutral-500 hover:text-neutral-600'}`}
                             >
                               {lang}
                               {activeTab === lang && (
-                                <motion.div layoutId="activeTab" className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#FFC400]" />
+                                <motion.div layoutId="activeTab" className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#0a4d2b] text-white" />
                               )}
                             </button>
                           ))}
@@ -718,7 +720,7 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                       </div>
 
                       <div>
-                        <label className={labelClass}>Boundary Shape</label>
+                        <label className={labelClass}>Boundary shape</label>
                         <div className="grid grid-cols-2 gap-3">
                           {[
                             { id: 'polygon', label: 'Polygon Boundary' },
@@ -728,10 +730,10 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                               key={option.id}
                               type="button"
                               onClick={() => setBoundaryMode(option.id)}
-                              className={`rounded-lg border px-4 py-3 text-sm font-semibold transition-colors ${
+                              className={`rounded-lg border px-4 py-3 text-sm font-medium transition-colors ${
                                 boundaryMode === option.id
-                                  ? 'border-[#FFC400] bg-[#FFC400]/10 text-[#0B1220]'
-                                  : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'
+                                  ? 'border-[#0a4d2b] bg-[#0a4d2b]/10 text-[#0a4d2b]'
+                                  : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300'
                               }`}
                             >
                               {option.label}
@@ -757,17 +759,17 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                    </div>
                 </div>
 
-                <div className="bg-white rounded-xl border border-gray-200 p-6 space-y-3 shadow-sm">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 space-y-3">
                    <button 
                      disabled={saving} onClick={handleSave}
-                     className="w-full py-3 bg-[#FFC400] text-[#0B1220] rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                     className="w-full py-3 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium hover:brightness-95 transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-2"
                    >
                      {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                      {editingId ? 'Update Zone' : 'Save'}
                    </button>
                    <button 
                      onClick={() => navigate("/taxi/admin/pricing/zone")}
-                     className="w-full py-3 bg-gray-50 text-gray-600 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                     className="w-full py-3 bg-neutral-50 text-neutral-600 border border-neutral-200 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors"
                    >
                      Cancel
                    </button>
@@ -776,11 +778,11 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
 
               {/* Map Section */}
               <div className="xl:col-span-8 space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                   <div className="flex flex-col gap-3 border-b border-gray-100 px-4 py-4 md:flex-row md:items-center md:justify-between">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
+                   <div className="flex flex-col gap-3 border-b border-neutral-100 px-4 py-4 md:flex-row md:items-center md:justify-between">
                       <div className="w-full md:max-w-md">
-                        <div className="flex h-12 w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 shadow-sm">
-                           <Search className="text-gray-400" size={18} />
+                        <div className="flex h-12 w-full items-center gap-3 rounded-xl border border-neutral-900/[0.08] bg-white px-4">
+                           <Search className="text-neutral-500" size={18} />
                            {isLoaded ? (
                              <Autocomplete
                                onLoad={a => setAutocomplete(a)}
@@ -790,7 +792,7 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                                <input
                                  type="text"
                                  placeholder="Search for a city or zone"
-                                 className="w-full bg-transparent text-sm font-semibold text-gray-800 outline-none placeholder:text-gray-400"
+                                 className="w-full bg-transparent text-sm font-medium text-neutral-800 outline-none placeholder:text-neutral-500"
                                />
                              </Autocomplete>
                            ) : (
@@ -798,15 +800,15 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                                type="text"
                                placeholder={loadError ? "Google Maps failed to load" : "Loading map search..."}
                                disabled
-                               className="w-full bg-transparent text-sm font-semibold text-gray-400 outline-none placeholder:text-gray-400"
+                               className="w-full bg-transparent text-sm text-neutral-500 outline-none placeholder:text-neutral-500"
                              />
                            )}
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-3 md:justify-end">
-                        <div className="rounded-full bg-slate-50 px-3 py-1.5 text-[11px] font-semibold text-slate-500">
-                          State and city labels remain visible while you draw zone boundaries.
+                        <div className="rounded-full bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-500">
+                          State and city labels remain visible while you draw zone boundaries
                         </div>
                         <button 
                           type="button"
@@ -815,10 +817,10 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                             setCircleCenter(null);
                             setCircleRadiusMeters('');
                           }}
-                          className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-[11px] font-black uppercase tracking-widest text-rose-600 shadow-sm transition-all border border-gray-200 hover:bg-rose-50 active:scale-95"
+                          className="flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-medium text-rose-600 transition-colors border border-neutral-900/[0.08] hover:bg-rose-50"
                         >
                           <X size={14} />
-                          Clear Map
+                          Clear map
                         </button>
                       </div>
                    </div>
@@ -851,16 +853,16 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                                  ],
                                },
                                polygonOptions: {
-                                 fillColor: '#FFC400',
+                                 fillColor: '#0a4d2b',
                                  fillOpacity: 0.15,
-                                 strokeColor: '#FFC400',
+                                 strokeColor: '#0a4d2b',
                                  strokeWeight: 2,
                                  editable: true,
                                },
                                circleOptions: {
-                                 fillColor: '#FFC400',
+                                 fillColor: '#0a4d2b',
                                  fillOpacity: 0.12,
-                                 strokeColor: '#FFC400',
+                                 strokeColor: '#0a4d2b',
                                  strokeWeight: 2,
                                  editable: true,
                                },
@@ -870,7 +872,7 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                            {boundaryMode === 'polygon' && polygonCoords.length > 0 && (
                              <Polygon
                                paths={polygonCoords}
-                               options={{ fillColor: '#FFC400', strokeColor: '#FFC400', strokeWeight: 2, fillOpacity: 0.25, editable: true, draggable: true }}
+                               options={{ fillColor: '#0a4d2b', strokeColor: '#0a4d2b', strokeWeight: 2, fillOpacity: 0.25, editable: true, draggable: true }}
                                onLoad={(polygon) => {
                                  polygonListenersRef.current.forEach((listener) => listener?.remove?.());
                                  polygonListenersRef.current = [];
@@ -896,8 +898,8 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                                center={circleCenter}
                                radius={Number(circleRadiusMeters)}
                                options={{
-                                 fillColor: '#FFC400',
-                                 strokeColor: '#FFC400',
+                                 fillColor: '#0a4d2b',
+                                 strokeColor: '#0a4d2b',
                                  strokeWeight: 2,
                                  fillOpacity: 0.18,
                                  editable: true,
@@ -929,24 +931,24 @@ const ZoneManagement = ({ mode: initialMode = "list" }) => {
                          </GoogleMap>
                        </div>
                      ) : (
-                       <div className="flex h-full items-center justify-center bg-gray-50 rounded-lg">
-                          <Loader2 className="animate-spin text-gray-300" size={32} />
+                       <div className="flex h-full items-center justify-center bg-neutral-50 rounded-lg">
+                          <Loader2 className="animate-spin text-neutral-300" size={32} />
                        </div>
                      )}
                    </div>
                 </div>
 
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-amber-800 flex items-start gap-3 shadow-sm">
-                   <Info size={18} className="text-amber-500 shrink-0 mt-0.5" />
+                   <Info size={18} className="text-[#0a4d2b] shrink-0 mt-0.5" />
                    <p className="text-sm font-medium">
-                     Avoid drawing multiple zones that overlap with each other.
+                     Avoid drawing multiple zones that overlap with each other
                    </p>
                 </div>
 
-                <div className="bg-gray-900 rounded-xl p-6 text-white overflow-hidden relative shadow-md">
+                <div className="bg-neutral-900 rounded-xl p-6 text-white overflow-hidden relative shadow-sm">
                     <div className="relative z-10">
-                      <h4 className="text-sm mb-2 flex items-center gap-2 font-bold"><MapPin size={16} className="text-[#FFC400]" /> Mapping Intelligence</h4>
-                      <p className="text-xs text-gray-300 leading-relaxed">
+                      <h4 className="text-sm mb-2 flex items-center gap-2 font-medium"><MapPin size={16} className="text-[#0a4d2b]" /> Mapping intelligence</h4>
+                      <p className="text-xs text-neutral-300 leading-relaxed">
                         Use the polygon or circle tool at the top of the map to define your zone boundary. Click to place polygon vertices and close the shape, or drop a circle and adjust its radius for a radial market boundary. The red dashed line represents the country boundary for reference.
                       </p>
                     </div>

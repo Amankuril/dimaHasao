@@ -163,71 +163,17 @@ body {
 }
 
 /* ==========================================================================
-   REDIGO CENTRALIZED ADMIN THEME & TYPOGRAPHY
-   This layer unifies typography, alignment, form fields, cards, and tables
-   specifically inside the Admin Panel, scoped under .redigo-admin-root.
+   TAXI ADMIN LAYER, scoped under .redigo-admin-root (TaxiApp wraps the admin in it)
+
+   This used to force Inter, weight 800 on h1 / 700 on h2, every rounded-xl and
+   rounded-2xl to 16px and every input white, all with !important. That made
+   Taxi look unlike the other four admins and beat any class-level fix; the
+   white-input rule also repainted the shared dark sidebar's search field.
+   What is left only does what classes cannot do from one place.
    ========================================================================== */
 
-/* 1. Global Font and Typography Unification */
-.redigo-admin-root,
-.redigo-admin-root * {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-}
-
-/* Normalise oversized headers and weight discrepancies */
-.redigo-admin-root h1 {
-  font-size: 1.5rem !important; /* Unified to 24px */
-  font-weight: 800 !important; /* Sleek bold */
-  letter-spacing: -0.025em !important;
-}
-
-.redigo-admin-root h2 {
-  font-size: 1.25rem !important; /* Unified to 20px */
-  font-weight: 700 !important;
-  letter-spacing: -0.02em !important;
-}
-
-.redigo-admin-root h3 {
-  font-size: 1rem !important; /* Unified to 16px */
-  font-weight: 600 !important;
-}
-
-/* Adjust overly heavy weights (900/black) to professional bold/semibold */
-.redigo-admin-root .font-black {
-  font-weight: 800 !important;
-}
-.redigo-admin-root .font-extrabold {
-  font-weight: 800 !important;
-}
-
-/* 2. Text Color Normalization */
-.redigo-admin-root .text-slate-900,
-.redigo-admin-root .text-gray-900 {
-  color: #0f172a !important; /* slate-900 */
-}
-
-.redigo-admin-root .text-slate-800,
-.redigo-admin-root .text-gray-800 {
-  color: #1e293b !important; /* slate-800 */
-}
-
-.redigo-admin-root .text-slate-700,
-.redigo-admin-root .text-gray-700 {
-  color: #334155 !important; /* slate-700 */
-}
-
-.redigo-admin-root .text-slate-500,
-.redigo-admin-root .text-gray-500 {
-  color: #64748b !important; /* slate-500 */
-}
-
-.redigo-admin-root .text-slate-400,
-.redigo-admin-root .text-gray-400 {
-  color: #94a3b8 !important; /* slate-400 */
-}
-
-/* 3. Outer Padding and Alignment Standardization */
-/* Prevents double padding between AdminLayout's main container and standalone page wrappers */
+/* Pages wrap themselves in their own padded, full-height shell; the layout's
+   <main> already pads, so the inner shell must not pad again. */
 .redigo-admin-root main > div,
 .redigo-admin-root main > section,
 .redigo-admin-root main > form {
@@ -236,66 +182,163 @@ body {
   min-height: auto !important;
 }
 
-/* 4. Form Field Standardization (Inputs, Selects, Textareas) */
-.redigo-admin-root input[type="text"],
-.redigo-admin-root input[type="number"],
-.redigo-admin-root input[type="email"],
-.redigo-admin-root input[type="tel"],
-.redigo-admin-root input[type="password"],
-.redigo-admin-root select,
-.redigo-admin-root textarea {
-  border-radius: 8px !important; /* unified rounded-lg */
-  border-color: #cbd5e1 !important; /* slate-300 */
-  background-color: #ffffff !important;
-  color: #1e293b !important; /* slate-800 */
-  font-size: 0.875rem !important; /* text-sm */
-  transition: all 0.2s ease-in-out !important;
+/* The admin pages use admin-btn-primary / admin-btn-secondary / admin-card /
+   admin-input in about 76 places, but their only definitions lived in
+   modules/admin/styles/adminTheme.css, which nothing imports. So these buttons
+   had no padding, no inline layout and no font size: "Download report" was
+   squashed and "Export CSV" stacked its icon over its label. Defined here in
+   the components layer, so a utility on the element (h-10, !bg-red-600, w-10
+   !p-0) still overrides them. */
+@layer components {
+  .redigo-admin-root .admin-btn-primary,
+  .redigo-admin-root .admin-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding: 0 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1), border-color 150ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .redigo-admin-root .admin-btn-primary {
+    background-color: #0a4d2b;
+    color: #ffffff;
+    border: 1px solid transparent;
+  }
+  .redigo-admin-root .admin-btn-primary:hover { background-color: #06381e; }
+  .redigo-admin-root .admin-btn-secondary {
+    background-color: #ffffff;
+    color: #171717;
+    border: 1px solid rgba(23, 23, 23, 0.12);
+  }
+  .redigo-admin-root .admin-btn-secondary:hover { background-color: #fafafa; }
+  .redigo-admin-root .admin-btn-primary:disabled,
+  .redigo-admin-root .admin-btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .redigo-admin-root .admin-btn-primary:focus-visible,
+  .redigo-admin-root .admin-btn-secondary:focus-visible { outline: 2px solid rgba(10, 77, 43, 0.35); outline-offset: 2px; }
+
+  .redigo-admin-root .admin-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(23, 23, 23, 0.08);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+  }
+
+  .redigo-admin-root .admin-input {
+    width: 100%;
+    height: 2.5rem;
+    padding: 0 0.75rem;
+    border: 1px solid rgba(23, 23, 23, 0.12);
+    border-radius: 0.5rem;
+    background-color: #ffffff;
+    color: #171717;
+    font-size: 0.8125rem;
+  }
+
+  .redigo-admin-root .admin-page-bg { background-color: #fafafa; }
+
+  /* Same story as the buttons: tables, badges and the modal backdrop used
+     classes that only existed in the unimported adminTheme.css, so the Admins
+     table had no cell padding and the create-admin modal had no backdrop to
+     dim the page or catch the click that closes it. */
+  .redigo-admin-root .admin-table-container {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid rgba(23, 23, 23, 0.08);
+    border-radius: 0.75rem;
+    background-color: #ffffff;
+  }
+  .redigo-admin-root .admin-table { width: 100%; border-collapse: collapse; }
+  .redigo-admin-root .admin-table th {
+    padding: 0.625rem 1rem;
+    text-align: left;
+    white-space: nowrap;
+    background-color: #fafafa;
+    border-bottom: 1px solid rgba(23, 23, 23, 0.08);
+  }
+  .redigo-admin-root .admin-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.8125rem;
+    color: #262626;
+    border-bottom: 1px solid rgba(23, 23, 23, 0.06);
+    vertical-align: middle;
+  }
+  .redigo-admin-root .admin-table tbody tr { transition: background-color 150ms cubic-bezier(0.22, 1, 0.36, 1); }
+  .redigo-admin-root .admin-table tbody tr:hover { background-color: #fafafa; }
+
+  .redigo-admin-root .admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    background-color: #f5f5f5;
+    color: #404040;
+  }
+  .redigo-admin-root .admin-badge-success { background-color: #ecf5ef; color: #0a4d2b; }
+  .redigo-admin-root .admin-badge-danger { background-color: #fdf0f0; color: #b42318; }
+  .redigo-admin-root .admin-badge-warning { background-color: #fdf6e7; color: #92600a; }
+  .redigo-admin-root .admin-badge-info { background-color: #f5f5f5; color: #404040; }
+
+  .redigo-admin-root .admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background-color: #0a0a0a;
+  }
+
+  /* Form fields inside page content (not the sidebar). Layered, so a utility
+     on the element (text-xs, rounded-xl) still wins; unlayered CSS beats every
+     Tailwind layer, which is what made the selects render larger than the rest. */
+.redigo-admin-root main input[type="text"],
+.redigo-admin-root main input[type="number"],
+.redigo-admin-root main input[type="email"],
+.redigo-admin-root main input[type="tel"],
+.redigo-admin-root main input[type="password"],
+.redigo-admin-root main select,
+.redigo-admin-root main textarea {
+  border-radius: 8px;
+  border-color: rgba(23, 23, 23, 0.12);
+  font-size: 0.8125rem;
+  transition: border-color 150ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 150ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.redigo-admin-root input[type="text"]:focus,
-.redigo-admin-root input[type="number"]:focus,
-.redigo-admin-root input[type="email"]:focus,
-.redigo-admin-root input[type="tel"]:focus,
-.redigo-admin-root input[type="password"]:focus,
-.redigo-admin-root select:focus,
-.redigo-admin-root textarea:focus {
-  border-color: #4f46e5 !important; /* Indigo-600 */
-  outline: 2px solid transparent !important;
-  outline-offset: 2px !important;
-  box-shadow: 0 0 0 1px #4f46e5 !important;
+.redigo-admin-root main input[type="text"]:focus,
+.redigo-admin-root main input[type="number"]:focus,
+.redigo-admin-root main input[type="email"]:focus,
+.redigo-admin-root main input[type="tel"]:focus,
+.redigo-admin-root main input[type="password"]:focus,
+.redigo-admin-root main select:focus,
+.redigo-admin-root main textarea:focus {
+  border-color: rgba(10, 77, 43, 0.6);
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 3px rgba(10, 77, 43, 0.12);
+}
 }
 
-/* 5. Card and Border Uniformity */
-.redigo-admin-root .rounded-xl,
-.redigo-admin-root .rounded-2xl,
-.redigo-admin-root .rounded-\[28px\] {
-  border-radius: 16px !important; /* Standardize premium rounded cards */
+/* Tables: quiet header row, hairline rows. */
+.redigo-admin-root main thead {
+  background-color: #fafafa;
+  border-bottom: 1px solid rgba(23, 23, 23, 0.08);
 }
 
-.redigo-admin-root .border-slate-200,
-.redigo-admin-root .border-gray-200 {
-  border-color: #e2e8f0 !important; /* Standard slate-200 */
+.redigo-admin-root main th {
+  color: #737373;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-.redigo-admin-root .border-slate-100,
-.redigo-admin-root .border-gray-100 {
-  border-color: #f1f5f9 !important; /* Standard slate-100 */
-}
-
-/* 6. Unified Table Design */
-.redigo-admin-root thead {
-  background-color: #f8fafc !important; /* slate-50 */
-  border-bottom: 1px solid #e2e8f0 !important;
-}
-
-.redigo-admin-root th {
-  color: #64748b !important; /* slate-500 */
-  font-size: 0.75rem !important;
-  font-weight: 700 !important;
-}
-
-.redigo-admin-root td {
-  border-color: #f1f5f9 !important;
+.redigo-admin-root main td {
+  border-color: rgba(23, 23, 23, 0.06);
 }
 
 /* ==========================================================================
