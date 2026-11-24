@@ -90,7 +90,7 @@ export default function TableBookingSuccess() {
           if (newStatus && newStatus !== prevStatusRef.current) {
             prevStatusRef.current = newStatus;
             setLiveStatus(newStatus);
-            if (CONFIRMED_STATUSES.includes(newStatus)) toast.success('Your booking has been confirmed! 🎉');
+            if (CONFIRMED_STATUSES.includes(newStatus)) toast.success('Your booking is confirmed');
             else if (newStatus === 'cancelled' || newStatus === 'rejected') toast.error('Your booking was not accepted.');
           }
         }
@@ -148,7 +148,7 @@ export default function TableBookingSuccess() {
 
         <FadeUp delay={200} style={{ alignItems: 'center', gap: space.sm, marginBottom: space.xxl, width: '100%', maxWidth: 384 }}>
           <Text style={styles.h1} accessibilityRole="header">
-            {isPending ? 'Booking requested!' : 'Seat confirmed!'}
+            {isPending ? 'Booking requested' : 'Seat confirmed'}
           </Text>
           <Text style={styles.tag}>{isPending ? 'Waiting for restaurant approval' : 'Your table is ready for you'}</Text>
           <View style={styles.idPill}>

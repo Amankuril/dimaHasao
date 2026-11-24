@@ -443,7 +443,7 @@ export function useOrderTracking() {
         };
       });
 
-      toast.success("Thanks for your feedback!")
+      toast.success("Thanks for your feedback")
       setShowRatingModal(false)
     } catch (error) {
       debugError("Error submitting order ratings:", error)
@@ -1288,7 +1288,7 @@ export function useOrderTracking() {
         });
       } else {
         await navigator.clipboard.writeText(`${API_ORIGIN}/food/user/orders/${orderId}`);
-        toast.success("Tracking link copied to clipboard!");
+        toast.success("Tracking link copied");
       }
     } catch (error) {
       if (error.name !== 'AbortError') {

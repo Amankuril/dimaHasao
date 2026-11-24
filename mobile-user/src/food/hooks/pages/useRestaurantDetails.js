@@ -154,14 +154,14 @@ export function useRestaurantDetails() {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(code)
         .then(() => {
-          toast.success(`Coupon code ${code} copied!`)
+          toast.success(`Coupon code ${code} copied`)
         })
         .catch((err) => {
           debugError("Failed to copy coupon code:", err)
           toast.error("Failed to copy code.")
         })
     } else {
-      toast.success(`Coupon code ${code} copied!`)
+      toast.success(`Coupon code ${code} copied`)
     }
   }
 
@@ -1699,7 +1699,7 @@ export function useRestaurantDetails() {
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text)
-      toast.success("Link copied to clipboard!")
+      toast.success("Link copied")
     } catch (error) {
       // Fallback for older browsers
       const textArea = document.createElement("textarea")
@@ -1710,7 +1710,7 @@ export function useRestaurantDetails() {
       textArea.select()
       try {
         document.execCommand("copy")
-        toast.success("Link copied to clipboard!")
+        toast.success("Link copied")
       } catch (err) {
         toast.error("Failed to copy link")
       }

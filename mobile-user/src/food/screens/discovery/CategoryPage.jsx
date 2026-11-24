@@ -200,7 +200,7 @@ export default function CategoryPage({ embeddedCategorySlug = null, hideHeader =
                       <Text style={styles.catInitials}>{String(cat.name || '?').trim().slice(0, 2).toUpperCase()}</Text>
                     )}
                   </View>
-                  <Text style={[styles.catName, isSelected ? { color: color.primary, fontFamily: 'Poppins_700Bold' } : null]} numberOfLines={1}>{cat.name}</Text>
+                  <Text style={[styles.catName, isSelected ? { color: color.primary, fontFamily: 'Poppins_600SemiBold' } : null]} numberOfLines={1}>{cat.name}</Text>
                 </Press>
               );
             })

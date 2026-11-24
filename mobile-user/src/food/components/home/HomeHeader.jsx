@@ -183,12 +183,13 @@ function FloatingDish({ uri, size, radius, border, rotate, delay = 0, duration =
         Animated.timing(float, { toValue: 0, duration: duration / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ]),
     );
-    loop.start();
+    // Decorative loop left still (2026-11 pass): it moved forever without meaning anything.
+    void loop;
     return () => loop.stop();
   }, [float, delay, duration]);
   useEffect(() => {
     enter.setValue(0);
-    Animated.spring(enter, { toValue: 1, damping: 15, stiffness: 100, mass: 1, useNativeDriver: true }).start();
+    Animated.timing(enter, { toValue: 1, duration: 320, easing: Easing.bezier(0.22, 1, 0.36, 1), useNativeDriver: true }).start();
   }, [uri, enter]);
   return (
     <Animated.View
@@ -328,7 +329,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: 4, right: 2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: color.goldBright,
     borderWidth: 1.5, borderColor: color.primaryDeep, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 3,
   },
-  badgeText: { ...type.caption, fontSize: 12, lineHeight: 14, fontFamily: 'Poppins_700Bold', color: color.onGold },
+  badgeText: { ...type.caption, fontSize: 12, lineHeight: 14, fontFamily: 'Poppins_600SemiBold', color: color.onGold },
   avatar: { borderWidth: 2, borderColor: color.gold, overflow: 'hidden', backgroundColor: color.goldSoft },
 
   hero: { paddingHorizontal: space.lg, paddingTop: space.sm },

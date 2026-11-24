@@ -65,7 +65,7 @@ function invoiceHtml(order, companyName) {
     ${line('GST:', `₹${money(tax)}`)}
     ${line('Discount:', `₹${money(Math.abs(Number(disc || 0)))}`)}
     <div class="grand-total"><span>Total:</span><span>₹${money(total)}</span></div>
-    <p style="text-align:center;color:#666;margin-top:30px">Thank you for your order!<br/>For any queries, please contact our support team.</p>
+    <p style="text-align:center;color:#666;margin-top:30px">Thank you for your order.<br/>For any queries, please contact our support team.</p>
   </body></html>`;
 }
 
@@ -223,7 +223,7 @@ export default function OrderInvoice() {
           </View>
 
           <View style={styles.thanks}>
-            <Text style={[type.small, { color: color.textMuted, textAlign: 'center' }]}>Thank you for your order!</Text>
+            <Text style={[type.small, { color: color.textMuted, textAlign: 'center' }]}>Thank you for your order</Text>
             <Text style={[type.caption, { color: color.textMuted, textAlign: 'center' }]}>For any queries, please contact our support team.</Text>
           </View>
         </Card>

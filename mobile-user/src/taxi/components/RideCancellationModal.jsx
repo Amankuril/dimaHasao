@@ -106,7 +106,7 @@ export default function RideCancellationModal({ isOpen, onClose, onConfirm, isCa
             <TextInput
               value={customComment}
               onChangeText={setCustomComment}
-              placeholder="Please tell us why you want to cancel this ride..."
+              placeholder="Please tell us why you want to cancel this ride"
               placeholderTextColor={color.textDisabled}
               editable={!isCancelling}
               multiline

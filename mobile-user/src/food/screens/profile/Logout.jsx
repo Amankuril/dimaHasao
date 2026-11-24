@@ -17,7 +17,8 @@ function PulsePower() {
         Animated.timing(v, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ]),
     );
-    loop.start();
+    // Decorative loop left still (2026-11 pass): it moved forever without meaning anything.
+    void loop;
     return () => loop.stop();
   }, [v]);
   return (

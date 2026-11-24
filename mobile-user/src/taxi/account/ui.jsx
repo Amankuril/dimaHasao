@@ -7,13 +7,14 @@ import { Press } from '../../components/ui';
 import { Button, IconButton } from '../../components/ds';
 import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { color, radii, space, touch, tw, type } from '../../theme';
+import { color, poppins, radii, space, touch, tw, type } from '../../theme';
 
 /* Shared bits of the taxi account / activity / support screens. */
 
 // Web font: Outfit (Taxi/index.css). Kept for screens outside this group that still import it.
-const OUTFIT = { 400: 'Outfit_400Regular', 500: 'Outfit_500Medium', 600: 'Outfit_600SemiBold', 700: 'Outfit_700Bold', 800: 'Outfit_800ExtraBold', 900: 'Outfit_900Black' };
-export const fo = (w = 400) => ({ fontFamily: OUTFIT[w] || OUTFIT[400] });
+// Was Outfit, a second text family only these taxi screens used. Poppins is the
+// app's one text family (DESIGN_SYSTEM.md); weights above 600 clamp to 600.
+export const fo = (w = 400) => poppins(Math.min(w, 600));
 
 export const goBack = (fallback = '/taxi/user') => {
   if (router.canGoBack()) router.back();
@@ -53,7 +54,7 @@ export function Pulse({ style }) {
 }
 
 export function Eyebrow({ children, color: fg = tw.slate400, style }) {
-  return <Text style={[{ fontSize: 9, letterSpacing: 2.3, textTransform: 'uppercase', color: fg, ...fo(900) }, style]}>{children}</Text>;
+  return <Text style={[{ fontSize: 12, lineHeight: 16, letterSpacing: 1, textTransform: 'uppercase', color: fg, ...fo(500) }, style]}>{children}</Text>;
 }
 
 export const sh = { boxShadow: '0 4px 14px rgba(15,23,42,0.06)' };

@@ -182,7 +182,7 @@ export default function UserOrderDetails() {
     try {
       const companyName = await getCompanyNameAsync();
       await shareOrderSummaryPdf({ companyName, orderIdDisplay, paymentDate, userName, addressText, restaurantName, restaurantLocation, items, total: pricing.total });
-      toast.success('Summary downloaded successfully!');
+      toast.success('Summary downloaded');
     } catch {
       toast.error('Failed to download summary');
     }

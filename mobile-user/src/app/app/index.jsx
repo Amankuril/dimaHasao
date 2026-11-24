@@ -31,7 +31,6 @@ function Hero() {
   const { setIsNotificationsOpen } = useBooking();
   const [index, setIndex] = useState(0);
   const fade = useAnimatedValue(1);
-  const pulse = useAnimatedValue(1);
 
   useEffect(() => {
     const timer = setInterval(() => setIndex((prev) => (prev + 1) % HERO_SLIDES.length), 4500);
@@ -40,26 +39,15 @@ function Hero() {
 
   useEffect(() => {
     fade.setValue(0);
-    Animated.timing(fade, { toValue: 1, duration: 800, useNativeDriver: true }).start();
+    Animated.timing(fade, { toValue: 1, duration: 600, useNativeDriver: true }).start();
   }, [index, fade]);
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 0.5, duration: 1000, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [pulse]);
 
   return (
     <View style={[styles.hero, { height: 340 + insets.top }]}>
       <Animated.Image
         source={{ uri: webAsset(HERO_SLIDES[index].image) }}
         accessibilityLabel={HERO_SLIDES[index].alt}
-        style={[StyleSheet.absoluteFill, { opacity: fade, transform: [{ scale: fade.interpolate({ inputRange: [0, 1], outputRange: [1.04, 1] }) }] }]}
+        style={[StyleSheet.absoluteFill, { opacity: fade, transform: [{ scale: fade.interpolate({ inputRange: [0, 1], outputRange: [1.02, 1] }) }] }]}
         resizeMode="cover"
       />
       <LinearGradient colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.3)']} style={StyleSheet.absoluteFill} pointerEvents="none" />
@@ -103,7 +91,7 @@ function Hero() {
         </Press>
         <Press scale={0.9} onPress={() => setIsNotificationsOpen(true)} accessibilityLabel="View Notifications" style={styles.roundBtn}>
           <Fa name="fa-solid fa-bell" size={18} color={color.textInverse} />
-          <Animated.View style={[styles.bellDot, { opacity: pulse }]} />
+          <View style={styles.bellDot} />
         </Press>
       </View>
     </View>
@@ -140,7 +128,7 @@ export default function HomeScreen() {
 
       <View style={styles.sections}>
         <View style={styles.grid}>
-          <SectionHeader title="Explore Dima Hasao" style={{ marginBottom: 0 }} />
+          <SectionHeader plain title="Explore Dima Hasao" style={{ marginBottom: 0 }} />
           <View style={styles.gridRow}>
             <CategoryCard
               title="Tourist places"
@@ -182,7 +170,7 @@ export default function HomeScreen() {
         <QuickLinksGrid />
 
         <View style={styles.gutter}>
-          <SectionHeader title="Happening soon" />
+          <SectionHeader plain title="Happening soon" />
           <Press scale={0.98} onPress={() => router.navigate('/app/festivals')} style={styles.festival} accessibilityRole="button" accessibilityLabel="Falcon Festival Umrangso 2026, Nov 14 to 17. Passes from ₹250. Book passes">
             <Image source={{ uri: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80' }} style={StyleSheet.absoluteFill} resizeMode="cover" />
             <LinearGradient colors={['rgba(6,28,14,0.95)', 'rgba(6,28,14,0.7)', 'rgba(6,28,14,0.2)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
@@ -230,43 +218,45 @@ export default function HomeScreen() {
   );
 }
 
-const textShadow = { textShadowColor: 'rgba(0,0,0,0.8)', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4 };
+// One soft shadow so photo-backed text stays readable; no glow.
+const textShadow = { textShadowColor: 'rgba(0,0,0,0.45)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 3 };
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: color.bg },
   hero: { width: '100%', overflow: 'hidden', borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, backgroundColor: color.primaryDeep },
-  dots: { position: 'absolute', bottom: 40, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: space.sm },
-  dot: { height: 6, width: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.6)' },
-  dotActive: { width: 24, backgroundColor: color.goldBright },
-  topBar: { position: 'absolute', left: space.md, right: space.md, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(6,44,22,0.85)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(202,168,62,0.6)', ...elevation.card },
-  bellDot: { position: 'absolute', top: 6, right: 6, width: 10, height: 10, borderRadius: 5, backgroundColor: color.danger, borderWidth: 2, borderColor: color.surface },
+  dots: { position: 'absolute', bottom: 44, left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: space.sm },
+  dot: { height: 6, width: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.55)' },
+  dotActive: { width: 20, backgroundColor: color.goldBright },
+  topBar: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(6,44,22,0.7)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(202,168,62,0.4)' },
+  bellDot: { position: 'absolute', top: 10, right: 10, width: 8, height: 8, borderRadius: 4, backgroundColor: color.danger, borderWidth: 1.5, borderColor: color.primaryDeep },
   brand: { position: 'absolute', left: space.lg, right: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md },
-  brandLogo: { width: 88, height: 88 },
+  brandLogo: { width: 84, height: 84 },
   brandText: { flex: 1, minWidth: 0 },
-  juthai: { fontSize: 24, lineHeight: 28, letterSpacing: 0.6, ...poppins(900), ...textShadow },
-  welcomeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginVertical: 2 },
-  welcomeLine: { height: 1.5, width: 16, flexShrink: 0, backgroundColor: color.goldBright },
+  // The JUTHAI wordmark is a display moment, so it names its weight directly (poppins() clamps at 600).
+  juthai: { fontSize: 24, lineHeight: 28, letterSpacing: 0.8, fontFamily: 'Poppins_800ExtraBold', ...textShadow },
+  welcomeRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, marginTop: space.xs },
+  welcomeLine: { height: 1, width: 16, flexShrink: 0, backgroundColor: color.goldBright },
   welcome: { ...cinzel(), fontSize: 12, lineHeight: 16, letterSpacing: 1, paddingRight: 2, flexShrink: 0, color: color.goldOnDark, ...textShadow },
-  district: { ...type.heroSerif, color: color.textInverse, ...textShadow },
-  tagline: { ...playfair(600, true), fontSize: 13, lineHeight: 18, marginTop: 2, color: color.textOnDarkMuted, ...textShadow },
-  sections: { gap: space.xxl, paddingTop: space.xl },
+  district: { ...type.heroSerif, fontSize: 26, lineHeight: 32, color: color.textInverse, marginTop: space.xxs, ...textShadow },
+  tagline: { ...playfair(400, true), fontSize: 13, lineHeight: 18, marginTop: space.xs, color: color.textOnDarkMuted, ...textShadow },
+  sections: { gap: space.xxxl, paddingTop: space.xxl },
   gutter: { paddingHorizontal: space.lg },
   grid: { paddingHorizontal: space.lg, gap: space.md },
   gridRow: { flexDirection: 'row', gap: space.md },
-  festival: { height: 172, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, ...elevation.card },
+  festival: { height: 176, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, ...elevation.card },
   festivalBody: { ...StyleSheet.absoluteFill, padding: space.lg, justifyContent: 'space-between' },
   festivalMeta: { flexDirection: 'row', alignItems: 'center', gap: space.sm, flexWrap: 'wrap' },
-  festivalDates: { ...type.label, color: color.goldOnDark },
-  festivalTitle: { ...type.subheading, color: color.textInverse },
+  festivalDates: { ...poppins(500), fontSize: 13, lineHeight: 18, color: color.goldOnDark },
+  festivalTitle: { ...poppins(600), fontSize: 17, lineHeight: 24, color: color.textInverse },
   festivalDesc: { ...type.small, color: 'rgba(255,255,255,0.85)' },
   festivalFoot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
-  festivalPrice: { ...type.bodyStrong, color: color.goldOnDark, flexShrink: 1 },
-  festivalBtn: { height: 36, paddingHorizontal: space.md, borderRadius: radii.md, backgroundColor: color.goldBright, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
-  festivalBtnText: { ...type.buttonSm, color: color.onGold },
-  packages: { borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, padding: space.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, ...elevation.card },
-  packagesKicker: { ...type.overline, color: color.goldOnDark },
-  packagesTitle: { ...type.subheading, color: color.textInverse },
+  festivalPrice: { ...poppins(500), fontSize: 14, lineHeight: 20, color: color.goldOnDark, flexShrink: 1 },
+  festivalBtn: { height: 36, paddingHorizontal: space.md, borderRadius: radii.sm, backgroundColor: color.goldBright, flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  festivalBtnText: { ...poppins(600), fontSize: 13, lineHeight: 18, color: color.onGold },
+  packages: { borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, padding: space.xl, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, ...elevation.card },
+  packagesKicker: { ...poppins(500), fontSize: 12, lineHeight: 16, letterSpacing: 1, textTransform: 'uppercase', color: color.goldOnDark },
+  packagesTitle: { ...poppins(600), fontSize: 17, lineHeight: 24, color: color.textInverse },
   packagesDesc: { ...type.small, color: 'rgba(255,255,255,0.82)' },
   packagesArrow: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.goldBright, alignItems: 'center', justifyContent: 'center' },
 });

@@ -33,7 +33,8 @@ function PulseBadge({ children }) {
         Animated.timing(pulse, { toValue: 1, duration: 1000, useNativeDriver: true }),
       ]),
     );
-    loop.start();
+    // Decorative loop left still (2026-11 pass): it moved forever without meaning anything.
+    void loop;
     return () => loop.stop();
   }, [pulse]);
   return <Animated.View style={[styles.mega, { opacity: pulse }]}>{children}</Animated.View>;

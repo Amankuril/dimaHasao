@@ -88,7 +88,7 @@ export default function TouristPlacesList() {
             <TextInput
               value={searchFilter}
               onChangeText={setSearchFilter}
-              placeholder="Filter tourist destinations..."
+              placeholder="Filter tourist destinations"
               placeholderTextColor={color.textMuted}
               autoFocus
               returnKeyType="search"
@@ -123,7 +123,7 @@ export default function TouristPlacesList() {
             <PatternDivider variant="native" />
             <View style={[styles.footer, { paddingBottom: NAV_CLEARANCE + insets.bottom + space.lg }]}>
               <Fa name="fa-solid fa-leaf" size={14} color={color.gold} />
-              <Text style={styles.footerText}>Plan your trip, stay safe and enjoy the beauty of Dima Hasao!</Text>
+              <Text style={styles.footerText}>Plan your trip, stay safe and enjoy the beauty of Dima Hasao</Text>
               <View style={styles.footerDots}>
                 {[0, 1, 2, 3, 4].map((i) => (
                   <View key={i} style={styles.footerDot} />

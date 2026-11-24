@@ -56,7 +56,7 @@ export default function HotelListScreen() {
         <View style={styles.searchBox}>
           <Fa name="fa-solid fa-magnifying-glass" size={16} color={color.primary} />
           <TextInput
-            placeholder="Search Haflong, Jatinga, Umrangso..."
+            placeholder="Search Haflong, Jatinga, Umrangso"
             placeholderTextColor={color.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}

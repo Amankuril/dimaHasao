@@ -1469,7 +1469,7 @@ export function useCartPage() {
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text)
-      toast.success("Link copied to clipboard!")
+      toast.success("Link copied")
     } catch (error) {
       // Fallback for older browsers
       const textArea = document.createElement("textarea")
@@ -1480,7 +1480,7 @@ export function useCartPage() {
       textArea.select()
       try {
         document.execCommand("copy")
-        toast.success("Link copied to clipboard!")
+        toast.success("Link copied")
       } catch (err) {
         toast.error("Failed to copy link")
       }

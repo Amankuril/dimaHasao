@@ -172,7 +172,7 @@ export default function SubmitComplaint() {
           label={required('Description')}
           value={formData.description}
           onChangeText={(t) => setFormData({ ...formData, description: t })}
-          placeholder="Please provide detailed information about your complaint..."
+          placeholder="Please provide detailed information about your complaint"
           multiline
           maxLength={1000}
           accessibilityLabel="Description"

@@ -343,7 +343,7 @@ export default function Orders() {
     if (!sharePayload?.url) return;
     try {
       await navigator.clipboard.writeText(sharePayload.url);
-      toast.success('Link copied to clipboard!');
+      toast.success('Link copied');
     } catch {
       toast.error('Failed to copy link');
     }
@@ -405,7 +405,7 @@ export default function Orders() {
             : o,
         ),
       );
-      toast.success('Thanks for rating your order!');
+      toast.success('Thanks for rating your order');
       try {
         const stored = JSON.parse(localStore.getItem('shownRatingForOrders') || '[]');
         localStore.setItem('shownRatingForOrders', JSON.stringify([...new Set([...stored, order.id])]));

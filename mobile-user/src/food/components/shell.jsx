@@ -275,7 +275,7 @@ export function StickyCartCard() {
         </Press>
         <Press scale={0.96} onPress={() => router.push('/food/user/cart')} style={styles.cartBtn} accessibilityLabel={`View cart, ${cartCount} items`}>
           <Text style={[styles.cartBtnText, { opacity: 0.9 }]}>View Cart</Text>
-          <Text style={[styles.cartBtnText, { fontFamily: 'Poppins_700Bold' }]}>
+          <Text style={[styles.cartBtnText, { fontFamily: 'Poppins_600SemiBold' }]}>
             {cartCount} {cartCount === 1 ? 'item' : 'items'}
           </Text>
         </Press>

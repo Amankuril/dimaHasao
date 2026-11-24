@@ -270,7 +270,7 @@ export default function MyBookingsScreen() {
                 {pass.qrCode || 'Awaiting payment'}
               </Text>
             </View>
-            <SmallButton icon="fa-solid fa-qrcode" title="QR" disabled={!pass.qrCode} onPress={() => showToast(`QR Pass ${pass.qrCode} ready for entry gate scan! 🎟️`)} />
+            <SmallButton icon="fa-solid fa-qrcode" title="QR" disabled={!pass.qrCode} onPress={() => showToast(`QR pass ${pass.qrCode} is ready to scan at the entry gate`)} />
           </View>
         ))}
       </View>

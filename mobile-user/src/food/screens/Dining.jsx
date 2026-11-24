@@ -572,7 +572,7 @@ export default function Dining() {
                 autoFocus
                 value={heroSearch}
                 onChangeText={setHeroSearch}
-                placeholder="Search dining restaurants..."
+                placeholder="Search dining restaurants"
                 placeholderTextColor={color.textMuted}
                 returnKeyType="search"
                 autoCorrect={false}

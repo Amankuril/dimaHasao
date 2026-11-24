@@ -79,7 +79,7 @@ export function BookingProvider({ children }) {
     (placeId) => {
       setFavorites((prev) => {
         const exists = prev.includes(placeId);
-        showToast(exists ? 'Removed from favorites' : 'Added to favorites ❤️');
+        showToast(exists ? 'Removed from favourites' : 'Added to favourites');
         return exists ? prev.filter((id) => id !== placeId) : [...prev, placeId];
       });
     },
@@ -90,7 +90,7 @@ export function BookingProvider({ children }) {
     (hotelId) => {
       setFavoriteHotels((prev) => {
         const exists = prev.includes(hotelId);
-        showToast(exists ? 'Removed hotel from saved' : 'Saved hotel to wishlist ❤️');
+        showToast(exists ? 'Removed from saved stays' : 'Saved to your wishlist');
         return exists ? prev.filter((id) => id !== hotelId) : [...prev, hotelId];
       });
     },
@@ -101,7 +101,7 @@ export function BookingProvider({ children }) {
   const login = useCallback(
     async (data) => {
       const u = await loginWithAuthData(data);
-      showToast('Welcome to Dima Hasao! 🌿');
+      showToast('Welcome to Dima Hasao');
       return u;
     },
     [loginWithAuthData, showToast],

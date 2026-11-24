@@ -1061,7 +1061,7 @@ export function useUnder250Page({ isTabActive = true } = {}) {
     try {
       if (type === "copy") {
         await navigator.clipboard.writeText(shareUrl)
-        toast.success("Link copied to clipboard!")
+        toast.success("Link copied")
       } else if (type === "whatsapp") {
         window.open(`https://wa.me/?text=${encodedText}`, "_blank", "noopener,noreferrer")
       } else if (type === "telegram") {

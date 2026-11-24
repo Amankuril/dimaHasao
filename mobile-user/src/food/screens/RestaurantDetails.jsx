@@ -36,7 +36,7 @@ function CategoryThumb({ category, size, radius, fontSize }) {
   }
   return (
     <View style={{ width: size, height: size, borderRadius: radius, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ ...type.label, fontFamily: 'Poppins_700Bold', fontSize: Math.max(12, fontSize), lineHeight: Math.max(16, fontSize + 4), color: color.textSecondary }}>{(category.name?.charAt(0) || 'C').toUpperCase()}</Text>
+      <Text style={{ ...type.label, fontFamily: 'Poppins_600SemiBold', fontSize: Math.max(12, fontSize), lineHeight: Math.max(16, fontSize + 4), color: color.textSecondary }}>{(category.name?.charAt(0) || 'C').toUpperCase()}</Text>
     </View>
   );
 }
@@ -617,7 +617,7 @@ export default function RestaurantDetails() {
                 <Text style={styles.emptyMenuBody}>
                   {vegMode && rawHasAnyDish
                     ? `${restaurant?.name || 'This restaurant'} doesn't have any veg dishes on their menu right now.`
-                    : `${restaurant?.name || 'This restaurant'} is still setting up their menu. We'll notify you as soon as their delicious dishes are available!`}
+                    : `${restaurant?.name || 'This restaurant'} is still setting up their menu. Check back soon.`}
                 </Text>
               </View>
             ) : null}
@@ -985,7 +985,7 @@ export default function RestaurantDetails() {
                     <Text style={[styles.itemAddText, shouldShowGrayscale ? { color: color.textMuted } : null]} numberOfLines={1}>
                       {qty > 0 ? 'Update cart' : hasFoodVariants(selectedItem) ? 'Add' : 'Add item'}
                     </Text>
-                    <Text style={[styles.itemAddText, { fontFamily: 'Poppins_700Bold' }, shouldShowGrayscale ? { color: color.textMuted } : null]} numberOfLines={1}>
+                    <Text style={[styles.itemAddText, { fontFamily: 'Poppins_600SemiBold' }, shouldShowGrayscale ? { color: color.textMuted } : null]} numberOfLines={1}>
                       {hasFoodVariants(selectedItem) ? `${variant?.name || 'Default'} · ${RUPEE}${Math.round(variant?.price || selectedItem.price)}` : `${RUPEE}${Math.round(selectedItem.price)}`}
                     </Text>
                   </Press>
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
   smBtn: { height: 40, paddingHorizontal: space.md + 2, borderRadius: radii.pill, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
   smBtnText: { ...type.label, color: color.text },
   filterCount: { position: 'absolute', top: -6, right: -6, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
-  filterCountText: { ...type.caption, lineHeight: 14, fontFamily: 'Poppins_700Bold', color: color.onPrimary },
+  filterCountText: { ...type.caption, lineHeight: 14, fontFamily: 'Poppins_600SemiBold', color: color.onPrimary },
   catChip: { flexDirection: 'row', alignItems: 'center', gap: space.sm, height: 40, borderRadius: radii.pill, borderWidth: 1, borderColor: color.border, backgroundColor: color.surface, paddingLeft: space.xs + 2, paddingRight: space.md + 2, minWidth: 48, justifyContent: 'center' },
   catChipOn: { borderColor: color.primary, backgroundColor: color.primary },
   catChipText: { ...type.label, color: color.text },
@@ -1246,7 +1246,7 @@ const styles = StyleSheet.create({
   couponTitle: { ...type.subheading, color: color.text },
   couponCode: { ...type.caption, fontFamily: 'Poppins_400Regular', color: color.textMuted, marginTop: space.xs },
   copyBox: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 40, paddingHorizontal: space.md, borderWidth: 1, borderStyle: 'dashed', borderColor: color.primaryBorder, backgroundColor: color.primarySoft, borderRadius: radii.md },
-  copyBoxText: { ...type.label, fontFamily: 'Poppins_700Bold', color: color.primary, letterSpacing: 0.5 },
+  copyBoxText: { ...type.label, fontFamily: 'Poppins_600SemiBold', color: color.primary, letterSpacing: 0.5 },
 
   infoCard: { backgroundColor: color.surface, borderRadius: radii.lg, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.card },
   infoName: { ...type.heading, color: color.text },

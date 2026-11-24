@@ -174,7 +174,7 @@ export default function AddressSettings() {
                   multiline
                   numberOfLines={3}
                 />
-                <Field label="Landmark (optional)" value={draft.landmark} onChangeText={set('landmark')} placeholder="Near…" />
+                <Field label="Landmark (optional)" value={draft.landmark} onChangeText={set('landmark')} placeholder="Near" />
                 <Field label="Notes (optional)" value={draft.notes} onChangeText={set('notes')} placeholder="e.g., Ring bell, call on arrival" />
                 <View style={{ paddingTop: space.sm, gap: space.sm }}>
                   <Button title={modal?.mode === 'landmark' ? 'Save landmark' : 'Save address'} onPress={saveDraft} />

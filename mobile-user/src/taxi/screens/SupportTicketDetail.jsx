@@ -98,7 +98,7 @@ export default function SupportTicketDetail() {
       </ScrollView>
 
       <View style={[styles.replyBar, { paddingBottom: space.md + replyPad }]}>
-        <TextInput value={reply} onChangeText={setReply} placeholder="Type your reply..." placeholderTextColor={color.textDisabled} multiline numberOfLines={1} accessibilityLabel="Reply" style={styles.input} />
+        <TextInput value={reply} onChangeText={setReply} placeholder="Type your reply" placeholderTextColor={color.textDisabled} multiline numberOfLines={1} accessibilityLabel="Reply" style={styles.input} />
         <Press scale={0.9} disabled={!canSend} onPress={handleSend} accessibilityLabel="Send reply" accessibilityState={{ disabled: !canSend, busy: sending }} style={[styles.send, reply.trim() ? null : styles.sendOff]}>
           {sending ? <ActivityIndicator size="small" color={color.onPrimary} /> : <Send size={20} color={reply.trim() ? color.onPrimary : color.textMuted} />}
         </Press>

@@ -115,7 +115,7 @@ export default function TourPackageListScreen() {
 
   const header = (
     <View style={{ gap: space.lg, marginBottom: space.lg }}>
-      <SearchPanel value={searchQuery} onChange={setSearchQuery} placeholder="Search packages (Jatinga, Silaikul, Trekking)..." />
+      <SearchPanel value={searchQuery} onChange={setSearchQuery} placeholder="Search packages (Jatinga, Silaikul, Trekking)" />
       <ChipRow items={TYPES} value={selectedType} onChange={setSelectedType} label={(t) => (t === 'All' ? 'All packages' : t)} />
       <ResultsBar text={`${filteredPackages.length} ${filteredPackages.length === 1 ? 'package' : 'packages'} available`} sortBy={sortBy} onSort={setSortBy} />
     </View>

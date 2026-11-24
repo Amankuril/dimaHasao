@@ -106,7 +106,7 @@ export default function ExplorePage({ tabAccent }) {
                 }}
                 onSubmitEditing={submitSearch}
                 returnKeyType="search"
-                placeholder="Search for restaurants, cuisines, dishes..."
+                placeholder="Search for restaurants, cuisines, dishes"
                 placeholderTextColor={tw.gray400}
                 accessibilityLabel="Search for restaurants, cuisines, dishes"
                 style={styles.search}

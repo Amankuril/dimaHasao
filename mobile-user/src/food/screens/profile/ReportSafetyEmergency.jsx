@@ -81,7 +81,7 @@ export default function ReportSafetyEmergency() {
       if (response.data.success) {
         setIsSubmitted(true);
         setReport('');
-        toast.success('Safety emergency report submitted successfully!');
+        toast.success('Safety report submitted');
         fetchHistory();
         timer.current = setTimeout(() => setIsSubmitted(false), 5000);
       }
@@ -126,7 +126,7 @@ export default function ReportSafetyEmergency() {
             <Card style={{ gap: space.xs }}>
               <Text style={styles.label}>Describe the safety concern or emergency</Text>
               <TextInput
-                placeholder="Please provide details about the safety issue..."
+                placeholder="Please provide details about the safety issue"
                 placeholderTextColor={color.textMuted}
                 value={report}
                 onChangeText={setReport}

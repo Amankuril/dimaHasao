@@ -231,7 +231,7 @@ export default function Cart() {
           <View style={[styles.banner, { backgroundColor: tone.success.bg, borderColor: tone.success.bg, alignItems: 'center' }]}>
             <Sparkles size={18} color={color.success} />
             <Text style={[type.bodyStrong, { color: color.success, flex: 1 }]}>
-              {appliedCoupon?.code ? `You saved ${RUPEE_SYMBOL}${savings} with '${appliedCoupon.code}' on this order!` : `You saved ${RUPEE_SYMBOL}${savings} on this order!`}
+              {appliedCoupon?.code ? `You saved ${RUPEE_SYMBOL}${savings} with '${appliedCoupon.code}' on this order` : `You saved ${RUPEE_SYMBOL}${savings} on this order`}
             </Text>
           </View>
         ) : null}

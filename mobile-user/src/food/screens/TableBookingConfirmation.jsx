@@ -78,7 +78,7 @@ export default function TableBookingConfirmation() {
       }
       const response = await diningAPI.createBooking({ restaurant: restaurantId, restaurantRef: restaurant, userRef: user, guests, date, timeSlot, specialRequest });
       if (response.data.success) {
-        toast.success('Table booked successfully!');
+        toast.success('Table booked');
         sessionStore.removeItem(BOOKING_DRAFT_KEY);
         navigate('/food/user/dining/book-success', { state: { booking: response.data.data } });
       }
@@ -247,7 +247,7 @@ export default function TableBookingConfirmation() {
           <TextInput
             value={tempRequest}
             onChangeText={setTempRequest}
-            placeholder="E.g. I have a peanut allergy, or we are celebrating a birthday..."
+            placeholder="E.g. I have a peanut allergy, or we are celebrating a birthday"
             placeholderTextColor={color.textMuted}
             multiline
             autoFocus

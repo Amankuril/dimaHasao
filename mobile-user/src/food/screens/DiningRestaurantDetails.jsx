@@ -530,7 +530,7 @@ export default function DiningRestaurantDetails() {
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.sheetTitle}>Select number of guests</Text>
             <Text style={[styles.sheetSub, remainingSeats > 0 ? null : { color: color.danger }]}>
-              {remainingSeats > 0 ? `Only ${remainingSeats} out of ${maxCapacity} seats available now.` : 'Fully booked for now. Try later!'}
+              {remainingSeats > 0 ? `Only ${remainingSeats} out of ${maxCapacity} seats available now.` : 'Fully booked for now. Try again later.'}
             </Text>
           </View>
           <IconButton icon={X} label="Close booking sheet" variant="soft" onPress={() => setIsBookingSheetOpen(false)} />

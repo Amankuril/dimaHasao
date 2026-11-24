@@ -202,7 +202,7 @@ export default function SupportTickets() {
                 setDesc(text);
                 setErrors((p) => ({ ...p, description: '' }));
               }}
-              placeholder="Describe your issue in detail..."
+              placeholder="Describe your issue in detail"
               multiline
               error={errors.description || undefined}
             />

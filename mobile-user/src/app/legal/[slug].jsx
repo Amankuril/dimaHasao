@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   card: { width: '100%', borderRadius: 16, borderWidth: 1, borderColor: '#E5DDC3', backgroundColor: '#fff', padding: 24, ...shadow('sm') },
   header: { marginBottom: 24, borderBottomWidth: 1, borderBottomColor: '#E5DDC3', paddingBottom: 20 },
   kicker: { ...type.overline, color: color.primary },
-  title: { marginTop: 6, fontSize: 24, lineHeight: 32, color: tw.gray900, ...poppins(900) },
+  title: { marginTop: 6, fontSize: 24, lineHeight: 32, color: tw.gray900, ...poppins(600) },
   updated: { marginTop: 4, fontSize: 12, lineHeight: 16, color: tw.gray500, ...poppins(400) },
   empty: { paddingVertical: 32, fontSize: 14, lineHeight: 20, color: tw.gray500, ...poppins(400) },
   // font-sans: Tailwind's system stack, so the platform font.

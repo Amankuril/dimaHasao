@@ -384,7 +384,7 @@ export default function Under250() {
                   style={[styles.addBig, detailOffline ? { backgroundColor: color.surfaceMuted } : null]}
                 >
                   <Text style={[styles.addBigText, detailOffline ? { color: color.textMuted } : null]} numberOfLines={1}>{quantities[selectedLine] > 0 ? 'Update item' : 'Add item'}</Text>
-                  <Text style={[styles.addBigText, { fontFamily: 'Poppins_700Bold' }, detailOffline ? { color: color.textMuted } : null]}>{RUPEE_SYMBOL}{Math.round((defaultVariant?.price ?? selectedItem.price) * itemDetailQuantity)}</Text>
+                  <Text style={[styles.addBigText, { fontFamily: 'Poppins_600SemiBold' }, detailOffline ? { color: color.textMuted } : null]}>{RUPEE_SYMBOL}{Math.round((defaultVariant?.price ?? selectedItem.price) * itemDetailQuantity)}</Text>
                 </Press>
                 {quantities[selectedLine] > 0 ? (
                   <Press
@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.md, paddingLeft: space.lg, paddingRight: space.md, paddingVertical: space.md, backgroundColor: color.primaryDeep, borderBottomLeftRadius: radii.xl, borderBottomRightRadius: radii.xl, ...elevation.card },
   hKicker: { ...type.overline, color: color.textOnDarkMuted },
   hTitle: { ...type.heroSerif, color: color.goldOnDark },
-  hRupee: { fontFamily: 'Poppins_700Bold', letterSpacing: 0 },
+  hRupee: { fontFamily: 'Poppins_600SemiBold', letterSpacing: 0 },
   hBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   avatar: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: color.gold, backgroundColor: color.goldSoft, overflow: 'hidden' },
   bannerWrap: { paddingHorizontal: space.lg, paddingTop: space.lg },
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   catRingOn: { borderColor: color.primary },
   catCircle: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: color.border },
   catName: { ...type.caption, color: color.text, textAlign: 'center', alignSelf: 'stretch' },
-  catNameOn: { color: color.primary, fontFamily: 'Poppins_700Bold' },
+  catNameOn: { color: color.primary, fontFamily: 'Poppins_600SemiBold' },
   filters: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingHorizontal: space.lg, paddingVertical: space.sm, flexWrap: 'wrap' },
   sk: { backgroundColor: color.surfaceMuted, borderRadius: radii.sm },
   skCard: { width: 184, height: 240, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, padding: space.md, gap: space.md },

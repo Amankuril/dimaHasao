@@ -72,7 +72,7 @@ export default function AddMoneyModal({ open, onOpenChange, onSuccess }) {
               razorpaySignature: response.razorpay_signature,
               amount: amountNum,
             });
-            toast.success(`₹${amountNum} added to wallet successfully!`);
+            toast.success(`₹${amountNum} added to your wallet`);
             setAmount('');
             setProcessing(false);
             onOpenChange(false);

@@ -12,7 +12,7 @@ import { PLACES_DATA, WHY_VISIT_DATA } from '../../data/dh/tourismData';
 import { openExternal } from '../../lib/links';
 import { telHref, useContactSettings } from '../../lib/contacts';
 import { Button, IconButton, SectionHeader, fa } from '../ds';
-import { color, elevation, radii, space, type } from '../../theme';
+import { color, elevation, poppins, radii, space, type } from '../../theme';
 
 /** components/common/SearchBar.jsx — overlaps the hero's bottom edge. */
 export function SearchBar() {
@@ -23,11 +23,11 @@ export function SearchBar() {
   // The web's mic button is a scripted demo (no speech API); same here.
   const handleVoiceSearch = () => {
     setIsListening(true);
-    showToast('🎤 Listening... Try saying "Jatinga" or "Haflong"');
+    showToast('Listening. Try saying "Jatinga" or "Haflong"');
     setTimeout(() => {
       setIsListening(false);
       setSearchQuery('Jatinga');
-      showToast('Voice matched: "Jatinga" 🌿');
+      showToast('Heard "Jatinga"');
       router.navigate('/app/places');
     }, 2000);
   };
@@ -49,7 +49,7 @@ export function SearchBar() {
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           onSubmitEditing={() => router.navigate('/app/places')}
           returnKeyType="search"
-          placeholder="Search places, hotels, cabs..."
+          placeholder="Search places, hotels, cabs"
           placeholderTextColor={color.textMuted}
           style={styles.searchInput}
           accessibilityLabel="Search"
@@ -105,7 +105,6 @@ export function CategoryCard({ title, subtitle, icon, image, buttonText, onPress
       </View>
       <View style={styles.catBody}>
         <View style={styles.catTitleRow}>
-          <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
           <Text style={styles.catTitle} numberOfLines={2}>
             {String(title).toUpperCase()}
           </Text>
@@ -134,14 +133,14 @@ const LINKS = [
 
 const MODAL_DETAILS = {
   guide: {
-    title: 'Local Certified Guides',
+    title: 'Local certified guides',
     desc: 'Connect with registered Dimasa eco-guides who know the secret trails, waterfalls, and folklore.',
     items: ['Government Certified Guides', 'Trekking & Forest Expeditions', 'Dimasa & English speaking', 'Nominal daily rates from ₹800/day'],
-    actionText: 'Contact Tourism Desk',
+    actionText: 'Contact tourism desk',
     // actionLink comes from the admin's tourism desk number (QuickLinksGrid).
   },
   emergency: {
-    title: 'Emergency Help & SOS',
+    title: 'Emergency help and SOS',
     desc: 'Direct emergency hotlines for visitors in Dima Hasao district.',
     // items, actionText and actionLink come from Global admin → Brand & Contact (QuickLinksGrid).
     isEmergency: true,
@@ -159,7 +158,7 @@ export function QuickLinksGrid() {
       ? {
           ...base,
           items: emergencyContacts.map((row) => `${row.label}: ${row.number}`),
-          actionText: `Call Emergency: ${sosNumber}`,
+          actionText: `Call emergency ${sosNumber}`,
           actionLink: telHref(sosNumber),
         }
       : activeModal === 'guide'
@@ -257,7 +256,7 @@ export function WhyVisitGrid() {
   return (
     <>
       <View style={styles.why}>
-        <SectionHeader title="Why visit Dima Hasao?" />
+        <SectionHeader plain title="Why visit Dima Hasao" />
         <View style={styles.whyRow}>
           {WHY_VISIT_DATA.map((item) => (
             <Press key={item.id} scale={0.94} onPress={() => setSelected(item)} style={styles.whyItem} accessibilityRole="button" accessibilityLabel={item.title}>
@@ -299,7 +298,7 @@ const styles = StyleSheet.create({
   searchStripe: { position: 'absolute', left: 0, right: 0, top: 26, opacity: 0.9 },
   searchBox: {
     height: 56, backgroundColor: color.surface, borderRadius: radii.pill, paddingLeft: space.lg, paddingRight: space.xs + 2, flexDirection: 'row', alignItems: 'center', gap: space.sm,
-    borderWidth: 2, borderColor: color.primary, ...elevation.float,
+    borderWidth: 1, borderColor: color.primaryBorder, ...elevation.float,
   },
   searchInput: { flex: 1, minWidth: 0, height: 52, paddingVertical: 0, paddingHorizontal: 0, ...type.body, color: color.text },
   mic: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: color.primarySoft },
@@ -313,24 +312,24 @@ const styles = StyleSheet.create({
 
   cat: { flex: 1, height: 216, borderRadius: radii.lg, overflow: 'hidden', backgroundColor: color.primaryDeep, justifyContent: 'space-between', ...elevation.card },
   catIcon: {
-    margin: space.md, width: 40, height: 40, borderRadius: 20, borderWidth: 1.5, borderColor: color.gold, backgroundColor: 'rgba(6,44,22,0.7)',
+    margin: space.md, width: 36, height: 36, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(202,168,62,0.45)', backgroundColor: 'rgba(6,44,22,0.6)',
     alignItems: 'center', justifyContent: 'center',
   },
-  catBody: { padding: space.md, gap: space.xs },
+  catBody: { padding: space.md, gap: space.xs + 2 },
   catTitleRow: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
   catTitle: { ...type.sectionSerif, fontSize: 14, lineHeight: 19, letterSpacing: 0.6, color: color.goldOnDark, flexShrink: 1 },
-  catSub: { ...type.caption, color: 'rgba(255,255,255,0.88)' },
+  catSub: { ...type.caption, ...poppins(400), color: 'rgba(255,255,255,0.88)' },
   catAction: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2, marginTop: space.xs, paddingTop: space.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: 'rgba(202,168,62,0.5)' },
-  catActionText: { ...type.label, color: color.goldOnDark, flexShrink: 1 },
+  catActionText: { ...type.label, ...poppins(500), color: color.goldOnDark, flexShrink: 1 },
 
   quick: { marginHorizontal: space.lg, backgroundColor: color.surface, borderRadius: radii.lg, borderWidth: 1, borderColor: color.border, paddingVertical: space.md, paddingHorizontal: space.xs, flexDirection: 'row', ...elevation.card },
   quickItem: { flex: 1, minWidth: 0, alignItems: 'center', gap: space.xs + 2, paddingHorizontal: 2 },
-  quickIcon: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
-  quickLabel: { ...type.caption, color: color.text, textAlign: 'center' },
+  quickIcon: { width: 48, height: 48, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
+  quickLabel: { ...type.caption, ...poppins(400), color: color.textSecondary, textAlign: 'center' },
 
   modal: { width: '100%', maxWidth: 384, backgroundColor: color.surface, borderRadius: radii.xl, padding: space.xl, borderWidth: 1, borderColor: color.border, ...elevation.float },
   modalHead: { flexDirection: 'row', alignItems: 'center', gap: space.md, marginBottom: space.sm },
-  modalTitle: { ...type.heading, color: color.text, flex: 1 },
+  modalTitle: { ...type.heading, ...poppins(600), color: color.text, flex: 1 },
   modalDesc: { ...type.small, color: color.textSecondary, marginBottom: space.md },
   modalList: { gap: space.sm, marginBottom: space.lg, backgroundColor: color.surfaceMuted, padding: space.md, borderRadius: radii.md },
   modalRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
@@ -340,7 +339,7 @@ const styles = StyleSheet.create({
   promoText: { position: 'absolute', top: 0, bottom: 0, left: 0, width: '62%', padding: space.lg, justifyContent: 'center', gap: space.sm },
   promoTitle: { ...type.sectionSerif, color: color.textInverse },
   promoAction: { flexDirection: 'row', alignItems: 'center', gap: space.xs + 2 },
-  promoActionText: { ...type.label, color: color.goldOnDark },
+  promoActionText: { ...type.label, ...poppins(500), color: color.goldOnDark },
   promoCircles: { position: 'absolute', right: space.md, top: 0, bottom: 0, flexDirection: 'row', alignItems: 'center' },
   promoCircle: { borderWidth: 2, borderColor: color.surface, backgroundColor: color.surface },
 
@@ -348,6 +347,6 @@ const styles = StyleSheet.create({
   whyRow: { flexDirection: 'row', gap: space.xs },
   whyItem: { flex: 1, minWidth: 0, alignItems: 'center', paddingVertical: space.xs, gap: space.xs + 2 },
   whyImgBox: { width: 52, height: 52, borderRadius: radii.md, backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
-  whyLabel: { ...type.caption, color: color.text, textAlign: 'center' },
-  whySub: { ...type.label, color: color.primary },
+  whyLabel: { ...type.caption, ...poppins(400), color: color.textSecondary, textAlign: 'center' },
+  whySub: { ...type.label, ...poppins(500), color: color.primary },
 });

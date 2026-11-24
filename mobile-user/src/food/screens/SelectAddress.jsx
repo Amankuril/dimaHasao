@@ -148,7 +148,7 @@ export default function SelectAddress() {
               setQuery(text);
               setSelectedSuggestionId('');
             }}
-            placeholder="Start typing to search saved addresses…"
+            placeholder="Start typing to search saved addresses"
             accessibilityLabel="Search saved addresses"
           />
           {showDropdown ? (

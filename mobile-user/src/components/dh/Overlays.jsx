@@ -52,7 +52,7 @@ export function DhToast() {
 const NOTIFICATIONS = [
   {
     id: 1,
-    title: 'Falcon Festival 2026 Announced!',
+    title: 'Falcon Festival 2026 announced',
     desc: 'Annual wildlife and tribal music extravaganza dates released. Umrangso Lake venue confirmed.',
     time: '2 hrs ago',
     icon: 'fa-solid fa-feather-pointed',

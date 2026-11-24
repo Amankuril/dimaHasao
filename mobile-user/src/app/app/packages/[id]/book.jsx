@@ -376,7 +376,7 @@ export default function TourBookingScreen() {
             <Field label="Full name" value={travelerName} onChangeText={setTravelerName} placeholder="Name on the booking" autoCapitalize="words" autoComplete="name" />
             <Field label="Phone number" value={travelerPhone} onChangeText={setTravelerPhone} placeholder="10-digit mobile" keyboardType="phone-pad" autoComplete="tel" />
             <Field label="Email ID" value={travelerEmail} onChangeText={setTravelerEmail} placeholder="For your invoice" keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
-            <Field label="Anything the operator should know?" value={specialRequest} onChangeText={setSpecialRequest} placeholder="Dietary needs, window seats, accessibility…" multiline />
+            <Field label="Anything the operator should know?" value={specialRequest} onChangeText={setSpecialRequest} placeholder="Dietary needs, window seats, accessibility" multiline />
           </View>
         </Panel>
 
@@ -510,7 +510,7 @@ export default function TourBookingScreen() {
           visible={isSuccessModalOpen}
           onDone={() => setIsSuccessModalOpen(false)}
           icon="fa-solid fa-compass"
-          title="Tour package confirmed!"
+          title="Tour package confirmed"
           text="Your expedition has been booked successfully"
           id={createdTourData.id}
           kicker="Tour"

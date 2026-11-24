@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -6, right: -12, minWidth: 18, height: 18, paddingHorizontal: 4, borderRadius: 9, backgroundColor: color.goldBright,
     borderWidth: 2, borderColor: color.primaryPressed, alignItems: 'center', justifyContent: 'center',
   },
-  badgeText: { fontSize: 11, lineHeight: 13, color: color.onGold, fontFamily: 'Poppins_700Bold' },
+  badgeText: { fontSize: 11, lineHeight: 13, color: color.onGold, fontFamily: 'Poppins_600SemiBold', fontVariant: ['tabular-nums'] },
   label: { ...type.caption, marginTop: 3, color: 'rgba(255,255,255,0.85)' },
   labelActive: { color: color.goldOnDark, fontFamily: 'Poppins_600SemiBold' },
   lineSlot: { height: 3, width: 20, alignItems: 'center', justifyContent: 'center', marginTop: 2 },

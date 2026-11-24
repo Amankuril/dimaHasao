@@ -106,8 +106,8 @@ function FoodShellContent() {
       const newNotif = {
         id: `order-${orderId}-${status}-${Date.now()}`,
         type: isDelivered ? 'order' : 'alert',
-        title: title || (isDelivered ? `Order #${orderId} Delivered!` : `Order #${orderId} ${status}`),
-        message: message || (isDelivered ? 'Your order has been delivered. Enjoy!' : `Your order status is now ${statusLower.replace(/_/g, ' ')}`),
+        title: title || (isDelivered ? `Order #${orderId} delivered` : `Order #${orderId} ${status}`),
+        message: message || (isDelivered ? 'Your order has been delivered. Enjoy your meal.' : `Your order status is now ${statusLower.replace(/_/g, ' ')}`),
         time: 'Just now',
         timestamp: Date.now(),
         read: false,

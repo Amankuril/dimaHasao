@@ -100,7 +100,7 @@ export default function Help() {
         <View style={{ justifyContent: 'center' }}>
           <Search size={20} color={color.textMuted} style={styles.searchIcon} />
           <Field
-            placeholder="Search help topics or keywords..."
+            placeholder="Search help topics or keywords"
             value={searchQuery}
             onChangeText={setSearchQuery}
             accessibilityLabel="Search help topics"

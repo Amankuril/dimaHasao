@@ -266,7 +266,7 @@ export default function Wallet() {
             {isSuccess ? (
               <View style={st.success}>
                 <View style={st.okIcon}><CheckCircle2 size={32} color={color.success} /></View>
-                <Text style={[type.heading, { color: color.text }]}>Wallet refilled!</Text>
+                <Text style={[type.heading, { color: color.text }]}>Wallet refilled</Text>
                 <Text style={[type.small, { color: color.textMuted }]}>Balance updated successfully</Text>
               </View>
             ) : (

@@ -118,7 +118,7 @@ export function SectionHeader({ title, action, onAction, plain = false, style })
   return (
     <View style={[styles.section, style]}>
       <View style={styles.sectionLeft}>
-        {plain ? null : <Fa name="fa-solid fa-leaf" size={12} color={color.gold} />}
+        {/* `plain` is kept for callers; the leaf ornament is gone everywhere (2026-11 pass). */}
         <Text style={styles.sectionTitle} accessibilityRole="header" numberOfLines={1}>
           {String(title).toUpperCase()}
         </Text>

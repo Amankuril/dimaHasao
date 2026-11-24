@@ -24,5 +24,5 @@ export function showAccountDeletedToast() {
 const styles = StyleSheet.create({
   box: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 12, minWidth: 300 },
   check: { position: 'absolute', top: -4, right: -4, backgroundColor: '#fff', borderRadius: 999 },
-  text: { color: '#15803d', fontSize: 14, lineHeight: 20, ...poppins(700) },
+  text: { color: '#15803d', fontSize: 14, lineHeight: 20, ...poppins(500) },
 });

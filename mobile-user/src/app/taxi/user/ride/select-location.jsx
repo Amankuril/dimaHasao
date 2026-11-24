@@ -780,7 +780,7 @@ export default function SelectLocation() {
                   <TextInput
                     value={drop}
                     autoFocus={activeInput === 'drop'}
-                    placeholder="Enter drop location..."
+                    placeholder="Enter drop location"
                     placeholderTextColor={color.textDisabled}
                     onFocus={() => setActiveInput('drop')}
                     selection={activeInput === 'drop' ? undefined : { start: 0, end: 0 }}

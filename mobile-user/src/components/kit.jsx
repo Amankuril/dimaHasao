@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   retry: { marginTop: space.lg, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.primary, paddingHorizontal: space.xl, height: 48, borderRadius: radii.md },
   retryText: { ...type.button, color: color.onPrimary },
   loading: { paddingVertical: 80, alignItems: 'center' },
-  rupee: { fontFamily: 'NunitoSans_800ExtraBold', letterSpacing: 0 },
+  rupee: { fontFamily: 'Poppins_600SemiBold', letterSpacing: 0 },
   selectSheet: { backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16, paddingTop: 8 },
   selectRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, height: 52 },
   selectText: { fontSize: 16, color: tw.gray900, ...ff(500) },

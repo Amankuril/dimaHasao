@@ -224,8 +224,8 @@ export default function OrderTracking() {
   const pickup = order?.orderType === 'takeaway' || order?.orderType === 'dining';
   const eta = typeof estimatedTime === 'number' ? estimatedTime : null;
   const statusConfig = {
-    placed: { title: 'Order Placed', subtitle: 'Waiting for restaurant to accept', iconType: 'food' },
-    confirmed: { title: 'Order Placed', subtitle: 'Waiting for restaurant to accept', iconType: 'food' },
+    placed: { title: 'Order placed', subtitle: 'Waiting for the restaurant to accept', iconType: 'food' },
+    confirmed: { title: 'Order placed', subtitle: 'Waiting for the restaurant to accept', iconType: 'food' },
     preparing: {
       title: 'Food is being prepared',
       subtitle: pickup
@@ -242,7 +242,7 @@ export default function OrderTracking() {
     },
     on_way: { title: 'Out for delivery', subtitle: eta == null ? 'Rider is out for delivery' : eta <= 0 ? 'Arriving soon' : `Arriving in ${eta} mins`, iconType: 'rider' },
     at_drop: { title: 'Arrived at location', subtitle: 'Please come to the door', iconType: 'rider' },
-    delivered: { title: order?.orderType === 'takeaway' ? 'Picked up' : 'Order delivered', subtitle: order?.orderType === 'takeaway' ? 'Thank you for ordering!' : 'Enjoy your meal!', iconType: 'delivered' },
+    delivered: { title: order?.orderType === 'takeaway' ? 'Picked up' : 'Order delivered', subtitle: order?.orderType === 'takeaway' ? 'Thanks for ordering' : 'Enjoy your meal', iconType: 'delivered' },
     cancelled: {
       title: order?.orderType === 'takeaway' ? 'Takeaway order cancelled' : order?.orderType === 'dining' ? 'Dining order cancelled' : 'Order cancelled',
       subtitle: order?.cancellationReason || 'This order has been cancelled',
@@ -381,7 +381,7 @@ export default function OrderTracking() {
             </View>
             <Text style={[type.heading, { color: color.text, marginTop: space.md }]}>{isLocalRated ? 'Feedback received' : 'Enjoyed your food?'}</Text>
             <Text style={[type.small, { color: color.textSecondary, textAlign: 'center', marginTop: space.xs, maxWidth: 300 }]}>
-              {isLocalRated ? 'Thank you for rating your experience! Your feedback has been submitted.' : `Rate your experience with ${order?.restaurant || 'The Restaurant'} and help us improve!`}
+              {isLocalRated ? 'Thanks for rating your experience. Your feedback has been submitted.' : `Rate your experience with ${order?.restaurant || 'The Restaurant'} and help us improve!`}
             </Text>
             {isLocalRated ? (
               <StatusBadge tone="success" icon={Check} label="Submitted" style={{ marginTop: space.lg, alignSelf: 'center' }} />
@@ -702,7 +702,7 @@ export default function OrderTracking() {
           </Text>
           <View style={{ gap: space.lg }}>
             <Text style={[type.small, { color: color.textSecondary }]}>Add instructions for the delivery partner to help them find your address or know where to leave your order.</Text>
-            <Field value={deliveryInstructions} onChangeText={setDeliveryInstructions} placeholder="E.g. Ring the doorbell, leave at the front desk..." multiline accessibilityLabel="Delivery instructions" inputStyle={{ minHeight: 120 }} />
+            <Field value={deliveryInstructions} onChangeText={setDeliveryInstructions} placeholder="E.g. Ring the doorbell, leave at the front desk" multiline accessibilityLabel="Delivery instructions" inputStyle={{ minHeight: 120 }} />
             <Button title="Save instructions" loading={isUpdatingInstructions} disabled={isUpdatingInstructions} onPress={handleUpdateInstructions} accessibilityLabel="Save instructions" />
           </View>
         </KeyboardAvoidingView>

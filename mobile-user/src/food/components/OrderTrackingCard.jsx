@@ -204,7 +204,7 @@ function TrackingCardContent({ activeOrder, currentOrderKey, hasBottomNav, timeR
         {(fg) => (
           <>
             <Small fg={fg}>Rider</Small>
-            <Big fg={fg}>Arrived!</Big>
+            <Big fg={fg}>Arrived</Big>
           </>
         )}
       </Badge>

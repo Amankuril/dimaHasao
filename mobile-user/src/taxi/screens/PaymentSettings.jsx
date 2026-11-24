@@ -107,7 +107,7 @@ export default function PaymentSettings() {
                 <View style={styles.successIcon}>
                   <Check size={36} color={color.success} strokeWidth={3} />
                 </View>
-                <Text style={[type.heading, { color: color.text }]}>Payment method added!</Text>
+                <Text style={[type.heading, { color: color.text }]}>Payment method added</Text>
               </View>
             ) : (
               <>

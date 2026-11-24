@@ -44,11 +44,9 @@ export function Header({
 
         <View style={styles.center}>
           <View style={styles.titleRow}>
-            <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
             <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
               {String(title).toUpperCase()}
             </Text>
-            <Fa name="fa-solid fa-leaf" size={11} color={color.gold} />
           </View>
           {subtitle ? (
             <Text style={styles.subtitle} numberOfLines={1}>

@@ -79,7 +79,7 @@ function ReviewModal({ booking, onClose, onSubmit }) {
             <TextInput
               value={comment}
               onChangeText={setComment}
-              placeholder="Write about the food, service, and atmosphere..."
+              placeholder="Write about the food, service, and atmosphere"
               placeholderTextColor={color.textMuted}
               multiline
               textAlignVertical="top"
@@ -207,7 +207,7 @@ export default function MyBookings() {
           <EmptyState
             icon={Utensils}
             title="No bookings yet"
-            message="Book your favorite restaurant for a great dining experience!"
+            message="Book a table at a restaurant you like"
             actionLabel="Book a table"
             onAction={() => navigateTo('/dining')}
           />

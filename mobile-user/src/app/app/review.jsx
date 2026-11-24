@@ -33,11 +33,11 @@ export default function RatingReviewScreen() {
   const toggleTag = (tag) => setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
 
   const handleSubmit = () => {
-    showToast('Thank you for rating your Dima Hasao experience! ⭐');
+    showToast('Thanks for rating your Dima Hasao trip');
     router.replace('/app/bookings');
   };
 
-  const verdict = rating === 5 ? '⭐ Outstanding Experience' : rating === 4 ? '👍 Very Good' : rating === 3 ? '👌 Average' : '👎 Needs Improvement';
+  const verdict = rating === 5 ? 'Outstanding experience' : rating === 4 ? 'Very good' : rating === 3 ? 'Average' : 'Needs improvement';
 
   return (
     <View style={dhs.page}>
@@ -72,7 +72,7 @@ export default function RatingReviewScreen() {
             </View>
           </View>
 
-          <Field label="Write a review (optional)" multiline numberOfLines={3} placeholder="Tell fellow tourists what made your experience memorable..." value={reviewText} onChangeText={setReviewText} />
+          <Field label="Write a review (optional)" multiline numberOfLines={3} placeholder="Tell fellow tourists what made your experience memorable" value={reviewText} onChangeText={setReviewText} />
 
           <GreenButton title="Submit verified review" size="lg" onPress={handleSubmit} />
         </Panel>

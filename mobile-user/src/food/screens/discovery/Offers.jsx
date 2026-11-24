@@ -69,7 +69,7 @@ export default function Offers() {
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
       <ScrollView contentContainerStyle={{ paddingBottom: NAV_CLEARANCE + space.lg + insets.bottom }}>
-        <DiscoveryHero onBack={goBack} height={180} kicker="Offers" title="Great offers" tagline="Save big on your next meal!" />
+        <DiscoveryHero onBack={goBack} height={180} kicker="Offers" title="Great offers" tagline="Save on your next meal" />
 
         <View style={{ padding: space.lg, gap: space.xxl }}>
           {showSkeleton ? <RestaurantGridSkeleton count={4} compact /> : null}

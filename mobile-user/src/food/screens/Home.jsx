@@ -125,7 +125,8 @@ function Glint({ duration = 2000, repeatDelay = 3000, opacity = 0.4 }) {
     const loop = Animated.loop(
       Animated.sequence([Animated.timing(x, { toValue: 1, duration, easing: Easing.inOut(Easing.ease), useNativeDriver: true }), Animated.delay(repeatDelay)]),
     );
-    loop.start();
+    // Decorative loop left still (2026-11 pass): it moved forever without meaning anything.
+    void loop;
     return () => loop.stop();
   }, [x, duration, repeatDelay]);
   return (
@@ -1429,7 +1430,7 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -2, right: -2, minWidth: 20, height: 20, paddingHorizontal: 4, borderRadius: 10, backgroundColor: color.goldBright,
     borderWidth: 1.5, borderColor: color.primaryDeep, alignItems: 'center', justifyContent: 'center',
   },
-  cartBadgeText: { ...type.caption, lineHeight: 14, fontFamily: 'Poppins_700Bold', color: color.onGold },
+  cartBadgeText: { ...type.caption, lineHeight: 14, fontFamily: 'Poppins_600SemiBold', color: color.onGold },
   takeSearch: { marginTop: space.md, height: 48, flexDirection: 'row', alignItems: 'center', gap: space.sm, backgroundColor: color.surface, borderRadius: radii.md, borderWidth: 1, borderColor: color.border, paddingLeft: space.md, paddingRight: space.xs + 2 },
   takeInput: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, ...type.body, color: color.text, outlineWidth: 0 },
   takeX: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },

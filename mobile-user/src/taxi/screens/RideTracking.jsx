@@ -133,7 +133,7 @@ export default function RideTracking() {
 
       {shareToast ? (
         <View style={[styles.toast, { top: space.lg + insets.top }]} accessibilityLiveRegion="polite">
-          <Text style={styles.toastText}>Ride details copied!</Text>
+          <Text style={styles.toastText}>Ride details copied</Text>
         </View>
       ) : null}
 

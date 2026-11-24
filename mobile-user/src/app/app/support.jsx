@@ -125,7 +125,7 @@ export default function HelpSupportScreen() {
             <Text style={dhs.label}>Category</Text>
             <SelectField value={ticketCategory} options={CATEGORIES} onChange={setTicketCategory} accessibilityLabel="Category" style={[dhs.input, { gap: space.sm }]} textStyle={styles.selectText} chevronColor={color.text} />
           </View>
-          <Field label="Describe your concern" multiline numberOfLines={3} placeholder="Explain the issue or booking ID details..." value={complaintText} onChangeText={setComplaintText} />
+          <Field label="Describe your concern" multiline numberOfLines={3} placeholder="Explain the issue or booking ID details" value={complaintText} onChangeText={setComplaintText} />
           <GreenButton title="Submit ticket" loadingTitle="Sending…" loading={submitting} onPress={handleCreateTicket} />
 
           {isTicketSubmitted ? (

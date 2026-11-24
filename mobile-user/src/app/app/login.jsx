@@ -12,7 +12,7 @@ import { useBooking } from '../../context/BookingContext';
 import { completeUserSignup, requestUserOtp, verifyUserOtp } from '../../api/auth';
 import { webAsset } from '../../lib/webAsset';
 import { Button } from '../../components/ds';
-import { color, elevation, playfair, radii, space, type } from '../../theme';
+import { color, elevation, playfair, poppins, radii, space, type } from '../../theme';
 
 // Web: DimaHasao/pages/LoginScreen.jsx (/app/login). 'phone' -> 'otp' -> 'name'.
 
@@ -110,7 +110,7 @@ export default function LoginScreen() {
       setOtp(['', '', '', '']);
       setStep('otp');
       setResendIn(RESEND_SECONDS);
-      showToast('OTP sent to your phone 📱');
+      showToast(`OTP sent to +91 ${digits}`);
     } catch (err) {
       showToast(readApiError(err, 'Could not send OTP. Please try again.'));
     } finally {
@@ -137,7 +137,7 @@ export default function LoginScreen() {
         setStep('name');
         return;
       }
-      await finishLogin(data, '✨ Welcome back!');
+      await finishLogin(data, 'Welcome back');
     } catch (err) {
       showToast(readApiError(err, 'Invalid or expired OTP.'));
     } finally {
@@ -156,7 +156,7 @@ export default function LoginScreen() {
     try {
       const res = await completeUserSignup(signupToken, { name });
       const data = res?.data?.data ?? res?.data ?? {};
-      await finishLogin(data, '✨ Account created! Welcome to Dima Hasao!');
+      await finishLogin(data, 'Account created. Welcome to Dima Hasao.');
     } catch (err) {
       showToast(readApiError(err, 'Could not save your name. Please try again.'));
     } finally {
@@ -170,8 +170,8 @@ export default function LoginScreen() {
     return handleCompleteRegistration();
   };
 
-  const title = step === 'name' ? 'Create your account' : step === 'otp' && needsName ? 'Verify your number' : 'Login to your account';
-  const cta = step === 'phone' ? 'Get OTP' : step === 'otp' ? 'Verify & explore' : 'Create account & explore';
+  const title = step === 'name' ? 'Create your account' : step === 'otp' ? (needsName ? 'Verify your number' : 'Enter your code') : 'Log in to continue';
+  const cta = step === 'phone' ? 'Get OTP' : step === 'otp' ? 'Verify and continue' : 'Create account';
 
   return (
     <View style={styles.root}>
@@ -206,11 +206,14 @@ export default function LoginScreen() {
             <StripeBorder height={6} band={5} colors={WEAVE} style={styles.weave} />
 
             <View style={styles.cardTitleRow}>
-              <Fa name="fa-solid fa-leaf" size={12} color={color.gold} style={{ transform: [{ scaleX: -1 }] }} />
               <Text style={styles.cardTitle} accessibilityRole="header" numberOfLines={1}>
                 {title}
               </Text>
-              <Fa name="fa-solid fa-leaf" size={12} color={color.gold} />
+              {step === 'otp' ? (
+                <Text style={styles.cardSub} numberOfLines={1}>
+                  Code sent to +91 {phone}
+                </Text>
+              ) : null}
             </View>
 
             <View style={{ gap: space.md }}>
@@ -227,7 +230,7 @@ export default function LoginScreen() {
                       value={fullName}
                       onChangeText={setFullName}
                       autoFocus
-                      placeholder="Full Name"
+                      placeholder="Your full name"
                       placeholderTextColor={PLACEHOLDER}
                       autoCapitalize="words"
                       autoComplete="name"
@@ -237,7 +240,7 @@ export default function LoginScreen() {
                       onFocus={() => setFocused('name')}
                       onBlur={() => setFocused(null)}
                       style={styles.input}
-                      accessibilityLabel="Full Name"
+                      accessibilityLabel="Full name"
                     />
                   </View>
                 </View>
@@ -255,14 +258,14 @@ export default function LoginScreen() {
                       autoComplete="tel"
                       textContentType="telephoneNumber"
                       maxLength={10}
-                      placeholder="Phone Number"
+                      placeholder="10-digit mobile number"
                       placeholderTextColor={PLACEHOLDER}
                       returnKeyType="done"
                       onSubmitEditing={handleSubmit}
                       onFocus={() => setFocused('phone')}
                       onBlur={() => setFocused(null)}
                       style={styles.input}
-                      accessibilityLabel="Phone Number"
+                      accessibilityLabel="Mobile number"
                     />
                     {step === 'otp' ? (
                       <Press
@@ -282,7 +285,7 @@ export default function LoginScreen() {
 
               {step === 'otp' ? (
                 <View style={{ gap: space.sm }}>
-                  <Text style={styles.fieldLabel}>Enter the 4-digit OTP</Text>
+                  <Text style={styles.fieldLabel}>4-digit code</Text>
                   <View style={styles.otpRow}>
                     {[0, 1, 2, 3].map((index) => (
                       <TextInput
@@ -307,7 +310,7 @@ export default function LoginScreen() {
                     ))}
                   </View>
                   <View style={styles.otpFoot}>
-                    <Text style={styles.sentTo}>Sent to +91 {phone}</Text>
+                    <Text style={styles.sentTo}>{"Didn't get it?"}</Text>
                     {resendIn > 0 ? (
                       <Text style={[styles.sentTo, styles.resendBtn, { textAlignVertical: 'center' }]} accessibilityLiveRegion="polite">
                         Resend in {resendIn}s
@@ -324,12 +327,8 @@ export default function LoginScreen() {
               <Button title={cta} onPress={handleSubmit} loading={isLoading} variant="gold" size="lg" accessibilityLabel={cta} />
             </View>
 
-            <View style={{ marginTop: space.lg }}>
-              <View style={styles.dividerRow}>
-                <LinearGradient colors={['transparent', 'rgba(202,168,62,0.7)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.dividerLine} />
-                <Fa name="fa-solid fa-leaf" size={12} color={color.gold} style={{ transform: [{ scaleX: -1 }] }} />
-                <LinearGradient colors={['rgba(202,168,62,0.7)', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.dividerLine} />
-              </View>
+            <View style={{ marginTop: space.xl }}>
+              <View style={styles.divider} />
               <AuthLegalLinks
                 module="platform"
                 variant="icons"
@@ -354,50 +353,57 @@ const PLACEHOLDER = 'rgba(254,243,198,0.55)';
 const VERIFIED = '#86EFAC';
 const INK = '#062C14';
 
+const halo = { textShadowColor: 'rgba(255,255,255,0.85)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 2 };
+// Browsers draw their own focus box inside a TextInput; the field border already shows focus.
+const noWebOutline = Platform.OS === 'web' ? { outlineStyle: 'none' } : null;
+
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: color.primaryDeep },
   flex: { flex: 1 },
   sky: { position: 'absolute', top: 0, left: 0, right: 0, height: 176 },
   vignette: { position: 'absolute', bottom: 0, left: 0, right: 0, height: 192 },
-  content: { flexGrow: 1, paddingHorizontal: space.md, justifyContent: 'space-between' },
-  top: { alignItems: 'center', paddingTop: space.xs, paddingHorizontal: space.sm },
-  logo: { width: 96, height: 96, marginBottom: space.xs },
-  juthai: { fontSize: 26, lineHeight: 32, letterSpacing: 1.2, color: INK, marginTop: 2, ...playfair(700), textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
-  welcomeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, marginVertical: 2 },
-  welcomeLine: { height: 1.5, width: 24, backgroundColor: INK },
-  welcome: { ...type.overline, letterSpacing: 2, color: INK, textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
-  district: { ...type.heroSerif, color: INK, textShadowColor: 'rgba(255,255,255,0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 1 },
-  spacer: { flex: 1, minHeight: space.xxl },
+  content: { flexGrow: 1, paddingHorizontal: space.lg, justifyContent: 'space-between' },
+  top: { alignItems: 'center', paddingTop: space.sm, paddingHorizontal: space.sm },
+  logo: { width: 88, height: 88, marginBottom: space.sm },
+  // Dark ink on the light sky of the gate photo. The photo comes from the server, so a
+  // small light halo keeps the title readable before it loads (or if it never does).
+  juthai: { fontSize: 24, lineHeight: 30, letterSpacing: 1, color: INK, ...playfair(600), ...halo },
+  welcomeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, marginTop: space.xs },
+  welcomeLine: { height: 1, width: 20, backgroundColor: INK, opacity: 0.6 },
+  welcome: { ...poppins(500), fontSize: 12, lineHeight: 16, letterSpacing: 1.5, textTransform: 'uppercase', color: INK, ...halo },
+  district: { ...type.heroSerif, fontSize: 28, lineHeight: 34, color: INK, marginTop: space.xxs, ...halo },
+  spacer: { flex: 1, minHeight: space.xxxl },
   card: {
-    width: '100%', maxWidth: 420, alignSelf: 'center', backgroundColor: 'rgba(5,31,17,0.96)', borderWidth: 2, borderColor: color.gold,
-    borderRadius: radii.xl, padding: space.xl, paddingTop: space.xl + space.xs, overflow: 'hidden', ...elevation.float,
+    width: '100%', maxWidth: 420, alignSelf: 'center', backgroundColor: 'rgba(5,31,17,0.96)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.55)',
+    borderRadius: radii.xl, padding: space.xxl, paddingTop: space.xxl + space.sm, overflow: 'hidden', ...elevation.float,
   },
   weave: { position: 'absolute', top: 0, left: 0, right: 0 },
-  cardTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, marginBottom: space.lg },
-  cardTitle: { ...type.sectionSerif, color: color.gold, flexShrink: 1 },
-  fieldLabel: { ...type.label, color: color.textOnDarkMuted },
+  cardTitleRow: { alignItems: 'center', gap: space.xs, marginBottom: space.xl },
+  cardTitle: { ...type.sectionSerif, fontSize: 16, lineHeight: 22, color: color.gold },
+  cardSub: { ...poppins(400), fontSize: 13, lineHeight: 18, color: color.textOnDarkMuted },
+  fieldLabel: { ...poppins(500), fontSize: 13, lineHeight: 18, color: color.textOnDarkMuted },
   verifiedRow: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm, marginBottom: space.xs },
   verified: { flex: 1, ...type.small, color: VERIFIED },
+  // Border colour changes on focus, width never does, so nothing shifts while typing.
   inputWrap: {
-    height: 52, flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingLeft: space.lg, paddingRight: space.xs,
-    borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', borderRadius: radii.md, backgroundColor: FIELD,
+    height: 52, flexDirection: 'row', alignItems: 'center', gap: space.md, paddingLeft: space.lg, paddingRight: space.xs,
+    borderWidth: 1, borderColor: 'rgba(202,168,62,0.4)', borderRadius: radii.md, backgroundColor: FIELD,
   },
-  inputLocked: { opacity: 0.8 },
-  inputFocused: { borderColor: color.gold, borderWidth: 2 },
-  prefix: { ...type.bodyStrong, fontSize: 16, color: color.textOnDarkMuted },
-  input: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, paddingHorizontal: 0, ...type.body, fontSize: 16, color: color.textInverse },
+  inputLocked: { opacity: 0.75 },
+  inputFocused: { borderColor: color.gold },
+  prefix: { ...poppins(500), fontSize: 16, lineHeight: 22, color: color.textOnDarkMuted },
+  input: { flex: 1, minWidth: 0, height: '100%', paddingVertical: 0, paddingHorizontal: 0, ...poppins(400), fontSize: 16, letterSpacing: 0.3, color: color.textInverse, ...noWebOutline },
   editBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 22 },
   otpRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.md },
   otpBox: {
-    width: 56, height: 56, borderRadius: radii.md, borderWidth: 1, borderColor: 'rgba(202,168,62,0.7)', backgroundColor: FIELD, textAlign: 'center',
-    padding: 0, ...type.priceLg, fontSize: 24, color: color.goldOnDark,
+    width: 56, height: 60, borderRadius: radii.md, borderWidth: 1, borderColor: 'rgba(202,168,62,0.4)', backgroundColor: FIELD, textAlign: 'center',
+    padding: 0, ...poppins(500), fontSize: 24, lineHeight: 30, color: color.goldOnDark, fontVariant: ['tabular-nums'], ...noWebOutline,
   },
   otpFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
   sentTo: { ...type.small, color: color.textOnDarkMuted, flexShrink: 1 },
   resendBtn: { minHeight: 44, justifyContent: 'center', paddingHorizontal: space.sm, marginRight: -space.sm },
-  resend: { ...type.label, color: color.goldOnDark, textDecorationLine: 'underline' },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, opacity: 0.7 },
-  dividerLine: { height: 1, width: 72 },
-  legalIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)', backgroundColor: FIELD, alignItems: 'center', justifyContent: 'center' },
-  legalLabel: { ...type.caption, color: color.textOnDarkMuted, marginTop: space.xs },
+  resend: { ...poppins(500), fontSize: 13, lineHeight: 18, color: color.goldOnDark, textDecorationLine: 'underline' },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(202,168,62,0.35)', marginBottom: space.md },
+  legalIcon: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', backgroundColor: FIELD, alignItems: 'center', justifyContent: 'center' },
+  legalLabel: { ...type.caption, ...poppins(400), color: color.textOnDarkMuted, marginTop: space.xs },
 });

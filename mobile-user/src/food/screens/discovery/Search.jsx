@@ -104,7 +104,7 @@ export default function SearchScreen() {
                           </View>
                         )}
                       </View>
-                      <Text numberOfLines={1} style={[styles.catName, active ? { color: color.primary, fontFamily: 'Poppins_700Bold' } : null]}>{cat.name}</Text>
+                      <Text numberOfLines={1} style={[styles.catName, active ? { color: color.primary, fontFamily: 'Poppins_600SemiBold' } : null]}>{cat.name}</Text>
                     </Press>
                   );
                 })}

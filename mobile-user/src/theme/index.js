@@ -97,7 +97,8 @@ export const font = { xs: 11, sm: 12, md: 14, lg: 16, xl: 20, xxl: 24, xxxl: 30 
  */
 const POPPINS = {
   300: 'Poppins_400Regular', 400: 'Poppins_400Regular', 500: 'Poppins_500Medium', 600: 'Poppins_600SemiBold',
-  700: 'Poppins_700Bold', 800: 'Poppins_800ExtraBold', 900: 'Poppins_800ExtraBold',
+  // Heavier weights clamp to 600 (2026-11 pass): hierarchy comes from size and colour.
+  700: 'Poppins_600SemiBold', 800: 'Poppins_600SemiBold', 900: 'Poppins_600SemiBold',
 };
 
 /** Body font of the whole user app (.dh-app, global.css). */
@@ -256,18 +257,18 @@ export const type = {
   titleSerif: { ...cinzel(), fontSize: 17, lineHeight: 24, letterSpacing: 1.4 }, // header titles
   sectionSerif: { ...cinzel(), fontSize: 15, lineHeight: 22, letterSpacing: 1 }, // section titles in a page
   tagline: { ...playfair(400, true), fontSize: 13, lineHeight: 18 }, // header subtitle only
-  heading: { ...pop(700), fontSize: 18, lineHeight: 26 }, // sheet / dialog / detail title
-  subheading: { ...pop(600), fontSize: 16, lineHeight: 22 }, // card titles, names
+  heading: { ...pop(600), fontSize: 18, lineHeight: 26 }, // sheet / dialog / detail title
+  subheading: { ...pop(500), fontSize: 16, lineHeight: 22 }, // card titles, names
   body: { ...pop(400), fontSize: 14, lineHeight: 21 },
-  bodyStrong: { ...pop(600), fontSize: 14, lineHeight: 21 },
+  bodyStrong: { ...pop(500), fontSize: 14, lineHeight: 21 },
   small: { ...pop(400), fontSize: 13, lineHeight: 19 }, // addresses, descriptions
-  label: { ...pop(600), fontSize: 13, lineHeight: 18 }, // field labels, chips, inline actions
-  caption: { ...pop(500), fontSize: 12, lineHeight: 16 }, // timestamps, hints, badge text
-  overline: { ...pop(700), fontSize: 12, lineHeight: 16, letterSpacing: 0.8, textTransform: 'uppercase' }, // 1-3 word kickers
+  label: { ...pop(500), fontSize: 13, lineHeight: 18 }, // field labels, chips, inline actions
+  caption: { ...pop(400), fontSize: 12, lineHeight: 16 }, // timestamps, hints, badge text
+  overline: { ...pop(500), fontSize: 12, lineHeight: 16, letterSpacing: 1, textTransform: 'uppercase' }, // 1-3 word kickers
   button: { ...pop(600), fontSize: 15, lineHeight: 20 },
   buttonSm: { ...pop(600), fontSize: 13, lineHeight: 18 },
-  price: { ...pop(700), fontSize: 18, lineHeight: 24 },
-  priceLg: { ...pop(700), fontSize: 26, lineHeight: 32 },
+  price: { ...pop(600), fontSize: 18, lineHeight: 24, fontVariant: ['tabular-nums'] },
+  priceLg: { ...pop(600), fontSize: 26, lineHeight: 32, fontVariant: ['tabular-nums'] },
 };
 
 export const elevation = {

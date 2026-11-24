@@ -233,7 +233,7 @@ export default function Checkout() {
         <Card>
           <CardTitle icon={MessageSquare} title="Add note for restaurant" />
           <Field
-            placeholder="E.g. Please make it extra spicy, or no onions..."
+            placeholder="E.g. Please make it extra spicy, or no onions"
             value={restaurantNote}
             onChangeText={setRestaurantNote}
             multiline

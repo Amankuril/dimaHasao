@@ -169,7 +169,7 @@ export default function TouristPlaceDetail() {
             <View style={styles.sunset}>
               <Image source={{ uri: place.guideSunsetImage || place.mainImage }} style={styles.sunsetImg} resizeMode="cover" accessibilityLabel="Sunset View" />
               <Text style={styles.sunsetText}>Enjoy the view, respect the nature</Text>
-              <Text style={styles.sunsetStrong}>Love Dima Hasao!</Text>
+              <Text style={styles.sunsetStrong}>Love Dima Hasao</Text>
             </View>
           </View>
 
@@ -185,7 +185,7 @@ export default function TouristPlaceDetail() {
         </View>
 
         <View style={[styles.footer, { paddingBottom: space.lg + insets.bottom }]}>
-          <Text style={styles.footerText}>Plan your trip, stay safe and enjoy the beauty of Dima Hasao!</Text>
+          <Text style={styles.footerText}>Plan your trip, stay safe and enjoy the beauty of Dima Hasao</Text>
         </View>
       </ScrollView>
     </View>
