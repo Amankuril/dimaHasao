@@ -163,10 +163,10 @@ export default function DiningList() {
                 {[...Array(5)].map((_, i) => (
                     <Star 
                         key={i} 
-                        className={`w-3.5 h-3.5 ${i < fullStars ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`} 
+                        className={`w-3.5 h-3.5 ${i < fullStars ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-300'}`} 
                     />
                 ))}
-                <span className="ml-1 text-slate-600">({rating || 0})</span>
+                <span className="ml-1 text-neutral-600">({rating || 0})</span>
             </div>
         )
     }
@@ -227,48 +227,48 @@ export default function DiningList() {
     }
 
     return (
-        <div className="h-full overflow-y-auto bg-slate-50 p-4 lg:p-6">
+        <div className="h-full overflow-y-auto bg-neutral-50 p-4 lg:p-6">
             <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                         <div className="flex items-center gap-3">
-                            <h1 className="text-2xl font-bold text-slate-900">Dining List</h1>
+                            <h1 className="text-2xl font-medium text-neutral-900">Dining list</h1>
                         </div>
                     </div>
-                    <p className="text-slate-500">Manage restaurants available for dining.</p>
+                    <p className="text-neutral-500">Manage restaurants available for dining</p>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
                     {loading ? (
                         <div className="flex items-center justify-center py-20">
-                            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                            <span className="ml-3 text-slate-600">Loading dining list...</span>
+                            <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
+                            <span className="ml-3 text-neutral-600">Loading dining list...</span>
                         </div>
                     ) : restaurants.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                                <Building2 className="w-10 h-10 text-slate-300" />
+                            <div className="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center mb-6">
+                                <Building2 className="w-10 h-10 text-neutral-300" />
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900 mb-2">No dining restaurants added yet</h2>
-                            <p className="text-slate-500 max-w-sm mb-8">
-                                Get started by adding your first restaurant to the dining management system.
+                            <h2 className="text-xl font-medium text-neutral-900 mb-2">No dining restaurants added yet</h2>
+                            <p className="text-neutral-500 max-w-sm mb-8">
+                                Get started by adding your first restaurant to the dining management system
                             </p>
                         </div>
                     ) : (
                         <>
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                                <h2 className="text-xl font-bold text-slate-900">Registered Dining Restaurants</h2>
+                                <h2 className="text-xl font-medium text-neutral-900">Registered dining restaurants</h2>
 
                                 <div className="flex flex-wrap items-center gap-3">
                                     <div className="relative flex-1 sm:flex-initial min-w-[250px]">
                                         <input
                                             type="text"
-                                            placeholder="Search dining restaurants..."
+                                            placeholder="Search dining restaurants"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
-                                            className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                                         />
-                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                                     </div>
                                 </div>
                             </div>
@@ -277,9 +277,9 @@ export default function DiningList() {
                             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-4 mb-2">
                                 <button
                                     onClick={() => setSelectedCategory("All")}
-                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === "All"
-                                        ? "bg-blue-600 text-white shadow-md"
-                                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${selectedCategory === "All"
+                                        ? "bg-neutral-900 text-white shadow-sm"
+                                        : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                                         }`}
                                 >
                                     All ({restaurants.length})
@@ -290,9 +290,9 @@ export default function DiningList() {
                                         <button
                                             key={cat._id}
                                             onClick={() => setSelectedCategory(cat.slug)}
-                                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${selectedCategory === cat.slug
-                                                ? "bg-blue-600 text-white shadow-md"
-                                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                                            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${selectedCategory === cat.slug
+                                                ? "bg-neutral-900 text-white shadow-sm"
+                                                : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                                                 }`}
                                         >
                                             {cat.name} ({count})
@@ -303,39 +303,39 @@ export default function DiningList() {
 
                             <div className="overflow-x-auto">
                                 <table className="w-full">
-                                    <thead className="bg-slate-50 border-b border-slate-200">
+                                    <thead className="bg-neutral-50 border-b border-neutral-200">
                                         <tr>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Owner</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Dining</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Guests</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</th>
-                                            <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                                            <th className="px-6 py-4 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Restaurant</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Owner</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Zone</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Dining</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Guests</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Rating</th>
+                                            <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
+                                            <th className="px-6 py-4 text-right text-xs font-medium text-neutral-700">Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-slate-100">
+                                    <tbody className="bg-white divide-y divide-neutral-100">
                                         {filteredRestaurants.length === 0 ? (
                                             <tr>
                                                 <td colSpan={8} className="px-6 py-20 text-center">
                                                     <div className="flex flex-col items-center justify-center">
-                                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                                                            <Search className="w-8 h-8 text-slate-300" />
+                                                        <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mb-4">
+                                                            <Search className="w-8 h-8 text-neutral-300" />
                                                         </div>
-                                                        <p className="text-lg font-semibold text-slate-700 mb-1">No dining restaurants found</p>
-                                                        <p className="text-sm text-slate-500">
-                                                            Try adjusting your search query or filters.
+                                                        <p className="text-lg font-medium text-neutral-700 mb-1">No dining restaurants found</p>
+                                                        <p className="text-sm text-neutral-500">
+                                                            Try adjusting your search query or filters
                                                         </p>
                                                     </div>
                                                 </td>
                                             </tr>
                                         ) : (
                                             filteredRestaurants.map((restaurant, index) => (
-                                                <tr key={restaurant.id} className="hover:bg-slate-50 transition-colors">
+                                                <tr key={restaurant.id} className="hover:bg-neutral-50 transition-colors">
                                                     <td className="px-6 py-4">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex-shrink-0">
+                                                            <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 flex-shrink-0">
                                                                 <img
                                                                     src={restaurant.logo}
                                                                     alt={restaurant.name}
@@ -344,24 +344,24 @@ export default function DiningList() {
                                                                 />
                                                             </div>
                                                             <div className="flex flex-col">
-                                                                <span className="text-sm font-medium text-slate-900">{restaurant.name}</span>
-                                                                <span className="text-xs text-slate-500">#{formatRestaurantId(restaurant.originalData?.restaurantId || restaurant._id)}</span>
+                                                                <span className="text-sm font-medium text-neutral-900">{restaurant.name}</span>
+                                                                <span className="text-xs text-neutral-500">#{formatRestaurantId(restaurant.originalData?.restaurantId || restaurant._id)}</span>
                                                             </div>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4">
                                                         <div className="flex flex-col">
-                                                            <span className="text-sm font-medium text-slate-900">{restaurant.ownerName}</span>
-                                                            <span className="text-xs text-slate-500">{restaurant.ownerPhone}</span>
+                                                            <span className="text-sm font-medium text-neutral-900">{restaurant.ownerName}</span>
+                                                            <span className="text-xs text-neutral-500">{restaurant.ownerPhone}</span>
                                                         </div>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <span className="text-sm text-slate-700">{restaurant.zone}</span>
+                                                        <span className="text-sm text-neutral-700">{restaurant.zone}</span>
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
                                                         <button
                                                             onClick={() => handleDiningToggle(restaurant)}
-                                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${restaurant.diningSettings?.isEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
+                                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${restaurant.diningSettings?.isEnabled ? 'bg-neutral-900' : 'bg-neutral-200'}`}
                                                         >
                                                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${restaurant.diningSettings?.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                                         </button>
@@ -379,7 +379,7 @@ export default function DiningList() {
                                                                         e.currentTarget.blur()
                                                                     }
                                                                 }}
-                                                                className="w-16 px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:border-blue-500 text-center"
+                                                                className="w-16 px-2 py-1 text-sm border border-neutral-300 rounded focus:outline-none focus:border-neutral-400 text-center"
                                                             />
                                                         </div>
                                                     </td>
@@ -397,7 +397,7 @@ export default function DiningList() {
                                                                 setEditingRestaurant({ ...restaurant })
                                                                 setIsEditModalOpen(true)
                                                             }}
-                                                            className="p-2 text-slate-400 hover:text-blue-600 transition-colors"
+                                                            className="p-2 text-neutral-400 hover:text-[#0a4d2b] transition-colors"
                                                         >
                                                             <Settings className="w-4 h-4" />
                                                         </button>
@@ -415,12 +415,12 @@ export default function DiningList() {
 
             {/* Edit Modal */}
             {isEditModalOpen && editingRestaurant && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neutral-900/50 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="text-lg font-bold text-slate-900">Edit Dining Settings</h3>
-                            <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-                                <Plus className="w-5 h-5 rotate-45 text-slate-500" />
+                        <div className="px-6 py-5 border-b border-neutral-100 flex items-center justify-between">
+                            <h3 className="text-lg font-medium text-neutral-900">Edit dining settings</h3>
+                            <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-neutral-100 rounded-lg transition-colors">
+                                <Plus className="w-5 h-5 rotate-45 text-neutral-500" />
                             </button>
                         </div>
 
@@ -428,15 +428,15 @@ export default function DiningList() {
                             {/* Status */}
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-900">Dining Status</p>
-                                    <p className="text-xs text-slate-500">Enable or disable dining for this restaurant</p>
+                                    <p className="text-sm font-medium text-neutral-900">Dining status</p>
+                                    <p className="text-xs text-neutral-500">Enable or disable dining for this restaurant</p>
                                 </div>
                                 <button
                                     onClick={() => setEditingRestaurant(prev => ({
                                         ...prev,
                                         diningSettings: { ...prev.diningSettings, isEnabled: !prev.diningSettings.isEnabled }
                                     }))}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingRestaurant.diningSettings?.isEnabled ? 'bg-blue-600' : 'bg-slate-200'}`}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${editingRestaurant.diningSettings?.isEnabled ? 'bg-neutral-900' : 'bg-neutral-200'}`}
                                 >
                                     <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition duration-200 ease-in-out ${editingRestaurant.diningSettings?.isEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                 </button>
@@ -444,7 +444,7 @@ export default function DiningList() {
 
                             {/* Max Guests */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-900">Maximum Guests</label>
+                                <label className="text-sm font-medium text-neutral-900">Maximum guests</label>
                                 <input
                                     type="number"
                                     min="1"
@@ -454,13 +454,13 @@ export default function DiningList() {
                                         ...prev,
                                         diningSettings: { ...prev.diningSettings, maxGuests: parseInt(e.target.value) || 1 }
                                     }))}
-                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                                 />
                             </div>
 
                             {/* Category */}
                             <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-900">Dining Category</label>
+                                <label className="text-sm font-medium text-neutral-900">Dining category</label>
                                 <select
                                     value={editingRestaurant.primaryCategoryId || editingRestaurant.categoryIds?.[0] || ""}
                                     onChange={(e) => setEditingRestaurant(prev => ({
@@ -475,7 +475,7 @@ export default function DiningList() {
                                             diningType: categories.find(cat => cat._id === e.target.value)?.slug || "",
                                         }
                                     }))}
-                                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                    className="w-full px-4 py-2 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 bg-white"
                                 >
                                     <option value="">Select a category</option>
                                     {categories.map(cat => (
@@ -485,10 +485,10 @@ export default function DiningList() {
                             </div>
                         </div>
 
-                        <div className="px-6 py-4 bg-slate-50 flex items-center justify-end gap-3">
+                        <div className="px-6 py-4 bg-neutral-50 flex items-center justify-end gap-3">
                             <button
                                 onClick={() => setIsEditModalOpen(false)}
-                                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
+                                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 rounded-lg transition-colors"
                             >
                                 Cancel
                             </button>
@@ -516,9 +516,9 @@ export default function DiningList() {
                                         setLoading(false)
                                     }
                                 }}
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-sm"
+                                className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 hover:bg-neutral-800 rounded-lg transition-colors shadow-sm"
                             >
-                                Save Changes
+                                Save changes
                             </button>
                         </div>
                     </div>

@@ -35,11 +35,11 @@ const iconOptions = [
 ]
 
 const colorOptions = [
-  { value: 'text-pink-600 dark:text-pink-400', label: 'Pink', bg: 'bg-pink-100 dark:bg-pink-900/30' },
-  { value: 'text-blue-600 dark:text-blue-400', label: 'Blue', bg: 'bg-blue-100 dark:bg-blue-900/30' },
+  { value: 'text-[#0a4d2b] dark:text-neutral-400', label: 'Pink', bg: 'bg-neutral-100 dark:bg-neutral-900/30' },
+  { value: 'text-[#0a4d2b] dark:text-neutral-400', label: 'Blue', bg: 'bg-neutral-100 dark:bg-neutral-900/30' },
   { value: 'text-green-600 dark:text-green-400', label: 'Green', bg: 'bg-green-100 dark:bg-green-900/30' },
   { value: 'text-orange-600 dark:text-orange-400', label: 'Orange', bg: 'bg-orange-100 dark:bg-orange-900/30' },
-  { value: 'text-purple-600 dark:text-purple-400', label: 'Purple', bg: 'bg-purple-100 dark:bg-purple-900/30' },
+  { value: 'text-[#0a4d2b] dark:text-neutral-400', label: 'Purple', bg: 'bg-neutral-100 dark:bg-neutral-900/30' },
   { value: 'text-red-600 dark:text-red-400', label: 'Red', bg: 'bg-red-100 dark:bg-red-900/30' }
 ]
 
@@ -113,8 +113,8 @@ export default function AboutUs() {
           icon: 'Heart',
           title: '',
           description: '',
-          color: 'text-pink-600 dark:text-pink-400',
-          bgColor: 'bg-pink-100 dark:bg-pink-900/30',
+          color: 'text-[#0a4d2b] dark:text-neutral-400',
+          bgColor: 'bg-neutral-100 dark:bg-neutral-900/30',
           order: prev.features.length
         }
       ]
@@ -174,31 +174,31 @@ export default function AboutUs() {
 
   if (loading) {
     return (
-      <div className="h-full overflow-y-auto bg-slate-50 p-4 lg:p-6 flex items-center justify-center">
+      <div className="h-full overflow-y-auto bg-neutral-50 p-4 lg:p-6 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0a4d2b] mx-auto"></div>
+          <p className="mt-4 text-neutral-600">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 p-4 lg:p-6">
+    <div className="h-full overflow-y-auto bg-neutral-50 p-4 lg:p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">About Us</h1>
-          <p className="text-sm text-slate-600 mt-1">Manage your About page content</p>
+          <h1 className="text-2xl font-medium text-neutral-900">About us</h1>
+          <p className="text-sm text-neutral-600 mt-1">Manage your About page content</p>
         </div>
 
         {/* Basic Information */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Basic Information</CardTitle>
+            <CardTitle>Basic information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="appName">App Name</Label>
+              <Label htmlFor="appName">App name</Label>
               <Input
                 id="appName"
                 value={aboutData.appName}
@@ -223,7 +223,7 @@ export default function AboutUs() {
                 id="description"
                 value={aboutData.description}
                 onChange={(e) => setAboutData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Your trusted food delivery partner..."
+                placeholder="Your trusted food delivery partner"
                 rows={4}
                 className="mt-1 w-full"
               />
@@ -247,7 +247,7 @@ export default function AboutUs() {
             <CardTitle>Features</CardTitle>
             <Button onClick={addFeature} size="sm" variant="outline">
               <Plus className="h-4 w-4 mr-2" />
-              Add Feature
+              Add feature
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -332,7 +332,7 @@ export default function AboutUs() {
               )
             })}
             {aboutData.features.length === 0 && (
-              <p className="text-center text-slate-500 py-8">No features added yet. Click "Add Feature" to get started.</p>
+              <p className="text-center text-neutral-500 py-8">No features added yet. Click "Add Feature" to get started.</p>
             )}
           </CardContent>
         </Card>

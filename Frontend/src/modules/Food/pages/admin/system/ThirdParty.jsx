@@ -99,10 +99,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
@@ -180,15 +180,15 @@ export default function ThirdParty() {
   const categories = [...new Set(services.map(s => s.category))]
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-6xl">
         {/* Page Title */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-3 mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center">
               <Settings className="w-3.5 h-3.5 text-white" />
             </div>
-            <h1 className="text-lg font-bold text-slate-900">3rd Party Configuration</h1>
+            <h1 className="text-lg font-medium text-neutral-900">3rd Party Configuration</h1>
           </div>
         </div>
 
@@ -197,33 +197,33 @@ export default function ThirdParty() {
           {categories.map((category) => {
             const categoryServices = services.filter(s => s.category === category)
             return (
-              <div key={category} className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
-                <h2 className="text-sm font-semibold text-slate-900 mb-3">{category}</h2>
+              <div key={category} className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
+                <h2 className="text-sm font-medium text-neutral-900 mb-3">{category}</h2>
                 <div className="space-y-3">
                   {categoryServices.map((service) => (
                     <div
                       key={service.id}
-                      className="border border-slate-200 rounded-lg p-3 hover:border-slate-300 transition-colors"
+                      className="border border-neutral-200 rounded-lg p-3 hover:border-neutral-300 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-xs font-semibold text-slate-900">{service.name}</h3>
+                            <h3 className="text-xs font-medium text-neutral-900">{service.name}</h3>
                             <div className="flex items-center gap-1">
                               {service.configured ? (
                                 <>
                                   <CheckCircle className="w-3.5 h-3.5 text-green-600" />
-                                  <span className="text-[10px] text-green-600">Configured</span>
+                                  <span className="text-xs text-green-600">Configured</span>
                                 </>
                               ) : (
                                 <>
                                   <XCircle className="w-3.5 h-3.5 text-red-600" />
-                                  <span className="text-[10px] text-red-600">Not Configured</span>
+                                  <span className="text-xs text-red-600">Not configured</span>
                                 </>
                               )}
                             </div>
                           </div>
-                          <p className="text-[10px] text-slate-600">{service.description}</p>
+                          <p className="text-xs text-neutral-600">{service.description}</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <ToggleSwitch
@@ -233,7 +233,7 @@ export default function ThirdParty() {
                           <button
                             type="button"
                             onClick={() => setExpandedService(expandedService === service.id ? null : service.id)}
-                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            className="text-xs text-[#0a4d2b] hover:text-[#0a4d2b] font-medium"
                           >
                             {expandedService === service.id ? "Hide" : "Configure"}
                           </button>
@@ -242,7 +242,7 @@ export default function ThirdParty() {
 
                       {/* Configuration Fields */}
                       {expandedService === service.id && (
-                        <div className="mt-3 pt-3 border-t border-slate-200 space-y-3">
+                        <div className="mt-3 pt-3 border-t border-neutral-200 space-y-3">
                           {service.fields.map((field) => {
                             const fieldKey = `${service.id}-${field.key}`
                             const isPassword = field.type === "password"
@@ -251,7 +251,7 @@ export default function ThirdParty() {
 
                             return (
                               <div key={field.key}>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                                   {field.label}
                                 </label>
                                 <div className="relative">
@@ -260,13 +260,13 @@ export default function ThirdParty() {
                                     value={value}
                                     onChange={(e) => handleFieldChange(service.id, field.key, e.target.value)}
                                     placeholder={`Enter ${field.label.toLowerCase()}`}
-                                    className="w-full px-3 py-2 pr-10 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full px-3 py-2 pr-10 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                                   />
                                   {isPassword && (
                                     <button
                                       type="button"
                                       onClick={() => toggleFieldVisibility(service.id, field.key)}
-                                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600"
+                                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-neutral-400 hover:text-neutral-600"
                                     >
                                       {isVisible ? (
                                         <EyeOff className="w-3.5 h-3.5" />
@@ -283,14 +283,14 @@ export default function ThirdParty() {
                             <button
                               type="button"
                               onClick={() => handleReset(service.id)}
-                              className="px-3 py-1.5 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                              className="px-3 py-1.5 text-xs font-medium bg-white border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors"
                             >
                               Reset
                             </button>
                             <button
                               type="button"
                               onClick={() => handleSave(service.id)}
-                              className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                              className="px-3 py-1.5 text-xs font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
                             >
                               Save
                             </button>

@@ -102,112 +102,112 @@ export default function CampaignOrderReport() {
   const getStatusBadge = (status) => {
     const statusColors = {
       Delivered: "bg-green-100 text-green-800",
-      Pending: "bg-blue-100 text-blue-800",
+      Pending: "bg-neutral-100 text-neutral-900",
       Canceled: "bg-red-100 text-red-800",
       "In Progress": "bg-yellow-100 text-yellow-800",
       Failed: "bg-orange-100 text-orange-800",
     }
-    return statusColors[status] || "bg-gray-100 text-gray-800"
+    return statusColors[status] || "bg-neutral-100 text-neutral-800"
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen overflow-x-hidden w-full max-w-full">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen overflow-x-hidden w-full max-w-full">
       <div className="w-full max-w-full overflow-x-hidden overflow-y-visible">
         {/* Page Header - compact */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 mb-4 w-full overflow-x-hidden">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-4 py-3 mb-4 w-full overflow-x-hidden">
           <div className="flex items-center gap-2 w-full">
-            <Briefcase className="w-5 h-5 text-slate-700" />
-            <h1 className="text-lg font-bold text-slate-900">Camapign Order Report</h1>
+            <Briefcase className="w-5 h-5 text-neutral-700" />
+            <h1 className="text-lg font-medium text-neutral-900">Camapign order report</h1>
           </div>
         </div>
 
         {/* Filter Section - compact */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-4 py-3 mb-4 w-full overflow-x-hidden">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-4 py-3 mb-4 w-full overflow-x-hidden">
           <div className="flex flex-col lg:flex-row lg:items-end gap-3 w-full">
             <div className="flex flex-wrap gap-3 flex-1 w-full min-w-0">
               <div className="relative flex-1 min-w-[180px]">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
                   Campaign
                 </label>
                 <select
                   value={filters.campaign}
                   onChange={(e) => setFilters(prev => ({ ...prev, campaign: e.target.value }))}
-                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All Campaignes">All Campaignes</option>
                   <option value="Campaign 1">Campaign 1</option>
                   <option value="Campaign 2">Campaign 2</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
 
               <div className="relative flex-1 min-w-[180px]">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
                   Restaurant
                 </label>
                 <select
                   value={filters.restaurant}
                   onChange={(e) => setFilters(prev => ({ ...prev, restaurant: e.target.value }))}
-                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All restaurants">All restaurants</option>
                   <option value="Hungry Puppets">Hungry Puppets</option>
                   <option value="Café Monarch">Café Monarch</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
 
               <div className="relative flex-1 min-w-[180px]">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
                   Customer
                 </label>
                 <select
                   value={filters.customer}
                   onChange={(e) => setFilters(prev => ({ ...prev, customer: e.target.value }))}
-                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All customers">All customers</option>
                   <option value="John Doe">John Doe</option>
                   <option value="V H">V H</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
 
               <div className="relative flex-1 min-w-[180px]">
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-neutral-700 mb-1">
                   Time
                 </label>
                 <select
                   value={filters.time}
                   onChange={(e) => setFilters(prev => ({ ...prev, time: e.target.value }))}
-                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 pr-8 text-xs rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All Time">All Time</option>
                   <option value="Today">Today</option>
                   <option value="This Week">This Week</option>
                   <option value="This Month">This Month</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
             </div>
 
             <div className="flex items-end gap-2 pt-1">
               <button 
                 onClick={handleResetFilters}
-                className="px-4 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-xs font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button 
                 onClick={handleFilterApply}
-                className={`px-4 py-2 text-xs font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all flex items-center gap-2 relative ${
-                  activeFiltersCount > 0 ? "ring-2 ring-blue-300" : ""
+                className={`px-4 py-2 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-900 transition-colors flex items-center gap-2 relative ${
+                  activeFiltersCount > 0 ? "ring-2 ring-[#0a4d2b]/30" : ""
                 }`}
               >
                 <Filter className="w-3.5 h-3.5" />
                 Filter
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white rounded-full text-[8px] flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -219,112 +219,112 @@ export default function CampaignOrderReport() {
         {/* Summary Cards - compact */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-4 w-full overflow-x-hidden">
           {/* Total orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center mb-2">
-                <ShoppingBag className="w-6 h-6 text-yellow-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <ShoppingBag className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.totalOrders}</p>
-              <p className="text-[11px] text-slate-600">Total orders</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.totalOrders}</p>
+              <p className="text-xs text-neutral-600">Total orders</p>
             </div>
           </div>
 
           {/* In progress orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-2">
-                <RefreshCw className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <RefreshCw className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.inProgressOrders}</p>
-              <p className="text-[11px] text-slate-600">In progress orders</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.inProgressOrders}</p>
+              <p className="text-xs text-neutral-600">In progress orders</p>
             </div>
           </div>
 
           {/* On the way */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-2">
-                <Truck className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <Truck className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.onTheWay}</p>
-              <p className="text-[11px] text-slate-600">On the way</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.onTheWay}</p>
+              <p className="text-xs text-neutral-600">On the way</p>
             </div>
           </div>
 
           {/* Delivered Orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center mb-2">
-                <ShoppingBag className="w-6 h-6 text-green-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <ShoppingBag className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.deliveredOrders}</p>
-              <p className="text-[11px] text-slate-600">Delivered Orders</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.deliveredOrders}</p>
+              <p className="text-xs text-neutral-600">Delivered orders</p>
             </div>
           </div>
 
           {/* Failed orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center mb-2">
-                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <AlertTriangle className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.failedOrders}</p>
-              <p className="text-[11px] text-slate-600">Failed orders</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.failedOrders}</p>
+              <p className="text-xs text-neutral-600">Failed orders</p>
             </div>
           </div>
 
           {/* Refunded orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mb-2">
-                <Coins className="w-6 h-6 text-orange-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <Coins className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.refundedOrders}</p>
-              <p className="text-[11px] text-slate-600">Refunded orders</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.refundedOrders}</p>
+              <p className="text-xs text-neutral-600">Refunded orders</p>
             </div>
           </div>
 
           {/* Canceled orders */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-3">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] px-3 py-3">
             <div className="flex flex-col items-center text-center">
-              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mb-2">
-                <X className="w-6 h-6 text-red-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-2 bg-neutral-100 text-neutral-500">
+                <X className="w-6 h-6" />
               </div>
-              <p className="text-lg font-bold text-slate-900 mb-0.5">{emptyCampaignOrderStats.canceledOrders}</p>
-              <p className="text-[11px] text-slate-600">Canceled orders</p>
+              <p className="text-lg font-medium text-neutral-900 mb-0.5">{emptyCampaignOrderStats.canceledOrders}</p>
+              <p className="text-xs text-neutral-600">Canceled orders</p>
             </div>
           </div>
         </div>
 
         {/* Orders Table - only this card scrolls */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 w-full overflow-x-hidden max-h-[500px] flex flex-col">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-4 w-full overflow-x-hidden max-h-[500px] flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 w-full">
-            <h2 className="text-lg font-bold text-slate-900">
-              Total Orders {filteredOrders.length}
+            <h2 className="text-lg font-medium text-neutral-900">
+              Total orders {filteredOrders.length}
             </h2>
 
             <div className="flex items-center gap-3">
               <div className="relative flex-1 sm:flex-initial min-w-[220px]">
                 <input
                   type="text"
-                  placeholder="Search by Order ID, Restaurant, Customer"
+                  placeholder="Search by order ID, restaurant, customer"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-3 pr-9 py-2 w-full text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-3 pr-9 py-2 w-full text-xs rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
-                <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-3 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-1.5 transition-all">
+                  <button className="px-3 py-2 text-xs font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-1.5 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -346,7 +346,7 @@ export default function CampaignOrderReport() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-4 h-4" />
               </button>
@@ -356,73 +356,73 @@ export default function CampaignOrderReport() {
           {/* Only this area scrolls */}
           <div className="overflow-y-auto overflow-x-auto w-full flex-1">
             <table className="w-full" style={{ minWidth: "1000px" }}>
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                     SI
                   </th>
-                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                    Order Id
+                  <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
+                    Order id
                   </th>
-                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                     Restaurant
                   </th>
-                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                    Customer Name
+                  <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
+                    Customer name
                   </th>
-                  <th className="px-3 py-2 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                    Order Amount
+                  <th className="px-3 py-2 text-right text-xs font-medium text-neutral-700 whitespace-nowrap">
+                    Order amount
                   </th>
-                  <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                    Payment Method
+                  <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
+                    Payment method
                   </th>
-                  <th className="px-3 py-2 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
-                    Order Status
+                  <th className="px-3 py-2 text-center text-xs font-medium text-neutral-700 whitespace-nowrap">
+                    Order status
                   </th>
-                  <th className="px-3 py-2 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                  <th className="px-3 py-2 text-center text-xs font-medium text-neutral-700 whitespace-nowrap">
                     Action
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredOrders.map((order) => (
-                  <tr key={order.sl} className="hover:bg-slate-50 transition-colors">
+                  <tr key={order.sl} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <span className="text-xs font-medium text-slate-700">{order.sl}</span>
+                      <span className="text-xs font-medium text-neutral-700">{order.sl}</span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <span className="text-xs font-medium text-slate-700">{order.orderId}</span>
+                      <span className="text-xs font-medium text-neutral-700">{order.orderId}</span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <span className="text-xs text-slate-700">{order.restaurant}</span>
+                      <span className="text-xs text-neutral-700">{order.restaurant}</span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <span className={`text-xs ${order.customerNameError ? "text-red-600 font-medium" : "text-slate-700"}`}>
+                      <span className={`text-xs ${order.customerNameError ? "text-red-600 font-medium" : "text-neutral-700"}`}>
                         {order.customerName}
                       </span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-right">
                       <div className="flex flex-col items-end">
-                        <span className="text-xs font-medium text-slate-900">{order.orderAmount}</span>
-                        <span className={`text-[10px] ${order.orderAmountStatus === "Paid" ? "text-green-600" : "text-red-600"}`}>
+                        <span className="text-xs font-medium text-neutral-900">{order.orderAmount}</span>
+                        <span className={`text-xs ${order.orderAmountStatus === "Paid" ? "text-green-600" : "text-red-600"}`}>
                           ({order.orderAmountStatus})
                         </span>
                       </div>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap">
-                      <span className="text-xs text-slate-700">{order.paymentMethod}</span>
+                      <span className="text-xs text-neutral-700">{order.paymentMethod}</span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-center">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${getStatusBadge(order.orderStatus)}`}>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(order.orderStatus)}`}>
                         {order.orderStatus}
                       </span>
                     </td>
                     <td className="px-3 py-2 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        <button className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                        <button className="p-1 text-[#0a4d2b] hover:text-neutral-900 hover:bg-neutral-50 rounded transition-colors">
                           <Eye className="w-3.5 h-3.5" />
                         </button>
-                        <button className="p-1 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded transition-colors">
+                        <button className="p-1 text-neutral-600 hover:text-neutral-800 hover:bg-neutral-50 rounded transition-colors">
                           <Printer className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -441,18 +441,18 @@ export default function CampaignOrderReport() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Report Settings
+              Report settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Campaign order report settings and preferences will be available here.
+            <p className="text-sm text-neutral-700">
+              Campaign order report settings and preferences will be available here
             </p>
           </div>
           <div className="px-6 pb-6 flex items-center justify-end">
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Close
             </button>

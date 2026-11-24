@@ -17,19 +17,19 @@ export default function CustomizationSettings() {
         <ToggleRight size={26} />
       </span>
 
-      <h2 className="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+      <h2 className="text-lg font-medium text-neutral-900 dark:text-neutral-100">
         These settings moved
       </h2>
       <p className="mt-2 text-sm text-neutral-500">
         COD, payment and availability switches are now managed for every module together in
-        Global admin.
+        Global admin
       </p>
 
       <Link
         to="/global/admin/toggles"
-        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-5 py-3 text-sm font-bold text-white"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0a4d2b] px-5 py-3 text-sm font-medium text-white"
       >
-        Open Toggle Management
+        Open toggle management
       </Link>
     </div>
   )

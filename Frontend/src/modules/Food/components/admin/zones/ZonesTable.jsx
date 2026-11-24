@@ -6,10 +6,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
@@ -41,98 +41,98 @@ export default function ZonesTable({
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-neutral-50 border-b border-neutral-200">
             <tr>
               {visibleColumns.si && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                   SI
                 </th>
               )}
               {visibleColumns.zoneId && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                  Zone Id
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
+                  Zone id
                 </th>
               )}
               {visibleColumns.name && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                   Name
                 </th>
               )}
               {visibleColumns.displayName && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                  Zone Display Name
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
+                  Zone display name
                 </th>
               )}
               {visibleColumns.restaurants && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                   Restaurants
                 </th>
               )}
               {visibleColumns.deliverymen && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                   Deliverymen
                 </th>
               )}
               {visibleColumns.defaultStatus && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                  Default Status
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
+                  Default status
                 </th>
               )}
               {visibleColumns.status && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                   Status
                 </th>
               )}
               {visibleColumns.actions && (
-                <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                   Action
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
+          <tbody className="bg-white divide-y divide-neutral-100">
             {paginatedZones.length === 0 ? (
               <tr>
                 <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center">
-                  <p className="text-sm text-slate-500">No zones found</p>
+                  <p className="text-sm text-neutral-500">No zones found</p>
                 </td>
               </tr>
             ) : (
               paginatedZones.map((zone, index) => {
                 const globalIndex = (currentPage - 1) * itemsPerPage + index
                 return (
-                  <tr key={zone.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={zone.id} className="hover:bg-neutral-50 transition-colors">
                     {visibleColumns.si && (
                       <td className="px-3 py-2.5">
-                        <span className="text-xs text-slate-700">{globalIndex + 1}</span>
+                        <span className="text-xs text-neutral-700">{globalIndex + 1}</span>
                       </td>
                     )}
                     {visibleColumns.zoneId && (
                       <td className="px-3 py-2.5">
-                        <span className="text-xs text-slate-700">{zone.zoneId}</span>
+                        <span className="text-xs text-neutral-700">{zone.zoneId}</span>
                       </td>
                     )}
                     {visibleColumns.name && (
                       <td className="px-3 py-2.5">
-                        <span className="text-xs text-slate-700">{zone.name}</span>
+                        <span className="text-xs text-neutral-700">{zone.name}</span>
                       </td>
                     )}
                     {visibleColumns.displayName && (
                       <td className="px-3 py-2.5">
-                        <span className="text-xs text-slate-700">{zone.displayName}</span>
+                        <span className="text-xs text-neutral-700">{zone.displayName}</span>
                       </td>
                     )}
                     {visibleColumns.restaurants && (
                       <td className="px-3 py-2.5">
-                        <span className="text-xs text-slate-700">{zone.restaurants}</span>
+                        <span className="text-xs text-neutral-700">{zone.restaurants}</span>
                       </td>
                     )}
                     {visibleColumns.deliverymen && (
                       <td className="px-3 py-2.5">
-                        <span className="text-xs text-slate-700">{zone.deliverymen}</span>
+                        <span className="text-xs text-neutral-700">{zone.deliverymen}</span>
                       </td>
                     )}
                     {visibleColumns.defaultStatus && (
@@ -143,7 +143,7 @@ export default function ZonesTable({
                           <button
                             type="button"
                             onClick={() => onMakeDefault(zone.id)}
-                            className="px-2 py-1 text-[10px] font-medium bg-slate-200 text-slate-700 rounded hover:bg-slate-300 transition-colors"
+                            className="px-2 py-1 text-xs font-medium bg-neutral-200 text-neutral-700 rounded hover:bg-neutral-300 transition-colors"
                           >
                             Make default
                           </button>
@@ -164,7 +164,7 @@ export default function ZonesTable({
                           <button
                             type="button"
                             onClick={() => onEditZone(zone)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            className="p-1.5 text-[#0a4d2b] hover:bg-neutral-50 rounded transition-colors"
                             title="Edit Zone"
                           >
                             <Pencil className="w-3.5 h-3.5" />
@@ -172,7 +172,7 @@ export default function ZonesTable({
                           <button
                             type="button"
                             onClick={() => onViewZone(zone)}
-                            className="p-1.5 text-slate-600 hover:bg-slate-50 rounded transition-colors"
+                            className="p-1.5 text-neutral-600 hover:bg-neutral-50 rounded transition-colors"
                             title="View Zone Details"
                           >
                             <Settings className="w-3.5 h-3.5" />
@@ -190,15 +190,15 @@ export default function ZonesTable({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="px-4 py-3 border-t border-slate-200 flex items-center justify-between">
-          <div className="text-xs text-slate-600">
+        <div className="px-4 py-3 border-t border-neutral-200 flex items-center justify-between">
+          <div className="text-xs text-neutral-600">
             Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, zones.length)} of {zones.length} zones
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -207,10 +207,10 @@ export default function ZonesTable({
                 <button
                   key={page}
                   onClick={() => handlePageChange(page)}
-                  className={`px-2.5 py-1 text-[11px] font-medium rounded-lg transition-colors ${
+                  className={`px-2.5 py-1 text-xs font-medium rounded-lg transition-colors ${
                     currentPage === page
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-slate-700 border border-slate-300 hover:bg-slate-50"
+                      ? "bg-neutral-900 text-white"
+                      : "bg-white text-neutral-700 border border-neutral-300 hover:bg-neutral-50"
                   }`}
                 >
                   {page}
@@ -220,7 +220,7 @@ export default function ZonesTable({
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="p-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

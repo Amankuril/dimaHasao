@@ -14,8 +14,8 @@ const formatINR = (value, digits = 0) =>
 const getStatusColor = (orderStatus) => {
   const colors = {
     "Delivered": "bg-emerald-100 text-emerald-700",
-    "Pending": "bg-blue-100 text-blue-700",
-    "Scheduled": "bg-blue-100 text-blue-700",
+    "Pending": "bg-neutral-100 text-[#0a4d2b]",
+    "Scheduled": "bg-neutral-100 text-[#0a4d2b]",
     "Accepted": "bg-green-100 text-green-700",
     "Processing": "bg-orange-100 text-orange-700",
     "Food On The Way": "bg-yellow-100 text-yellow-700",
@@ -23,19 +23,19 @@ const getStatusColor = (orderStatus) => {
     "Cancelled by Restaurant": "bg-red-100 text-red-700",
     "Cancelled by User": "bg-orange-100 text-orange-700",
     "Payment Failed": "bg-red-100 text-red-700",
-    "Refunded": "bg-sky-100 text-sky-700",
-    "Dine In": "bg-indigo-100 text-indigo-700",
-    "Offline Payments": "bg-slate-100 text-slate-700",
+    "Refunded": "bg-neutral-100 text-[#0a4d2b]",
+    "Dine In": "bg-neutral-100 text-[#0a4d2b]",
+    "Offline Payments": "bg-neutral-100 text-neutral-700",
   }
-  return colors[orderStatus] || "bg-slate-100 text-slate-700"
+  return colors[orderStatus] || "bg-neutral-100 text-neutral-700"
 }
 
 const getPaymentStatusColor = (paymentStatus) => {
   if (paymentStatus === "Paid" || paymentStatus === "Collected") return "text-emerald-600"
   if (paymentStatus === "COD Pending" || paymentStatus === "Not Collected") return "text-amber-600"
-  if (paymentStatus === "Refunded") return "text-sky-600"
+  if (paymentStatus === "Refunded") return "text-[#0a4d2b]"
   if (paymentStatus === "Unpaid" || paymentStatus === "Failed") return "text-red-600"
-  return "text-slate-600"
+  return "text-neutral-600"
 }
 
 export default function OrdersTable({
@@ -196,157 +196,157 @@ export default function OrdersTable({
 
   if (orders.length === 0 && totalCount === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08]">
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-32 h-32 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
-            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-5xl text-orange-500 font-bold">!</span>
+          <div className="w-32 h-32 rounded-2xl flex items-center justify-center mb-6 shadow-inner bg-neutral-100">
+            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+              <span className="text-5xl text-orange-500 font-medium">!</span>
             </div>
           </div>
-          <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-          <p className="text-sm text-slate-500">There are no orders matching your criteria</p>
+          <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+          <p className="text-sm text-neutral-500">There are no orders matching your criteria</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden w-full max-w-full">
+    <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden w-full max-w-full">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1800px]">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-neutral-50 border-b border-neutral-200">
             <tr>
               {visibleColumns.si && (
-                <th className="w-[50px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[50px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("si")}>
                     <span>SI</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "si" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "si" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.orderId && (
-                <th className="w-[110px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[110px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("orderId")}>
                     <span>Order ID</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderId" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderId" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.orderDate && (
-                <th className="w-[160px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[160px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("orderDate")}>
-                    <span>Order Date</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderDate" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Order date</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderDate" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.orderOtp && (
-                <th className="w-[90px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[90px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("orderOtp")}>
                     <span>Order OTP</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderOtp" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderOtp" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.customer && (
-                <th className="w-[200px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[200px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("customer")}>
-                    <span>Customer Information</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "customer" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Customer information</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "customer" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.restaurant && (
-                <th className="w-[200px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[200px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("restaurant")}>
                     <span>Restaurant</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "restaurant" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "restaurant" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.foodItems && (
-                <th className="w-[240px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[240px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("foodItems")}>
-                    <span>Food Items</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "foodItems" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Food items</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "foodItems" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.itemPrice && (
-                <th className="w-[100px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[100px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("itemPrice")}>
                     <span>Price</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "itemPrice" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "itemPrice" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.deliveryCharge && (
-                <th className="w-[110px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[110px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("deliveryCharge")}>
-                    <span>Delivery Charge</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "deliveryCharge" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Delivery charge</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "deliveryCharge" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.totalAmount && (
-                <th className="w-[120px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[120px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("totalAmount")}>
-                    <span>Total Amount</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "totalAmount" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Total amount</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "totalAmount" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {(visibleColumns.paymentType !== false) && (
-                <th className="w-[120px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[120px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("paymentType")}>
-                    <span>Payment Type</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "paymentType" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Payment type</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "paymentType" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {(visibleColumns.paymentCollectionStatus !== false) && (
-                <th className="w-[120px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[120px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("paymentCollectionStatus")}>
-                    <span>Payment Status</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "paymentCollectionStatus" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Payment status</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "paymentCollectionStatus" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
 
               {visibleColumns.orderStatus && (
-                <th className="w-[150px] px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[150px] px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                   <div className="flex items-center gap-2 cursor-pointer select-none group" onClick={() => requestSort("orderStatus")}>
-                    <span>Order Status</span>
-                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderStatus" ? "text-slate-900" : "text-slate-400 group-hover:text-slate-600"}`} />
+                    <span>Order status</span>
+                    <ArrowUpDown className={`w-3 h-3 transition-colors ${sortConfig.key === "orderStatus" ? "text-neutral-900" : "text-neutral-400 group-hover:text-neutral-600"}`} />
                   </div>
                 </th>
               )}
               {visibleColumns.actions && (
-                <th className="w-[220px] px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                <th className="w-[220px] px-6 py-4 text-center text-xs font-medium text-neutral-700 whitespace-nowrap">
                   Actions
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
+          <tbody className="bg-white divide-y divide-neutral-100">
             {paginatedOrders.map((order, index) => (
               <tr 
                 key={order.orderId} 
-                className="hover:bg-slate-50 transition-colors"
+                className="hover:bg-neutral-50 transition-colors"
               >
                 {visibleColumns.si && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</span>
+                    <span className="text-sm font-medium text-neutral-700">{(currentPage - 1) * pageSize + index + 1}</span>
                   </td>
                 )}
                 {visibleColumns.orderId && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-900">{order.orderId}</span>
+                    <span className="text-sm font-medium text-neutral-900">{order.orderId}</span>
                   </td>
                 )}
                 {visibleColumns.orderDate && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-700">{order.date}, {order.time}</span>
+                    <span className="text-sm font-medium text-neutral-700">{order.date}, {order.time}</span>
                   </td>
                 )}
                 {visibleColumns.orderOtp && (
@@ -355,9 +355,9 @@ export default function OrdersTable({
                       order.orderStatus === "Cancelled by Restaurant" || 
                       order.orderStatus === "Cancelled by User" || 
                       order.orderStatus === "Canceled") ? (
-                        <span className="text-sm font-medium text-slate-900">N/A</span>
+                        <span className="text-sm font-medium text-neutral-900">N/A</span>
                       ) : (
-                        <span className="text-sm font-semibold text-slate-900">
+                        <span className="text-sm font-medium text-neutral-900">
                           {order.orderOtp || "--"}
                         </span>
                       )}
@@ -366,14 +366,14 @@ export default function OrdersTable({
                 {visibleColumns.customer && (
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-700">{order.customerName}</span>
-                      <span className="text-xs text-slate-500 mt-0.5">{order.customerPhone}</span>
+                      <span className="text-sm font-medium text-neutral-700">{order.customerName}</span>
+                      <span className="text-xs text-neutral-500 mt-0.5">{order.customerPhone}</span>
                     </div>
                   </td>
                 )}
                 {visibleColumns.restaurant && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-700">{formatRestaurantName(order.restaurant)}</span>
+                    <span className="text-sm font-medium text-neutral-700">{formatRestaurantName(order.restaurant)}</span>
                   </td>
                 )}
                 {visibleColumns.foodItems && (
@@ -390,15 +390,15 @@ export default function OrdersTable({
                             <>
                               {itemsToShow.map((item, idx) => (
                                 <div key={idx || item.itemId || idx} className="flex items-center gap-2 text-sm animate-fadeIn">
-                                  <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded min-w-[2.5rem] text-center self-start mt-0.5">
+                                  <span className="font-medium text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded min-w-[2.5rem] text-center self-start mt-0.5">
                                     {item.quantity || 1}x
                                   </span>
                                   <div className="flex-1">
-                                    <span className="text-slate-800 font-medium">
+                                    <span className="text-neutral-800 font-medium">
                                       {item.name || item.itemName || item.title || 'Unknown Item'}
                                     </span>
                                     {item.variantName && (
-                                      <p className="text-xs text-slate-500 font-medium">{item.variantName}</p>
+                                      <p className="text-xs text-neutral-500 font-medium">{item.variantName}</p>
                                     )}
                                   </div>
                                 </div>
@@ -406,7 +406,7 @@ export default function OrdersTable({
                               {hasMore && (
                                 <button
                                   onClick={() => toggleOrderExpand(order.orderId)}
-                                  className="px-2 py-0.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded text-[10px] font-bold flex items-center gap-1 transition-all shadow-sm w-fit mt-1.5 active:scale-95"
+                                  className="px-2 py-0.5 text-white rounded text-xs font-medium flex items-center gap-1 transition-colors shadow-sm w-fit mt-1.5 bg-[#0a4d2b]"
                                   title={isExpanded ? "Show less items" : "View all items"}
                                 >
                                   <span>{isExpanded ? "View Less" : `+${remainingCount} More Items`}</span>
@@ -421,7 +421,7 @@ export default function OrdersTable({
                           );
                         })()
                       ) : (
-                        <span className="text-sm text-slate-400 italic">No items found</span>
+                        <span className="text-sm text-neutral-400">No items found</span>
                       )}
                     </div>
                   </td>
@@ -445,7 +445,7 @@ export default function OrdersTable({
                                     key={idx || item.itemId || `item-price-${idx}`}
                                     className="text-sm text-left min-h-[20px] flex items-center"
                                   >
-                                    <span className="font-medium text-slate-700">
+                                    <span className="font-medium text-neutral-700">
                                       {formatINR(baseLine)}
                                     </span>
                                   </div>
@@ -458,14 +458,14 @@ export default function OrdersTable({
                           );
                         })()
                       ) : (
-                        <span className="text-sm text-slate-400 italic">-</span>
+                        <span className="text-sm text-neutral-400">-</span>
                       )}
                     </div>
                   </td>
                 )}
                 {visibleColumns.deliveryCharge && (
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-neutral-700">
                       {(() => {
                         const deliveryCharge = Number(order.deliveryCharge ?? 0)
                         return `₹${deliveryCharge.toLocaleString(undefined, {
@@ -478,7 +478,7 @@ export default function OrdersTable({
                 )}
                 {visibleColumns.totalAmount && (
                   <td className="px-6 py-4 whitespace-nowrap text-left">
-                    <div className="text-sm font-medium text-slate-900">
+                    <div className="text-sm font-medium text-neutral-900">
                       {(() => {
                         const rawAmount =
                           order.totalAmount ??
@@ -517,7 +517,7 @@ export default function OrdersTable({
                               }, 0)
                             : 0
                       return (
-                        <div className="text-[11px] mt-0.5 font-semibold text-slate-500">
+                        <div className="text-xs mt-0.5 font-medium text-neutral-500">
                           {formatINR(restaurantBase)}{" "}
                           <span className="text-rose-600">+ {formatINR(markup)}</span>
                         </div>
@@ -558,7 +558,7 @@ export default function OrdersTable({
                       return (
                         <span className={`text-sm font-medium ${
                           isCod ? 'text-amber-600' : 
-                          isWallet ? 'text-purple-600' : 
+                          isWallet ? 'text-[#0a4d2b]' : 
                           'text-emerald-600'
                         }`}>
                           {paymentTypeDisplay}
@@ -574,7 +574,7 @@ export default function OrdersTable({
                         {order.paymentStatus || "Pending"}
                       </span>
                       {order.paymentCollectionStatus && (
-                        <span className="text-xs text-slate-500 mt-0.5">
+                        <span className="text-xs text-neutral-500 mt-0.5">
                           {order.paymentCollectionStatus}
                         </span>
                       )}
@@ -589,7 +589,7 @@ export default function OrdersTable({
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.orderStatus)}`}>
                           {order.orderStatus}
                         </span>
-                        <span className="text-xs text-slate-500">{order.deliveryType}</span>
+                        <span className="text-xs text-neutral-500">{order.deliveryType}</span>
                       </div>
                       {order.cancellationReason && (() => {
                         const rowKey = order.id || order.orderId
@@ -605,7 +605,7 @@ export default function OrdersTable({
                                   : "inline-flex items-center gap-1 px-2 py-0.5"
                               }`}
                             >
-                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-red-600">
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600">
                                 Reason
                                 {isOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                               </span>
@@ -635,7 +635,7 @@ export default function OrdersTable({
                         </button>
                         <button 
                           onClick={() => onPrintOrder(order)}
-                          className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center"
+                          className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors flex items-center justify-center"
                           title="Print Order"
                         >
                           <Printer className="w-4 h-4" />
@@ -663,7 +663,7 @@ export default function OrdersTable({
                            return isCancelled && (isOnlinePayment || isWalletPayment) && order.paymentStatus === "Paid";
                          })() )
                       ) && (
-                        <div className="h-4 w-[1px] bg-slate-200" />
+                        <div className="h-4 w-[1px] bg-neutral-200" />
                       )}
 
                       {/* Primary Actions (Text/Status buttons) */}
@@ -675,7 +675,7 @@ export default function OrdersTable({
                           <button
                             onClick={() => onAcceptOrder(order)}
                             disabled={isRowLoading}
-                            className="px-2.5 py-1.5 rounded text-xs font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                            className="px-2.5 py-1.5 rounded text-xs font-medium text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm flex items-center gap-1 bg-[#0a4d2b]"
                             title="Accept Order"
                           >
                             {isAccepting ? (
@@ -694,7 +694,7 @@ export default function OrdersTable({
                           <button
                             onClick={() => onRejectOrder(order)}
                             disabled={isRowLoading}
-                            className="px-2.5 py-1.5 rounded text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
+                            className="px-2.5 py-1.5 rounded text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
                             title="Reject Order"
                           >
                             {isRejecting ? (
@@ -728,9 +728,9 @@ export default function OrdersTable({
                         })() && (
                           <>
                             {order.refundStatus === 'processed' || order.refundStatus === 'initiated' ? (
-                              <span className={`px-2.5 py-1.5 rounded-md text-xs font-semibold ${
+                              <span className={`px-2.5 py-1.5 rounded-md text-xs font-medium ${
                                 order.paymentType === "Wallet" || order.payment?.method === "wallet"
-                                  ? "bg-purple-100 text-purple-700"
+                                  ? "bg-neutral-100 text-[#0a4d2b]"
                                   : "bg-emerald-100 text-emerald-700"
                               }`}>
                                 {order.paymentType === "Wallet" || order.payment?.method === "wallet" 
@@ -740,16 +740,16 @@ export default function OrdersTable({
                             ) : onRefund ? (
                               <button 
                                 onClick={() => onRefund(order)}
-                                className={`px-3 py-1.5 rounded-md text-white text-xs font-semibold hover:opacity-90 transition-colors shadow-sm flex items-center gap-1 ${
+                                className={`px-3 py-1.5 rounded-md text-white text-xs font-medium hover:opacity-90 transition-colors shadow-sm flex items-center gap-1 ${
                                   order.paymentType === "Wallet" || order.payment?.method === "wallet"
-                                    ? "bg-purple-600 hover:bg-purple-700"
-                                    : "bg-blue-600 hover:bg-blue-700"
+                                    ? "bg-neutral-900 hover:bg-neutral-900"
+                                    : "bg-neutral-900 hover:bg-neutral-900"
                                 }`}
                                 title={order.paymentType === "Wallet" || order.payment?.method === "wallet"
                                   ? "Process Wallet Refund (Add to user wallet)"
                                   : "Process Refund via Razorpay"}
                               >
-                                <span className="text-sm font-bold">₹</span>
+                                <span className="text-sm font-medium">₹</span>
                                 <span>Refund</span>
                               </button>
                             ) : null}
@@ -767,13 +767,13 @@ export default function OrdersTable({
       
       {/* Pagination Controls — same pattern as Delivery Man List */}
       {totalCount > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 bg-white px-4 py-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-neutral-100 bg-white px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-500 font-medium">Rows per page:</span>
+            <span className="text-sm text-neutral-500 font-medium">Rows per page:</span>
             <select
               value={pageSize}
               onChange={(e) => setPageSize(Number(e.target.value))}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400 cursor-pointer shadow-sm"
+              className="rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-sm font-medium text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400 cursor-pointer shadow-sm"
             >
               <option value={10}>10</option>
               <option value={20}>20</option>
@@ -786,14 +786,14 @@ export default function OrdersTable({
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="relative inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
             >
               Previous
             </button>
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage >= totalPages}
-              className="relative ml-3 inline-flex items-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="relative ml-3 inline-flex items-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
             >
               Next
             </button>
@@ -801,17 +801,17 @@ export default function OrdersTable({
 
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between w-full">
             <div className="pl-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-neutral-600">
                 Showing{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-medium text-neutral-900">
                   {Math.min(totalCount, (currentPage - 1) * pageSize + 1)}
                 </span>{" "}
                 to{" "}
-                <span className="font-semibold text-slate-900">
+                <span className="font-medium text-neutral-900">
                   {Math.min(totalCount, currentPage * pageSize)}
                 </span>{" "}
                 of{" "}
-                <span className="font-semibold text-slate-900">{totalCount}</span> orders
+                <span className="font-medium text-neutral-900">{totalCount}</span> orders
               </p>
             </div>
             <div>
@@ -819,7 +819,7 @@ export default function OrdersTable({
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center rounded-md px-2.5 py-1.5 text-slate-500 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className="relative inline-flex items-center rounded-md px-2.5 py-1.5 text-neutral-500 border border-neutral-200 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
                 >
                   &lt;
                 </button>
@@ -835,14 +835,14 @@ export default function OrdersTable({
                     return (
                       <React.Fragment key={page}>
                         {showEllipsisBefore && (
-                          <span className="px-3 py-1.5 text-slate-400 text-sm">...</span>
+                          <span className="px-3 py-1.5 text-neutral-400 text-sm">...</span>
                         )}
                         <button
                           onClick={() => setCurrentPage(page)}
-                          className={`relative inline-flex items-center px-3.5 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                          className={`relative inline-flex items-center px-3.5 py-1.5 text-sm font-medium rounded-md transition-colors ${
                             currentPage === page
-                              ? "bg-slate-900 text-white"
-                              : "text-slate-700 border border-slate-200 hover:bg-slate-50"
+                              ? "bg-neutral-900 text-white"
+                              : "text-neutral-700 border border-neutral-200 hover:bg-neutral-50"
                           }`}
                         >
                           {page}
@@ -853,7 +853,7 @@ export default function OrdersTable({
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage >= totalPages}
-                  className="relative inline-flex items-center rounded-md px-2.5 py-1.5 text-slate-500 border border-slate-200 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className="relative inline-flex items-center rounded-md px-2.5 py-1.5 text-neutral-500 border border-neutral-200 hover:bg-neutral-50 disabled:opacity-50 transition-colors"
                 >
                   &gt;
                 </button>

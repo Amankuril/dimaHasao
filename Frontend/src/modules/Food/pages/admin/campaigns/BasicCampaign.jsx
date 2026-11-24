@@ -165,17 +165,17 @@ export default function BasicCampaign() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Megaphone className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Megaphone className="w-5 h-5" />
             </div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">Basic Campaign</h1>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h1 className="text-2xl font-medium text-neutral-900">Basic campaign</h1>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredCampaigns.length}
               </span>
             </div>
@@ -183,10 +183,10 @@ export default function BasicCampaign() {
 
           <button 
             onClick={handleAdd}
-            className="px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 transition-all shadow-md"
+            className="px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 flex items-center gap-2 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            Add New Campaign
+            Add new campaign
           </button>
         </div>
 
@@ -194,24 +194,24 @@ export default function BasicCampaign() {
           <div className="relative flex-1 sm:flex-initial min-w-[200px]">
             <input
               type="text"
-              placeholder="Ex: Search by name..."
+              placeholder="Ex: Search by name"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+              <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                 <Download className="w-4 h-4" />
                 <span>Export</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
+              <DropdownMenuLabel>Export format</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                 <FileDown className="w-4 h-4 mr-2" />
@@ -234,14 +234,14 @@ export default function BasicCampaign() {
 
           <button 
             onClick={() => setIsFilterOpen(true)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${
+            className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors relative ${
               activeFiltersCount > 0 ? "border-emerald-500 bg-emerald-50" : ""
             }`}
           >
             <Filter className="w-4 h-4" />
             <span>Filter</span>
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                 {activeFiltersCount}
               </span>
             )}
@@ -249,7 +249,7 @@ export default function BasicCampaign() {
 
           <button 
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+            className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -257,100 +257,100 @@ export default function BasicCampaign() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="overflow-x-hidden">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 {visibleColumns.si && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>SI</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.title && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>Title</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.dateDuration && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Date Duration</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Date duration</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.timeDuration && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Time Duration</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Time duration</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.status && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>Status</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.actions && (
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">
                     Action
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {filteredCampaigns.length === 0 ? (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-20 text-center">
-                    <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                    <p className="text-sm text-slate-500">No campaigns match your search</p>
+                    <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                    <p className="text-sm text-neutral-500">No campaigns match your search</p>
                   </td>
                 </tr>
               ) : (
                 filteredCampaigns.map((campaign) => (
                   <tr
                     key={campaign.sl}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="hover:bg-neutral-50 transition-colors"
                   >
                     {visibleColumns.si && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{campaign.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{campaign.sl}</span>
                       </td>
                     )}
                     {visibleColumns.title && (
                       <td className="px-6 py-4">
-                        <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                        <a href="#" className="text-sm font-medium text-[#0a4d2b] hover:text-[#0a4d2b]">
                           {campaign.title}
                         </a>
                       </td>
                     )}
                     {visibleColumns.dateDuration && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{campaign.dateStart} - {campaign.dateEnd}</span>
+                        <span className="text-sm text-neutral-700">{campaign.dateStart} - {campaign.dateEnd}</span>
                       </td>
                     )}
                     {visibleColumns.timeDuration && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{campaign.timeStart} - {campaign.timeEnd}</span>
+                        <span className="text-sm text-neutral-700">{campaign.timeStart} - {campaign.timeEnd}</span>
                       </td>
                     )}
                     {visibleColumns.status && (
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleToggleStatus(campaign.sl)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                            campaign.status ? "bg-blue-600" : "bg-slate-300"
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:ring-offset-2 ${
+                            campaign.status ? "bg-neutral-900" : "bg-neutral-300"
                           }`}
                         >
                           <span
@@ -366,7 +366,7 @@ export default function BasicCampaign() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleEdit(campaign)}
-                            className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                            className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />

@@ -158,19 +158,19 @@ export default function EmployeeRole() {
   const column4 = modulePermissions.slice(19, 26)
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <UserCog className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <UserCog className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Employee Role</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Employee role</h1>
           </div>
 
           {/* Language Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-200">
+          <div className="flex items-center gap-2 border-b border-neutral-200">
             {languageTabs.map((tab) => (
               <button
                 key={tab.key}
@@ -178,8 +178,8 @@ export default function EmployeeRole() {
                 onClick={() => setActiveLanguage(tab.key)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeLanguage === tab.key
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
+                    ? "border-[#0a4d2b] text-[#0a4d2b]"
+                    : "border-transparent text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {tab.label}
@@ -190,9 +190,9 @@ export default function EmployeeRole() {
 
         <form onSubmit={handleSubmit}>
           {/* Role Name Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Role Name ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label})
               </label>
               <input
@@ -200,15 +200,15 @@ export default function EmployeeRole() {
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 placeholder="Role name example"
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               />
             </div>
           </div>
 
           {/* Module Permission Section */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
             <div className="mb-4">
-              <label className="block text-sm font-semibold text-slate-700 mb-4">
+              <label className="block text-sm font-medium text-neutral-700 mb-4">
                 Module Permission :
               </label>
               <div className="flex items-center mb-6">
@@ -217,10 +217,10 @@ export default function EmployeeRole() {
                   id="selectAll"
                   checked={allSelected}
                   onChange={(e) => handleSelectAll(e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                 />
-                <label htmlFor="selectAll" className="ml-2 text-sm font-semibold text-slate-700">
-                  Select All
+                <label htmlFor="selectAll" className="ml-2 text-sm font-medium text-neutral-700">
+                  Select all
                 </label>
               </div>
             </div>
@@ -235,9 +235,9 @@ export default function EmployeeRole() {
                       id={permission.id}
                       checked={permissions[permission.id] || false}
                       onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                     />
-                    <label htmlFor={permission.id} className="ml-2 text-sm text-slate-700">
+                    <label htmlFor={permission.id} className="ml-2 text-sm text-neutral-700">
                       {permission.label}
                     </label>
                   </div>
@@ -253,9 +253,9 @@ export default function EmployeeRole() {
                       id={permission.id}
                       checked={permissions[permission.id] || false}
                       onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                     />
-                    <label htmlFor={permission.id} className="ml-2 text-sm text-slate-700">
+                    <label htmlFor={permission.id} className="ml-2 text-sm text-neutral-700">
                       {permission.label}
                     </label>
                   </div>
@@ -271,9 +271,9 @@ export default function EmployeeRole() {
                       id={permission.id}
                       checked={permissions[permission.id] || false}
                       onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                     />
-                    <label htmlFor={permission.id} className="ml-2 text-sm text-slate-700">
+                    <label htmlFor={permission.id} className="ml-2 text-sm text-neutral-700">
                       {permission.label}
                     </label>
                   </div>
@@ -289,9 +289,9 @@ export default function EmployeeRole() {
                       id={permission.id}
                       checked={permissions[permission.id] || false}
                       onChange={(e) => handlePermissionChange(permission.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                     />
-                    <label htmlFor={permission.id} className="ml-2 text-sm text-slate-700">
+                    <label htmlFor={permission.id} className="ml-2 text-sm text-neutral-700">
                       {permission.label}
                     </label>
                   </div>
@@ -305,13 +305,13 @@ export default function EmployeeRole() {
             <button
               type="button"
               onClick={handleReset}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Reset
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
             >
               Submit
             </button>
@@ -319,11 +319,11 @@ export default function EmployeeRole() {
         </form>
 
         {/* Employee Role Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-slate-900">Employee Role Table</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h2 className="text-xl font-medium text-neutral-900">Employee role table</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredRoles.length}
               </span>
             </div>
@@ -332,24 +332,24 @@ export default function EmployeeRole() {
               <div className="relative flex-1 sm:flex-initial min-w-[250px]">
                 <input
                   type="text"
-                  placeholder="Search by Name"
+                  placeholder="Search by name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -371,7 +371,7 @@ export default function EmployeeRole() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -381,49 +381,49 @@ export default function EmployeeRole() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
                   {visibleColumns.si && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
                         <span>SI</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.roleName && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
-                        <span>Role Name</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <span>Role name</span>
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.modules && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
                         <span>Modules</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.createdAt && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
-                        <span>Created At</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <span>Created at</span>
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.actions && (
-                    <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredRoles.length === 0 ? (
                   <tr>
-                    <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-neutral-500">
                       No roles found
                     </td>
                   </tr>
@@ -431,16 +431,16 @@ export default function EmployeeRole() {
                   filteredRoles.map((role, index) => (
                     <tr
                       key={role.id}
-                      className="hover:bg-slate-50 transition-colors"
+                      className="hover:bg-neutral-50 transition-colors"
                     >
                       {visibleColumns.si && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-700">{index + 1}</span>
+                          <span className="text-sm font-medium text-neutral-700">{index + 1}</span>
                         </td>
                       )}
                       {visibleColumns.roleName && (
                         <td className="px-6 py-4">
-                          <span className="text-sm font-medium text-slate-900">{role.roleName}</span>
+                          <span className="text-sm font-medium text-neutral-900">{role.roleName}</span>
                         </td>
                       )}
                       {visibleColumns.modules && (
@@ -449,7 +449,7 @@ export default function EmployeeRole() {
                             {role.modules.map((module, idx) => (
                               <span
                                 key={idx}
-                                className="inline-block px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded"
+                                className="inline-block px-2 py-1 text-xs bg-neutral-100 text-neutral-700 rounded"
                               >
                                 {module}
                               </span>
@@ -459,14 +459,14 @@ export default function EmployeeRole() {
                       )}
                       {visibleColumns.createdAt && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-700">{role.createdAt}</span>
+                          <span className="text-sm text-neutral-700">{role.createdAt}</span>
                         </td>
                       )}
                       {visibleColumns.actions && (
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                               title="Edit"
                             >
                               <Edit className="w-4 h-4" />
@@ -496,28 +496,28 @@ export default function EmployeeRole() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -525,16 +525,16 @@ export default function EmployeeRole() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>

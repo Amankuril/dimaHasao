@@ -275,9 +275,9 @@ export default function EarningAddon() {
   const getStatusBadge = (status, isValid) => {
     const statusConfig = {
       active: { bg: "bg-green-100", text: "text-green-700", label: "Active" },
-      inactive: { bg: "bg-gray-100", text: "text-gray-700", label: "Inactive" },
+      inactive: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Inactive" },
       expired: { bg: "bg-red-100", text: "text-red-700", label: "Expired" },
-      completed: { bg: "bg-blue-100", text: "text-blue-700", label: "Completed" },
+      completed: { bg: "bg-neutral-100", text: "text-[#0a4d2b]", label: "Completed" },
     }
     const config = statusConfig[status] || statusConfig.inactive
     return (
@@ -288,13 +288,13 @@ export default function EarningAddon() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">Earning Addon Offers</h1>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h1 className="text-2xl font-medium text-neutral-900">Earning addon offers</h1>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {totalItems}
               </span>
             </div>
@@ -306,20 +306,20 @@ export default function EarningAddon() {
                   placeholder="Ex: search offer title"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
               <button
                 onClick={() => handleOpenDialog()}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 flex items-center gap-2 transition-all"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] flex items-center gap-2 transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                <span>Create Offer</span>
+                <span>Create offer</span>
               </button>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -329,86 +329,86 @@ export default function EarningAddon() {
           {/* Table */}
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-slate-500">Loading...</div>
+              <div className="text-neutral-500">Loading...</div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     {visibleColumns.title && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Title</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.requiredOrders && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>Required Orders</span>
+                          <span>Required orders</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.earningAmount && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Earning Amount (₹)</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.startDate && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>Start Date</span>
+                          <span>Start date</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.endDate && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>End Date</span>
+                          <span>End date</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.status && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Status</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.redemptions && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Redemptions</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.actions && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         Actions
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {earningAddons.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
-                        No earning addons found. Create your first offer!
+                      <td colSpan={8} className="px-6 py-12 text-center text-neutral-500">
+                        No earning addons found. Create your first offer
                       </td>
                     </tr>
                   ) : (
                     earningAddons.map((addon, index) => (
-                      <tr key={addon._id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={addon._id} className="hover:bg-neutral-50 transition-colors">
                         {visibleColumns.title && (
                           <td className="px-6 py-4">
                             <div>
-                              <p className="text-sm font-medium text-slate-900">{addon.title}</p>
+                              <p className="text-sm font-medium text-neutral-900">{addon.title}</p>
                               {addon.description && (
-                                <p className="text-xs text-slate-500 mt-1">{addon.description}</p>
+                                <p className="text-xs text-neutral-500 mt-1">{addon.description}</p>
                               )}
                             </div>
                           </td>
@@ -416,29 +416,29 @@ export default function EarningAddon() {
                         {visibleColumns.requiredOrders && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-1">
-                              <Package className="w-4 h-4 text-slate-400" />
-                              <span className="text-sm font-medium text-slate-900">{addon.requiredOrders}</span>
+                              <Package className="w-4 h-4 text-neutral-400" />
+                              <span className="text-sm font-medium text-neutral-900">{addon.requiredOrders}</span>
                             </div>
                           </td>
                         )}
                         {visibleColumns.earningAmount && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-1">
-                              <span className="text-sm font-semibold text-emerald-500">₹</span>
-                              <span className="text-sm font-medium text-slate-900">{addon.earningAmount?.toFixed(2)}</span>
+                              <span className="text-sm font-medium text-emerald-500">₹</span>
+                              <span className="text-sm font-medium text-neutral-900">{addon.earningAmount?.toFixed(2)}</span>
                             </div>
                           </td>
                         )}
                         {visibleColumns.startDate && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">
+                            <span className="text-sm text-neutral-700">
                               {new Date(addon.startDate).toLocaleDateString()}
                             </span>
                           </td>
                         )}
                         {visibleColumns.endDate && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">
+                            <span className="text-sm text-neutral-700">
                               {new Date(addon.endDate).toLocaleDateString()}
                             </span>
                           </td>
@@ -450,7 +450,7 @@ export default function EarningAddon() {
                         )}
                         {visibleColumns.redemptions && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">
+                            <span className="text-sm text-neutral-700">
                               {addon.currentRedemptions || 0} / {addon.maxRedemptions || '8'}
                             </span>
                           </td>
@@ -460,25 +460,25 @@ export default function EarningAddon() {
                             <div className="flex items-center gap-2">
                               <button
                                 onClick={() => handleToggleStatus(addon._id, addon.status)}
-                                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                                 title={addon.status === 'active' ? 'Deactivate' : 'Activate'}
                               >
                                 {addon.status === 'active' ? (
                                   <ToggleRight className="w-5 h-5 text-green-500" />
                                 ) : (
-                                  <ToggleLeft className="w-5 h-5 text-gray-400" />
+                                  <ToggleLeft className="w-5 h-5 text-neutral-500" />
                                 )}
                               </button>
                               <button
                                 onClick={() => handleOpenDialog(addon)}
-                                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                                 title="Edit"
                               >
-                                <Edit className="w-4 h-4 text-blue-500" />
+                                <Edit className="w-4 h-4 text-[#0a4d2b]" />
                               </button>
                               <button
                                 onClick={() => handleDelete(addon._id)}
-                                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                                 title="Delete"
                               >
                                 <Trash2 className="w-4 h-4 text-red-500" />
@@ -514,10 +514,10 @@ export default function EarningAddon() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl bg-gradient-to-br from-slate-50 via-white to-slate-50 p-0 border-0 shadow-2xl">
-          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-4 rounded-t-2xl">
+        <DialogContent className="max-w-2xl p-0 border-0 shadow-2xl bg-neutral-50">
+          <div className="px-5 py-4 rounded-t-2xl bg-emerald-500">
             <DialogHeader className="mb-0">
-              <DialogTitle className="text-lg font-bold text-white flex items-center gap-2">
+              <DialogTitle className="text-lg font-medium text-white flex items-center gap-2">
                 <Package className="w-4 h-4" />
                 {isEditMode ? "Edit Earning Addon" : "Create Earning Addon Offer"}
               </DialogTitle>
@@ -526,7 +526,7 @@ export default function EarningAddon() {
           <form onSubmit={handleSubmit} className="px-5 py-5 space-y-4">
             {/* Title Field */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-slate-700">
+              <label className="block text-sm font-medium text-neutral-700">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -534,36 +534,36 @@ export default function EarningAddon() {
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
-                placeholder="e.g., Complete 50 orders and earn \u20B9500"
+                className="w-full px-3 py-2.5 border-2 border-neutral-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors text-sm"
+                placeholder="e.g., complete 50 orders and earn \u20B9500"
               />
             </div>
 
             {/* Orders and Earnings Row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-slate-700">
-                  Required Orders <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700">
+                  Required orders <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <Package className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Package className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                   <input
                     type="number"
                     required
                     min="1"
                     value={formData.requiredOrders}
                     onChange={(e) => setFormData({ ...formData, requiredOrders: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                    className="w-full pl-9 pr-3 py-2.5 border-2 border-neutral-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors text-sm"
                     placeholder="e.g., 50"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-slate-700">
+                <label className="block text-sm font-medium text-neutral-700">
                   Earning Amount (₹) <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-emerald-500">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-emerald-500">₹</span>
                   <input
                     type="number"
                     required
@@ -571,7 +571,7 @@ export default function EarningAddon() {
                     step="0.01"
                     value={formData.earningAmount}
                     onChange={(e) => setFormData({ ...formData, earningAmount: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                    className="w-full pl-9 pr-3 py-2.5 border-2 border-neutral-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors text-sm"
                     placeholder="e.g., 500.00"
                   />
                 </div>
@@ -581,8 +581,8 @@ export default function EarningAddon() {
             {/* Date Range Row */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-slate-700">
-                  Start Date <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700">
+                  Start date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -590,12 +590,12 @@ export default function EarningAddon() {
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                   min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                  className="w-full px-3 py-2.5 border-2 border-neutral-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors text-sm"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold text-slate-700">
-                  End Date <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700">
+                  End date <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
@@ -603,37 +603,37 @@ export default function EarningAddon() {
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                   min={formData.startDate || new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                  className="w-full px-3 py-2.5 border-2 border-neutral-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors text-sm"
                 />
               </div>
             </div>
 
             {/* Max Redemptions Field */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-slate-700">Max Redemptions</label>
+              <label className="block text-sm font-medium text-neutral-700">Max redemptions</label>
               <input
                 type="number"
                 min="1"
                 value={formData.maxRedemptions}
                 onChange={(e) => setFormData({ ...formData, maxRedemptions: e.target.value })}
-                className="w-full px-3 py-2.5 border-2 border-slate-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                className="w-full px-3 py-2.5 border-2 border-neutral-200 rounded-lg bg-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-colors text-sm"
                 placeholder="Leave empty for unlimited"
               />
-              <p className="text-xs text-slate-500">Leave empty for unlimited redemptions</p>
+              <p className="text-xs text-neutral-500">Leave empty for unlimited redemptions</p>
             </div>
 
             {/* Footer Buttons */}
-            <DialogFooter className="pt-3 border-t border-slate-200 mt-4">
+            <DialogFooter className="pt-3 border-t border-neutral-200 mt-4">
               <button
                 type="button"
                 onClick={handleCloseDialog}
-                className="px-5 py-2 text-sm font-semibold rounded-lg border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                className="px-5 py-2 text-sm font-medium rounded-lg border-2 border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-sm font-semibold rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-md shadow-emerald-500/30 transition-all"
+                className="px-5 py-2 text-sm font-medium rounded-lg text-white shadow-sm shadow-emerald-500/30 transition-colors bg-[#0a4d2b]"
               >
                 {isEditMode ? "Update" : "Create"} Offer
               </button>
@@ -644,34 +644,34 @@ export default function EarningAddon() {
 
       {/* Settings Dialog */}
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-        <DialogContent className="max-w-md bg-gradient-to-br from-slate-50 via-white to-slate-50 p-0 border-0 shadow-2xl">
-          <div className="bg-gradient-to-r from-slate-600 to-slate-700 px-6 py-5 rounded-t-2xl">
+        <DialogContent className="max-w-md p-0 border-0 shadow-2xl bg-neutral-50">
+          <div className="px-6 py-5 rounded-t-2xl bg-neutral-600">
             <DialogHeader className="mb-0">
-              <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+              <DialogTitle className="text-xl font-medium text-white flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                Table Settings
+                Table settings
               </DialogTitle>
             </DialogHeader>
           </div>
           <div className="px-6 py-6 space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-4 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors border border-transparent hover:border-slate-200"
+                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-neutral-50 cursor-pointer transition-colors border border-transparent hover:border-neutral-200"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm font-medium text-slate-700 flex-1">{label}</span>
+                    <span className="text-sm font-medium text-neutral-700 flex-1">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600" />
                     )}
@@ -679,16 +679,16 @@ export default function EarningAddon() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                className="px-5 py-2.5 text-sm font-medium rounded-xl border-2 border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/30 transition-all"
+                className="px-5 py-2.5 text-sm font-medium rounded-xl text-white shadow-sm shadow-emerald-500/30 transition-colors bg-[#0a4d2b]"
               >
                 Apply
               </button>

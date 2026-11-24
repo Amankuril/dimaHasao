@@ -85,55 +85,55 @@ export default function AddDeliveryman() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 relative">
           {/* Settings Icon */}
-          <button className="absolute top-6 right-6 p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors">
-            <Settings className="w-5 h-5 text-slate-600" />
+          <button className="absolute top-6 right-6 p-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors">
+            <Settings className="w-5 h-5 text-neutral-600" />
           </button>
 
-          <h1 className="text-2xl font-bold text-slate-900 mb-6">Add New Deliveryman</h1>
+          <h1 className="text-2xl font-medium text-neutral-900 mb-6">Add new deliveryman</h1>
 
           <form onSubmit={handleSubmit}>
             {/* 1. General info */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">1. General info</h2>
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">1. General info</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    First name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => handleInputChange("firstName", e.target.value)}
                     placeholder="Ex: Jhone"
-                    className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                      formErrors.firstName ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                      formErrors.firstName ? "border-red-500" : "border-neutral-300"
                     }`}
                   />
                   {formErrors.firstName && <p className="text-xs text-red-500 mt-1">{formErrors.firstName}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Last name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
                     placeholder="Ex: Joe"
-                    className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                      formErrors.lastName ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                      formErrors.lastName ? "border-red-500" : "border-neutral-300"
                     }`}
                   />
                   {formErrors.lastName && <p className="text-xs text-red-500 mt-1">{formErrors.lastName}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Email <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -141,21 +141,21 @@ export default function AddDeliveryman() {
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="Ex: ex@example.com"
-                    className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                      formErrors.email ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                      formErrors.email ? "border-red-500" : "border-neutral-300"
                     }`}
                   />
                   {formErrors.email && <p className="text-xs text-red-500 mt-1">{formErrors.email}</p>}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Deliveryman Type <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Deliveryman type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.deliverymanType}
                     onChange={(e) => handleInputChange("deliverymanType", e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   >
                     <option value="">Delivery man type</option>
                     <option value="full-time">Full Time</option>
@@ -164,13 +164,13 @@ export default function AddDeliveryman() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Zone <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.zone}
                     onChange={(e) => handleInputChange("zone", e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   >
                     <option value="">Select Zone</option>
                     <option value="asia">Asia</option>
@@ -179,13 +179,13 @@ export default function AddDeliveryman() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Image <span className="text-red-500">*</span>
                   </label>
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-blue-600 mb-1">Click to upload Or drag and drop</p>
-                    <p className="text-xs text-slate-500">JPG, JPEG, PNG, Gif Image size: Max 2 MB (1:1)</p>
+                  <div className="border-2 border-dashed border-neutral-300 rounded-lg p-6 text-center hover:border-[#0a4d2b] transition-colors cursor-pointer">
+                    <Upload className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-[#0a4d2b] mb-1">Click to upload Or drag and drop</p>
+                    <p className="text-xs text-neutral-500">JPG, JPEG, PNG, Gif Image size: Max 2 MB (1:1)</p>
                   </div>
                 </div>
               </div>
@@ -193,16 +193,16 @@ export default function AddDeliveryman() {
 
             {/* 2. Identification Information */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">2. Identification Information</h2>
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">2. Identification Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Vehicle <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.vehicle}
                     onChange={(e) => handleInputChange("vehicle", e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   >
                     <option value="">Select Vehicle</option>
                     <option value="car">Car</option>
@@ -211,13 +211,13 @@ export default function AddDeliveryman() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Identity Type <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Identity type <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.identityType}
                     onChange={(e) => handleInputChange("identityType", e.target.value)}
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   >
                     <option value="Passport">Passport</option>
                     <option value="Driving License">Driving License</option>
@@ -226,26 +226,26 @@ export default function AddDeliveryman() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Identity Number <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Identity number <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.identityNumber}
                     onChange={(e) => handleInputChange("identityNumber", e.target.value)}
                     placeholder="Ex: DH-23434-LS"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Identity Image
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Identity image
                   </label>
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                    <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-blue-600 mb-1">Select a file or Drag & Drop here</p>
-                    <p className="text-xs text-slate-500">Pdf, doc, jpg. File size: max 2 MB</p>
+                  <div className="border-2 border-dashed border-neutral-300 rounded-lg p-6 text-center hover:border-[#0a4d2b] transition-colors cursor-pointer">
+                    <Upload className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                    <p className="text-sm font-medium text-[#0a4d2b] mb-1">Select a file or Drag & Drop here</p>
+                    <p className="text-xs text-neutral-500">Pdf, doc, jpg. File size: max 2 MB</p>
                   </div>
                 </div>
               </div>
@@ -253,23 +253,23 @@ export default function AddDeliveryman() {
 
             {/* 3. Additional Data */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">3. Additional Data</h2>
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">3. Additional Data</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Enter your age <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     value={formData.age}
                     onChange={(e) => handleInputChange("age", e.target.value)}
-                    placeholder="Enter Age"
-                    className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    placeholder="Enter age"
+                    className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Enter your birthdate <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -277,21 +277,21 @@ export default function AddDeliveryman() {
                       type="date"
                       value={formData.birthdate}
                       onChange={(e) => handleInputChange("birthdate", e.target.value)}
-                      className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                     />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Driving license
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <input
                         type="file"
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                       />
                     </div>
                   </div>
@@ -301,14 +301,14 @@ export default function AddDeliveryman() {
 
             {/* 4. Account info */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">4. Account info</h2>
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">4. Account info</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Phone <span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-2">
-                    <div className="px-3 py-2.5 border border-slate-300 rounded-l-lg bg-slate-50 text-sm">
+                    <div className="px-3 py-2.5 border border-neutral-300 rounded-l-lg bg-neutral-50 text-sm">
                       +1
                     </div>
                     <input
@@ -316,13 +316,13 @@ export default function AddDeliveryman() {
                       value={formData.phone.replace("+1", "")}
                       onChange={(e) => handleInputChange("phone", "+1" + e.target.value)}
                       placeholder="Enter phone number"
-                      className="flex-1 px-4 py-2.5 border border-slate-300 border-l-0 rounded-r-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="flex-1 px-4 py-2.5 border border-neutral-300 border-l-0 rounded-r-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -331,12 +331,12 @@ export default function AddDeliveryman() {
                       value={formData.password}
                       onChange={(e) => handleInputChange("password", e.target.value)}
                       placeholder="Ex: 8+ Character"
-                      className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -344,8 +344,8 @@ export default function AddDeliveryman() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Confirm Password <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    Confirm password <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -353,12 +353,12 @@ export default function AddDeliveryman() {
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                       placeholder="Ex: 8+ Character"
-                      className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -371,14 +371,14 @@ export default function AddDeliveryman() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Submitting..." : "Submit"}
               </button>
@@ -391,17 +391,17 @@ export default function AddDeliveryman() {
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-green-600">Success!</DialogTitle>
+            <DialogTitle className="text-green-600">Success</DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Deliveryman added successfully!
+            <p className="text-sm text-neutral-700">
+              Deliveryman added successfully
             </p>
           </div>
           <DialogFooter className="px-6 pb-6">
             <button
               onClick={() => setShowSuccessDialog(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               OK
             </button>

@@ -120,15 +120,15 @@ export default function DeliveryCashLimit() {
   }, [fetchLimit])
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex items-center gap-3 mb-2">
-            <IndianRupee className="w-5 h-5 text-slate-700" />
-            <h1 className="text-2xl font-bold text-slate-900">Delivery Cash Limit</h1>
+            <IndianRupee className="w-5 h-5 text-neutral-700" />
+            <h1 className="text-2xl font-medium text-neutral-900">Delivery cash limit</h1>
           </div>
 
-          <p className="text-sm text-slate-600 mb-6">
+          <p className="text-sm text-neutral-600 mb-6">
             Set a <strong>global COD cash limit</strong> and <strong>minimum withdrawal amount</strong> for all delivery
             partners. Cash limit is used for Available cash limit in the delivery app; withdrawal is allowed only when
             withdrawable amount is above the withdrawal limit.
@@ -138,11 +138,11 @@ export default function DeliveryCashLimit() {
             <div className="flex items-start gap-3">
               <IndianRupee className="w-5 h-5 text-emerald-700 mt-0.5" />
               <div className="flex-1">
-                <div className="font-semibold text-emerald-900 mb-1">
+                <div className="font-medium text-emerald-900 mb-1">
                   Delivery Boy Available Cash Limit (Global)
                 </div>
                 <div className="text-sm text-emerald-800/80 mb-3">
-                  When COD cash is collected, delivery partner&apos;s remaining limit will decrease automatically.
+                  When COD cash is collected, delivery partner&apos;s remaining limit will decrease automatically
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
@@ -167,7 +167,7 @@ export default function DeliveryCashLimit() {
                   <button
                     onClick={saveLimit}
                     disabled={loading || saving}
-                    className="px-4 py-2.5 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="px-4 py-2.5 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                     Save
@@ -181,7 +181,7 @@ export default function DeliveryCashLimit() {
             <div className="flex items-start gap-3">
               <Wallet className="w-5 h-5 text-amber-700 mt-0.5" />
               <div className="flex-1">
-                <div className="font-semibold text-amber-900 mb-1">
+                <div className="font-medium text-amber-900 mb-1">
                   Minimum Withdrawal Amount (Global)
                 </div>
                 <div className="text-sm text-amber-800/80 mb-3">
@@ -211,7 +211,7 @@ export default function DeliveryCashLimit() {
                   <button
                     onClick={saveWithdrawalLimit}
                     disabled={loading || savingWithdrawal}
-                    className="px-4 py-2.5 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="px-4 py-2.5 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {savingWithdrawal && <Loader2 className="w-4 h-4 animate-spin" />}
                     Save

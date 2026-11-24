@@ -31,16 +31,16 @@ const ComparisonField = ({ label, oldVal, newVal, type = 'text' }) => {
   };
 
   return (
-    <div className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
-      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{label}</label>
+    <div className="p-3 bg-white rounded-lg border border-neutral-100 shadow-sm">
+      <label className="block text-xs text-neutral-500 mb-1">{label}</label>
       <div className="flex items-center gap-3">
-        <span className={`text-sm font-medium line-through decoration-2 ${type === 'boolean' ? (oldVal ? 'text-blue-500 decoration-blue-500/30' : 'text-gray-400 decoration-gray-400/50') : 'text-red-500 decoration-red-500/50'}`}>
+        <span className={`text-sm font-medium line-through decoration-2 ${type === 'boolean' ? (oldVal ? 'text-[#0a4d2b] decoration-blue-500/30' : 'text-neutral-500 decoration-gray-400/50') : 'text-red-500 decoration-red-500/50'}`}>
           {formatValue(oldVal)}
         </span>
-        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-50 text-gray-400">
+        <div className="flex items-center justify-center w-5 h-5 rounded-full bg-neutral-50 text-neutral-500">
            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" /></svg>
         </div>
-        <span className={`text-sm font-bold px-2 py-0.5 rounded ${type === 'boolean' ? (newVal ? 'text-green-600 bg-green-50' : 'text-gray-600 bg-gray-100') : 'text-green-600 bg-green-50'}`}>
+        <span className={`text-sm font-medium px-2 py-0.5 rounded ${type === 'boolean' ? (newVal ? 'text-green-600 bg-green-50' : 'text-neutral-600 bg-neutral-100') : 'text-green-600 bg-green-50'}`}>
           {formatValue(newVal)}
         </span>
       </div>
@@ -62,22 +62,22 @@ const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] })
     if (!hasChanges) return null;
 
     return (
-        <div className="col-span-full space-y-4 pt-4 border-t border-gray-100">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Image Variations</label>
+        <div className="col-span-full space-y-4 pt-4 border-t border-neutral-100">
+            <label className="block text-xs text-neutral-500">Image variations</label>
             <div className="flex flex-wrap gap-6">
                 {isSingleImageChanged && (
-                    <div className="flex gap-4 items-center p-3 bg-slate-50 rounded-xl border border-dashed border-gray-200">
+                    <div className="flex gap-4 items-center p-3 bg-neutral-50 rounded-xl border border-dashed border-neutral-200">
                         <div className="relative">
                             <img src={oldImage} className="w-20 h-20 object-cover rounded-lg border-2 border-red-100 opacity-40 grayscale" alt="Old" />
                             <div className="absolute inset-0 flex items-center justify-center"><XCircle className="w-6 h-6 text-red-500/50" /></div>
-                            <span className="absolute -top-2 -left-2 bg-red-100 text-red-600 text-[8px] font-bold px-1.5 py-0.5 rounded">OLD</span>
+                            <span className="absolute -top-2 -left-2 bg-red-100 text-red-600 text-xs font-medium px-1.5 py-0.5 rounded">OLD</span>
                         </div>
-                        <div className="text-gray-300">
+                        <div className="text-neutral-300">
                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="9 5l7 7-7 7" /></svg>
                         </div>
                         <div className="relative">
-                            <img src={newImage} className="w-20 h-20 object-cover rounded-lg border-2 border-green-400 shadow-md transition-transform hover:scale-105" alt="New" />
-                            <span className="absolute -top-2 -left-2 bg-green-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded shadow-sm">NEW</span>
+                            <img src={newImage} className="w-20 h-20 object-cover rounded-lg border-2 border-green-400 shadow-sm transition-transform" alt="New" />
+                            <span className="absolute -top-2 -left-2 bg-[#0a4d2b] text-white text-xs font-medium px-1.5 py-0.5 rounded shadow-sm">NEW</span>
                         </div>
                     </div>
                 )}
@@ -86,14 +86,14 @@ const ImageComparison = ({ oldImage, newImage, oldImages = [], newImages = [] })
                     <div key={`rem-${idx}`} className="relative opacity-60">
                         <img src={img} className="w-20 h-20 object-cover rounded-lg border-2 border-red-200 grayscale" alt="Removed" />
                         <div className="absolute inset-0 flex items-center justify-center"><XCircle className="w-6 h-6 text-red-500" /></div>
-                        <span className="absolute -bottom-4 left-0 right-0 text-[8px] text-center text-red-500 font-bold">REMOVED</span>
+                        <span className="absolute -bottom-4 left-0 right-0 text-xs text-center text-red-500 font-medium">Removed</span>
                     </div>
                 ))}
                 
                 {added.map((img, idx) => (
                     <div key={`add-${idx}`} className="relative">
                         <img src={img} className="w-20 h-20 object-cover rounded-lg border-2 border-green-500 shadow-sm" alt="Added" />
-                        <span className="absolute -bottom-4 left-0 right-0 text-[8px] text-center text-green-600 font-bold">ADDED</span>
+                        <span className="absolute -bottom-4 left-0 right-0 text-xs text-center text-green-600 font-medium">Added</span>
                     </div>
                 ))}
             </div>
@@ -291,19 +291,19 @@ export default function FoodApproval() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-green-500" />
-          <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-            Food Approval
+          <h1 className="text-lg sm:text-xl font-medium text-neutral-900">
+            Food approval
           </h1>
         </div>
       </div>
 
       {/* Food Approval List Section */}
-      <Card className="border border-gray-200 shadow-sm">
+      <Card className="border border-neutral-200 shadow-sm">
         <div className="p-4">
           {/* Section Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-gray-900">Pending Food & Add-on Approvals</h2>
+              <h2 className="text-base font-medium text-neutral-900">Pending Food & Add-on Approvals</h2>
               <span className="inline-flex items-center rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-600">
                 {totalRequests}
               </span>
@@ -313,7 +313,7 @@ export default function FoodApproval() {
           {/* Search Bar */}
           <div className="mb-4">
             <div className="relative flex-1">
-              <span className="absolute inset-y-0 left-2.5 flex items-center text-gray-400">
+              <span className="absolute inset-y-0 left-2.5 flex items-center text-neutral-500">
                 <Search className="w-4 h-4" />
               </span>
               <input
@@ -321,7 +321,7 @@ export default function FoodApproval() {
                 placeholder="Search by name, category, restaurant or status"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-gray-300 bg-white py-1.5 pl-9 pr-3 text-sm focus:outline-none focus:border-[#006fbd] focus:ring-1 focus:ring-[#006fbd]"
+                className="w-full rounded-md border border-neutral-300 bg-white py-1.5 pl-9 pr-3 text-sm focus:outline-none focus:border-[#006fbd] focus:ring-1 focus:ring-[#006fbd]"
               />
             </div>
           </div>
@@ -332,70 +332,70 @@ export default function FoodApproval() {
               <Loader2 className="w-8 h-8 animate-spin text-[#006fbd]" />
             </div>
           ) : (
-            <div className="border-t border-gray-200">
+            <div className="border-t border-neutral-200">
               <div className="w-full overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-sm">
+                <table className="min-w-full divide-y divide-neutral-200 text-sm">
                   <thead style={{ backgroundColor: "rgba(0, 111, 189, 0.1)" }}>
                     <tr>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         S.No
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         Restaurant
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         Category
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Item Name
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
+                        Item name
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         Type
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         Status
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         Price
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Requested Date
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
+                        Requested date
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                        Action Type
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
+                        Action type
                       </th>
-                      <th className="px-3 py-3 !text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      <th className="px-3 py-3 !text-center text-xs font-medium text-neutral-700">
                         Action
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-neutral-200 bg-white">
                     {filteredRequests.length === 0 ? (
                       <tr>
-                        <td colSpan="10" className="px-3 py-8 text-center text-sm text-gray-500">
+                        <td colSpan="10" className="px-3 py-8 text-center text-sm text-neutral-500">
                           {loading ? "Loading..." : "No food or add-on records found."}
                         </td>
                       </tr>
                     ) : (
                       filteredRequests.map((request, index) => (
-                        <tr key={request._id || request.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 font-semibold !text-center">
+                        <tr key={request._id || request.id} className="hover:bg-neutral-50">
+                          <td className="px-3 py-3 whitespace-nowrap text-sm text-neutral-700 font-medium !text-center">
                             {(currentPage - 1) * pageSize + index + 1}
                           </td>
                           <td className="px-3 py-3 !text-center max-w-[200px]">
                             <div className="text-sm truncate" title={request.restaurantName}>
-                              <div className="font-semibold text-gray-900 truncate">{request.restaurantName || '-'}</div>
-                              <div className="text-gray-500 text-xs truncate" title={request.restaurantId}>{request.restaurantId || '-'}</div>
+                              <div className="font-medium text-neutral-900 truncate">{request.restaurantName || '-'}</div>
+                              <div className="text-neutral-500 text-xs truncate" title={request.restaurantId}>{request.restaurantId || '-'}</div>
                             </div>
                           </td>
-                          <td className="px-3 py-3 text-sm text-gray-700 !text-center max-w-[150px] truncate" title={request.category}>
+                          <td className="px-3 py-3 text-sm text-neutral-700 !text-center max-w-[150px] truncate" title={request.category}>
                             {request.category || '-'}
                           </td>
-                          <td className="px-3 py-3 text-sm text-gray-700 font-semibold !text-center max-w-[200px] truncate" title={request.itemName}>
+                          <td className="px-3 py-3 text-sm text-neutral-700 font-medium !text-center max-w-[200px] truncate" title={request.itemName}>
                             {request.itemName || '-'}
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 capitalize !text-center">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${request.entityType === 'addon' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                          <td className="px-3 py-3 whitespace-nowrap text-sm text-neutral-700 capitalize !text-center">
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${request.entityType === 'addon' ? 'bg-neutral-100 text-[#0a4d2b]' : 'bg-neutral-100 text-[#0a4d2b]'}`}>
                                 {request.entityType || 'food'}
                             </span>
                           </td>
@@ -405,25 +405,25 @@ export default function FoodApproval() {
                                 ? 'bg-amber-100 text-amber-700'
                                 : String(request.approvalStatus || '').toLowerCase() === 'approved'
                                   ? 'bg-green-100 text-green-700'
-                                  : 'bg-gray-100 text-gray-700'
+                                  : 'bg-neutral-100 text-neutral-700'
                             }`}>
                               {request.approvalStatus || (request.isActionable ? 'pending' : 'active')}
                             </span>
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-700 font-semibold !text-center">
+                          <td className="px-3 py-3 whitespace-nowrap text-sm text-neutral-700 font-medium !text-center">
                             {request.price !== null && request.price !== undefined ? `Rs ${request.price}` : '-'}
                           </td>
-                          <td className="px-3 py-3 whitespace-nowrap text-sm text-gray-500 !text-center">
+                          <td className="px-3 py-3 whitespace-nowrap text-sm text-neutral-500 !text-center">
                             {request.requestedAt ? new Date(request.requestedAt).toLocaleDateString() : '-'}
                           </td>
                           <td className="px-3 py-3 whitespace-nowrap text-sm !text-center">
                             {request.actionType === 'UPDATED' ? (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-100 text-yellow-700">
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
                                     Changes
                                 </span>
                             ) : (
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700">
-                                    New Added
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+                                    New added
                                 </span>
                             )}
                           </td>
@@ -440,7 +440,7 @@ export default function FoodApproval() {
                               <button
                                 onClick={() => handleApprove(request)}
                                 disabled={processing || !request.isActionable}
-                                className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 title="Approve"
                               >
                                 <CheckCircle2 className="w-4 h-4" />
@@ -483,30 +483,30 @@ export default function FoodApproval() {
 
       {/* Item Details Modal */}
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 bg-white shadow-2xl rounded-2xl border-none">
-          <DialogHeader className="p-6 pb-4 border-b border-gray-100 bg-slate-50/50">
-            <DialogTitle className="text-xl font-bold text-gray-900">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 bg-white shadow-2xl rounded-xl border-none">
+          <DialogHeader className="p-6 pb-4 border-b border-neutral-100 bg-neutral-50/50">
+            <DialogTitle className="text-xl font-medium text-neutral-900">
               {selectedRequest?.entityType === 'addon' ? 'Add-on Details' : 'Food Item Details'}
             </DialogTitle>
-            <DialogDescription className="text-sm text-gray-500 mt-1">
-              Review the submitted details before approval.
+            <DialogDescription className="text-sm text-neutral-500 mt-1">
+              Review the submitted details before approval
             </DialogDescription>
           </DialogHeader>
           {selectedRequest && (
             <div className="p-6 space-y-6">
               {/* Restaurant Info */}
-              <div className="p-4 bg-blue-50/50 rounded-xl border border-blue-100/50 flex items-center justify-between">
+              <div className="p-4 bg-neutral-50/50 rounded-xl border border-neutral-200 flex items-center justify-between">
                 <div>
-                   <h3 className="font-bold text-xs text-blue-700 uppercase tracking-wider mb-1">Restaurant</h3>
-                   <p className="text-sm font-semibold text-gray-900">{selectedRequest.restaurantName || '-'}</p>
-                   <p className="text-xs text-gray-500">ID: {selectedRequest.restaurantId || '-'}</p>
+                   <h3 className="font-medium text-xs text-[#0a4d2b] mb-1">Restaurant</h3>
+                   <p className="text-sm font-medium text-neutral-900">{selectedRequest.restaurantName || '-'}</p>
+                   <p className="text-xs text-neutral-500">ID: {selectedRequest.restaurantId || '-'}</p>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                    <div className="px-3 py-1 bg-white rounded-full border border-blue-100 text-[10px] font-bold text-blue-600">
+                    <div className="px-3 py-1 bg-white rounded-full border border-neutral-200 text-xs font-medium text-[#0a4d2b]">
                         {selectedRequest.entityType?.toUpperCase()}
                     </div>
                     {selectedRequest.actionType === 'UPDATED' && (
-                        <div className="px-2 py-0.5 bg-yellow-100 rounded text-[9px] font-bold text-yellow-700 uppercase">
+                        <div className="px-2 py-0.5 bg-yellow-100 rounded text-xs font-medium text-yellow-700">
                             Changes
                         </div>
                     )}
@@ -528,25 +528,25 @@ export default function FoodApproval() {
                          if (oldStr === newStr || (!oldStr && !newStr)) return null
                          return (
                            <div className="col-span-full">
-                             <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Variants</label>
+                             <label className="block text-xs text-neutral-500 mb-2">Variants</label>
                              <div className="grid grid-cols-2 gap-3">
                                <div>
-                                 <p className="text-[10px] text-gray-400 mb-1">Before</p>
+                                 <p className="text-xs text-neutral-500 mb-1">Before</p>
                                  {oldV.length > 0 ? oldV.map((v, i) => (
                                    <div key={i} className="flex justify-between bg-red-50 border border-red-100 rounded-lg px-3 py-1.5 mb-1">
-                                     <span className="text-sm text-gray-700">{v.name}</span>
-                                     <span className="text-sm font-bold text-red-600">₹{v.price}</span>
+                                     <span className="text-sm text-neutral-700">{v.name}</span>
+                                     <span className="text-sm font-medium text-red-600">₹{v.price}</span>
                                    </div>
-                                 )) : <p className="text-sm text-gray-400 italic">None</p>}
+                                 )) : <p className="text-sm text-neutral-500">None</p>}
                                </div>
                                <div>
-                                 <p className="text-[10px] text-gray-400 mb-1">After</p>
+                                 <p className="text-xs text-neutral-500 mb-1">After</p>
                                  {newV.length > 0 ? newV.map((v, i) => (
                                    <div key={i} className="flex justify-between bg-green-50 border border-green-100 rounded-lg px-3 py-1.5 mb-1">
-                                     <span className="text-sm text-gray-700">{v.name}</span>
-                                     <span className="text-sm font-bold text-green-600">₹{v.price}</span>
+                                     <span className="text-sm text-neutral-700">{v.name}</span>
+                                     <span className="text-sm font-medium text-green-600">₹{v.price}</span>
                                    </div>
-                                 )) : <p className="text-sm text-gray-400 italic">None</p>}
+                                 )) : <p className="text-sm text-neutral-500">None</p>}
                                </div>
                              </div>
                            </div>
@@ -573,59 +573,59 @@ export default function FoodApproval() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Item Name</label>
-                          <p className="text-sm font-semibold text-gray-900">{selectedRequest.itemName || '-'}</p>
+                          <label className="block text-xs text-neutral-500 mb-1">Item name</label>
+                          <p className="text-sm font-medium text-neutral-900">{selectedRequest.itemName || '-'}</p>
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Category</label>
-                          <p className="text-sm text-gray-700">{selectedRequest.category || '-'}</p>
+                          <label className="block text-xs text-neutral-500 mb-1">Category</label>
+                          <p className="text-sm text-neutral-700">{selectedRequest.category || '-'}</p>
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Price</label>
+                          <label className="block text-xs text-neutral-500 mb-1">Price</label>
                           {selectedRequest.variants && selectedRequest.variants.length > 0 ? (
-                            <p className="text-xs text-gray-500 font-medium">Starts from ₹{selectedRequest.price}</p>
+                            <p className="text-xs text-neutral-500">Starts from ₹{selectedRequest.price}</p>
                           ) : (
-                            <p className="text-sm font-bold text-green-600">{selectedRequest.price !== null && selectedRequest.price !== undefined ? `₹${selectedRequest.price}` : '-'}</p>
+                            <p className="text-sm font-medium text-green-600">{selectedRequest.price !== null && selectedRequest.price !== undefined ? `₹${selectedRequest.price}` : '-'}</p>
                           )}
                       </div>
                       {selectedRequest.variants && selectedRequest.variants.length > 0 && (
                         <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Variants</label>
+                          <label className="block text-xs text-neutral-500 mb-2">Variants</label>
                           <div className="space-y-1.5">
                             {selectedRequest.variants.map((v, i) => (
-                              <div key={i} className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
-                                <span className="text-sm font-medium text-gray-800">{v.name}</span>
-                                <span className="text-sm font-bold text-green-600">₹{v.price}</span>
+                              <div key={i} className="flex items-center justify-between bg-neutral-50 border border-neutral-100 rounded-lg px-3 py-2">
+                                <span className="text-sm font-medium text-neutral-800">{v.name}</span>
+                                <span className="text-sm font-medium text-green-600">₹{v.price}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       )}
                       <div>
-                          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Status</label>
-                          <p className="text-sm text-gray-700 capitalize font-medium">{selectedRequest.approvalStatus || 'pending'}</p>
+                          <label className="block text-xs text-neutral-500 mb-1">Status</label>
+                          <p className="text-sm text-neutral-700 capitalize font-medium">{selectedRequest.approvalStatus || 'pending'}</p>
                       </div>
                   </div>
 
                   <div className="space-y-4">
                       {selectedRequest.foodType && (
                           <div>
-                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Food Type</label>
-                              <p className="text-sm text-gray-700">{selectedRequest.foodType}</p>
+                              <label className="block text-xs text-neutral-500 mb-1">Food type</label>
+                              <p className="text-sm text-neutral-700">{selectedRequest.foodType}</p>
                           </div>
                       )}
                       {selectedRequest.requestedAt && (
                           <div>
-                              <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Requested On</label>
-                              <p className="text-sm text-gray-700">{new Date(selectedRequest.requestedAt).toLocaleString()}</p>
+                              <label className="block text-xs text-neutral-500 mb-1">Requested on</label>
+                              <p className="text-sm text-neutral-700">{new Date(selectedRequest.requestedAt).toLocaleString()}</p>
                           </div>
                       )}
                   </div>
 
                   {selectedRequest.description && (
                     <div className="col-span-full">
-                      <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Description</label>
-                      <p className="text-sm text-gray-700 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-100">{selectedRequest.description}</p>
+                      <label className="block text-xs text-neutral-500 mb-1">Description</label>
+                      <p className="text-sm text-neutral-700 leading-relaxed bg-neutral-50 p-3 rounded-lg border border-neutral-100">{selectedRequest.description}</p>
                     </div>
                   )}
 
@@ -638,7 +638,7 @@ export default function FoodApproval() {
                     
                     return allImages.length > 0 ? (
                       <div className="col-span-full">
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        <label className="block text-xs text-neutral-500 mb-2">
                           Images ({allImages.length})
                         </label>
                         <div className="flex flex-wrap gap-3">
@@ -647,7 +647,7 @@ export default function FoodApproval() {
                                 key={idx}
                                 src={img} 
                                 alt="Item preview"
-                                className="w-24 h-24 object-cover rounded-xl border border-gray-100 shadow-sm hover:scale-105 transition-transform cursor-zoom-in"
+                                className="w-24 h-24 object-cover rounded-xl border border-neutral-100 shadow-sm transition-transform cursor-zoom-in"
                                 onClick={() => window.open(img, '_blank')}
                                 onError={(e) => { e.target.style.display = 'none'; }}
                               />
@@ -660,11 +660,11 @@ export default function FoodApproval() {
               )}
             </div>
           )}
-          <DialogFooter className="p-6 pt-4 border-t border-gray-100 bg-slate-50/50 flex gap-2">
+          <DialogFooter className="p-6 pt-4 border-t border-neutral-100 bg-neutral-50/50 flex gap-2">
             <button
               type="button"
               onClick={() => setShowDetailModal(false)}
-              className="px-6 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 text-sm font-medium text-neutral-600 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors"
             >
               Close
             </button>
@@ -673,7 +673,7 @@ export default function FoodApproval() {
                 <button
                   type="button"
                   onClick={() => handleRejectClick(selectedRequest)}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-lg shadow-red-200 transition-all active:scale-95"
+                  className="px-6 py-2 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-sm shadow-red-200 transition-colors"
                 >
                   Reject
                 </button>
@@ -681,7 +681,7 @@ export default function FoodApproval() {
                   type="button"
                   onClick={() => handleApprove(selectedRequest)}
                   disabled={processing}
-                  className="px-6 py-2 text-sm font-semibold text-white bg-green-500 rounded-xl hover:bg-green-600 shadow-lg shadow-green-200 transition-all active:scale-95 disabled:opacity-50"
+                  className="px-6 py-2 text-sm font-medium text-white bg-[#0a4d2b] rounded-xl hover:bg-[#06381e] shadow-sm shadow-green-200 transition-colors disabled:opacity-50"
                 >
                   {processing ? "Processing..." : "Approve Item"}
                 </button>
@@ -693,30 +693,30 @@ export default function FoodApproval() {
 
       {/* Reject Confirmation Modal */}
       <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
-        <DialogContent className="max-w-md p-0 bg-white rounded-2xl border-none shadow-2xl">
-          <DialogHeader className="p-6 pb-4 border-b border-gray-100 bg-red-50/30">
-            <DialogTitle className="text-xl font-bold text-red-700 flex items-center gap-2">
+        <DialogContent className="max-w-md p-0 bg-white rounded-xl border-none shadow-2xl">
+          <DialogHeader className="p-6 pb-4 border-b border-neutral-100 bg-red-50/30">
+            <DialogTitle className="text-xl font-medium text-red-700 flex items-center gap-2">
                 <XCircle className="w-5 h-5" />
-                Reject Item
+                Reject item
             </DialogTitle>
-            <DialogDescription className="text-sm text-gray-500 mt-1">
+            <DialogDescription className="text-sm text-neutral-500 mt-1">
               Please provide a clear reason for rejecting this {selectedRequest?.entityType || 'item'}.
             </DialogDescription>
           </DialogHeader>
           <div className="p-6">
             <div className="space-y-4">
               <div>
-                <label htmlFor="rejectReason" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  Rejection Reason <span className="text-red-500">*</span>
+                <label htmlFor="rejectReason" className="block text-xs text-neutral-500 mb-2">
+                  Rejection reason <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   id="rejectReason"
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
-                  placeholder="Tell the restaurant why this item was rejected..."
+                  placeholder="Tell the restaurant why this item was rejected"
                   required
                   rows={4}
-                  className="w-full rounded-xl border border-gray-200 bg-slate-50 px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-colors"
                 />
               </div>
             </div>
@@ -724,7 +724,7 @@ export default function FoodApproval() {
               <button
                 type="button"
                 onClick={() => setShowRejectModal(false)}
-                className="flex-1 px-4 py-2.5 text-sm font-bold text-gray-500 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+                className="flex-1 px-4 py-2.5 text-sm text-neutral-500 bg-white border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors"
               >
                 Cancel
               </button>
@@ -732,7 +732,7 @@ export default function FoodApproval() {
                 type="button"
                 onClick={handleReject}
                 disabled={processing || !rejectReason.trim()}
-                className="flex-1 px-4 py-2.5 text-sm font-bold text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-lg shadow-red-100 transition-all active:scale-95 disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-700 shadow-sm shadow-red-100 transition-colors disabled:opacity-50"
               >
                 {processing ? "Processing..." : "Confirm Rejection"}
               </button>

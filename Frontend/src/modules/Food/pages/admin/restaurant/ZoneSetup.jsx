@@ -53,78 +53,78 @@ export default function ZoneSetup() {
   )
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div className="flex items-center gap-3 mb-4 md:mb-0">
-            <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Zone Setup Restaurant</h1>
-              <p className="text-sm text-slate-600">Manage delivery zones for restaurants</p>
+              <h1 className="text-2xl font-medium text-neutral-900">Zone setup restaurant</h1>
+              <p className="text-sm text-neutral-600">Manage delivery zones for restaurants</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate("/admin/food/zone-setup/delivery-boy-view")}
-              className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
             >
               <Bike className="w-5 h-5" />
-              <span>Delivery Boy View</span>
+              <span>Delivery boy view</span>
             </button>
             <button
               onClick={() => navigate("/admin/food/zone-setup/map")}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-[#0a4d2b] text-white rounded-lg hover:bg-[#06381e] transition-colors"
             >
               <Map className="w-5 h-5" />
-              <span>View Map</span>
+              <span>View map</span>
             </button>
             <button
               onClick={() => navigate("/admin/food/zone-setup/add")}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
             >
               <Plus className="w-5 h-5" />
-              <span>Add Zone</span>
+              <span>Add zone</span>
             </button>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               type="text"
-              placeholder="Search zones by name or location..."
+              placeholder="Search zones by name or location"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
             />
           </div>
         </div>
 
         {/* Zones List */}
         {loading ? (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading zones...</p>
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a4d2b] mx-auto mb-4"></div>
+            <p className="text-neutral-600">Loading zones...</p>
           </div>
         ) : filteredZones.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-12 text-center">
-            <MapPin className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">No zones found</h3>
-            <p className="text-slate-600 mb-6">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-12 text-center">
+            <MapPin className="w-16 h-16 text-neutral-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-neutral-900 mb-2">No zones found</h3>
+            <p className="text-neutral-600 mb-6">
               {searchQuery ? "Try adjusting your search query" : "Create your first delivery zone to get started"}
             </p>
             {!searchQuery && (
               <button
                 onClick={() => navigate("/admin/food/zone-setup/add")}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                <span>Add Zone</span>
+                <span>Add zone</span>
               </button>
             )}
           </div>
@@ -133,31 +133,31 @@ export default function ZoneSetup() {
             {filteredZones.map((zone) => (
               <div
                 key={zone._id || zone.id}
-                className="bg-white rounded-lg shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
+                className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-1">{zone.name || "Unnamed Zone"}</h3>
-                    <p className="text-sm text-slate-600">{zone.serviceLocation || "N/A"}</p>
+                    <h3 className="text-lg font-medium text-neutral-900 mb-1">{zone.name || "Unnamed Zone"}</h3>
+                    <p className="text-sm text-neutral-600">{zone.serviceLocation || "N/A"}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => navigate(`/admin/food/zone-setup/view/${zone._id || zone.id}`)}
-                      className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="p-2 text-neutral-600 hover:text-[#0a4d2b] hover:bg-neutral-50 rounded-lg transition-colors"
                       title="View"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => navigate(`/admin/food/zone-setup/edit/${zone._id || zone.id}`)}
-                      className="p-2 text-slate-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      className="p-2 text-neutral-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                       title="Edit"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteZone(zone._id || zone.id)}
-                      className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-neutral-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -166,21 +166,21 @@ export default function ZoneSetup() {
                 </div>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Unit:</span>
-                    <span className="font-medium text-slate-900">{zone.unit || "km"}</span>
+                    <span className="text-neutral-600">Unit:</span>
+                    <span className="font-medium text-neutral-900">{zone.unit || "km"}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-600">Status:</span>
+                    <span className="text-neutral-600">Status:</span>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      zone.isActive ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-800"
+                      zone.isActive ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-800"
                     }`}>
                       {zone.isActive ? "Active" : "Inactive"}
                     </span>
                   </div>
                   {zone.coordinates && zone.coordinates.length > 0 && (
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600">Points:</span>
-                      <span className="font-medium text-slate-900">{zone.coordinates.length}</span>
+                      <span className="text-neutral-600">Points:</span>
+                      <span className="font-medium text-neutral-900">{zone.coordinates.length}</span>
                     </div>
                   )}
                 </div>

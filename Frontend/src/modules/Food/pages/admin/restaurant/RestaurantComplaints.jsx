@@ -127,13 +127,13 @@ export default function RestaurantComplaints() {
       case 'pending':
         return <Clock className="w-4 h-4 text-yellow-600" />
       case 'in_progress':
-        return <AlertCircle className="w-4 h-4 text-blue-600" />
+        return <AlertCircle className="w-4 h-4 text-[#0a4d2b]" />
       case 'resolved':
         return <CheckCircle className="w-4 h-4 text-green-600" />
       case 'rejected':
         return <XCircle className="w-4 h-4 text-red-600" />
       default:
-        return <FileText className="w-4 h-4 text-gray-600" />
+        return <FileText className="w-4 h-4 text-neutral-600" />
     }
   }
 
@@ -142,13 +142,13 @@ export default function RestaurantComplaints() {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800'
       case 'in_progress':
-        return 'bg-blue-100 text-blue-800'
+        return 'bg-neutral-100 text-neutral-900'
       case 'resolved':
         return 'bg-green-100 text-green-800'
       case 'rejected':
         return 'bg-red-100 text-red-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-neutral-100 text-neutral-800'
     }
   }
 
@@ -156,27 +156,27 @@ export default function RestaurantComplaints() {
     <div className="p-6 space-y-6">
       <div>
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900">Restaurant Complaints</h1>
+          <h1 className="text-2xl font-medium text-neutral-900">Restaurant complaints</h1>
         </div>
-        <p className="text-sm text-gray-500 mt-1">Manage and track customer complaints</p>
+        <p className="text-sm text-neutral-500 mt-1">Manage and track customer complaints</p>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg p-4 border border-gray-200 space-y-4">
+      <div className="bg-white rounded-lg p-4 border border-neutral-200 space-y-4">
         <div className="flex flex-col gap-4 md:flex-row md:items-center">
           <div className="w-full md:max-w-md">
             <input
               type="text"
-              placeholder="Search by order, customer, restaurant..."
+              placeholder="Search by order, customer, restaurant"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value.replace(/\s/g, ''), page: 1 })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-transparent"
             />
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <Select value={filters.status || 'all'} onValueChange={(value) => setFilters({ ...filters, status: value, page: 1 })}>
               <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="All Status" />
+                <SelectValue placeholder="All status" />
               </SelectTrigger>
               <SelectContent>
                 {STATUS_OPTIONS.map((option) => (
@@ -188,7 +188,7 @@ export default function RestaurantComplaints() {
             </Select>
             <Select value={filters.complaintType || 'all'} onValueChange={(value) => setFilters({ ...filters, complaintType: value, page: 1 })}>
               <SelectTrigger className="w-full sm:w-[140px]">
-                <SelectValue placeholder="All Types" />
+                <SelectValue placeholder="All types" />
               </SelectTrigger>
               <SelectContent>
                 {COMPLAINT_TYPE_OPTIONS.map((option) => (
@@ -203,63 +203,63 @@ export default function RestaurantComplaints() {
       </div>
 
       {/* Complaints List */}
-      <div className="bg-white rounded-lg border border-gray-200">
+      <div className="bg-white rounded-lg border border-neutral-200">
         {loading ? (
           <div className="p-12 text-center">
-            <p className="text-gray-500">Loading complaints...</p>
+            <p className="text-neutral-500">Loading complaints...</p>
           </div>
         ) : complaints.length === 0 ? (
           <div className="p-12 text-center">
-            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500">No complaints found</p>
+            <FileText className="w-12 h-12 text-neutral-500 mx-auto mb-4" />
+            <p className="text-neutral-500">No complaints found</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-neutral-200">
             {complaints.map((complaint) => (
-              <div key={complaint._id} className="p-4 hover:bg-gray-50 transition-colors">
+              <div key={complaint._id} className="p-4 hover:bg-neutral-50 transition-colors">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       {getStatusIcon(complaint.status)}
-                      <h3 className="font-semibold text-gray-900">{complaint.subject || complaint.issueType?.replace('_', ' ')}</h3>
+                      <h3 className="font-medium text-neutral-900">{complaint.subject || complaint.issueType?.replace('_', ' ')}</h3>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-neutral-600">
                       <div>
-                        <p className="text-xs text-gray-500">Order</p>
+                        <p className="text-xs text-neutral-500">Order</p>
                         <p className="font-medium">#{complaint.orderId?.orderId || 'N/A'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Customer</p>
+                        <p className="text-xs text-neutral-500">Customer</p>
                         <p className="font-medium">{complaint.userId?.name || 'Customer'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Restaurant</p>
+                        <p className="text-xs text-neutral-500">Restaurant</p>
                         <p className="font-medium">{complaint.restaurantId?.restaurantName || 'Restaurant'}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-gray-500">Type</p>
+                        <p className="text-xs text-neutral-500">Type</p>
                         <p className="font-medium capitalize">{(complaint.issueType || 'other').replace('_', ' ')}</p>
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleOpenModal(complaint)} className="p-2 rounded-md hover:bg-gray-200">
-                    <Edit className="w-4 h-4 text-gray-600" />
+                  <button onClick={() => handleOpenModal(complaint)} className="p-2 rounded-md hover:bg-neutral-200">
+                    <Edit className="w-4 h-4 text-neutral-600" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-700 mb-3">{complaint.description}</p>
+                <p className="text-sm text-neutral-700 mb-3">{complaint.description}</p>
                 {complaint.restaurantResponse && (
-                  <div className="bg-blue-50 rounded p-3 mb-3">
-                    <p className="text-xs font-semibold text-blue-700 mb-1">Restaurant Response:</p>
-                    <p className="text-sm text-blue-800">{complaint.restaurantResponse}</p>
+                  <div className="bg-neutral-50 rounded p-3 mb-3">
+                    <p className="text-xs font-medium text-[#0a4d2b] mb-1">Restaurant Response:</p>
+                    <p className="text-sm text-neutral-900">{complaint.restaurantResponse}</p>
                   </div>
                 )}
                 {complaint.adminResponse && (
                   <div className="bg-green-50 rounded p-3 mb-3">
-                    <p className="text-xs font-semibold text-green-700 mb-1">Admin Response:</p>
+                    <p className="text-xs font-medium text-green-700 mb-1">Admin Response:</p>
                     <p className="text-sm text-green-800">{complaint.adminResponse}</p>
                   </div>
                 )}
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-neutral-500">
                   {new Date(complaint.createdAt).toLocaleDateString('en-IN', {
                     day: 'numeric',
                     month: 'short',
@@ -277,21 +277,21 @@ export default function RestaurantComplaints() {
       {/* Pagination */}
       {pagination.pages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-neutral-500">
             Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} complaints
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
               disabled={filters.page === 1}
-              className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-neutral-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
             <button
               onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
               disabled={filters.page >= pagination.pages}
-              className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 border border-neutral-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -303,9 +303,9 @@ export default function RestaurantComplaints() {
       <Dialog open={!!editingComplaint} onOpenChange={(open) => !open && setEditingComplaint(null)}>
         <DialogContent className="max-w-lg p-6">
           <DialogHeader>
-            <DialogTitle>Update Complaint</DialogTitle>
+            <DialogTitle>Update complaint</DialogTitle>
             <DialogDescription>
-              Update the status and provide a response for this complaint.
+              Update the status and provide a response for this complaint
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -323,10 +323,10 @@ export default function RestaurantComplaints() {
               </Select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Admin Response</label>
+              <label className="text-sm font-medium">Admin response</label>
               <textarea
                 className="w-full min-h-[100px] p-3 border rounded-md"
-                placeholder="Type your response here..."
+                placeholder="Type your response here"
                 value={updateData.adminResponse}
                 onChange={(e) => setUpdateData({ ...updateData, adminResponse: e.target.value })}
               />
@@ -334,7 +334,7 @@ export default function RestaurantComplaints() {
           </div>
           <DialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-end">
             <button onClick={() => setEditingComplaint(null)} className="px-4 py-2 border rounded-md">Cancel</button>
-            <button onClick={handleUpdateComplaint} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+            <button onClick={handleUpdateComplaint} className="px-4 py-2 bg-neutral-900 text-white rounded-md hover:bg-neutral-800">Save changes</button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

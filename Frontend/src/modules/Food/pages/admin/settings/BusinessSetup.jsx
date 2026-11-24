@@ -221,22 +221,22 @@ export default function BusinessSetup() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Page header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="text-xl lg:text-2xl font-bold text-slate-900">Business setup</h1>
+            <h1 className="text-xl lg:text-2xl font-medium text-neutral-900">Business setup</h1>
           </div>
-          <p className="text-xs lg:text-sm text-slate-500 mt-1">
-            Manage your company information, general configuration and business rules.
+          <p className="text-xs lg:text-sm text-neutral-500 mt-1">
+            Manage your company information, general configuration and business rules
           </p>
         </div>
 
@@ -245,66 +245,66 @@ export default function BusinessSetup() {
           <div className="mt-0.5">
             <Info className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-xs lg:text-sm text-slate-700">
-            <p className="font-semibold text-amber-700 mb-0.5">Note</p>
-            <p>Don&apos;t forget to click the &quot;Save Information&quot; button below to save changes.</p>
+          <div className="text-xs lg:text-sm text-neutral-700">
+            <p className="font-medium text-amber-700 mb-0.5">Note</p>
+            <p>Don&apos;t forget to click the &quot;Save Information&quot; button below to save changes</p>
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
         {/* Company info */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
           {/* Company information */}
-          <div className="px-4 py-4 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <span>Company Information</span>
+          <div className="px-4 py-4 border-b border-neutral-100">
+            <h3 className="text-sm font-medium text-neutral-900 mb-4 flex items-center gap-2">
+              <span>Company information</span>
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   Company name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter Your Company Name"
+                  placeholder="Enter your company name"
                   value={formData.companyName}
                   maxLength={50}
                   onChange={(e) => handleInputChange("companyName", e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
-                  placeholder="Enter Your Email"
+                  placeholder="Enter your email"
                   value={formData.email}
                   maxLength={100}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   Region <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.region}
                   onChange={(e) => handleInputChange("region", e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 >
                   <option value="India">India</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   Phone <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -312,71 +312,71 @@ export default function BusinessSetup() {
                     <select
                       value={formData.phoneCountryCode}
                       onChange={(e) => handleInputChange("phoneCountryCode", e.target.value)}
-                      className="w-full pl-8 pr-6 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                      className="w-full pl-8 pr-6 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 appearance-none"
                     >
                       <option value="+91">+91 (IN)</option>
                     </select>
-                    <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">
+                    <Phone className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-neutral-400 pointer-events-none">
                       ?
                     </span>
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter Your Phone Number"
+                    placeholder="Enter your phone number"
                     value={formData.phoneNumber}
                     maxLength={15}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       handleInputChange("phoneNumber", val);
                     }}
-                    className="flex-1 px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                   />
                 </div>
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   Address
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Enter Your Addresss"
+                  placeholder="Enter your addresss"
                   value={formData.address}
                   maxLength={250}
                   onChange={(e) => handleInputChange("address", e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   State
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter Your State"
+                  placeholder="Enter your state"
                   value={formData.state}
                   maxLength={50}
                   onChange={(e) => handleInputChange("state", e.target.value)}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                   Pincode
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter Your Pincode"
+                  placeholder="Enter your pincode"
                   value={formData.pincode}
                   maxLength={10}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, "");
                     handleInputChange("pincode", val);
                   }}
-                  className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
               </div>
             </div>
@@ -384,7 +384,7 @@ export default function BusinessSetup() {
             {/* Logo & favicon upload */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Logo</label>
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">Logo</label>
                 <input
                   ref={logoInputRef}
                   type="file"
@@ -419,7 +419,7 @@ export default function BusinessSetup() {
                 />
                 <div
                   onClick={() => logoInputRef.current?.click()}
-                  className="border border-dashed border-slate-300 rounded-lg bg-slate-50/60 h-28 flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors relative overflow-hidden"
+                  className="border border-dashed border-neutral-300 rounded-lg bg-neutral-50/60 h-28 flex items-center justify-center cursor-pointer hover:bg-neutral-100 transition-colors relative overflow-hidden"
                 >
                   {logoPreview ? (
                     <>
@@ -446,14 +446,14 @@ export default function BusinessSetup() {
                     </>
                   ) : (
                     <div className="text-center">
-                      <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-                      <p className="text-xs text-slate-400">Click to upload logo</p>
+                      <Upload className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
+                      <p className="text-xs text-neutral-400">Click to upload logo</p>
                     </div>
                   )}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Favicon</label>
+                <label className="block text-xs font-medium text-neutral-700 mb-1.5">Favicon</label>
                 <input
                   ref={faviconInputRef}
                   type="file"
@@ -488,7 +488,7 @@ export default function BusinessSetup() {
                 />
                 <div
                   onClick={() => faviconInputRef.current?.click()}
-                  className="border border-dashed border-slate-300 rounded-lg bg-slate-50/60 h-28 flex items-center justify-center cursor-pointer hover:bg-slate-100 transition-colors relative overflow-hidden"
+                  className="border border-dashed border-neutral-300 rounded-lg bg-neutral-50/60 h-28 flex items-center justify-center cursor-pointer hover:bg-neutral-100 transition-colors relative overflow-hidden"
                 >
                   {faviconPreview ? (
                     <>
@@ -515,8 +515,8 @@ export default function BusinessSetup() {
                     </>
                   ) : (
                     <div className="text-center">
-                      <Upload className="w-5 h-5 text-slate-400 mx-auto mb-1" />
-                      <p className="text-xs text-slate-400">Click to upload favicon</p>
+                      <Upload className="w-5 h-5 text-neutral-400 mx-auto mb-1" />
+                      <p className="text-xs text-neutral-400">Click to upload favicon</p>
                     </div>
                   )}
                 </div>
@@ -525,17 +525,17 @@ export default function BusinessSetup() {
           </div>
 
           {/* Save Button Section */}
-          <div className="px-4 py-4 border-t border-slate-100">
+          <div className="px-4 py-4 border-t border-neutral-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <p className="text-[11px] text-slate-500">
-                Changes will only be applied after clicking the <span className="font-semibold">Save Information</span> button.
+              <p className="text-xs text-neutral-500">
+                Changes will only be applied after clicking the <span className="font-medium">Save information</span> button.
               </p>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleReset}
                   disabled={saving || !hasChanges}
-                  className="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-xs font-medium rounded-lg border border-neutral-300 text-neutral-700 hover:bg-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Reset
                 </button>
@@ -543,7 +543,7 @@ export default function BusinessSetup() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving || !hasChanges}
-                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-4 py-2 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {saving ? (
                     <>
@@ -570,7 +570,7 @@ function ToggleSwitch({ initial = false }) {
     <button
       type="button"
       onClick={() => setEnabled((prev) => !prev)}
-      className={`inline-flex items-center w-10 h-5 rounded-full border transition-all ${enabled ? "bg-blue-600 border-blue-600 justify-end" : "bg-slate-200 border-slate-300 justify-start"
+      className={`inline-flex items-center w-10 h-5 rounded-full border transition-colors ${enabled ? "bg-neutral-900 border-[#0a4d2b] justify-end" : "bg-neutral-200 border-neutral-300 justify-start"
         }`}
     >
       <span className="h-4 w-4 rounded-full bg-white shadow-sm" />

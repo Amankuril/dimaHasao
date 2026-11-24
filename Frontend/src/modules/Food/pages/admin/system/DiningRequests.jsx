@@ -73,17 +73,17 @@ export default function DiningRequests() {
     }
 
     return (
-        <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+        <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-plum-600 flex items-center justify-center">
-                            <UtensilsCrossed className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                            <UtensilsCrossed className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Dining Category Requests</h1>
-                            <p className="text-sm text-slate-600 mt-1">Review and approve restaurant dining setting updates</p>
+                            <h1 className="text-2xl font-medium text-neutral-900">Dining category requests</h1>
+                            <p className="text-sm text-neutral-600 mt-1">Review and approve restaurant dining setting updates</p>
                         </div>
                     </div>
                 </div>
@@ -92,27 +92,27 @@ export default function DiningRequests() {
                     <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2 max-w-2xl">
                         <AlertCircle className="w-5 h-5" />
                         {error}
-                        <Button variant="link" onClick={fetchRequests} className="text-red-800 font-bold p-0 ml-auto">Retry</Button>
+                        <Button variant="link" onClick={fetchRequests} className="text-red-800 font-medium p-0 ml-auto">Retry</Button>
                     </div>
                 )}
 
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-dashed border-slate-300">
+                    <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-dashed border-neutral-300">
                         <Loader2 className="w-10 h-10 animate-spin text-plum-600 mb-4" />
-                        <p className="text-slate-500 font-medium">Loading pending requests...</p>
+                        <p className="text-neutral-500 font-medium">Loading pending requests...</p>
                     </div>
                 ) : requests.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-dashed border-slate-300">
-                        <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                            <CheckCircle2 className="w-8 h-8 text-slate-400" />
+                    <div className="flex flex-col items-center justify-center p-20 bg-white rounded-xl border border-dashed border-neutral-300">
+                        <div className="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
+                            <CheckCircle2 className="w-8 h-8 text-neutral-400" />
                         </div>
-                        <h3 className="text-lg font-bold text-slate-900">No Pending Requests</h3>
-                        <p className="text-slate-500 text-center max-w-xs mt-1">All dining settings updates have been processed.</p>
+                        <h3 className="text-lg font-medium text-neutral-900">No pending requests</h3>
+                        <p className="text-neutral-500 text-center max-w-xs mt-1">All dining settings updates have been processed</p>
                     </div>
                 ) : (
                     <div className="grid gap-6">
                         {requests.map((request) => (
-                            <div key={request._id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                            <div key={request._id} className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
                                 <div className="p-6">
                                     <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
                                         <div className="flex items-center gap-4">
@@ -120,16 +120,16 @@ export default function DiningRequests() {
                                                 <img 
                                                     src={request.restaurant.profileImage.url} 
                                                     alt={request.restaurant.name} 
-                                                    className="w-14 h-14 rounded-lg object-cover border border-slate-100" 
+                                                    className="w-14 h-14 rounded-lg object-cover border border-neutral-100" 
                                                 />
                                             ) : (
-                                                <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center border border-slate-100">
-                                                    <UtensilsCrossed className="w-6 h-6 text-slate-400" />
+                                                <div className="w-14 h-14 rounded-lg bg-neutral-100 flex items-center justify-center border bg-neutral-100 text-neutral-500">
+                                                    <UtensilsCrossed className="w-6 h-6" />
                                                 </div>
                                             )}
                                             <div>
-                                                <h3 className="text-lg font-bold text-slate-900">{request.restaurant?.name || "Unknown Restaurant"}</h3>
-                                                <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
+                                                <h3 className="text-lg font-medium text-neutral-900">{request.restaurant?.name || "Unknown Restaurant"}</h3>
+                                                <div className="flex items-center gap-2 text-sm text-neutral-500 mt-1">
                                                     <MapPin className="w-3.5 h-3.5" />
                                                     {request.restaurant?.address || "No address provided"}
                                                 </div>
@@ -141,20 +141,20 @@ export default function DiningRequests() {
                                         </Badge>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 rounded-xl bg-neutral-50 border border-neutral-100">
                                         <div className="space-y-1">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Dining Status</p>
-                                            <p className="font-semibold text-slate-900 flex items-center gap-2">
+                                            <p className="text-xs font-medium text-neutral-400">Dining status</p>
+                                            <p className="font-medium text-neutral-900 flex items-center gap-2">
                                                 {request.requestedSettings?.isEnabled ? (
                                                     <><CheckCircle2 className="w-4 h-4 text-green-500" /> Enabled</>
                                                 ) : (
-                                                    <><XCircle className="w-4 h-4 text-slate-400" /> Disabled</>
+                                                    <><XCircle className="w-4 h-4 text-neutral-400" /> Disabled</>
                                                 )}
                                             </p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Requested Category</p>
-                                            <p className="font-semibold text-slate-900">
+                                            <p className="text-xs font-medium text-neutral-400">Requested category</p>
+                                            <p className="font-medium text-neutral-900">
                                                 {(() => {
                                                     const raw = request.requestedSettings?.diningType
                                                     if (!raw) return "Not specified"
@@ -165,13 +165,13 @@ export default function DiningRequests() {
                                             </p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Max Guests Limit</p>
-                                            <p className="font-semibold text-slate-900">{request.requestedSettings?.maxGuests || "No limit"} Guests</p>
+                                            <p className="text-xs font-medium text-neutral-400">Max guests limit</p>
+                                            <p className="font-medium text-neutral-900">{request.requestedSettings?.maxGuests || "No limit"} Guests</p>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-slate-100">
-                                        <div className="text-sm text-slate-500 italic">
+                                    <div className="flex items-center justify-between mt-6 pt-6 border-t border-neutral-100">
+                                        <div className="text-sm text-neutral-500">
                                             Requested on: {new Date(request.createdAt).toLocaleString()}
                                         </div>
                                         <div className="flex items-center gap-3">
@@ -179,14 +179,14 @@ export default function DiningRequests() {
                                                 variant="outline" 
                                                 onClick={() => handleReject(request._id)}
                                                 disabled={processingId === request._id}
-                                                className="border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all font-semibold"
+                                                className="border-neutral-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors font-medium"
                                             >
                                                 {processingId === request._id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reject"}
                                             </Button>
                                             <Button 
                                                 onClick={() => handleApprove(request._id)}
                                                 disabled={processingId === request._id}
-                                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 shadow-sm shadow-emerald-200 transition-all"
+                                                className="bg-[#0a4d2b] hover:bg-[#06381e] text-white font-medium px-6 shadow-sm shadow-emerald-200 transition-colors"
                                             >
                                                 {processingId === request._id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve Changes"}
                                             </Button>

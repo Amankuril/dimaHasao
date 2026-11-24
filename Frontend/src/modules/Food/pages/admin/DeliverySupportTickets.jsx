@@ -91,7 +91,7 @@ export default function DeliverySupportTickets() {
       })
 
       if (response?.data?.success) {
-        toast.success("Ticket updated successfully!")
+        toast.success("Ticket updated successfully")
         const updatedTicket =
           response?.data?.data?.ticket ||
           response?.data?.ticket ||
@@ -125,7 +125,7 @@ export default function DeliverySupportTickets() {
       })
 
       if (response?.data?.success) {
-        toast.success("Ticket status updated!")
+        toast.success("Ticket status updated")
         await fetchTickets()
         await fetchStats()
       }
@@ -140,13 +140,13 @@ export default function DeliverySupportTickets() {
       case "open":
         return <Clock className="w-5 h-5 text-orange-500" />
       case "in_progress":
-        return <Clock className="w-5 h-5 text-blue-500" />
+        return <Clock className="w-5 h-5 text-[#0a4d2b]" />
       case "resolved":
         return <CheckCircle className="w-5 h-5 text-green-500" />
       case "closed":
-        return <XCircle className="w-5 h-5 text-gray-500" />
+        return <XCircle className="w-5 h-5 text-neutral-500" />
       default:
-        return <Clock className="w-5 h-5 text-gray-500" />
+        return <Clock className="w-5 h-5 text-neutral-500" />
     }
   }
 
@@ -155,13 +155,13 @@ export default function DeliverySupportTickets() {
       case "open":
         return "bg-orange-100 text-orange-700"
       case "in_progress":
-        return "bg-blue-100 text-blue-700"
+        return "bg-neutral-100 text-[#0a4d2b]"
       case "resolved":
         return "bg-green-100 text-green-700"
       case "closed":
-        return "bg-gray-100 text-gray-700"
+        return "bg-neutral-100 text-neutral-700"
       default:
-        return "bg-gray-100 text-gray-700"
+        return "bg-neutral-100 text-neutral-700"
     }
   }
 
@@ -184,15 +184,15 @@ export default function DeliverySupportTickets() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <MessageSquare className="w-6 h-6 text-slate-600" />
+            <MessageSquare className="w-6 h-6 text-neutral-600" />
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Delivery Support Tickets</h1>
-              <p className="text-sm text-slate-600 mt-1">
+              <h1 className="text-2xl font-medium text-neutral-900">Delivery support tickets</h1>
+              <p className="text-sm text-neutral-600 mt-1">
                 Manage and respond to support tickets from delivery partners
               </p>
             </div>
@@ -201,25 +201,25 @@ export default function DeliverySupportTickets() {
           {/* Stats */}
           {stats && (
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              <div className="bg-slate-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
-                <p className="text-xs text-slate-600 mt-1">Total</p>
+              <div className="bg-neutral-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-medium text-neutral-900">{stats.total}</p>
+                <p className="text-xs text-neutral-600 mt-1">Total</p>
               </div>
               <div className="bg-orange-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-orange-700">{stats.open}</p>
+                <p className="text-2xl font-medium text-orange-700">{stats.open}</p>
                 <p className="text-xs text-orange-600 mt-1">Open</p>
               </div>
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-blue-700">{stats.inProgress}</p>
-                <p className="text-xs text-blue-600 mt-1">In Progress</p>
+              <div className="bg-neutral-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-medium text-[#0a4d2b]">{stats.inProgress}</p>
+                <p className="text-xs text-[#0a4d2b] mt-1">In progress</p>
               </div>
               <div className="bg-green-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-green-700">{stats.resolved}</p>
+                <p className="text-2xl font-medium text-green-700">{stats.resolved}</p>
                 <p className="text-xs text-green-600 mt-1">Resolved</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <p className="text-2xl font-bold text-gray-700">{stats.closed}</p>
-                <p className="text-xs text-gray-600 mt-1">Closed</p>
+              <div className="bg-neutral-50 rounded-lg p-4 text-center">
+                <p className="text-2xl font-medium text-neutral-700">{stats.closed}</p>
+                <p className="text-xs text-neutral-600 mt-1">Closed</p>
               </div>
             </div>
           )}
@@ -228,21 +228,21 @@ export default function DeliverySupportTickets() {
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="Search by subject, description, ticket ID, or delivery partner..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search by subject, description, ticket ID, or delivery partner"
+                  className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 />
               </div>
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
             >
               <option value="">All Status</option>
               <option value="open">Open</option>
@@ -253,7 +253,7 @@ export default function DeliverySupportTickets() {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
             >
               <option value="">All Priority</option>
               <option value="low">Low</option>
@@ -266,19 +266,19 @@ export default function DeliverySupportTickets() {
           {/* Tickets List */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-neutral-600" />
             </div>
           ) : (
             <div className="space-y-3">
               {tickets.length === 0 ? (
-                <div className="bg-slate-50 rounded-lg p-8 text-center">
-                  <p className="text-gray-600">No tickets found</p>
+                <div className="bg-neutral-50 rounded-lg p-8 text-center">
+                  <p className="text-neutral-600">No tickets found</p>
                 </div>
               ) : (
                 tickets.map((ticket) => (
                   <div
                     key={ticket._id}
-                    className="bg-white rounded-lg p-3 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                    className="bg-white rounded-lg p-3 shadow-sm border border-neutral-200 hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -286,22 +286,22 @@ export default function DeliverySupportTickets() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             {ticket.ticketId && (
-                              <span className="text-xs font-mono font-semibold bg-gray-100 text-gray-700 px-2 py-0.5 rounded">
+                              <span className="text-xs font-mono font-medium bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded">
                                 #{ticket.ticketId}
                               </span>
                             )}
-                            <span className="text-sm font-medium text-gray-900 truncate">
+                            <span className="text-sm font-medium text-neutral-900 truncate">
                               {ticket.subject}
                             </span>
-                            <span className="text-xs text-gray-600">
+                            <span className="text-xs text-neutral-600">
                               {ticket.deliveryPartner?.name || 'N/A'}
                             </span>
                             {ticket.deliveryPartner?._id && (
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-neutral-500">
                                 ID: DP-{String(ticket.deliveryPartner._id).slice(-8).toUpperCase()}
                               </span>
                             )}
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-neutral-500">
                               {formatDateTime(ticket.createdAt)}
                             </span>
                           </div>
@@ -310,23 +310,23 @@ export default function DeliverySupportTickets() {
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           onClick={() => handleViewTicket(ticket)}
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
                           title="View Details"
                         >
-                          <Eye className="w-4 h-4 text-gray-600" />
+                          <Eye className="w-4 h-4 text-neutral-600" />
                         </button>
                         <button
                           onClick={() => handleRespond(ticket)}
-                          className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 hover:bg-neutral-50 rounded-lg transition-colors"
                           title={ticket.adminResponse ? "Edit Response" : "Send Response"}
                         >
-                          <Edit className="w-4 h-4 text-blue-600" />
+                          <Edit className="w-4 h-4 text-[#0a4d2b]" />
                         </button>
                         {ticket.status !== 'closed' && (
                           <select
                             value={ticket.status}
                             onChange={(e) => handleStatusChange(ticket._id, e.target.value)}
-                            className="text-xs px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            className="text-xs px-2 py-1 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 bg-white"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <option value="open">Open</option>
@@ -347,10 +347,10 @@ export default function DeliverySupportTickets() {
 
       {/* View Ticket Dialog - Full Details */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="flex w-[calc(100%-2rem)] max-w-[600px] max-h-[85vh] flex-col overflow-hidden border border-slate-200 bg-white p-0 shadow-2xl">
-          <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-14">
-            <DialogTitle className="text-xl font-semibold text-gray-900">Ticket Details</DialogTitle>
-            <p className="text-sm text-gray-600 mt-1">Complete information about the support ticket</p>
+        <DialogContent className="flex w-[calc(100%-2rem)] max-w-[600px] max-h-[85vh] flex-col overflow-hidden border border-neutral-200 bg-white p-0 shadow-2xl">
+          <DialogHeader className="border-b border-neutral-200 px-6 py-5 pr-14">
+            <DialogTitle className="text-xl font-medium text-neutral-900">Ticket details</DialogTitle>
+            <p className="text-sm text-neutral-600 mt-1">Complete information about the support ticket</p>
           </DialogHeader>
           {selectedTicket && (
             <div className="flex-1 overflow-y-auto px-6 py-5">
@@ -358,16 +358,16 @@ export default function DeliverySupportTickets() {
               {/* Ticket Information Section */}
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-1 h-6 bg-blue-500 rounded"></div>
-                  <h3 className="text-base font-semibold text-gray-900">Ticket Information</h3>
+                  <div className="w-1 h-6 bg-neutral-900 rounded"></div>
+                  <h3 className="text-base font-medium text-neutral-900">Ticket information</h3>
                 </div>
                 <div className="pl-4 space-y-4">
                   {/* Ticket ID */}
                   {selectedTicket.ticketId && (
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Ticket ID</p>
-                      <div className="bg-gray-200 text-gray-800 px-4 py-2.5 rounded-lg inline-block">
-                        <p className="text-base font-mono font-semibold">
+                      <p className="text-xs text-neutral-500 mb-2">Ticket ID</p>
+                      <div className="bg-neutral-200 text-neutral-800 px-4 py-2.5 rounded-lg inline-block">
+                        <p className="text-base font-mono font-medium">
                           #{selectedTicket.ticketId}
                         </p>
                       </div>
@@ -376,15 +376,15 @@ export default function DeliverySupportTickets() {
 
                   {/* Subject */}
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Subject</p>
-                    <p className="text-base text-gray-900 font-semibold">{selectedTicket.subject}</p>
+                    <p className="text-xs text-neutral-500 mb-2">Subject</p>
+                    <p className="text-base text-neutral-900 font-medium">{selectedTicket.subject}</p>
                   </div>
 
                   {/* Description / Issue */}
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Description / Issue</p>
-                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 max-h-64 overflow-y-auto">
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
+                    <p className="text-xs text-neutral-500 mb-2">Description / issue</p>
+                    <div className="bg-neutral-50 p-4 rounded-lg border border-neutral-200 max-h-64 overflow-y-auto">
+                      <p className="text-sm text-neutral-900 whitespace-pre-wrap leading-relaxed">
                         {selectedTicket.description}
                       </p>
                     </div>
@@ -393,25 +393,25 @@ export default function DeliverySupportTickets() {
                   {/* Status, Priority, Category */}
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Status</p>
-                      <span className={`inline-block px-4 py-2 rounded-full text-xs font-semibold ${getStatusColor(selectedTicket.status)}`}>
+                      <p className="text-xs text-neutral-500 mb-2">Status</p>
+                      <span className={`inline-block px-4 py-2 rounded-full text-xs font-medium ${getStatusColor(selectedTicket.status)}`}>
                         {selectedTicket.status.charAt(0).toUpperCase() + selectedTicket.status.slice(1).replace('_', ' ')}
                       </span>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Priority</p>
-                      <p className="text-sm text-gray-900 capitalize font-semibold">{selectedTicket.priority}</p>
+                      <p className="text-xs text-neutral-500 mb-2">Priority</p>
+                      <p className="text-sm text-neutral-900 capitalize font-medium">{selectedTicket.priority}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wide">Category</p>
-                      <p className="text-sm text-gray-900 capitalize font-semibold">{selectedTicket.category}</p>
+                      <p className="text-xs text-neutral-500 mb-2">Category</p>
+                      <p className="text-sm text-neutral-900 capitalize font-medium">{selectedTicket.category}</p>
                     </div>
                   </div>
 
                   {/* Created Date */}
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Created</p>
-                    <p className="text-sm text-gray-900">{formatDateTime(selectedTicket.createdAt)}</p>
+                    <p className="text-xs text-neutral-500 mb-1">Created</p>
+                    <p className="text-sm text-neutral-900">{formatDateTime(selectedTicket.createdAt)}</p>
                   </div>
                 </div>
               </div>
@@ -420,21 +420,21 @@ export default function DeliverySupportTickets() {
               <div>
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-1 h-6 bg-orange-500 rounded"></div>
-                  <h3 className="text-base font-semibold text-gray-900">Delivery Partner</h3>
+                  <h3 className="text-base font-medium text-neutral-900">Delivery partner</h3>
                 </div>
                 <div className="pl-4 space-y-3">
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Name</p>
-                    <p className="text-sm text-gray-900 font-semibold">{selectedTicket.deliveryPartner?.name || 'N/A'}</p>
+                    <p className="text-xs text-neutral-500 mb-1">Name</p>
+                    <p className="text-sm text-neutral-900 font-medium">{selectedTicket.deliveryPartner?.name || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">Phone Number</p>
-                    <p className="text-sm text-gray-900">{selectedTicket.deliveryPartner?.phone || 'N/A'}</p>
+                    <p className="text-xs text-neutral-500 mb-1">Phone number</p>
+                    <p className="text-sm text-neutral-900">{selectedTicket.deliveryPartner?.phone || 'N/A'}</p>
                   </div>
                   {selectedTicket.deliveryPartner?._id && (
                     <div>
-                      <p className="text-xs font-medium text-gray-500 mb-1 uppercase tracking-wide">ID</p>
-                      <p className="text-sm text-gray-900">DP-{String(selectedTicket.deliveryPartner._id).slice(-8).toUpperCase()}</p>
+                      <p className="text-xs text-neutral-500 mb-1">ID</p>
+                      <p className="text-sm text-neutral-900">DP-{String(selectedTicket.deliveryPartner._id).slice(-8).toUpperCase()}</p>
                     </div>
                   )}
                 </div>
@@ -445,13 +445,13 @@ export default function DeliverySupportTickets() {
                 <div>
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-1 h-6 bg-green-500 rounded"></div>
-                    <h3 className="text-base font-semibold text-gray-900">Admin Response</h3>
+                    <h3 className="text-base font-medium text-neutral-900">Admin response</h3>
                   </div>
                   <div className="pl-4">
-                    <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">{selectedTicket.adminResponse}</p>
+                    <div className="bg-neutral-50 border border-neutral-200 p-4 rounded-lg">
+                      <p className="text-sm text-neutral-900 whitespace-pre-wrap leading-relaxed">{selectedTicket.adminResponse}</p>
                       {selectedTicket.respondedAt && (
-                        <p className="text-xs text-gray-500 mt-3 pt-3 border-t border-blue-200">
+                        <p className="text-xs text-neutral-500 mt-3 pt-3 border-t border-neutral-200">
                           Responded on: {formatDateTime(selectedTicket.respondedAt)}
                         </p>
                       )}
@@ -462,10 +462,10 @@ export default function DeliverySupportTickets() {
 
               {/* Action Buttons */}
               {selectedTicket.status !== 'closed' && (
-                <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row gap-3 pt-5 border-t border-neutral-200">
                   <button
                     onClick={() => handleRespond(selectedTicket)}
-                    className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
+                    className="px-5 py-2.5 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 font-medium transition-colors shadow-sm"
                   >
                     {selectedTicket.adminResponse ? "Edit Response" : "Send Response"}
                   </button>
@@ -475,9 +475,9 @@ export default function DeliverySupportTickets() {
                         handleStatusChange(selectedTicket._id, 'resolved')
                         setIsViewOpen(false)
                       }}
-                      className="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors shadow-sm"
+                      className="px-5 py-2.5 bg-[#0a4d2b] text-white rounded-lg hover:bg-[#06381e] font-medium transition-colors shadow-sm"
                     >
-                      Mark Resolved
+                      Mark resolved
                     </button>
                   )}
                   <button
@@ -485,9 +485,9 @@ export default function DeliverySupportTickets() {
                       handleStatusChange(selectedTicket._id, 'closed')
                       setIsViewOpen(false)
                     }}
-                    className="px-5 py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-medium transition-colors shadow-sm"
+                    className="px-5 py-2.5 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 font-medium transition-colors shadow-sm"
                   >
-                    Close Ticket
+                    Close ticket
                   </button>
                 </div>
               )}
@@ -499,17 +499,17 @@ export default function DeliverySupportTickets() {
 
       {/* Respond Dialog */}
       <Dialog open={isResponseOpen} onOpenChange={setIsResponseOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-[560px] overflow-hidden border border-slate-200 bg-white p-0 shadow-2xl">
-          <DialogHeader className="border-b border-slate-200 px-6 py-5 pr-14">
-            <DialogTitle className="text-xl font-semibold text-slate-900">
-              Respond to Ticket
+        <DialogContent className="w-[calc(100%-2rem)] max-w-[560px] overflow-hidden border border-neutral-200 bg-white p-0 shadow-2xl">
+          <DialogHeader className="border-b border-neutral-200 px-6 py-5 pr-14">
+            <DialogTitle className="text-xl font-medium text-neutral-900">
+              Respond to ticket
             </DialogTitle>
             {selectedTicket && (
               <div className="mt-2 space-y-1">
-                <p className="text-sm font-medium text-slate-600">
+                <p className="text-sm font-medium text-neutral-600">
                   {selectedTicket.ticketId ? `#${selectedTicket.ticketId}` : "Support Ticket"}
                 </p>
-                <p className="text-sm text-slate-500 line-clamp-2">
+                <p className="text-sm text-neutral-500 line-clamp-2">
                   {selectedTicket.subject || "Send an update that the delivery partner can see."}
                 </p>
               </div>
@@ -517,32 +517,32 @@ export default function DeliverySupportTickets() {
           </DialogHeader>
           <div className="space-y-4 px-6 py-5">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-700">
+              <label className="mb-2 block text-sm font-medium text-neutral-700">
                 Response
               </label>
               <Textarea
                 value={responseText}
                 onChange={(e) => setResponseText(e.target.value)}
-                placeholder="Enter your response..."
+                placeholder="Enter your response"
                 rows={6}
-                className="min-h-[180px] resize-y rounded-xl border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-800 shadow-sm focus-visible:border-blue-500 focus-visible:ring-4 focus-visible:ring-blue-100"
+                className="min-h-[180px] resize-y rounded-xl border-neutral-300 bg-white px-4 py-3 text-sm leading-6 text-neutral-800 focus-visible:border-neutral-400 focus-visible:ring-4 focus-visible:ring-[#0a4d2b]/30"
               />
-              <p className="mt-2 text-xs text-slate-500">
-                This message will be visible to the delivery partner in their support ticket.
+              <p className="mt-2 text-xs text-neutral-500">
+                This message will be visible to the delivery partner in their support ticket
               </p>
             </div>
           </div>
-          <DialogFooter className="border-t border-slate-200 px-6 py-4">
+          <DialogFooter className="border-t border-neutral-200 px-6 py-4">
             <button
               onClick={() => setIsResponseOpen(false)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+              className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
             >
               Cancel
             </button>
             <button
               onClick={handleUpdateTicket}
               disabled={updating || !responseText.trim()}
-              className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {updating ? (
                 <>

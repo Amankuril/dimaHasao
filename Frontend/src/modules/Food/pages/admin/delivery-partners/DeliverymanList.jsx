@@ -489,49 +489,49 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <User className="w-5 h-5 text-slate-600" />
-              <h1 className="text-2xl font-bold text-slate-900">Deliveryman List</h1>
+              <User className="w-5 h-5 text-neutral-600" />
+              <h1 className="text-2xl font-medium text-neutral-900">Deliveryman list</h1>
             </div>
 
             <div className="flex items-center gap-3">
               <div className="relative flex-1 sm:flex-initial min-w-[250px]">
                 <input
                   type="text"
-                  placeholder="Search by name or restaur..."
+                  placeholder="Search by name or restaur"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <button
                 onClick={handleExportPDF}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors"
                 title="Export as PDF"
               >
                 <FileText className="w-4 h-4" />
-                <span className="text-black font-bold">PDF</span>
+                <span className="text-black font-medium">PDF</span>
               </button>
               <button
                 onClick={handleExportExcel}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors"
                 title="Export as Excel"
               >
                 <FileSpreadsheet className="w-4 h-4" />
-                <span className="text-black font-bold">Excel</span>
+                <span className="text-black font-medium">Excel</span>
               </button>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -540,10 +540,10 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
 
           <div className="mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-700">Deliveryman</span>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+              <span className="text-sm font-medium text-neutral-700">Deliveryman</span>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
                 {loading ? (
-                  <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                  <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
                 ) : (
                   totalDeliverymen
                 )}
@@ -568,15 +568,15 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-sm text-slate-600">Loading delivery partners...</span>
+                <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
+                <span className="ml-3 text-sm text-neutral-600">Loading delivery partners...</span>
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     {visibleColumns.si && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span>SI</span>
                         </div>
@@ -584,124 +584,124 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                     )}
                     {visibleColumns.name && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('name')}
                       >
                         <div className="flex items-center gap-2">
                           <span>Name</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'name' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.rating && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('rating')}
                       >
                         <div className="flex items-center gap-2">
                           <span>Rating</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'rating' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'rating' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.contact && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('contact')}
                       >
                         <div className="flex items-center gap-2">
                           <span>Contact</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'contact' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'contact' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.zone && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('zone')}
                       >
                         <div className="flex items-center gap-2">
                           <span>Zone</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'zone' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'zone' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.totalOrders && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('totalOrders')}
                       >
                         <div className="flex items-center gap-2">
-                          <span>Total Orders</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'totalOrders' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <span>Total orders</span>
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'totalOrders' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.pocketBalance && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('pocketBalance')}
                       >
                         <div className="flex items-center gap-2">
-                          <span>Pocket Balance</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'pocketBalance' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <span>Pocket balance</span>
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'pocketBalance' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.cashInHand && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('cashInHand')}
                       >
                         <div className="flex items-center gap-2">
-                          <span>Cash In Hand</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'cashInHand' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <span>Cash in hand</span>
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'cashInHand' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.remainingCashLimit && (
                       <th
-                        className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap cursor-pointer hover:bg-slate-100 transition-colors"
+                        className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap cursor-pointer hover:bg-neutral-100 transition-colors"
                         onClick={() => handleSort('remainingCashLimit')}
                       >
                         <div className="flex items-center gap-2">
-                          <span>Remaining Cash Limit</span>
-                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'remainingCashLimit' ? 'text-blue-600' : 'text-slate-400'}`} />
+                          <span>Remaining cash limit</span>
+                          <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'remainingCashLimit' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                         </div>
                       </th>
                     )}
                     {visibleColumns.availabilityStatus && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span>Availability Status</span>
+                          <span>Availability status</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.actions && (
-                      <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                      <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {filteredDeliverymen.length === 0 ? (
                     <tr>
-                      <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-slate-500">
+                      <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-neutral-500">
                         {error ? "Error loading delivery partners" : "No delivery partners found"}
                       </td>
                     </tr>
                   ) : (
                     filteredDeliverymen.map((dm, index) => (
-                      <tr key={dm._id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={dm._id} className="hover:bg-neutral-50 transition-colors">
                         {visibleColumns.si && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</span>
+                            <span className="text-sm font-medium text-neutral-700">{(currentPage - 1) * pageSize + index + 1}</span>
                           </td>
                         )}
                         {visibleColumns.name && (
                           <td className="px-6 py-4 whitespace-nowrap align-middle">
                             <div className="flex items-center gap-3">
                               <div 
-                                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-all border border-slate-200"
+                                className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 overflow-hidden cursor-pointer hover:opacity-80 transition-colors border border-neutral-200"
                                 style={{ background: 'linear-gradient(135deg, #E8EEF7 0%, #C5D3E5 100%)' }}
                                 onClick={() => handleView(dm)}
                               >
@@ -714,7 +714,7 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                                 />
                               </div>
                               <span
-                                className="text-sm font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
+                                className="text-sm font-medium text-neutral-900 cursor-pointer hover:text-[#0a4d2b] transition-colors"
                                 onClick={() => handleView(dm)}
                               >
                                 {dm.name}
@@ -732,11 +732,11 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                             >
                               {dm.rating > 0 ? (
                                 <>
-                                  <span className="text-sm font-bold text-amber-700 leading-none">{Number(dm.rating).toFixed(1)}</span>
+                                  <span className="text-sm font-medium text-amber-700 leading-none">{Number(dm.rating).toFixed(1)}</span>
                                   <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                                 </>
                               ) : (
-                                <span className="text-sm text-slate-400 leading-none">N/A</span>
+                                <span className="text-sm text-neutral-400 leading-none">N/A</span>
                               )}
                             </div>
                           </td>
@@ -744,19 +744,19 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                         {visibleColumns.contact && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
-                              <span className="text-sm text-slate-700">{dm.email}</span>
-                              <span className="text-xs text-slate-500">{dm.phone}</span>
+                              <span className="text-sm text-neutral-700">{dm.email}</span>
+                              <span className="text-xs text-neutral-500">{dm.phone}</span>
                             </div>
                           </td>
                         )}
                         {visibleColumns.zone && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">{dm.zone}</span>
+                            <span className="text-sm text-neutral-700">{dm.zone}</span>
                           </td>
                         )}
                         {visibleColumns.totalOrders && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">{dm.totalOrders || 0}</span>
+                            <span className="text-sm text-neutral-700">{dm.totalOrders || 0}</span>
                           </td>
                         )}
                         {visibleColumns.pocketBalance && (
@@ -768,10 +768,10 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                                 step="0.01"
                                 value={editValues.pocketBalance}
                                 onChange={(e) => updateWalletFieldValue("pocketBalance", e.target.value)}
-                                className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                                className="w-28 rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                               />
                             ) : (
-                              <span className="text-sm text-slate-700">{formatCurrency(dm.pocketBalance)}</span>
+                              <span className="text-sm text-neutral-700">{formatCurrency(dm.pocketBalance)}</span>
                             )}
                           </td>
                         )}
@@ -784,23 +784,23 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                                 step="0.01"
                                 value={editValues.cashInHand}
                                 onChange={(e) => updateWalletFieldValue("cashInHand", e.target.value)}
-                                className="w-28 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                                className="w-28 rounded-lg border border-neutral-300 px-3 py-2 text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                               />
                             ) : (
-                              <span className="text-sm text-slate-700">{formatCurrency(dm.cashInHand)}</span>
+                              <span className="text-sm text-neutral-700">{formatCurrency(dm.cashInHand)}</span>
                             )}
                           </td>
                         )}
                         {visibleColumns.remainingCashLimit && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">{formatCurrency(dm.remainingCashLimit)}</span>
+                            <span className="text-sm text-neutral-700">{formatCurrency(dm.remainingCashLimit)}</span>
                           </td>
                         )}
                         {visibleColumns.availabilityStatus && (
                           <td className="px-6 py-4">
                             <div className="flex flex-col">
                               <span className="text-xs">
-                                Active Status: <span className={`${dm.status === 'Online' ? 'text-blue-600' : 'text-slate-600'} underline`}>{dm.status}</span>
+                                Active Status: <span className={`${dm.status === 'Online' ? 'text-[#0a4d2b]' : 'text-neutral-600'} underline`}>{dm.status}</span>
                               </span>
                             </div>
                           </td>
@@ -821,7 +821,7 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                                   <button
                                     onClick={cancelEditingWallet}
                                     disabled={savingDeliveryId === String(dm._id)}
-                                    className="p-1.5 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50"
+                                    className="p-1.5 rounded bg-neutral-100 text-neutral-600 hover:bg-neutral-200 transition-colors disabled:opacity-50"
                                     title="Cancel"
                                   >
                                     <X className="w-4 h-4" />
@@ -838,7 +838,7 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                               )}
                               <button 
                                 onClick={() => handleView(dm)}
-                                className="p-1.5 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors" 
+                                className="p-1.5 rounded bg-neutral-50 text-[#0a4d2b] hover:bg-neutral-100 transition-colors" 
                                 title="View Details"
                               >
                                 <Eye className="w-4 h-4" />
@@ -888,67 +888,67 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
       {/* View Details Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="max-w-3xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100 max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="text-xl font-bold text-slate-900">Delivery Partner Details</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+            <DialogTitle className="text-xl font-medium text-neutral-900">Delivery partner details</DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
             {viewDetails ? (
               <div className="space-y-6 mt-4">
                 {/* Profile Image & Basic Info */}
-                <div className="flex items-start gap-6 pb-6 border-b border-slate-200">
+                <div className="flex items-start gap-6 pb-6 border-b border-neutral-200">
                   <div className="flex-shrink-0">
                     {viewDetails.profileImage?.url ? (
                       <img 
                         src={viewDetails.profileImage.url} 
                         alt={viewDetails.name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-slate-200"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-neutral-200"
                         onError={(e) => { e.currentTarget.src = "/assets/images/profile_avatar.webp" }}
                       />
                     ) : (
                       <img
                         src="/assets/images/profile_avatar.webp"
                         alt={viewDetails.name}
-                        className="w-24 h-24 rounded-full object-cover border-2 border-slate-200"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-neutral-200"
                       />
                     )}
                   </div>
                   <div className="flex-1 grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
+                      <label className="text-xs font-medium text-neutral-500 flex items-center gap-1">
                         <User className="w-3 h-3" /> Name
                       </label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">{viewDetails.name || "N/A"}</p>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">{viewDetails.name || "N/A"}</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
+                      <label className="text-xs font-medium text-neutral-500 flex items-center gap-1">
                         <Mail className="w-3 h-3" /> Email
                       </label>
-                      <p className="text-sm text-slate-900 mt-1">{viewDetails.email || "N/A"}</p>
+                      <p className="text-sm text-neutral-900 mt-1">{viewDetails.email || "N/A"}</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
+                      <label className="text-xs font-medium text-neutral-500 flex items-center gap-1">
                         <Phone className="w-3 h-3" /> Phone
                       </label>
-                      <p className="text-sm text-slate-900 mt-1">{viewDetails.phone || "N/A"}</p>
+                      <p className="text-sm text-neutral-900 mt-1">{viewDetails.phone || "N/A"}</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Delivery ID</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">{viewDetails.deliveryId || "N/A"}</p>
+                      <label className="text-xs font-medium text-neutral-500">Delivery ID</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">{viewDetails.deliveryId || "N/A"}</p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Status</label>
+                      <label className="text-xs font-medium text-neutral-500">Status</label>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
-                        viewDetails.status === 'pending' ? 'bg-blue-100 text-blue-700' :
+                        viewDetails.status === 'pending' ? 'bg-neutral-100 text-[#0a4d2b]' :
                         viewDetails.status === 'approved' || viewDetails.status === 'active' ? 'bg-green-100 text-green-700' :
                         viewDetails.status === 'blocked' ? 'bg-red-100 text-red-700' :
-                        'bg-slate-100 text-slate-700'
+                        'bg-neutral-100 text-neutral-700'
                       }`}>
                         {viewDetails.status === 'blocked' ? 'Rejected' : (viewDetails.status?.charAt(0).toUpperCase() + viewDetails.status?.slice(1) || "N/A")}
                       </span>
                     </div>
                     {viewDetails.rejectionReason && (
                       <div className="col-span-2">
-                        <label className="text-xs font-semibold text-slate-500 uppercase text-red-600">Rejection Reason</label>
+                        <label className="text-xs font-medium text-neutral-500 text-red-600">Rejection reason</label>
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-1">
                           <p className="text-sm text-red-700 whitespace-pre-wrap">{viewDetails.rejectionReason}</p>
                         </div>
@@ -956,18 +956,18 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                     )}
                     {viewDetails.dateOfBirth && (
                       <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> Date of Birth
+                        <label className="text-xs font-medium text-neutral-500 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> Date of birth
                         </label>
-                        <p className="text-sm text-slate-900 mt-1">
+                        <p className="text-sm text-neutral-900 mt-1">
                           {new Date(viewDetails.dateOfBirth).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
                     )}
                     {viewDetails.gender && (
                       <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase">Gender</label>
-                        <p className="text-sm text-slate-900 mt-1 capitalize">{viewDetails.gender || "N/A"}</p>
+                        <label className="text-xs font-medium text-neutral-500">Gender</label>
+                        <p className="text-sm text-neutral-900 mt-1 capitalize">{viewDetails.gender || "N/A"}</p>
                       </div>
                     )}
                   </div>
@@ -975,45 +975,45 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
 
                 {/* Location Details */}
                 {viewDetails.location && (
-                  <div className="pb-6 border-b border-slate-200">
-                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <MapPin className="w-4 h-4" /> Location Details
+                  <div className="pb-6 border-b border-neutral-200">
+                    <h3 className="text-sm font-medium text-neutral-900 mb-3 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" /> Location details
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {viewDetails.location.addressLine1 && (
                         <div className="col-span-2">
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Address Line 1</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.location.addressLine1}</p>
+                          <label className="text-xs font-medium text-neutral-500">Address Line 1</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.location.addressLine1}</p>
                         </div>
                       )}
                       {viewDetails.location.addressLine2 && (
                         <div className="col-span-2">
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Address Line 2</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.location.addressLine2}</p>
+                          <label className="text-xs font-medium text-neutral-500">Address Line 2</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.location.addressLine2}</p>
                         </div>
                       )}
                       {viewDetails.location.area && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Area</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.location.area}</p>
+                          <label className="text-xs font-medium text-neutral-500">Area</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.location.area}</p>
                         </div>
                       )}
                       {viewDetails.location.city && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">City</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.location.city}</p>
+                          <label className="text-xs font-medium text-neutral-500">City</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.location.city}</p>
                         </div>
                       )}
                       {viewDetails.location.state && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">State</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.location.state}</p>
+                          <label className="text-xs font-medium text-neutral-500">State</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.location.state}</p>
                         </div>
                       )}
                       {viewDetails.location.zipCode && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Zip Code</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.location.zipCode}</p>
+                          <label className="text-xs font-medium text-neutral-500">Zip code</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.location.zipCode}</p>
                         </div>
                       )}
                     </div>
@@ -1022,33 +1022,33 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
 
                 {/* Vehicle Details */}
                 {viewDetails.vehicle && (
-                  <div className="pb-6 border-b border-slate-200">
-                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <Bike className="w-4 h-4" /> Vehicle Details
+                  <div className="pb-6 border-b border-neutral-200">
+                    <h3 className="text-sm font-medium text-neutral-900 mb-3 flex items-center gap-2">
+                      <Bike className="w-4 h-4" /> Vehicle details
                     </h3>
                     <div className="grid grid-cols-4 gap-4">
                       {viewDetails.vehicle.brand && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Brand</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.vehicle.brand}</p>
+                          <label className="text-xs font-medium text-neutral-500">Brand</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.vehicle.brand}</p>
                         </div>
                       )}
                       {viewDetails.vehicle.model && (
                         <div className="text-right col-span-1">
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Model</label>
-                          <p className="text-xs text-slate-900 mt-1">{viewDetails.vehicle.model}</p>
+                          <label className="text-xs font-medium text-neutral-500">Model</label>
+                          <p className="text-xs text-neutral-900 mt-1">{viewDetails.vehicle.model}</p>
                         </div>
                       )}
                       {viewDetails.vehicle.number && (
                         <div className="col-span-2">
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Vehicle Number</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.vehicle.number}</p>
+                          <label className="text-xs font-medium text-neutral-500">Vehicle number</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.vehicle.number}</p>
                         </div>
                       )}
                       {viewDetails.vehicle.type && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Vehicle Type</label>
-                          <p className="text-sm text-slate-900 mt-1 capitalize">{viewDetails.vehicle.type}</p>
+                          <label className="text-xs font-medium text-neutral-500">Vehicle type</label>
+                          <p className="text-sm text-neutral-900 mt-1 capitalize">{viewDetails.vehicle.type}</p>
                         </div>
                       )}
                     </div>
@@ -1056,44 +1056,44 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                 )}
 
                 {/* Pocket Details */}
-                <div className="pb-6 border-b border-slate-200">
-                  <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                    <CreditCard className="w-4 h-4" /> Pocket Details
+                <div className="pb-6 border-b border-neutral-200">
+                  <h3 className="text-sm font-medium text-neutral-900 mb-3 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4" /> Pocket details
                   </h3>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Pocket Balance</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Pocket balance</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">
                         {formatCurrency(viewDetails.pocketBalance || viewDetails.walletSummary?.pocketBalance)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Cash In Hand</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Cash in hand</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">
                         {formatCurrency(viewDetails.cashInHand || viewDetails.walletSummary?.cashCollected)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Remaining Cash Limit</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Remaining cash limit</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">
                         {formatCurrency(viewDetails.remainingCashLimit || viewDetails.walletSummary?.remainingCashLimit)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Total Earning</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Total earning</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">
                         {formatCurrency(viewDetails.totalEarning || viewDetails.walletSummary?.totalEarning)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Bonus</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Bonus</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">
                         {formatCurrency(viewDetails.bonus || viewDetails.walletSummary?.bonus)}
                       </p>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Total Withdrawn</label>
-                      <p className="text-sm font-medium text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Total withdrawn</label>
+                      <p className="text-sm font-medium text-neutral-900 mt-1">
                         {formatCurrency(viewDetails.totalWithdrawn || viewDetails.walletSummary?.totalWithdrawn)}
                       </p>
                     </div>
@@ -1102,27 +1102,27 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
 
                 {/* Documents */}
                 {viewDetails.documents && (
-                  <div className="pb-6 border-b border-slate-200">
-                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                  <div className="pb-6 border-b border-neutral-200">
+                    <h3 className="text-sm font-medium text-neutral-900 mb-3 flex items-center gap-2">
                       <FileCheck className="w-4 h-4" /> Documents
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {/* Aadhar */}
                       {viewDetails.documents.aadhar && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Aadhar Card</label>
+                          <label className="text-xs font-medium text-neutral-500">Aadhar card</label>
                           <div className="mt-2">
                             {viewDetails.documents.aadhar.number && (
-                              <p className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.aadhar.number}</p>
+                              <p className="text-sm text-neutral-700 mb-1">Number: {viewDetails.documents.aadhar.number}</p>
                             )}
                             {viewDetails.documents.aadhar.document && (
                               <a 
                                 href={viewDetails.documents.aadhar.document} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                className="inline-flex items-center gap-1 text-sm text-[#0a4d2b] hover:text-[#0a4d2b]"
                               >
-                                <ExternalLink className="w-3 h-3" /> View Document
+                                <ExternalLink className="w-3 h-3" /> View document
                               </a>
                             )}
                           </div>
@@ -1132,19 +1132,19 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                       {/* PAN */}
                       {viewDetails.documents.pan && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">PAN Card</label>
+                          <label className="text-xs font-medium text-neutral-500">PAN card</label>
                           <div className="mt-2">
                             {viewDetails.documents.pan.number && (
-                              <p className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.pan.number}</p>
+                              <p className="text-sm text-neutral-700 mb-1">Number: {viewDetails.documents.pan.number}</p>
                             )}
                             {viewDetails.documents.pan.document && (
                               <a 
                                 href={viewDetails.documents.pan.document} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                className="inline-flex items-center gap-1 text-sm text-[#0a4d2b] hover:text-[#0a4d2b]"
                               >
-                                <ExternalLink className="w-3 h-3" /> View Document
+                                <ExternalLink className="w-3 h-3" /> View document
                               </a>
                             )}
                           </div>
@@ -1154,13 +1154,13 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                       {/* Driving License */}
                       {viewDetails.documents.drivingLicense && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Driving License</label>
+                          <label className="text-xs font-medium text-neutral-500">Driving license</label>
                           <div className="mt-2">
                             {viewDetails.documents.drivingLicense.number && (
-                              <p className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.drivingLicense.number}</p>
+                              <p className="text-sm text-neutral-700 mb-1">Number: {viewDetails.documents.drivingLicense.number}</p>
                             )}
                             {viewDetails.documents.drivingLicense.expiryDate && (
-                              <p className="text-xs text-slate-500 mb-1">
+                              <p className="text-xs text-neutral-500 mb-1">
                                 Expiry: {new Date(viewDetails.documents.drivingLicense.expiryDate).toLocaleDateString('en-GB')}
                               </p>
                             )}
@@ -1169,9 +1169,9 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                                 href={viewDetails.documents.drivingLicense.document} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                className="inline-flex items-center gap-1 text-sm text-[#0a4d2b] hover:text-[#0a4d2b]"
                               >
-                                <ExternalLink className="w-3 h-3" /> View Document
+                                <ExternalLink className="w-3 h-3" /> View document
                               </a>
                             )}
                           </div>
@@ -1181,19 +1181,19 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                       {/* Vehicle RC */}
                       {viewDetails.documents.vehicleRC && (viewDetails.documents.vehicleRC.number || viewDetails.documents.vehicleRC.document) && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Vehicle RC</label>
+                          <label className="text-xs font-medium text-neutral-500">Vehicle RC</label>
                           <div className="mt-2">
                             {viewDetails.documents.vehicleRC.number && (
-                              <p className="text-sm text-slate-700 mb-1">Number: {viewDetails.documents.vehicleRC.number}</p>
+                              <p className="text-sm text-neutral-700 mb-1">Number: {viewDetails.documents.vehicleRC.number}</p>
                             )}
                             {viewDetails.documents.vehicleRC.document && (
                               <a 
                                 href={viewDetails.documents.vehicleRC.document} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                                className="inline-flex items-center gap-1 text-sm text-[#0a4d2b] hover:text-[#0a4d2b]"
                               >
-                                <ExternalLink className="w-3 h-3" /> View Document
+                                <ExternalLink className="w-3 h-3" /> View document
                               </a>
                             )}
                           </div>
@@ -1205,33 +1205,33 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
 
                 {/* Bank Details */}
                 {viewDetails.documents?.bankDetails && (
-                  <div className="pb-6 border-b border-slate-200">
-                    <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                      <CreditCard className="w-4 h-4" /> Bank Details
+                  <div className="pb-6 border-b border-neutral-200">
+                    <h3 className="text-sm font-medium text-neutral-900 mb-3 flex items-center gap-2">
+                      <CreditCard className="w-4 h-4" /> Bank details
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
                       {viewDetails.documents.bankDetails.accountHolderName && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Account Holder Name</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.accountHolderName}</p>
+                          <label className="text-xs font-medium text-neutral-500">Account holder name</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.documents.bankDetails.accountHolderName}</p>
                         </div>
                       )}
                       {viewDetails.documents.bankDetails.accountNumber && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Account Number</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.accountNumber}</p>
+                          <label className="text-xs font-medium text-neutral-500">Account number</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.documents.bankDetails.accountNumber}</p>
                         </div>
                       )}
                       {viewDetails.documents.bankDetails.ifscCode && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">IFSC Code</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.ifscCode}</p>
+                          <label className="text-xs font-medium text-neutral-500">IFSC code</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.documents.bankDetails.ifscCode}</p>
                         </div>
                       )}
                       {viewDetails.documents.bankDetails.bankName && (
                         <div>
-                          <label className="text-xs font-semibold text-slate-500 uppercase">Bank Name</label>
-                          <p className="text-sm text-slate-900 mt-1">{viewDetails.documents.bankDetails.bankName}</p>
+                          <label className="text-xs font-medium text-neutral-500">Bank name</label>
+                          <p className="text-sm text-neutral-900 mt-1">{viewDetails.documents.bankDetails.bankName}</p>
                         </div>
                       )}
                     </div>
@@ -1242,13 +1242,13 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                 <div className="grid grid-cols-2 gap-4">
                   {viewDetails.signupMethod && (
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Signup Method</label>
-                      <p className="text-sm text-slate-900 mt-1 capitalize">{viewDetails.signupMethod}</p>
+                      <label className="text-xs font-medium text-neutral-500">Signup method</label>
+                      <p className="text-sm text-neutral-900 mt-1 capitalize">{viewDetails.signupMethod}</p>
                     </div>
                   )}
                   {viewDetails.phoneVerified !== undefined && (
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Phone Verified</label>
+                      <label className="text-xs font-medium text-neutral-500">Phone verified</label>
                       <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${
                         viewDetails.phoneVerified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
@@ -1258,8 +1258,8 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                   )}
                   {viewDetails.createdAt && (
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase">Joined Date</label>
-                      <p className="text-sm text-slate-900 mt-1">
+                      <label className="text-xs font-medium text-neutral-500">Joined date</label>
+                      <p className="text-sm text-neutral-900 mt-1">
                         {new Date(viewDetails.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>
@@ -1268,14 +1268,14 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
               </div>
             ) : (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                <Loader2 className="w-6 h-6 animate-spin text-[#0a4d2b]" />
               </div>
             )}
           </div>
-          <DialogFooter className="px-6 pb-6 border-t border-slate-200">
+          <DialogFooter className="px-6 pb-6 border-t border-neutral-200">
             <button
               onClick={() => setIsViewOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Close
             </button>
@@ -1289,28 +1289,28 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -1318,16 +1318,16 @@ availableCashLimit: deliveryman.availableCashLimit || 0,
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>

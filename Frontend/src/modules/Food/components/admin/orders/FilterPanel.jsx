@@ -27,36 +27,36 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-neutral-900/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div 
         className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-slate-900">Filter Orders</h2>
+        <div className="sticky top-0 bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-medium text-neutral-900">Filter orders</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-100 rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-slate-600" />
+            <X className="w-5 h-5 text-neutral-600" />
           </button>
         </div>
         
         <div className="p-6 space-y-6">
           {/* Payment Status Filter */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Payment Status
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Payment status
             </label>
             <div className="flex flex-wrap gap-2">
               {["All", "paid", "pending", "failed", "refunded"].map((status) => (
                 <button
                   key={status}
                   onClick={() => setLocalFilters(prev => ({ ...prev, paymentStatus: status === "All" ? "" : status }))}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     localFilters.paymentStatus === status || (status === "All" && !localFilters.paymentStatus)
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-neutral-900 text-white shadow-sm"
+                      : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
                   }`}
                 >
                   {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -67,18 +67,18 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
 
           {/* Delivery Type Filter */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Delivery Type
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Delivery type
             </label>
             <div className="flex flex-wrap gap-2">
               {["All", "home_delivery", "take_away", "dine_in"].map((type) => (
                 <button
                   key={type}
                   onClick={() => setLocalFilters(prev => ({ ...prev, deliveryType: type === "All" ? "" : type }))}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     localFilters.deliveryType === type || (type === "All" && !localFilters.deliveryType)
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-neutral-900 text-white shadow-sm"
+                      : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200"
                   }`}
                 >
                   {type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
@@ -90,7 +90,7 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
           {/* Amount Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Min Amount ($)
               </label>
               <input
@@ -99,11 +99,11 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
                 min="0"
                 onChange={(e) => setLocalFilters(prev => ({ ...prev, minAmount: sanitizeAmountInput(e.target.value) }))}
                 placeholder="0"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Max Amount ($)
               </label>
               <input
@@ -112,7 +112,7 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
                 min="0"
                 onChange={(e) => setLocalFilters(prev => ({ ...prev, maxAmount: sanitizeAmountInput(e.target.value) }))}
                 placeholder="10000"
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
           </div>
@@ -120,8 +120,8 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
           {/* Date Range */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                From Date
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                From date
               </label>
               <input
                 type="date"
@@ -140,12 +140,12 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
                     }
                   })
                 }
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                To Date
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                To date
               </label>
               <input
                 type="date"
@@ -158,7 +158,7 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
                     toDate: clampDateValue(e.target.value),
                   }))
                 }
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
           </div>
@@ -166,13 +166,13 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
           {/* Restaurant Filter */}
           {restaurants.length > 0 && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Restaurant
               </label>
               <select
                 value={localFilters.restaurant || ""}
                 onChange={(e) => setLocalFilters(prev => ({ ...prev, restaurant: e.target.value }))}
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               >
                 <option value="">All Restaurants</option>
                 {restaurants.map((rest) => (
@@ -183,18 +183,18 @@ export default function FilterPanel({ isOpen, onClose, filters, setFilters, onAp
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-slate-50 border-t border-slate-200 px-6 py-4 flex items-center justify-end gap-3">
+        <div className="sticky bottom-0 bg-neutral-50 border-t border-neutral-200 px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={onReset}
-            className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+            className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
           >
             Reset
           </button>
           <button
             onClick={() => { setFilters(localFilters); onApply(); }}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+            className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
           >
-            Apply Filters
+            Apply filters
           </button>
         </div>
       </div>

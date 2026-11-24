@@ -73,25 +73,25 @@ export default function DeliveryBoyWallet() {
     wallets.reduce((acc, w) => acc + Number(w?.[key] ?? fallback), 0)
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-full mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <PiggyBank className="w-5 h-5 text-emerald-600" />
-              <h1 className="text-2xl font-bold text-slate-900">Delivery Boy Wallet</h1>
+              <h1 className="text-2xl font-medium text-neutral-900">Delivery boy wallet</h1>
             </div>
             <button
               onClick={() => fetchWallets()}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
             </button>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-neutral-600 mt-1">
             Cash Collected = lifetime COD. Cash Deposited = amount already paid/settled. Cash In Hand = still unsettled.
           </p>
         </div>
@@ -108,8 +108,8 @@ export default function DeliveryBoyWallet() {
             {
               label: "Cash Collected (lifetime)",
               value: summary?.totalCashCollected ?? sumField("cashCollected"),
-              color: "text-blue-600",
-              bg: "bg-blue-50",
+              color: "text-[#0a4d2b]",
+              bg: "bg-neutral-50",
             },
             {
               label: "Cash Deposited (paid)",
@@ -126,14 +126,14 @@ export default function DeliveryBoyWallet() {
             {
               label: "Total Earning",
               value: summary?.totalEarning ?? sumField("totalEarning"),
-              color: "text-slate-900",
-              bg: "bg-slate-100",
+              color: "text-neutral-900",
+              bg: "bg-neutral-100",
             },
             {
               label: "Bonus",
               value: summary?.totalBonus ?? sumField("bonus"),
-              color: "text-violet-600",
-              bg: "bg-violet-50",
+              color: "text-[#0a4d2b]",
+              bg: "bg-neutral-50",
             },
             {
               label: "Total Withdrawn",
@@ -142,21 +142,21 @@ export default function DeliveryBoyWallet() {
               bg: "bg-orange-50",
             },
           ].map((stat, i) => (
-            <div key={i} className={`${stat.bg} rounded-xl border border-slate-200 p-4 shadow-sm`}>
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">{stat.label}</p>
-              <p className={`text-lg font-bold ${stat.color}`}>{formatCurrency(stat.value)}</p>
+            <div key={i} className={`${stat.bg} rounded-xl border border-neutral-200 p-4 shadow-sm`}>
+              <p className="text-xs font-medium text-neutral-500 mb-1">{stat.label}</p>
+              <p className={`text-lg font-medium ${stat.color}`}>{formatCurrency(stat.value)}</p>
             </div>
           ))}
         </div>
 
         {/* Table Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-slate-900">Wallets</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+              <h2 className="text-xl font-medium text-neutral-900">Wallets</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
                 {loading ? (
-                  <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                  <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
                 ) : (
                   total
                 )}
@@ -168,43 +168,43 @@ export default function DeliveryBoyWallet() {
                 placeholder="Search by name or phone"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
 
           {loading ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-4" />
-              <p className="text-slate-600">Loading wallets…</p>
+              <p className="text-neutral-600">Loading wallets…</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1100px]">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">#</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Phone</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Remaining Limit</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Pocket Balance</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Cash Collected</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Cash Deposited</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Cash In Hand</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Earning</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Bonus</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Withdrawn</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">#</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Phone</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Remaining limit</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Pocket balance</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Cash collected</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Cash deposited</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Cash in hand</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Total earning</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Bonus</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Withdrawn</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {wallets.length === 0 ? (
                     <tr>
                       <td colSpan={11} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <Package className="w-16 h-16 text-slate-400 mb-4" />
-                          <p className="text-lg font-semibold text-slate-700">No wallets found</p>
-                          <p className="text-sm text-slate-500 mt-1">
+                          <Package className="w-16 h-16 text-neutral-400 mb-4" />
+                          <p className="text-lg font-medium text-neutral-700">No wallets found</p>
+                          <p className="text-sm text-neutral-500 mt-1">
                             {searchQuery ? `No results for "${searchQuery}"` : "No approved delivery boys found."}
                           </p>
                         </div>
@@ -223,26 +223,26 @@ export default function DeliveryBoyWallet() {
                       const isSettled = deposited > 0 && cashInHand <= 0
 
                       return (
-                        <tr key={w.walletId || w.deliveryId || i} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">{(page - 1) * limit + i + 1}</td>
+                        <tr key={w.walletId || w.deliveryId || i} className="hover:bg-neutral-50 transition-colors">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-neutral-500">{(page - 1) * limit + i + 1}</td>
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <span className="text-sm font-semibold text-slate-800">{w.name || "—"}</span>
+                            <span className="text-sm font-medium text-neutral-800">{w.name || "—"}</span>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">
+                          <td className="px-4 py-4 whitespace-nowrap text-sm text-neutral-600">
                             {w.phone || w.deliveryIdString || "—"}
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <span className={`text-sm font-semibold ${remaining <= 0 ? "text-red-600" : "text-emerald-600"}`}>
+                            <span className={`text-sm font-medium ${remaining <= 0 ? "text-red-600" : "text-emerald-600"}`}>
                               {formatCurrency(remaining)}
                             </span>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{formatCurrency(pocket)}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{formatCurrency(collected)}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{formatCurrency(pocket)}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{formatCurrency(collected)}</td>
                           <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex flex-col gap-1">
                               <span className="text-sm font-medium text-teal-700">{formatCurrency(deposited)}</span>
                               {deposited > 0 && (
-                                <span className={`inline-flex w-fit px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                <span className={`inline-flex w-fit px-2 py-0.5 rounded-full text-xs font-medium ${
                                   isSettled ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
                                 }`}>
                                   {isSettled ? "Fully paid" : "Partially paid"}
@@ -251,12 +251,12 @@ export default function DeliveryBoyWallet() {
                             </div>
                           </td>
                           <td className="px-4 py-4 whitespace-nowrap">
-                            <span className={`text-sm font-semibold ${cashInHand > 0 ? "text-rose-600" : "text-slate-700"}`}>
+                            <span className={`text-sm font-medium ${cashInHand > 0 ? "text-rose-600" : "text-neutral-700"}`}>
                               {formatCurrency(cashInHand)}
                             </span>
                           </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-slate-800">{formatCurrency(earning)}</td>
-                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-violet-600">{formatCurrency(bonus)}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">{formatCurrency(earning)}</td>
+                          <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-[#0a4d2b]">{formatCurrency(bonus)}</td>
                           <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-orange-600">{formatCurrency(withdrawn)}</td>
                         </tr>
                       )
@@ -268,22 +268,22 @@ export default function DeliveryBoyWallet() {
           )}
 
           {pages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
-              <p className="text-sm text-slate-600">
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-200">
+              <p className="text-sm text-neutral-600">
                 Page {page} of {pages} · {total} total
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(pages, p + 1))}
                   disabled={page >= pages}
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

@@ -8,48 +8,48 @@ export default function SetupTaxes() {
   const [packagingTaxOn, setPackagingTaxOn] = useState(true);
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-xl lg:text-2xl font-bold text-slate-900">
-          Setup Tax Calculation
+        <h1 className="text-xl lg:text-2xl font-medium text-neutral-900">
+          Setup tax calculation
         </h1>
       </div>
 
       <div className="space-y-4">
         {/* Allow Tax calculation card */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 border-b border-slate-100">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 border-b border-neutral-100">
             <div>
-              <h2 className="text-sm font-semibold text-slate-900">
+              <h2 className="text-sm font-medium text-neutral-900">
                 Allow Tax Calculation For Restaurant ?
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                To active tax calculation Turn On The Status.
+              <p className="text-xs text-neutral-500 mt-1">
+                To active tax calculation Turn On The Status
               </p>
             </div>
             <ToggleSwitch enabled={statusOn} onToggle={() => setStatusOn((p) => !p)} />
           </div>
 
           {/* Tax based on product price */}
-          <div className="px-4 py-4 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">
+          <div className="px-4 py-4 border-b border-neutral-100">
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">
               Tax calculation based on Product Price
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-700">
-              <label className="flex gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 cursor-pointer">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-neutral-700">
+              <label className="flex gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 cursor-pointer">
                 <input
                   type="radio"
                   name="price-mode"
                   checked={productPriceMode === "include"}
                   onChange={() => setProductPriceMode("include")}
-                  className="mt-1 w-3.5 h-3.5 text-blue-600"
+                  className="mt-1 w-3.5 h-3.5 text-[#0a4d2b]"
                 />
                 <div>
-                  <p className="font-semibold text-slate-900 mb-0.5">
-                    Calculate Tax Include Product Price
+                  <p className="font-medium text-neutral-900 mb-0.5">
+                    Calculate tax include product price
                   </p>
-                  <p className="text-[11px] leading-relaxed">
+                  <p className="text-xs leading-relaxed">
                     By selecting this option no need to setup VAT from here. If
                     enabled the customer will see the total food price
                     including VAT.
@@ -57,21 +57,21 @@ export default function SetupTaxes() {
                 </div>
               </label>
 
-              <label className="flex gap-3 rounded-lg border border-blue-500 bg-blue-50 px-4 py-3 cursor-pointer">
+              <label className="flex gap-3 rounded-lg border border-[#0a4d2b] bg-neutral-50 px-4 py-3 cursor-pointer">
                 <input
                   type="radio"
                   name="price-mode"
                   checked={productPriceMode === "exclude"}
                   onChange={() => setProductPriceMode("exclude")}
-                  className="mt-1 w-3.5 h-3.5 text-blue-600"
+                  className="mt-1 w-3.5 h-3.5 text-[#0a4d2b]"
                 />
                 <div>
-                  <p className="font-semibold text-slate-900 mb-0.5">
-                    Calculate Tax Exclude Product Price
+                  <p className="font-medium text-neutral-900 mb-0.5">
+                    Calculate tax exclude product price
                   </p>
-                  <p className="text-[11px] leading-relaxed">
+                  <p className="text-xs leading-relaxed">
                     By selecting this option you will need to setup individual
-                    vat rate for different types of income source.
+                    vat rate for different types of income source
                   </p>
                 </div>
               </label>
@@ -79,19 +79,19 @@ export default function SetupTaxes() {
           </div>
 
           {/* Basic setup */}
-          <div className="px-4 py-4 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">
-              Basic Setup
+          <div className="px-4 py-4 border-b border-neutral-100">
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">
+              Basic setup
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Select Tax Type
+                <label className="block font-medium text-neutral-700 mb-1.5">
+                  Select tax type
                 </label>
                 <select
                   value={taxType}
                   onChange={(e) => setTaxType(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 >
                   <option value="order-wise">Order wise</option>
                   <option value="item-wise">Item wise</option>
@@ -99,20 +99,20 @@ export default function SetupTaxes() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
-                  Select Tax Rate
+                <label className="block font-medium text-neutral-700 mb-1.5">
+                  Select tax rate
                 </label>
                 <div className="relative">
                   <select
                     value={taxRate}
                     onChange={(e) => setTaxRate(e.target.value)}
-                    className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-3 pr-8 py-2 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                   >
                     <option value="custom-10">Custom Tax (10%)</option>
                     <option value="gst-15">GST (15%)</option>
                     <option value="income-5">Income Tax (5%)</option>
                   </select>
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-neutral-400 pointer-events-none">
                     ▾
                   </span>
                 </div>
@@ -122,13 +122,13 @@ export default function SetupTaxes() {
 
           {/* Additional setup */}
           <div className="px-4 py-4">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">
-              Additional Setup
+            <h3 className="text-sm font-medium text-neutral-900 mb-3">
+              Additional setup
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
+                <label className="block font-medium text-neutral-700 mb-1.5">
                   Tax on packaging charge
                 </label>
                 <ToggleSwitch
@@ -138,18 +138,18 @@ export default function SetupTaxes() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1.5">
+                <label className="block font-medium text-neutral-700 mb-1.5">
                   &nbsp;
                 </label>
                 <div className="relative">
                   <select
                     value="gst-15"
                     readOnly
-                    className="w-full pl-3 pr-8 py-2 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-3 pr-8 py-2 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                   >
                     <option>GST (15%)</option>
                   </select>
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-neutral-400 pointer-events-none">
                     ▾
                   </span>
                 </div>
@@ -162,15 +162,15 @@ export default function SetupTaxes() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
           <button
             type="button"
-            className="px-4 py-2 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors"
+            className="px-4 py-2 text-xs font-medium rounded-lg border border-neutral-300 text-neutral-700 hover:bg-neutral-100 transition-colors"
           >
             Reset
           </button>
           <button
             type="button"
-            className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors"
           >
-            Save Information
+            Save information
           </button>
         </div>
       </div>
@@ -183,10 +183,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />

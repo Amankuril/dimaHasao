@@ -679,7 +679,7 @@ export default function AddRestaurant() {
       const data = response?.data?.data ?? response?.data
       if (response?.data?.success !== false && data) {
         await clearPersistedFormData()
-        toast.success("Restaurant created successfully!")
+        toast.success("Restaurant created successfully")
         setShowSuccessDialog(true)
         setTimeout(() => {
           navigate("/admin/food/restaurants")
@@ -942,10 +942,10 @@ export default function AddRestaurant() {
   const renderStep1 = () => (
     <div className="space-y-6">
       <section className="bg-white p-4 sm:p-6 rounded-md">
-        <h2 className="text-lg font-semibold text-black mb-4">Restaurant information</h2>
+        <h2 className="text-lg font-medium text-black mb-4">Restaurant information</h2>
         <div className="space-y-4">
           <div>
-            <Label className="text-xs text-gray-700">Restaurant name*</Label>
+            <Label className="text-xs text-neutral-700">Restaurant name*</Label>
             <Input
               value={step1.restaurantName || ""}
               onChange={(e) => setStep1({ ...step1, restaurantName: e.target.value })}
@@ -954,15 +954,15 @@ export default function AddRestaurant() {
             />
           </div>
           <div>
-            <Label className="text-xs text-gray-700">Pure veg restaurant?*</Label>
+            <Label className="text-xs text-neutral-700">Pure veg restaurant?*</Label>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setStep1({ ...step1, pureVegRestaurant: true })}
                 className={`px-3 py-1.5 text-xs rounded-full border ${
                   step1.pureVegRestaurant === true
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-white text-gray-700 border-gray-200"
+                    ? "bg-[#0a4d2b] text-white border-green-600"
+                    : "bg-white text-neutral-700 border-neutral-200"
                 }`}
               >
                 Yes, Pure Veg
@@ -972,25 +972,25 @@ export default function AddRestaurant() {
                 onClick={() => setStep1({ ...step1, pureVegRestaurant: false })}
                 className={`px-3 py-1.5 text-xs rounded-full border ${
                   step1.pureVegRestaurant === false
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-white text-gray-700 border-gray-200"
+                    ? "bg-neutral-900 text-white border-neutral-900"
+                    : "bg-white text-neutral-700 border-neutral-200"
                 }`}
               >
                 No, Mixed Menu
               </button>
             </div>
-            <p className="text-[11px] text-gray-500 mt-1">
-              This helps users filter restaurants by dietary preference.
+            <p className="text-xs text-neutral-500 mt-1">
+              This helps users filter restaurants by dietary preference
             </p>
           </div>
         </div>
       </section>
 
       <section className="bg-white p-4 sm:p-6 rounded-md">
-        <h2 className="text-lg font-semibold text-black mb-4">Owner details</h2>
+        <h2 className="text-lg font-medium text-black mb-4">Owner details</h2>
         <div className="space-y-4">
           <div>
-            <Label className="text-xs text-gray-700">Full name*</Label>
+            <Label className="text-xs text-neutral-700">Full name*</Label>
             <Input
               value={step1.ownerName || ""}
               onChange={(e) => setStep1({ ...step1, ownerName: normalizeName(e.target.value) })}
@@ -999,7 +999,7 @@ export default function AddRestaurant() {
             />
           </div>
           <div>
-            <Label className="text-xs text-gray-700">Email address*</Label>
+            <Label className="text-xs text-neutral-700">Email address*</Label>
             <Input
               type="email"
               value={step1.ownerEmail || ""}
@@ -1009,7 +1009,7 @@ export default function AddRestaurant() {
             />
           </div>
           <div>
-            <Label className="text-xs text-gray-700">Phone number*</Label>
+            <Label className="text-xs text-neutral-700">Phone number*</Label>
             <Input
               value={step1.ownerPhone || ""}
               onChange={(e) => setStep1({ ...step1, ownerPhone: sanitizeDigits(e.target.value).slice(0, 10) })}
@@ -1023,16 +1023,16 @@ export default function AddRestaurant() {
       </section>
 
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <h2 className="text-lg font-semibold text-black">Restaurant contact & location</h2>
+        <h2 className="text-lg font-medium text-black">Restaurant contact & location</h2>
         <div className="relative">
-          <Label className="text-xs text-gray-700">Search location</Label>
+          <Label className="text-xs text-neutral-700">Search location</Label>
           <div className="relative">
             <Input
               ref={locationSearchInputRef}
               value={locationSearchValue}
               onChange={(e) => setLocationSearchValue(e.target.value)}
               className="mt-1 bg-white text-sm"
-              placeholder="Search and select restaurant address..."
+              placeholder="Search and select restaurant address"
             />
             {isSearchingLocation && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -1042,7 +1042,7 @@ export default function AddRestaurant() {
           </div>
 
           {locationSuggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-md shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
               {locationSuggestions.map((s) => (
                 <button
                   key={s.id}
@@ -1071,7 +1071,7 @@ export default function AddRestaurant() {
                     setLocationSearchValue(display)
                     setLocationSuggestions([])
                   }}
-                  className="w-full px-4 py-2 text-left text-[13px] font-medium text-gray-700 hover:bg-orange-50 border-b border-gray-100 last:border-none"
+                  className="w-full px-4 py-2 text-left text-[13px] font-medium text-neutral-700 hover:bg-orange-50 border-b border-neutral-100 last:border-none"
                 >
                   <span className="truncate">{s.display}</span>
                 </button>
@@ -1079,12 +1079,12 @@ export default function AddRestaurant() {
             </div>
           )}
           
-          <p className="text-[11px] text-gray-500 mt-1">
-            Search to auto-fill Area, City, State, Pincode and coordinates.
+          <p className="text-xs text-neutral-500 mt-1">
+            Search to auto-fill Area, City, State, Pincode and coordinates
           </p>
         </div>
         <div>
-          <Label className="text-xs text-gray-700">Service zone*</Label>
+          <Label className="text-xs text-neutral-700">Service zone*</Label>
           <select
             value={step1.zoneId || ""}
             onChange={(e) => setStep1({ ...step1, zoneId: e.target.value })}
@@ -1102,12 +1102,12 @@ export default function AddRestaurant() {
               )
             })}
           </select>
-          <p className="text-[11px] text-gray-500 mt-1">
-            Choose the service zone where your restaurant will be available.
+          <p className="text-xs text-neutral-500 mt-1">
+            Choose the service zone where your restaurant will be available
           </p>
         </div>
         <div>
-          <Label className="text-xs text-gray-700">Primary contact number*</Label>
+          <Label className="text-xs text-neutral-700">Primary contact number*</Label>
           <Input
             value={step1.primaryContactNumber || ""}
             onChange={(e) => setStep1({ ...step1, primaryContactNumber: sanitizeDigits(e.target.value).slice(0, 10) })}
@@ -1122,7 +1122,7 @@ export default function AddRestaurant() {
             value={step1.location?.area || ""}
             onChange={(e) => setStep1({ ...step1, location: { ...step1.location, area: e.target.value } })}
             className="bg-white text-sm"
-            placeholder="Area / Sector / Locality*"
+            placeholder="Area / sector / locality*"
           />
           <Input
             value={step1.location?.city || ""}
@@ -1168,10 +1168,10 @@ export default function AddRestaurant() {
   const renderStep2 = () => (
     <div className="space-y-6">
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-5">
-        <h2 className="text-lg font-semibold text-black">Menu & photos</h2>
+        <h2 className="text-lg font-medium text-black">Menu & photos</h2>
         <div className="space-y-2">
-          <Label className="text-xs font-medium text-gray-700">Menu images*</Label>
-          <div className="mt-1 border border-dashed border-gray-300 rounded-md bg-gray-50/70 px-4 py-3">
+          <Label className="text-xs font-medium text-neutral-700">Menu images*</Label>
+          <div className="mt-1 border border-dashed border-neutral-300 rounded-md bg-neutral-50/70 px-4 py-3">
             <label htmlFor="menuImagesInput" className="inline-flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-sm bg-white text-black border-black text-xs font-medium cursor-pointer w-full items-center">
               <Upload className="w-4.5 h-4.5" />
               <span>Choose files</span>
@@ -1196,7 +1196,7 @@ export default function AddRestaurant() {
               {step2.menuImages.map((file, idx) => {
                 const imageUrl = file instanceof File ? URL.createObjectURL(file) : (file?.url || file)
                 return (
-                  <div key={idx} className="relative aspect-[4/5] rounded-md overflow-hidden bg-gray-100">
+                  <div key={idx} className="relative aspect-[4/5] rounded-md overflow-hidden bg-neutral-100">
                     {imageUrl && <img src={imageUrl} alt={`Menu ${idx + 1}`} className="w-full h-full object-cover" />}
                     <button
                       type="button"
@@ -1213,16 +1213,16 @@ export default function AddRestaurant() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs font-medium text-gray-700">Restaurant profile image*</Label>
+          <Label className="text-xs font-medium text-neutral-700">Restaurant profile image*</Label>
           <div className="flex items-center gap-4">
-            <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden">
+            <div className="h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden">
               {step2.profileImage ? (
                 (() => {
                   const imageSrc = step2.profileImage instanceof File ? URL.createObjectURL(step2.profileImage) : (step2.profileImage?.url || step2.profileImage)
-                  return imageSrc ? <img src={imageSrc} alt="Profile" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-gray-500" />
+                  return imageSrc ? <img src={imageSrc} alt="Profile" className="w-full h-full object-cover" /> : <ImageIcon className="w-6 h-6 text-neutral-500" />
                 })()
               ) : (
-                <ImageIcon className="w-6 h-6 text-gray-500" />
+                <ImageIcon className="w-6 h-6 text-neutral-500" />
               )}
             </div>
             <label htmlFor="profileImageInput" className="inline-flex justify-center items-center gap-1.5 px-3 py-1.5 rounded-sm bg-white text-black border-black text-xs font-medium cursor-pointer">
@@ -1246,7 +1246,7 @@ export default function AddRestaurant() {
 
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-5">
         <div>
-          <Label className="text-xs text-gray-700">Select cuisines (up to 3)*</Label>
+          <Label className="text-xs text-neutral-700">Select cuisines (up to 3)*</Label>
           <div className="mt-2 flex flex-wrap gap-2">
             {cuisinesOptions.map((cuisine) => {
               const active = step2.cuisines.includes(cuisine)
@@ -1262,7 +1262,7 @@ export default function AddRestaurant() {
                       return { ...prev, cuisines: [...prev.cuisines, cuisine] }
                     })
                   }}
-                  className={`px-3 py-1.5 text-xs rounded-full ${active ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
+                  className={`px-3 py-1.5 text-xs rounded-full ${active ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-800"}`}
                 >
                   {cuisine}
                 </button>
@@ -1272,13 +1272,13 @@ export default function AddRestaurant() {
         </div>
 
         <div className="space-y-3">
-          <Label className="text-xs text-gray-700">Outlet timings*</Label>
+          <Label className="text-xs text-neutral-700">Outlet timings*</Label>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/60">
+              <div className="border border-neutral-200 rounded-md px-3 py-2 bg-neutral-50/60">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-gray-800" />
-                  <span className="text-xs font-medium text-gray-900">Opening time</span>
+                  <Clock className="w-4 h-4 text-neutral-800" />
+                  <span className="text-xs font-medium text-neutral-900">Opening time</span>
                 </div>
                 <MobileTimePicker
                   ampm={true}
@@ -1325,10 +1325,10 @@ export default function AddRestaurant() {
                 />
               </div>
 
-              <div className="border border-gray-200 rounded-md px-3 py-2 bg-gray-50/60">
+              <div className="border border-neutral-200 rounded-md px-3 py-2 bg-neutral-50/60">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-gray-800" />
-                  <span className="text-xs font-medium text-gray-900">Closing time</span>
+                  <Clock className="w-4 h-4 text-neutral-800" />
+                  <span className="text-xs font-medium text-neutral-900">Closing time</span>
                 </div>
                 <MobileTimePicker
                   ampm={true}
@@ -1379,7 +1379,7 @@ export default function AddRestaurant() {
         </div>
 
         <div>
-          <Label className="text-xs text-gray-700">Estimated delivery time*</Label>
+          <Label className="text-xs text-neutral-700">Estimated delivery time*</Label>
           <Input
             value={step2.estimatedDeliveryTime || ""}
             onChange={(e) => setStep2({ ...step2, estimatedDeliveryTime: e.target.value })}
@@ -1390,8 +1390,8 @@ export default function AddRestaurant() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs text-gray-700 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-gray-800" />
+          <Label className="text-xs text-neutral-700 flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5 text-neutral-800" />
             <span>Open days*</span>
           </Label>
           <div className="mt-1 grid grid-cols-7 gap-1.5 sm:gap-2">
@@ -1408,7 +1408,7 @@ export default function AddRestaurant() {
                       return { ...prev, openDays: [...prev.openDays, day] }
                     })
                   }}
-                  className={`aspect-square flex items-center justify-center rounded-md text-[11px] font-medium ${active ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
+                  className={`aspect-square flex items-center justify-center rounded-md text-xs font-medium ${active ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-800"}`}
                 >
                   {day.charAt(0)}
                 </button>
@@ -1417,20 +1417,20 @@ export default function AddRestaurant() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between p-4 rounded-md border border-gray-100 bg-gray-50/50">
+        <div className="flex items-center justify-between p-4 rounded-md border border-neutral-100 bg-neutral-50/50">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <p className="text-sm font-medium text-neutral-900 flex items-center gap-1.5">
               <span>🛍️</span>
               <span>Takeaway (Pickup)</span>
             </p>
-            <p className="text-[11px] text-gray-500 mt-0.5">
-              Allow customers to place orders online and pick them up from the restaurant.
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Allow customers to place orders online and pick them up from the restaurant
             </p>
           </div>
           <Switch
             checked={step2.takeawayEnabled}
             onCheckedChange={(checked) => setStep2({ ...step2, takeawayEnabled: checked })}
-            className="data-[state=unchecked]:bg-gray-300 data-[state=checked]:bg-green-600"
+            className="data-[state=unchecked]:bg-neutral-300 data-[state=checked]:bg-green-600"
           />
         </div>
       </section>
@@ -1440,10 +1440,10 @@ export default function AddRestaurant() {
   const renderStep3 = () => (
     <div className="space-y-6">
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <h2 className="text-lg font-semibold text-black">PAN details</h2>
+        <h2 className="text-lg font-medium text-black">PAN details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-xs text-gray-700">PAN number*</Label>
+            <Label className="text-xs text-neutral-700">PAN number*</Label>
             <Input
               value={step3.panNumber || ""}
               onChange={(e) => setStep3({ ...step3, panNumber: sanitizePan(e.target.value) })}
@@ -1453,7 +1453,7 @@ export default function AddRestaurant() {
             />
           </div>
           <div>
-            <Label className="text-xs text-gray-700">Name on PAN*</Label>
+            <Label className="text-xs text-neutral-700">Name on PAN*</Label>
             <Input
               value={step3.nameOnPan || ""}
               onChange={(e) => setStep3({ ...step3, nameOnPan: normalizeName(e.target.value) })}
@@ -1462,7 +1462,7 @@ export default function AddRestaurant() {
           </div>
         </div>
         <div>
-          <Label className="text-xs text-gray-700">PAN image*</Label>
+          <Label className="text-xs text-neutral-700">PAN image*</Label>
           <Input
             type="file"
             accept="image/*"
@@ -1471,30 +1471,30 @@ export default function AddRestaurant() {
           />
           {step3.panImage && (
             <div className="mt-2 flex items-center gap-3">
-              <div className="h-14 w-14 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+              <div className="h-14 w-14 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
                 <img src={getStoredImageSrc(step3.panImage)} alt="PAN document" className="h-full w-full object-cover" />
               </div>
-              <p className="text-xs text-gray-600">Selected: {getStoredFileLabel(step3.panImage)}</p>
+              <p className="text-xs text-neutral-600">Selected: {getStoredFileLabel(step3.panImage)}</p>
             </div>
           )}
         </div>
       </section>
 
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <h2 className="text-lg font-semibold text-black">GST details</h2>
+        <h2 className="text-lg font-medium text-black">GST details</h2>
         <div className="flex gap-4 items-center text-sm">
-          <span className="text-gray-700">GST registered?</span>
+          <span className="text-neutral-700">GST registered?</span>
           <button
             type="button"
             onClick={() => setStep3({ ...step3, gstRegistered: true })}
-            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
+            className={`px-3 py-1.5 text-xs rounded-full ${step3.gstRegistered ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-800"}`}
           >
             Yes
           </button>
           <button
             type="button"
             onClick={() => setStep3({ ...step3, gstRegistered: false })}
-            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? "bg-black text-white" : "bg-gray-100 text-gray-800"}`}
+            className={`px-3 py-1.5 text-xs rounded-full ${!step3.gstRegistered ? "bg-neutral-900 text-white" : "bg-neutral-100 text-neutral-800"}`}
           >
             No
           </button>
@@ -1507,10 +1507,10 @@ export default function AddRestaurant() {
             <Input type="file" accept="image/*" onChange={(e) => setStep3({ ...step3, gstImage: e.target.files?.[0] || null })} className="bg-white text-sm" />
             {step3.gstImage && (
               <div className="flex items-center gap-3">
-                <div className="h-14 w-14 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                <div className="h-14 w-14 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
                   <img src={getStoredImageSrc(step3.gstImage)} alt="GST document" className="h-full w-full object-cover" />
                 </div>
-                <p className="text-xs text-gray-600">Selected: {getStoredFileLabel(step3.gstImage)}</p>
+                <p className="text-xs text-neutral-600">Selected: {getStoredFileLabel(step3.gstImage)}</p>
               </div>
             )}
           </div>
@@ -1518,11 +1518,11 @@ export default function AddRestaurant() {
       </section>
 
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <h2 className="text-lg font-semibold text-black">FSSAI details</h2>
+        <h2 className="text-lg font-medium text-black">FSSAI details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input value={step3.fssaiNumber || ""} onChange={(e) => setStep3({ ...step3, fssaiNumber: sanitizeFssai(e.target.value) })} className="bg-white text-sm" placeholder="FSSAI number*" inputMode="numeric" maxLength={14} />
           <div>
-            <Label className="text-xs text-gray-700 mb-1 block">FSSAI expiry date*</Label>
+            <Label className="text-xs text-neutral-700 mb-1 block">FSSAI expiry date*</Label>
             <Input
               type="date"
               value={step3.fssaiExpiry || ""}
@@ -1536,16 +1536,16 @@ export default function AddRestaurant() {
         <Input type="file" accept="image/*" onChange={(e) => setStep3({ ...step3, fssaiImage: e.target.files?.[0] || null })} className="bg-white text-sm" />
         {step3.fssaiImage && (
           <div className="flex items-center gap-3">
-            <div className="h-14 w-14 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+            <div className="h-14 w-14 overflow-hidden rounded-md border border-neutral-200 bg-neutral-50">
               <img src={getStoredImageSrc(step3.fssaiImage)} alt="FSSAI document" className="h-full w-full object-cover" />
             </div>
-            <p className="text-xs text-gray-600">Selected: {getStoredFileLabel(step3.fssaiImage)}</p>
+            <p className="text-xs text-neutral-600">Selected: {getStoredFileLabel(step3.fssaiImage)}</p>
           </div>
         )}
       </section>
 
       <section className="bg-white p-4 sm:p-6 rounded-md space-y-4">
-        <h2 className="text-lg font-semibold text-black">Bank account details</h2>
+        <h2 className="text-lg font-medium text-black">Bank account details</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input value={step3.accountNumber || ""} onChange={(e) => setStep3({ ...step3, accountNumber: sanitizeDigits(e.target.value).slice(0, 18) })} className="bg-white text-sm" placeholder="Account number*" inputMode="numeric" maxLength={18} />
           <Input value={step3.confirmAccountNumber || ""} onChange={(e) => setStep3({ ...step3, confirmAccountNumber: sanitizeDigits(e.target.value).slice(0, 18) })} className="bg-white text-sm" placeholder="Re-enter account number*" inputMode="numeric" maxLength={18} />
@@ -1570,13 +1570,13 @@ export default function AddRestaurant() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="min-h-screen bg-neutral-100 flex flex-col">
       <header className="px-4 py-4 sm:px-6 sm:py-5 bg-white flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Building2 className="w-5 h-5 text-blue-600" />
-          <div className="text-sm font-semibold text-black">Add New Restaurant</div>
+          <Building2 className="w-5 h-5 text-[#0a4d2b]" />
+          <div className="text-sm font-medium text-black">Add new restaurant</div>
         </div>
-        <div className="text-xs text-gray-600">Step {step} of 3</div>
+        <div className="text-xs text-neutral-600">Step {step} of 3</div>
       </header>
 
       <main ref={mainContentRef} className="flex-1 px-4 sm:px-6 py-4 space-y-4">
@@ -1593,14 +1593,14 @@ export default function AddRestaurant() {
             variant="ghost"
             disabled={step === 1 || isSubmitting}
             onClick={() => setStep((s) => Math.max(1, s - 1))}
-            className="text-sm text-gray-700 bg-transparent"
+            className="text-sm text-neutral-700 bg-transparent"
           >
             Back
           </Button>
           <Button
             onClick={handleNext}
             disabled={isSubmitting}
-            className="text-sm bg-black text-white px-6"
+            className="text-sm bg-neutral-900 text-white px-6"
           >
             {step === 3 ? (isSubmitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating... </> : "Create Restaurant") : isSubmitting ? "Saving..." : "Continue"}
           </Button>
@@ -1620,9 +1620,9 @@ export default function AddRestaurant() {
               </div>
             </div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900 mb-2">Restaurant Created Successfully!</DialogTitle>
-              <DialogDescription className="text-sm text-slate-600">
-                The restaurant has been created and is now pending approval.
+              <DialogTitle className="text-2xl font-medium text-neutral-900 mb-2">Restaurant Created Successfully</DialogTitle>
+              <DialogDescription className="text-sm text-neutral-600">
+                The restaurant has been created and is now pending approval
               </DialogDescription>
             </DialogHeader>
             <div className="mt-8">
@@ -1631,9 +1631,9 @@ export default function AddRestaurant() {
                   setShowSuccessDialog(false)
                   navigate("/admin/restaurants")
                 }}
-                className="w-full bg-black text-white"
+                className="w-full bg-neutral-900 text-white"
               >
-                Go to Restaurant List
+                Go to restaurant list
               </Button>
             </div>
           </div>

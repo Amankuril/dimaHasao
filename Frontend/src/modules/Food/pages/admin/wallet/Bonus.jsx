@@ -76,27 +76,27 @@ export default function Bonus() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Bonus Setup Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Wallet className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Wallet Bonus Setup</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Wallet bonus setup</h1>
           </div>
 
           {/* Language Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+          <div className="flex items-center gap-2 border-b border-neutral-200 mb-6">
             {languageTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveLanguage(tab.key)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeLanguage === tab.key
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
+                    ? "border-[#0a4d2b] text-[#0a4d2b]"
+                    : "border-transparent text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {tab.label}
@@ -107,39 +107,39 @@ export default function Bonus() {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Bonus Title ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label})
                 </label>
                 <input
                   type="text"
                   value={formData.bonusTitle}
                   onChange={(e) => handleInputChange("bonusTitle", e.target.value)}
-                  placeholder="Ex: EID Dhamaka"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Ex: EID dhamaka"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Short Description ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label})
                 </label>
                 <input
                   type="text"
                   value={formData.shortDescription}
                   onChange={(e) => handleInputChange("shortDescription", e.target.value)}
-                  placeholder="Ex: EID Dhamaka"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Ex: EID dhamaka"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Bonus Type
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Bonus type
                 </label>
                 <select
                   value={formData.bonusType}
                   onChange={(e) => handleInputChange("bonusType", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 >
                   <option value="Percentage (%)">Percentage (%)</option>
                   <option value="Amount ($)">Amount ($)</option>
@@ -147,10 +147,10 @@ export default function Bonus() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   <div className="flex items-center gap-2">
                     <span>Bonus Amount ({formData.bonusType === "Percentage (%)" ? "%" : "$"})</span>
-                    <Info className="w-4 h-4 text-slate-400" />
+                    <Info className="w-4 h-4 text-neutral-400" />
                   </div>
                 </label>
                 <input
@@ -158,15 +158,15 @@ export default function Bonus() {
                   value={formData.bonusAmount}
                   onChange={(e) => handleInputChange("bonusAmount", e.target.value)}
                   placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   <div className="flex items-center gap-2">
                     <span>Minimum Add Money Amount ($)</span>
-                    <Info className="w-4 h-4 text-slate-400" />
+                    <Info className="w-4 h-4 text-neutral-400" />
                   </div>
                 </label>
                 <input
@@ -174,15 +174,15 @@ export default function Bonus() {
                   value={formData.minAddMoney}
                   onChange={(e) => handleInputChange("minAddMoney", e.target.value)}
                   placeholder="Ex: 10"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   <div className="flex items-center gap-2">
                     <span>Maximum Bonus ($)</span>
-                    <Info className="w-4 h-4 text-slate-400" />
+                    <Info className="w-4 h-4 text-neutral-400" />
                   </div>
                 </label>
                 <input
@@ -190,37 +190,37 @@ export default function Bonus() {
                   value={formData.maxBonus}
                   onChange={(e) => handleInputChange("maxBonus", e.target.value)}
                   placeholder="Ex: 1000"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Start Date
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Start date
                 </label>
                 <div className="relative">
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange("startDate", e.target.value)}
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Expire Date
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Expire date
                 </label>
                 <div className="relative">
                   <input
                     type="date"
                     value={formData.expireDate}
                     onChange={(e) => handleInputChange("expireDate", e.target.value)}
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -229,13 +229,13 @@ export default function Bonus() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Submit
               </button>
@@ -244,11 +244,11 @@ export default function Bonus() {
         </div>
 
         {/* Bonus List Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-slate-900">Bonus List</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h2 className="text-xl font-medium text-neutral-900">Bonus list</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredBonuses.length}
               </span>
             </div>
@@ -259,53 +259,53 @@ export default function Bonus() {
                 placeholder="Ex: Search by bonus title"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Bonus Title</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Bonus Info</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Bonus Amount</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Started On</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Expires On</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Bonus title</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Bonus info</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Bonus amount</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Started on</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Expires on</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredBonuses.map((bonus) => (
-                  <tr key={bonus.sl} className="hover:bg-slate-50 transition-colors">
+                  <tr key={bonus.sl} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-700">{bonus.sl}</span>
+                      <span className="text-sm font-medium text-neutral-700">{bonus.sl}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-900">{bonus.bonusTitle}</span>
+                      <span className="text-sm font-medium text-neutral-900">{bonus.bonusTitle}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm text-slate-700">{bonus.bonusInfo}</span>
+                      <span className="text-sm text-neutral-700">{bonus.bonusInfo}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-900">{bonus.bonusAmount}</span>
+                      <span className="text-sm font-medium text-neutral-900">{bonus.bonusAmount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{bonus.startedOn}</span>
+                      <span className="text-sm text-neutral-700">{bonus.startedOn}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{bonus.expiresOn}</span>
+                      <span className="text-sm text-neutral-700">{bonus.expiresOn}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(bonus.sl)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          bonus.status ? "bg-blue-600" : "bg-slate-300"
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:ring-offset-2 ${
+                          bonus.status ? "bg-neutral-900" : "bg-neutral-300"
                         }`}
                       >
                         <span
@@ -318,7 +318,7 @@ export default function Bonus() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />

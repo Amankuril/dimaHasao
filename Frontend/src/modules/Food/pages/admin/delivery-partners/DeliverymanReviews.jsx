@@ -129,7 +129,7 @@ export default function DeliverymanReviews() {
   const getRatingBadge = (rating) => {
     return (
       <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg w-fit">
-        <span className="text-sm font-bold text-amber-700 leading-none">{rating}</span>
+        <span className="text-sm font-medium text-amber-700 leading-none">{rating}</span>
         <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
       </div>
     )
@@ -159,17 +159,17 @@ export default function DeliverymanReviews() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
               <Star className="w-5 h-5 text-orange-500" />
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">Deliveryman Reviews</h1>
-                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+                <h1 className="text-2xl font-medium text-neutral-900">Deliveryman reviews</h1>
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
                   {isLoading ? (
-                    <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                    <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
                   ) : (
                     totalItems
                   )}
@@ -184,21 +184,21 @@ export default function DeliverymanReviews() {
                   placeholder="Ex : search delivery man"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -220,7 +220,7 @@ export default function DeliverymanReviews() {
               </DropdownMenu>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -233,121 +233,121 @@ export default function DeliverymanReviews() {
                 {Array.from({ length: 6 }).map((_, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 px-2 py-3 border-b border-slate-100"
+                    className="flex items-center gap-4 px-2 py-3 border-b border-neutral-100"
                   >
-                    <span className="w-8 h-4 rounded bg-slate-200 animate-pulse" />
-                    <span className="w-24 h-4 rounded bg-slate-200 animate-pulse" />
-                    <span className="w-32 h-4 rounded bg-slate-200 animate-pulse" />
-                    <span className="flex-1 h-4 rounded bg-slate-200 animate-pulse" />
-                    <span className="w-20 h-6 rounded-lg bg-slate-200 animate-pulse" />
-                    <span className="w-28 h-4 rounded bg-slate-200 animate-pulse" />
+                    <span className="w-8 h-4 rounded bg-neutral-200 animate-pulse" />
+                    <span className="w-24 h-4 rounded bg-neutral-200 animate-pulse" />
+                    <span className="w-32 h-4 rounded bg-neutral-200 animate-pulse" />
+                    <span className="flex-1 h-4 rounded bg-neutral-200 animate-pulse" />
+                    <span className="w-20 h-6 rounded-lg bg-neutral-200 animate-pulse" />
+                    <span className="w-28 h-4 rounded bg-neutral-200 animate-pulse" />
                   </div>
                 ))}
               </div>
             ) : reviews.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-slate-500">No reviews found</p>
+                <p className="text-neutral-500">No reviews found</p>
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     {visibleColumns.si && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>S.No.</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <span>S.No</span>
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.orderId && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Order ID</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.deliveryman && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Deliveryman</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.deliverymanId && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>Delivery Boy ID</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <span>Delivery boy ID</span>
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.customer && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Customer</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.review && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Review</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.rating && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Rating</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.date && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>Date & Time</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <span>Date & time</span>
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {reviews.map((review, index) => (
-                    <tr key={review.sl || review.orderId || index} className="hover:bg-slate-50 transition-colors">
+                    <tr key={review.sl || review.orderId || index} className="hover:bg-neutral-50 transition-colors">
                       {visibleColumns.si && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</span>
+                          <span className="text-sm font-medium text-neutral-700">{(currentPage - 1) * pageSize + index + 1}</span>
                         </td>
                       )}
                       {visibleColumns.orderId && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-mono text-slate-700">{review.orderId || "N/A"}</span>
+                          <span className="text-sm font-mono text-neutral-700">{review.orderId || "N/A"}</span>
                         </td>
                       )}
                       {visibleColumns.deliveryman && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <a href={`/admin/delivery-partners/${review.deliverymanId}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                          <a href={`/admin/delivery-partners/${review.deliverymanId}`} className="text-sm font-medium text-[#0a4d2b] hover:text-[#0a4d2b]">
                             {review.deliveryman}
                           </a>
                         </td>
                       )}
                       {visibleColumns.deliverymanId && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-mono text-slate-600">
+                          <span className="text-sm font-mono text-neutral-600">
                             {review.deliverymanId ? (typeof review.deliverymanId === "object" ? review.deliverymanId.toString() : review.deliverymanId.toString()) : "N/A"}
                           </span>
                         </td>
                       )}
                       {visibleColumns.customer && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <a href={`/admin/users/${review.customerId}`} className="text-sm font-medium text-blue-600 hover:text-blue-700">
+                          <a href={`/admin/users/${review.customerId}`} className="text-sm font-medium text-[#0a4d2b] hover:text-[#0a4d2b]">
                             {review.customer}
                           </a>
                         </td>
@@ -355,7 +355,7 @@ export default function DeliverymanReviews() {
                       {visibleColumns.review && (
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-700 flex-1 truncate max-w-xs">
+                            <span className="text-sm text-neutral-700 flex-1 truncate max-w-xs">
                               {review.review || "No review text"}
                             </span>
                             {review.review && review.review.trim() && (
@@ -364,7 +364,7 @@ export default function DeliverymanReviews() {
                                   setSelectedReview(review)
                                   setIsReviewModalOpen(true)
                                 }}
-                                className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-600 hover:text-slate-900 flex-shrink-0"
+                                className="p-1.5 rounded-lg hover:bg-neutral-100 transition-colors text-neutral-600 hover:text-neutral-900 flex-shrink-0"
                                 title="View full review"
                               >
                                 <Eye className="w-4 h-4" />
@@ -381,7 +381,7 @@ export default function DeliverymanReviews() {
                       {visibleColumns.date && (
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-col">
-                            <span className="text-sm text-slate-700">{formatDateTime(review.submittedAt || review.deliveredAt)}</span>
+                            <span className="text-sm text-neutral-700">{formatDateTime(review.submittedAt || review.deliveredAt)}</span>
                           </div>
                         </td>
                       )}
@@ -416,28 +416,28 @@ export default function DeliverymanReviews() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -445,16 +445,16 @@ export default function DeliverymanReviews() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>
@@ -466,83 +466,83 @@ export default function DeliverymanReviews() {
       {/* Review Detail Modal */}
       <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
         <DialogContent className="max-w-2xl bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
             <DialogTitle className="flex items-center gap-2 text-xl">
-              <Eye className="w-5 h-5 text-slate-600" />
-              Review Details
+              <Eye className="w-5 h-5 text-neutral-600" />
+              Review details
             </DialogTitle>
           </DialogHeader>
 
           {selectedReview && (
             <div className="px-6 py-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <p className="text-xs text-slate-500 mb-1">Order ID</p>
-                  <p className="text-sm font-semibold text-slate-900 font-mono">{selectedReview.orderId || "N/A"}</p>
+                <div className="bg-neutral-50 rounded-lg p-4">
+                  <p className="text-xs text-neutral-500 mb-1">Order ID</p>
+                  <p className="text-sm font-medium text-neutral-900 font-mono">{selectedReview.orderId || "N/A"}</p>
                 </div>
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <p className="text-xs text-slate-500 mb-1">Delivery Boy ID</p>
-                  <p className="text-sm font-semibold text-slate-900 font-mono">
+                <div className="bg-neutral-50 rounded-lg p-4">
+                  <p className="text-xs text-neutral-500 mb-1">Delivery boy ID</p>
+                  <p className="text-sm font-medium text-neutral-900 font-mono">
                     {selectedReview.deliverymanId ? (typeof selectedReview.deliverymanId === "object" ? selectedReview.deliverymanId.toString() : selectedReview.deliverymanId.toString()) : "N/A"}
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-xs text-blue-600 mb-1">Deliveryman</p>
+                <div className="bg-neutral-50 rounded-lg p-4">
+                  <p className="text-xs text-[#0a4d2b] mb-1">Deliveryman</p>
                   <a
                     href={`/admin/delivery-partners/${selectedReview.deliverymanId}`}
-                    className="text-sm font-semibold text-blue-700 hover:text-blue-800"
+                    className="text-sm font-medium text-[#0a4d2b] hover:text-neutral-900"
                   >
                     {selectedReview.deliveryman}
                   </a>
                   {selectedReview.deliverymanPhone && (
-                    <p className="text-xs text-blue-500 mt-1">{selectedReview.deliverymanPhone}</p>
+                    <p className="text-xs text-[#0a4d2b] mt-1">{selectedReview.deliverymanPhone}</p>
                   )}
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4">
-                  <p className="text-xs text-purple-600 mb-1">Customer</p>
+                <div className="bg-neutral-50 rounded-lg p-4">
+                  <p className="text-xs text-[#0a4d2b] mb-1">Customer</p>
                   <a
                     href={`/admin/users/${selectedReview.customerId}`}
-                    className="text-sm font-semibold text-purple-700 hover:text-purple-800"
+                    className="text-sm font-medium text-[#0a4d2b] hover:text-neutral-900"
                   >
                     {selectedReview.customer}
                   </a>
                   {selectedReview.customerPhone && (
-                    <p className="text-xs text-purple-500 mt-1">{selectedReview.customerPhone}</p>
+                    <p className="text-xs text-[#0a4d2b] mt-1">{selectedReview.customerPhone}</p>
                   )}
                 </div>
               </div>
 
               <div className="bg-orange-50 rounded-lg p-4">
-                <p className="text-xs text-orange-600 mb-2 font-semibold">Rating</p>
+                <p className="text-xs text-orange-600 mb-2 font-medium">Rating</p>
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
                     {renderStars(selectedReview.rating)}
                   </div>
-                  <span className="text-lg font-bold text-orange-700">
+                  <span className="text-lg font-medium text-orange-700">
                     {selectedReview.rating} / 5
                   </span>
                 </div>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-xs text-slate-600 mb-2 font-semibold">Review Feedback</p>
-                <p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+              <div className="bg-neutral-50 rounded-lg p-4">
+                <p className="text-xs text-neutral-600 mb-2 font-medium">Review feedback</p>
+                <p className="text-sm text-neutral-800 leading-relaxed whitespace-pre-wrap">
                   {selectedReview.review || "No review text provided"}
                 </p>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-xs text-slate-600 mb-1">Submitted At</p>
-                <p className="text-sm font-medium text-slate-900">
+              <div className="bg-neutral-50 rounded-lg p-4">
+                <p className="text-xs text-neutral-600 mb-1">Submitted at</p>
+                <p className="text-sm font-medium text-neutral-900">
                   {formatDateTime(selectedReview.submittedAt || selectedReview.deliveredAt)}
                 </p>
                 {selectedReview.deliveredAt && (
                   <>
-                    <p className="text-xs text-slate-600 mb-1 mt-3">Delivered At</p>
-                    <p className="text-sm font-medium text-slate-900">
+                    <p className="text-xs text-neutral-600 mb-1 mt-3">Delivered at</p>
+                    <p className="text-sm font-medium text-neutral-900">
                       {formatDateTime(selectedReview.deliveredAt)}
                     </p>
                   </>
@@ -551,10 +551,10 @@ export default function DeliverymanReviews() {
             </div>
           )}
 
-          <DialogFooter className="px-6 pb-6 pt-4 border-t border-slate-200">
+          <DialogFooter className="px-6 pb-6 pt-4 border-t border-neutral-200">
             <button
               onClick={() => setIsReviewModalOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors"
             >
               Close
             </button>

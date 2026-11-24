@@ -142,26 +142,26 @@ export default function DeliveryManPayments() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Provide Delivery Man Earning Form */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <Camera className="w-5 h-5 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Provide Delivery Man Earning</h1>
+            <Camera className="w-5 h-5 text-[#0a4d2b]" />
+            <h1 className="text-2xl font-medium text-neutral-900">Provide delivery man earning</h1>
           </div>
 
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Deliveryman <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.deliveryman}
                   onChange={(e) => handleInputChange("deliveryman", e.target.value)}
-                  className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                    formErrors.deliveryman ? "border-red-500" : "border-slate-300"
+                  className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                    formErrors.deliveryman ? "border-red-500" : "border-neutral-300"
                   }`}
                 >
                   <option value="">Select Deliveryman</option>
@@ -176,7 +176,7 @@ export default function DeliveryManPayments() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Amount <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -185,15 +185,15 @@ export default function DeliveryManPayments() {
                   value={formData.amount}
                   onChange={(e) => handleInputChange("amount", e.target.value)}
                   placeholder="Ex: 100"
-                  className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                    formErrors.amount ? "border-red-500" : "border-slate-300"
+                  className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                    formErrors.amount ? "border-red-500" : "border-neutral-300"
                   }`}
                 />
                 {formErrors.amount && <p className="text-red-500 text-xs mt-1">{formErrors.amount}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Method <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -201,23 +201,23 @@ export default function DeliveryManPayments() {
                   value={formData.method}
                   onChange={(e) => handleInputChange("method", e.target.value)}
                   placeholder="Ex: Cash"
-                  className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                    formErrors.method ? "border-red-500" : "border-slate-300"
+                  className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                    formErrors.method ? "border-red-500" : "border-neutral-300"
                   }`}
                 />
                 {formErrors.method && <p className="text-red-500 text-xs mt-1">{formErrors.method}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Reference
                 </label>
                 <input
                   type="text"
                   value={formData.reference}
                   onChange={(e) => handleInputChange("reference", e.target.value)}
-                  placeholder="Ex: Collect Cash"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  placeholder="Ex: Collect cash"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
             </div>
@@ -226,14 +226,14 @@ export default function DeliveryManPayments() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Saving..." : "Save"}
               </button>
@@ -242,12 +242,12 @@ export default function DeliveryManPayments() {
         </div>
 
         {/* Distribute DM Earning Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <h2 className="text-xl font-bold text-slate-900">Distribute DM Earning Table</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <FileText className="w-5 h-5 text-[#0a4d2b]" />
+              <h2 className="text-xl font-medium text-neutral-900">Distribute DM earning table</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredPayments.length}
               </span>
             </div>
@@ -256,23 +256,23 @@ export default function DeliveryManPayments() {
               <div className="relative flex-1 sm:flex-initial min-w-[250px]">
                 <input
                   type="text"
-                  placeholder="Ex: Search here by Name"
+                  placeholder="Ex: Search here by name"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
                     <span>Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer flex items-center gap-2">
                     <FileText className="w-4 h-4" /> CSV
@@ -284,13 +284,13 @@ export default function DeliveryManPayments() {
                     <Code className="w-4 h-4" /> PDF
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleExport("json")} className="cursor-pointer flex items-center gap-2">
-                    <Code className="w-4 h-4" /> JSON
+                    <Code className="w-4 h-4" /> Json
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all flex items-center justify-center"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors flex items-center justify-center"
                 title="Table Settings"
               >
                 <Settings className="w-4 h-4" />
@@ -301,49 +301,49 @@ export default function DeliveryManPayments() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  {visibleColumns.si && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  {visibleColumns.si && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>SI</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>}
-                  {visibleColumns.name && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</th>}
-                  {visibleColumns.receivedAt && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Received At</th>}
-                  {visibleColumns.amount && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</th>}
-                  {visibleColumns.method && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Method</th>}
-                  {visibleColumns.reference && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Reference</th>}
-                  {visibleColumns.actions && <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>}
+                  {visibleColumns.name && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Name</th>}
+                  {visibleColumns.receivedAt && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Received at</th>}
+                  {visibleColumns.amount && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Amount</th>}
+                  {visibleColumns.method && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Method</th>}
+                  {visibleColumns.reference && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Reference</th>}
+                  {visibleColumns.actions && <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredPayments.length === 0 ? (
                   <tr>
                     <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <Camera className="w-16 h-16 text-slate-400 mb-4" />
-                        <p className="text-lg font-semibold text-slate-700">No Data Found</p>
-                        <p className="text-sm text-slate-500">No payments match your search.</p>
+                        <Camera className="w-16 h-16 text-neutral-400 mb-4" />
+                        <p className="text-lg font-medium text-neutral-700">No data found</p>
+                        <p className="text-sm text-neutral-500">No payments match your search</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredPayments.map((payment) => (
-                    <tr key={payment.sl} className="hover:bg-slate-50 transition-colors">
+                    <tr key={payment.sl} className="hover:bg-neutral-50 transition-colors">
                       {visibleColumns.si && <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{payment.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{payment.sl}</span>
                       </td>}
                       {visibleColumns.name && <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-blue-600 font-medium cursor-pointer hover:underline">
+                        <span className="text-sm text-[#0a4d2b] font-medium cursor-pointer hover:underline">
                           {payment.name}
                         </span>
                       </td>}
                       {visibleColumns.receivedAt && <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{payment.receivedAt}</span>
+                        <span className="text-sm font-medium text-neutral-700">{payment.receivedAt}</span>
                       </td>}
                       {visibleColumns.amount && <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">
+                        <span className="text-sm font-medium text-neutral-700">
                           $ {payment.amount.toLocaleString("en-US", {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2,
@@ -351,10 +351,10 @@ export default function DeliveryManPayments() {
                         </span>
                       </td>}
                       {visibleColumns.method && <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{payment.method}</span>
+                        <span className="text-sm font-medium text-neutral-700">{payment.method}</span>
                       </td>}
                       {visibleColumns.reference && <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{payment.reference}</span>
+                        <span className="text-sm font-medium text-neutral-700">{payment.reference}</span>
                       </td>}
                       {visibleColumns.actions && <td className="px-6 py-4 whitespace-nowrap text-center">
                         <button
@@ -382,12 +382,12 @@ export default function DeliveryManPayments() {
               </DialogTitle>
             </DialogHeader>
             <div className="px-6 pb-6">
-              <p className="text-sm text-slate-700">Earning provided successfully!</p>
+              <p className="text-sm text-neutral-700">Earning provided successfully</p>
             </div>
             <DialogFooter className="px-6 pb-6">
               <button
                 onClick={() => setShowSuccessDialog(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 OK
               </button>
@@ -399,21 +399,21 @@ export default function DeliveryManPayments() {
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
           <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
             <DialogHeader className="px-6 pt-6 pb-4">
-              <DialogTitle>Payment Details</DialogTitle>
+              <DialogTitle>Payment details</DialogTitle>
             </DialogHeader>
             {selectedPayment && (
               <div className="px-6 pb-6 space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Name</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedPayment.name}</p>
+                  <label className="text-xs font-medium text-neutral-500">Name</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedPayment.name}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Received At</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedPayment.receivedAt}</p>
+                  <label className="text-xs font-medium text-neutral-500">Received at</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedPayment.receivedAt}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Amount</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">
+                  <label className="text-xs font-medium text-neutral-500">Amount</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">
                     $ {selectedPayment.amount.toLocaleString("en-US", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -421,19 +421,19 @@ export default function DeliveryManPayments() {
                   </p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Method</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedPayment.method}</p>
+                  <label className="text-xs font-medium text-neutral-500">Method</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedPayment.method}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Reference</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedPayment.reference}</p>
+                  <label className="text-xs font-medium text-neutral-500">Reference</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedPayment.reference}</p>
                 </div>
               </div>
             )}
             <DialogFooter className="px-6 pb-6">
               <button
                 onClick={() => setIsViewOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Close
               </button>
@@ -447,12 +447,12 @@ export default function DeliveryManPayments() {
             <DialogHeader className="px-6 pt-6 pb-4">
               <DialogTitle className="flex items-center gap-2">
                 <Settings className="w-5 h-5" />
-                Table Settings
+                Table settings
               </DialogTitle>
             </DialogHeader>
             <div className="px-6 pb-6 space-y-4">
               <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">Toggle Columns</h3>
+                <h3 className="text-sm font-medium text-neutral-700 mb-2">Toggle columns</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(visibleColumns).map(([key, isVisible]) => (
                     <div key={key} className="flex items-center">
@@ -461,9 +461,9 @@ export default function DeliveryManPayments() {
                         id={`toggle-${key}`}
                         checked={isVisible}
                         onChange={() => toggleColumn(key)}
-                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                       />
-                      <label htmlFor={`toggle-${key}`} className="ml-2 text-sm text-slate-700 capitalize">
+                      <label htmlFor={`toggle-${key}`} className="ml-2 text-sm text-neutral-700 capitalize">
                         {key.replace(/([A-Z])/g, ' $1').trim()}
                       </label>
                     </div>
@@ -474,13 +474,13 @@ export default function DeliveryManPayments() {
             <DialogFooter className="px-6 pb-6 flex justify-between">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
-                Reset Columns
+                Reset columns
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>

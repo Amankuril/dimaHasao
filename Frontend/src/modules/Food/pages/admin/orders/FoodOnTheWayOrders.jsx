@@ -38,7 +38,7 @@ export default function FoodOnTheWayOrders() {
   } = useOrdersManagement(foodOnTheWayOrders, "food-on-the-way", "Food On The Way Orders")
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen w-full max-w-full overflow-x-hidden">
       <OrdersTopbar 
         title="Food On The Way Orders" 
         count={count} 

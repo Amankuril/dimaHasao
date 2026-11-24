@@ -159,10 +159,10 @@ export default function RestaurantReport() {
             <Star className="w-3.5 h-3.5 fill-amber-200 text-amber-400" />
           )}
           {Array.from({ length: emptyStars }).map((_, index) => (
-            <Star key={`empty-${index}`} className="w-3.5 h-3.5 text-slate-300" />
+            <Star key={`empty-${index}`} className="w-3.5 h-3.5 text-neutral-300" />
           ))}
         </div>
-        <span className="text-sm text-slate-700 whitespace-nowrap">
+        <span className="text-sm text-neutral-700 whitespace-nowrap">
           {numericRating.toFixed(1)} ({safeReviews})
         </span>
       </div>
@@ -171,90 +171,90 @@ export default function RestaurantReport() {
 
   if (loading && restaurants.length === 0) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-gray-600">Loading restaurant report...</p>
+          <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+          <p className="text-neutral-600">Loading restaurant report...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Briefcase className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Restaurant Report</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Restaurant report</h1>
           </div>
         </div>
 
         {/* Search Data Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <h3 className="text-sm font-semibold text-slate-700 mb-4">Search Data</h3>
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+          <h3 className="text-sm font-medium text-neutral-700 mb-4">Search data</h3>
           <div className="flex flex-col lg:flex-row lg:items-end gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
               <div className="relative">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Zone
                 </label>
                 <select
                   value={filters.zone}
                   onChange={(e) => setFilters(prev => ({ ...prev, zone: e.target.value }))}
-                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All Zones">All Zones</option>
                   {zones.map(zone => (
                     <option key={zone._id} value={zone.name}>{zone.name}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
 
               <div className="relative">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   All
                 </label>
                 <select
                   value={filters.all}
                   onChange={(e) => setFilters(prev => ({ ...prev, all: e.target.value }))}
-                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All">All</option>
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
 
               <div className="relative">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Type
                 </label>
                 <select
                   value={filters.type}
                   onChange={(e) => setFilters(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All types">All types</option>
                   <option value="Commission">Commission</option>
                   <option value="Subscription">Subscription</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
 
               <div className="relative">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Time
                 </label>
                 <select
                   value={filters.time}
                   onChange={(e) => setFilters(prev => ({ ...prev, time: e.target.value }))}
-                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                 >
                   <option value="All Time">All Time</option>
                   <option value="Today">Today</option>
@@ -262,28 +262,28 @@ export default function RestaurantReport() {
                   <option value="This Month">This Month</option>
                   <option value="This Year">This Year</option>
                 </select>
-                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
               </div>
             </div>
 
             <div className="flex items-end gap-3">
               <button
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-slate-600 text-white hover:bg-slate-700 transition-all flex items-center gap-2"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-600 text-white hover:bg-neutral-700 transition-colors flex items-center gap-2"
               >
                 <RefreshCw className="w-4 h-4" />
                 Reset
               </button>
               <button 
                 onClick={handleFilterApply}
-                className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all flex items-center gap-2 relative ${
-                  activeFiltersCount > 0 ? "ring-2 ring-blue-300" : ""
+                className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-900 transition-colors flex items-center gap-2 relative ${
+                  activeFiltersCount > 0 ? "ring-2 ring-[#0a4d2b]/30" : ""
                 }`}
               >
                 <Filter className="w-4 h-4" />
                 Filter
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -293,9 +293,9 @@ export default function RestaurantReport() {
         </div>
 
         {/* Restaurant Report Table Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Restaurant Report Table {totalItems}</h2>
+            <h2 className="text-xl font-medium text-neutral-900">Restaurant report table {totalItems}</h2>
 
             <div className="flex items-center gap-3">
               <div className="relative flex-1 sm:flex-initial min-w-[250px]">
@@ -304,24 +304,24 @@ export default function RestaurantReport() {
                   placeholder="Ex: search restaurant nam"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-4 pr-10 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-4 pr-10 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                 {isRefreshing && (
-                  <Loader2 className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />
+                  <Loader2 className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 animate-spin" />
                 )}
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -343,7 +343,7 @@ export default function RestaurantReport() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -353,83 +353,83 @@ export default function RestaurantReport() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>SL</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Restaurant Name</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Restaurant name</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Total Food</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Total food</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Total Order</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Total order</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Total Order Amount</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Total order amount</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Total Discount Given</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Total discount given</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Total Admin Commission</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Total admin commission</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>Total VAT/TAX</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Average Ratings</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Average ratings</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {restaurants.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                        <p className="text-sm text-slate-500">No restaurants match your search</p>
+                        <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                        <p className="text-sm text-neutral-500">No restaurants match your search</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   restaurants.map((restaurant) => (
-                    <tr key={restaurant.sl} className="hover:bg-slate-50 transition-colors">
+                    <tr key={restaurant.sl} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{restaurant.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{restaurant.sl}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center flex-shrink-0">
                             {restaurant.icon ? (
                               <img
                                 src={restaurant.icon}
@@ -440,37 +440,37 @@ export default function RestaurantReport() {
                                 }}
                               />
                             ) : (
-                              <div className="w-full h-full bg-slate-300 flex items-center justify-center text-xs text-slate-600 font-semibold">
+                              <div className="w-full h-full bg-neutral-300 flex items-center justify-center text-xs text-neutral-600 font-medium">
                                 {restaurant.restaurantName.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
-                          <span className="text-sm font-medium text-slate-900">{restaurant.restaurantName}</span>
+                          <span className="text-sm font-medium text-neutral-900">{restaurant.restaurantName}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{restaurant.totalFood}</span>
+                        <span className="text-sm text-neutral-700">{restaurant.totalFood}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{restaurant.totalOrder}</span>
+                        <span className="text-sm text-neutral-700">{restaurant.totalOrder}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-900">{restaurant.totalOrderAmount}</span>
+                        <span className="text-sm font-medium text-neutral-900">{restaurant.totalOrderAmount}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{restaurant.totalDiscountGiven}</span>
+                        <span className="text-sm text-neutral-700">{restaurant.totalDiscountGiven}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`text-sm font-medium ${
                           restaurant.totalAdminCommission.startsWith('?-') || restaurant.totalAdminCommission.startsWith('-?')
                             ? 'text-red-600'
-                            : 'text-slate-900'
+                            : 'text-neutral-900'
                         }`}>
                           {restaurant.totalAdminCommission}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{restaurant.totalVATTAX}</span>
+                        <span className="text-sm text-neutral-700">{restaurant.totalVATTAX}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {renderStars(restaurant.averageRatings, restaurant.reviews)}
@@ -505,18 +505,18 @@ export default function RestaurantReport() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Report Settings
+              Report settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Restaurant report settings and preferences will be available here.
+            <p className="text-sm text-neutral-700">
+              Restaurant report settings and preferences will be available here
             </p>
           </div>
           <div className="px-6 pb-6 flex items-center justify-end">
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Close
             </button>

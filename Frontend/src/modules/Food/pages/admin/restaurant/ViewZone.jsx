@@ -314,10 +314,10 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Loading zone...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a4d2b] mx-auto mb-4"></div>
+          <p className="text-neutral-600">Loading zone...</p>
         </div>
       </div>
     )
@@ -325,14 +325,14 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
 
   if (!zone) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-600">Zone not found</p>
+          <p className="text-neutral-600">Zone not found</p>
           <button
             onClick={() => navigate("/admin/food/zone-setup")}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="mt-4 px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
           >
-            Back to Zones
+            Back to zones
           </button>
         </div>
       </div>
@@ -340,23 +340,23 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="p-4 lg:p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/admin/food/zone-setup")}
-            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ArrowLeft className="w-5 h-5 text-neutral-600" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">View Zone</h1>
-              <p className="text-sm text-slate-600">{zone.name || zone.serviceLocation}</p>
+              <h1 className="text-2xl font-medium text-neutral-900">View zone</h1>
+              <p className="text-sm text-neutral-600">{zone.name || zone.serviceLocation}</p>
             </div>
           </div>
         </div>
@@ -364,29 +364,29 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Zone Details */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Zone Details</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">Zone details</h2>
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Name</label>
-                  <p className="text-sm text-slate-900">{zone.name || "N/A"}</p>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Name</label>
+                  <p className="text-sm text-neutral-900">{zone.name || "N/A"}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Country</label>
-                  <p className="text-sm text-slate-900">{zone.country || "N/A"}</p>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Country</label>
+                  <p className="text-sm text-neutral-900">{zone.country || "N/A"}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Unit</label>
-                  <p className="text-sm text-slate-900">{zone.unit || "kilometer"}</p>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Unit</label>
+                  <p className="text-sm text-neutral-900">{zone.unit || "kilometer"}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Status</label>
+                  <label className="block text-sm font-medium text-neutral-700 mb-1">Status</label>
                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                    zone.isActive ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-800"
+                    zone.isActive ? "bg-green-100 text-green-800" : "bg-neutral-100 text-neutral-800"
                   }`}>
                     {zone.isActive ? "Active" : "Inactive"}
                   </span>
@@ -394,8 +394,8 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
 
                 {zone.coordinates && zone.coordinates.length > 0 && (
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Points</label>
-                    <p className="text-sm text-slate-900">{zone.coordinates.length}</p>
+                    <label className="block text-sm font-medium text-neutral-700 mb-1">Points</label>
+                    <p className="text-sm text-neutral-900">{zone.coordinates.length}</p>
                   </div>
                 )}
               </div>
@@ -404,8 +404,8 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
 
           {/* Map */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Zone Map</h2>
+            <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">Zone map</h2>
               
               <div className="relative" style={{ height: "600px", minHeight: "600px" }}>
                 <div 
@@ -421,19 +421,19 @@ const coordinatesLength = useMemo(() => zone?.coordinates?.length || 0, [zone?.c
                 />
                 
                 {mapLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" style={{ zIndex: 10, pointerEvents: "none" }}>
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg" style={{ zIndex: 10, pointerEvents: "none" }}>
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-slate-600">Loading map...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a4d2b] mx-auto mb-4"></div>
+                      <p className="text-neutral-600">Loading map...</p>
                     </div>
                   </div>
                 )}
 
                 {!googleMapsApiKey && !mapLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg" style={{ zIndex: 10 }}>
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg" style={{ zIndex: 10 }}>
                     <div className="text-center p-6">
-                      <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-sm text-slate-600">Google Maps API key not found</p>
+                      <MapPin className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                      <p className="text-sm text-neutral-600">Google Maps API key not found</p>
                     </div>
                   </div>
                 )}

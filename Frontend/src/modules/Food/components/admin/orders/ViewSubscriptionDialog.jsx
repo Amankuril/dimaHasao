@@ -8,20 +8,20 @@ import {
 } from "@food/components/ui/dialog"
 
 const getStatusColor = (status) => {
-  if (status === "Expired") return "bg-blue-100 text-blue-700"
+  if (status === "Expired") return "bg-neutral-100 text-[#0a4d2b]"
   if (status === "Active") return "bg-emerald-100 text-emerald-700"
   if (status === "Pending") return "bg-amber-100 text-amber-700"
-  return "bg-slate-100 text-slate-700"
+  return "bg-neutral-100 text-neutral-700"
 }
 
 export default function ViewSubscriptionDialog({ isOpen, onOpenChange, order }) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
           <DialogTitle className="flex items-center gap-2">
             <Eye className="w-5 h-5 text-orange-600" />
-            Subscription Details
+            Subscription details
           </DialogTitle>
           <DialogDescription>
             View complete information about this subscription
@@ -31,45 +31,45 @@ export default function ViewSubscriptionDialog({ isOpen, onOpenChange, order }) 
           <div className="px-6 py-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Subscription ID</p>
-                <p className="text-sm font-medium text-slate-900">{order.subscriptionId}</p>
+                <p className="text-xs font-medium text-neutral-500">Subscription ID</p>
+                <p className="text-sm font-medium text-neutral-900">{order.subscriptionId}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Order Type</p>
-                <p className="text-sm font-medium text-slate-900">{order.orderType}</p>
+                <p className="text-xs font-medium text-neutral-500">Order type</p>
+                <p className="text-sm font-medium text-neutral-900">{order.orderType}</p>
               </div>
               <div className="space-y-1 col-span-2">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Duration</p>
-                <p className="text-sm font-medium text-slate-900">{order.duration}</p>
+                <p className="text-xs font-medium text-neutral-500">Duration</p>
+                <p className="text-sm font-medium text-neutral-900">{order.duration}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Customer Name</p>
-                <p className="text-sm font-medium text-slate-900">{order.customerName}</p>
+                <p className="text-xs font-medium text-neutral-500">Customer name</p>
+                <p className="text-sm font-medium text-neutral-900">{order.customerName}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Phone</p>
-                <p className="text-sm font-medium text-slate-900">{order.customerPhone}</p>
+                <p className="text-xs font-medium text-neutral-500">Phone</p>
+                <p className="text-sm font-medium text-neutral-900">{order.customerPhone}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Restaurant</p>
-                <p className="text-sm font-medium text-slate-900">{order.restaurant}</p>
+                <p className="text-xs font-medium text-neutral-500">Restaurant</p>
+                <p className="text-sm font-medium text-neutral-900">{order.restaurant}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</p>
+                <p className="text-xs font-medium text-neutral-500">Status</p>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                   {order.status}
                 </span>
               </div>
             </div>
-            <div className="pt-4 border-t border-slate-200">
+            <div className="pt-4 border-t border-neutral-200">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Total Orders</p>
-                  <p className="text-lg font-bold text-slate-900">{order.totalOrders}</p>
+                  <p className="text-xs text-neutral-500 mb-1">Total orders</p>
+                  <p className="text-lg font-medium text-neutral-900">{order.totalOrders}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Delivered</p>
-                  <p className="text-lg font-bold text-emerald-600">{order.delivered}</p>
+                  <p className="text-xs text-neutral-500 mb-1">Delivered</p>
+                  <p className="text-lg font-medium text-emerald-600">{order.delivered}</p>
                 </div>
               </div>
             </div>

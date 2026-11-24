@@ -325,7 +325,7 @@ export default function AdminRouter() {
           <Route path="taxi/*" element={<Navigate to="/taxi/admin/dashboard" replace />} />
 
           {/* QUICK COMMERCE ADMIN - Placeholder for future implementation */}
-          <Route path="quick-commerce/*" element={<div className="p-8 text-center text-gray-500 bg-white min-h-[50vh] flex items-center justify-center border rounded-xl m-4">Quick Commerce Administration - Coming Soon</div>} />
+          <Route path="quick-commerce/*" element={<div className="p-8 text-center text-neutral-500 bg-white min-h-[50vh] flex items-center justify-center border rounded-xl m-4">Quick Commerce Administration - Coming Soon</div>} />
         </Route>
 
         {/* Redirect unknown admin routes to food admin */}

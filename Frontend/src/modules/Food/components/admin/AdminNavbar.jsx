@@ -287,7 +287,7 @@ export default function AdminNavbar({ onMenuClick }) {
                 >
                   <Bell className="w-5 h-5 shrink-0" strokeWidth={2} />
                   {notificationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 z-10 min-w-[18px] h-[18px] rounded-full bg-amber-500 text-white text-[10px] font-bold leading-none flex items-center justify-center px-1 border-2 border-white shadow-sm pointer-events-none">
+                    <span className="absolute -top-1 -right-1 z-10 min-w-[18px] h-[18px] rounded-full bg-amber-500 text-white text-xs font-medium leading-none flex items-center justify-center px-1 border-2 border-white shadow-sm pointer-events-none">
                       {notificationCount > 99 ? "99+" : notificationCount > 9 ? "9+" : notificationCount}
                     </span>
                   )}
@@ -297,7 +297,7 @@ export default function AdminNavbar({ onMenuClick }) {
                 <div className="bg-white">
                   <div className="px-4 py-3 border-b border-neutral-200 flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-neutral-900">Notifications</p>
+                      <p className="text-sm font-medium text-neutral-900">Notifications</p>
                       <p className="text-xs text-neutral-500">
                         {notificationCount > 0
                           ? `${notificationCount} unread alert${notificationCount === 1 ? "" : "s"}`
@@ -307,7 +307,7 @@ export default function AdminNavbar({ onMenuClick }) {
                     <button
                       type="button"
                       onClick={openNotificationsPage}
-                      className="text-xs font-semibold text-amber-600 hover:text-amber-700 shrink-0"
+                      className="text-xs font-medium text-amber-600 hover:text-amber-700 shrink-0"
                     >
                       View all
                     </button>
@@ -338,7 +338,7 @@ export default function AdminNavbar({ onMenuClick }) {
                                   <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
                                 )}
                                 <p
-                                  className={`text-sm font-semibold truncate ${
+                                  className={`text-sm font-medium truncate ${
                                     item.read ? "text-neutral-600" : "text-neutral-900"
                                   }`}
                                 >
@@ -348,11 +348,11 @@ export default function AdminNavbar({ onMenuClick }) {
                               <p className={`text-xs mt-1 line-clamp-2 ${item.read ? "text-neutral-500" : "text-neutral-600"}`}>
                                 {item?.message || "-"}
                               </p>
-                              <p className="text-[11px] text-neutral-400 mt-2">
+                              <p className="text-xs text-neutral-400 mt-2">
                                 {item?.metaLabel || item?.category || "Admin alert"}
                               </p>
                             </div>
-                            <span className="shrink-0 text-[10px] text-neutral-400">
+                            <span className="shrink-0 text-xs text-neutral-400">
                               {item?.timeLabel || "Now"}
                             </span>
                           </div>
@@ -392,7 +392,7 @@ export default function AdminNavbar({ onMenuClick }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="w-64 bg-white border border-neutral-200 rounded-lg shadow-lg z-50 text-neutral-900 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
+                className="w-64 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 text-neutral-900 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95"
               >
                 <div className="p-4 border-b border-neutral-200">
                   <div className="flex items-center gap-3">
@@ -404,7 +404,7 @@ export default function AdminNavbar({ onMenuClick }) {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-lg font-semibold text-neutral-600">
+                        <span className="text-lg font-medium text-neutral-600">
                           {adminData?.name
                             ? adminData.name
                               .split(" ")
@@ -417,7 +417,7 @@ export default function AdminNavbar({ onMenuClick }) {
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-neutral-900">
+                      <p className="text-sm font-medium text-neutral-900">
                         {adminData?.name || "Admin User"}
                       </p>
                       <p className="text-xs text-neutral-500">
@@ -470,8 +470,8 @@ export default function AdminNavbar({ onMenuClick }) {
       <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
         <DialogContent className="max-w-2xl p-0 bg-white opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 ease-in-out data-[state=open]:scale-100 data-[state=closed]:scale-100 border border-neutral-200">
           <DialogHeader className="p-6 pb-4 border-b border-neutral-200">
-            <DialogTitle className="text-xl font-semibold text-neutral-900">
-              Universal Search
+            <DialogTitle className="text-xl font-medium text-neutral-900">
+              Universal search
             </DialogTitle>
           </DialogHeader>
           <div className="p-6">
@@ -480,16 +480,16 @@ export default function AdminNavbar({ onMenuClick }) {
               <Input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search orders, users, products, reports..."
+                placeholder="Search orders, users, products, reports"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-3 text-base border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-500 focus:border-black focus:ring-black"
+                className="pl-10 pr-4 py-3 text-base border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-500 focus:border-neutral-400 focus:ring-[#0a4d2b]/30"
               />
             </div>
 
             {searchQuery.trim() === "" ? (
               <div className="space-y-4">
-                <div className="text-sm text-neutral-500 mb-4">Quick Actions</div>
+                <div className="text-sm text-neutral-500 mb-4">Quick actions</div>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { icon: Package, label: "Orders", path: "/admin/food/orders/all" },
@@ -503,9 +503,9 @@ export default function AdminNavbar({ onMenuClick }) {
                         setSearchOpen(false);
                         navigate(action.path);
                       }}
-                      className="flex items-center gap-3 p-4 rounded-lg border border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 transition-all"
+                      className="flex items-center gap-3 p-4 rounded-lg border border-neutral-200 bg-white hover:border-neutral-300 hover:bg-neutral-50 transition-colors"
                     >
-                      <div className="p-2 rounded-md bg-black text-white">
+                      <div className="p-2 rounded-md bg-neutral-900 text-white">
                         <action.icon className="w-5 h-5" />
                       </div>
                       <span className="text-sm font-medium text-neutral-900">{action.label}</span>
@@ -515,8 +515,8 @@ export default function AdminNavbar({ onMenuClick }) {
                 {recentSearches.length > 0 && (
                   <div className="mt-6 pt-4 border-t border-neutral-200">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-xs text-neutral-500">Recent Searches</p>
-                      <button onClick={clearRecent} className="text-[10px] text-red-500 hover:underline">Clear All</button>
+                      <p className="text-xs text-neutral-500">Recent searches</p>
+                      <button onClick={clearRecent} className="text-xs text-red-500 hover:underline">Clear all</button>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {recentSearches.map((term, idx) => (
@@ -552,7 +552,7 @@ export default function AdminNavbar({ onMenuClick }) {
                     {Object.entries(groupedResults).map(([type, results]) => (
                       <div key={type} className="mb-4">
                         <div className="flex items-center gap-2 mb-2 px-1">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                          <span className="text-xs text-neutral-400">
                             {type}s
                           </span>
                           <div className="h-px flex-1 bg-neutral-100"></div>
@@ -562,7 +562,7 @@ export default function AdminNavbar({ onMenuClick }) {
                             <button
                               key={`${type}-${idx}`}
                               onClick={() => handleResultClick(result)}
-                              className="w-full flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50 transition-all text-left group"
+                              className="w-full flex items-center gap-3 p-3 rounded-xl border border-neutral-100 hover:border-neutral-200 hover:bg-neutral-50 transition-colors text-left group"
                             >
                               <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center text-neutral-500 group-hover:bg-white group-hover:text-black transition-colors">
                                 {result.type === 'Order' && <Package className="w-5 h-5" />}
@@ -573,14 +573,14 @@ export default function AdminNavbar({ onMenuClick }) {
                                 {result.type === 'Addon' && <PlusCircle className="w-5 h-5" />}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-neutral-900 truncate">
+                                <p className="text-sm font-medium text-neutral-900 truncate">
                                   {result.title}
                                 </p>
                                 <p className="text-xs text-neutral-500 truncate mt-0.5">
                                   {result.description}
                                 </p>
                               </div>
-                              <ArrowRight className="w-4 h-4 text-neutral-300 group-hover:text-black group-hover:translate-x-0.5 transition-all" />
+                              <ArrowRight className="w-4 h-4 text-neutral-300 group-hover:text-black group-hover:translate-x-0.5 transition-colors" />
                             </button>
                           ))}
                         </div>

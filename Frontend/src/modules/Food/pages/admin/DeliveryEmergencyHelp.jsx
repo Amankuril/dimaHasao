@@ -121,7 +121,7 @@ export default function DeliveryEmergencyHelp() {
       })
 
       if (response?.data?.success) {
-        toast.success("Emergency help numbers saved successfully!")
+        toast.success("Emergency help numbers saved successfully")
         // Refresh data
         await fetchEmergencyHelp()
       } else {
@@ -164,11 +164,11 @@ export default function DeliveryEmergencyHelp() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-slate-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-neutral-600" />
             </div>
           </div>
         </div>
@@ -177,26 +177,26 @@ export default function DeliveryEmergencyHelp() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <Phone className="w-6 h-6 text-slate-600" />
+            <Phone className="w-6 h-6 text-neutral-600" />
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Delivery Emergency Help</h1>
-              <p className="text-sm text-slate-600 mt-1">
+              <h1 className="text-2xl font-medium text-neutral-900">Delivery emergency help</h1>
+              <p className="text-sm text-neutral-600 mt-1">
                 Manage emergency contact numbers for delivery partners
               </p>
             </div>
           </div>
 
           {/* Info Card */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-6 p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-              <div className="text-sm text-blue-800">
-                <p className="font-semibold mb-1">Important Information</p>
+              <AlertCircle className="w-5 h-5 text-[#0a4d2b] mt-0.5 shrink-0" />
+              <div className="text-sm text-neutral-900">
+                <p className="font-medium mb-1">Important information</p>
                 <p>
                   These phone numbers will be displayed to delivery partners in the emergency help section. 
                   When a delivery partner clicks on any emergency option, it will automatically dial the corresponding number.
@@ -209,8 +209,8 @@ export default function DeliveryEmergencyHelp() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {emergencyFields.map((field) => (
               <div key={field.id} className="space-y-2">
-                <label className="block text-sm font-semibold text-slate-900">{field.label}</label>
-                <p className="text-xs text-slate-600 mb-2">{field.description}</p>
+                <label className="block text-sm font-medium text-neutral-900">{field.label}</label>
+                <p className="text-xs text-neutral-600 mb-2">{field.description}</p>
                 <div className="relative">
                   <input
                     type="text"
@@ -219,10 +219,10 @@ export default function DeliveryEmergencyHelp() {
                     placeholder={field.placeholder}
                     inputMode="numeric"
                     maxLength={fieldLimits[field.id] || 15}
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 ${
                       formErrors[field.id]
                         ? "border-red-300 focus:ring-red-500"
-                        : "border-slate-300"
+                        : "border-neutral-300"
                     }`}
                   />
                   {formErrors[field.id] && (
@@ -236,11 +236,11 @@ export default function DeliveryEmergencyHelp() {
             ))}
 
             {/* Submit Button */}
-            <div className="pt-4 border-t border-slate-200">
+            <div className="pt-4 border-t border-neutral-200">
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-6 py-3 bg-neutral-900 text-white rounded-lg font-medium hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>
@@ -250,7 +250,7 @@ export default function DeliveryEmergencyHelp() {
                 ) : (
                   <>
                     <Save className="w-5 h-5" />
-                    Save Emergency Numbers
+                    Save emergency numbers
                   </>
                 )}
               </button>

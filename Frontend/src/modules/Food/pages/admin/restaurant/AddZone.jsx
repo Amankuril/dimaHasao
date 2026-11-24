@@ -689,25 +689,25 @@ export default function AddZone() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="p-4 lg:p-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/admin/food/zone-setup")}
-            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ArrowLeft className="w-5 h-5 text-neutral-600" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="text-2xl font-medium text-neutral-900">
                 {isEditMode ? "Edit Zone" : "Add New Zone"}
               </h1>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-neutral-600">
                 {isEditMode ? "Update delivery zone for customer" : "Create a delivery zone for customer"}
               </p>
             </div>
@@ -718,19 +718,19 @@ export default function AddZone() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Left Panel - Form */}
             <div className="space-y-6">
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Zone Details</h2>
+              <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+                <h2 className="text-lg font-medium text-neutral-900 mb-4">Zone details</h2>
                 
                 <div className="space-y-4">
                   {/* Country Selection */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
                       Country <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.country}
                       onChange={(e) => handleInputChange("country", e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                       required
                     >
                       <option value="India">India</option>
@@ -739,7 +739,7 @@ export default function AddZone() {
 
                   {/* Zone Name */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
                       Create Zone name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -747,20 +747,20 @@ export default function AddZone() {
                       value={formData.zoneName}
                       onChange={(e) => handleInputChange("zoneName", e.target.value)}
                       placeholder="Enter zone name"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                       required
                     />
                   </div>
 
                   {/* Select Unit */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Select Unit <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      Select unit <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.unit}
                       onChange={(e) => handleInputChange("unit", e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                       required
                     >
                       <option value="kilometer">Kilometers (km)</option>
@@ -772,9 +772,9 @@ export default function AddZone() {
             </div>
 
             {/* Right Panel - Map */}
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">Draw Zone on Map</h2>
+                <h2 className="text-lg font-medium text-neutral-900">Draw zone on map</h2>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -782,7 +782,7 @@ export default function AddZone() {
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       isDrawing
                         ? "bg-red-600 text-white hover:bg-red-700"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
+                        : "bg-neutral-900 text-white hover:bg-neutral-900"
                     }`}
                   >
                     <Shapes className="w-4 h-4" />
@@ -792,7 +792,7 @@ export default function AddZone() {
                     <button
                       type="button"
                       onClick={clearDrawing}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-colors"
                     >
                       <X className="w-4 h-4" />
                       <span>Clear</span>
@@ -803,23 +803,23 @@ export default function AddZone() {
 
               <div className="mb-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <input
                     ref={autocompleteInputRef}
                     type="text"
-                    placeholder="Search location on map..."
+                    placeholder="Search location on map"
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                   />
                 </div>
                 {isDrawing && (
-                  <p className="text-xs text-blue-600 mt-2">
-                    Click on the map to add points ({MIN_POINTS}&ndash;{MAX_POINTS}), then click <strong>Finish Drawing</strong>.
+                  <p className="text-xs text-[#0a4d2b] mt-2">
+                    Click on the map to add points ({MIN_POINTS}&ndash;{MAX_POINTS}), then click <strong>Finish drawing</strong>.
                   </p>
                 )}
                 {coordinates.length > 0 && (
-                  <p className="text-xs text-slate-600 mt-2">
+                  <p className="text-xs text-neutral-600 mt-2">
                     Points drawn: <strong>{coordinates.length}</strong>
                     {coordinates.length < 3 && (
                       <span className="text-red-600 ml-2">(Minimum 3 points required)</span>
@@ -832,19 +832,19 @@ export default function AddZone() {
                 <div ref={mapRef} className="w-full h-full rounded-lg" />
                 
                 {mapLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg">
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-slate-600">Loading map...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a4d2b] mx-auto mb-4"></div>
+                      <p className="text-neutral-600">Loading map...</p>
                     </div>
                   </div>
                 )}
 
                 {!googleMapsApiKey && !mapLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg">
                     <div className="text-center p-6">
-                      <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                      <p className="text-sm text-slate-600">Google Maps API key not found</p>
+                      <MapPin className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                      <p className="text-sm text-neutral-600">Google Maps API key not found</p>
                     </div>
                   </div>
                 )}
@@ -857,14 +857,14 @@ export default function AddZone() {
             <button
               type="button"
               onClick={() => navigate("/admin/food/zone-setup")}
-              className="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-6 py-2 border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || coordinates.length < 3 || !formData.zoneName || !formData.country}
-              className="flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-6 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -874,7 +874,7 @@ export default function AddZone() {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  <span>Save Zone</span>
+                  <span>Save zone</span>
                 </>
               )}
             </button>

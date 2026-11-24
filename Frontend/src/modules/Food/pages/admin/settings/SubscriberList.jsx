@@ -12,7 +12,7 @@ const debugError = (...args) => {}
 
 
 const statsCards = [
-  { id: 1, label: "Total Subscribed User", value: 3, bg: "bg-sky-50" },
+  { id: 1, label: "Total Subscribed User", value: 3, bg: "bg-neutral-50" },
   { id: 2, label: "Active Subscriptions", value: 0, bg: "bg-emerald-50" },
   { id: 3, label: "Expired Subscription", value: 3, bg: "bg-rose-50" },
   { id: 4, label: "Expiring Soon", value: 0, bg: "bg-amber-50" },
@@ -121,21 +121,21 @@ export default function SubscriberList() {
   };
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-xl lg:text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-xl lg:text-2xl font-medium text-neutral-900 flex items-center gap-2">
           <span role="img" aria-label="subscribed">
             ??
           </span>
-          <span>Subscribed Restaurant List</span>
+          <span>Subscribed restaurant list</span>
         </h1>
 
         <div className="relative">
-          <select className="pl-3 pr-8 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none">
+          <select className="pl-3 pr-8 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 appearance-none">
             <option value="all-zones">{zoneFilter}</option>
           </select>
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">
+          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-neutral-400 pointer-events-none">
             ?
           </span>
         </div>
@@ -149,41 +149,41 @@ export default function SubscriberList() {
             className={`${card.bg} rounded-lg px-5 py-4 flex flex-col justify-between`}
           >
             <div className="flex items-center justify-between mb-3">
-              <p className="text-xs font-semibold text-slate-600">
+              <p className="text-xs font-medium text-neutral-600">
                 {card.label}
               </p>
               <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center">
                 <span className="text-lg">??</span>
               </div>
             </div>
-            <p className="text-2xl font-bold text-slate-900">{card.value}</p>
+            <p className="text-2xl font-medium text-neutral-900">{card.value}</p>
           </div>
         ))}
       </div>
 
       {/* Summary strip */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-4">
-        <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-200">
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 mb-4">
+        <div className="flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-neutral-200">
           <div className="flex-1 px-5 py-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-700">
-              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-sky-50 text-sky-600 text-lg">
+            <div className="flex items-center gap-2 text-neutral-700">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-neutral-50 text-[#0a4d2b] text-lg">
                 ?
               </span>
               <div>
-                <p className="font-semibold">TOTAL TRANSACTIONS</p>
-                <p className="text-[11px] text-slate-500">5</p>
+                <p className="font-medium">Total transactions</p>
+                <p className="text-xs text-neutral-500">5</p>
               </div>
             </div>
           </div>
 
           <div className="flex-1 px-5 py-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-700">
+            <div className="flex items-center gap-2 text-neutral-700">
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 text-lg">
                 ??
               </span>
               <div>
-                <p className="font-semibold">TOTAL EARNING</p>
-                <p className="text-[11px] text-emerald-600 font-semibold">
+                <p className="font-medium">Total earning</p>
+                <p className="text-xs text-emerald-600 font-medium">
                   $ 4,795.00
                 </p>
               </div>
@@ -191,13 +191,13 @@ export default function SubscriberList() {
           </div>
 
           <div className="flex-1 px-5 py-3 flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-slate-700">
+            <div className="flex items-center gap-2 text-neutral-700">
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-50 text-amber-600 text-lg">
                 ??
               </span>
               <div>
-                <p className="font-semibold">EARNED THIS MONTH</p>
-                <p className="text-[11px] text-slate-500">$ 0.00</p>
+                <p className="font-medium">Earned this month</p>
+                <p className="text-xs text-neutral-500">$ 0.00</p>
               </div>
             </div>
           </div>
@@ -205,23 +205,23 @@ export default function SubscriberList() {
       </div>
 
       {/* Restaurant list card */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-        <div className="px-4 py-3 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200">
+        <div className="px-4 py-3 border-b border-neutral-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-slate-900">
-              Restaurant List
+            <h2 className="text-sm font-medium text-neutral-900">
+              Restaurant list
             </h2>
-            <span className="inline-flex items-center justify-center min-w-[24px] h-6 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
+            <span className="inline-flex items-center justify-center min-w-[24px] h-6 text-xs font-medium rounded-full bg-neutral-100 text-neutral-700">
               3
             </span>
           </div>
 
           <div className="flex flex-col md:flex-row md:items-center gap-2">
             <div className="relative">
-              <select className="pl-3 pr-8 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none">
+              <select className="pl-3 pr-8 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 appearance-none">
                 <option>All</option>
               </select>
-              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none">
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-neutral-400 pointer-events-none">
                 ?
               </span>
             </div>
@@ -232,21 +232,21 @@ export default function SubscriberList() {
                 placeholder="Ex: Search by name & pack"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-8 pr-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
               />
-              <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             </div>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                   <Download className="w-4 h-4" />
-                  <span className="text-black font-bold">Export</span>
+                  <span className="text-black font-medium">Export</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                <DropdownMenuLabel>Export format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                   <FileText className="w-4 h-4 mr-2" />
@@ -268,7 +268,7 @@ export default function SubscriberList() {
             </DropdownMenu>
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+              className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -277,105 +277,105 @@ export default function SubscriberList() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50 border-b border-slate-200">
+          <table className="min-w-full divide-y divide-neutral-100">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 {visibleColumns.si && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>SI</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.restaurantInfo && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Restaurant Info</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Restaurant info</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.packageName && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Current Package Name</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Current package name</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.price && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Package Price</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Package price</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.expDate && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Exp Date</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Exp date</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.subscriptionUsed && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Total Subscription Used</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Total subscription used</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.isTrial && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Is Trial</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Is trial</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.isCancel && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Is Cancel</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Is cancel</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.status && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>Status</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.actions && (
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {filteredRows.length === 0 ? (
                 <tr>
-                  <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-neutral-500">
                     No subscribers found
                   </td>
                 </tr>
               ) : (
                 filteredRows.map((row, index) => (
-                  <tr key={row.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={row.id} className="hover:bg-neutral-50 transition-colors">
                     {visibleColumns.si && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{index + 1}</span>
+                        <span className="text-sm font-medium text-neutral-700">{index + 1}</span>
                       </td>
                     )}
                     {visibleColumns.restaurantInfo && (
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border border-slate-200">
+                          <div className="w-9 h-9 rounded-full bg-neutral-50 flex items-center justify-center overflow-hidden border border-neutral-200">
                             <img
                               src={row.icon}
                               alt={row.name}
@@ -383,7 +383,7 @@ export default function SubscriberList() {
                             />
                           </div>
                           <div className="flex flex-col gap-0.5">
-                            <span className="text-sm font-semibold">
+                            <span className="text-sm font-medium">
                               {row.name}
                             </span>
                             <span className="text-xs text-amber-500">
@@ -395,22 +395,22 @@ export default function SubscriberList() {
                     )}
                     {visibleColumns.packageName && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{row.packageName}</span>
+                        <span className="text-sm text-neutral-700">{row.packageName}</span>
                       </td>
                     )}
                     {visibleColumns.price && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{row.price}</span>
+                        <span className="text-sm text-neutral-700">{row.price}</span>
                       </td>
                     )}
                     {visibleColumns.expDate && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{row.expDate}</span>
+                        <span className="text-sm text-neutral-700">{row.expDate}</span>
                       </td>
                     )}
                     {visibleColumns.subscriptionUsed && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{row.subscriptionUsed}</span>
+                        <span className="text-sm text-neutral-700">{row.subscriptionUsed}</span>
                       </td>
                     )}
                     {visibleColumns.isTrial && (
@@ -430,7 +430,7 @@ export default function SubscriberList() {
                     )}
                     {visibleColumns.actions && (
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <button className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors" title="View">
+                        <button className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors" title="View">
                           <Eye className="w-4 h-4" />
                         </button>
                       </td>
@@ -449,28 +449,28 @@ export default function SubscriberList() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -478,16 +478,16 @@ export default function SubscriberList() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>
@@ -502,14 +502,14 @@ export default function SubscriberList() {
 function StatusPill({ label, variant }) {
   if (variant === "danger") {
     return (
-      <span className="inline-flex items-center px-3 py-1 rounded-full bg-rose-50 text-rose-500 text-[11px] font-semibold">
+      <span className="inline-flex items-center px-3 py-1 rounded-full bg-rose-50 text-rose-500 text-xs font-medium">
         {label}
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-semibold">
+    <span className="inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium">
       {label}
     </span>
   );

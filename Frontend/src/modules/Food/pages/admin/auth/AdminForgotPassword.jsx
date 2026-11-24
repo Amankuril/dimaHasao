@@ -188,12 +188,12 @@ export default function AdminForgotPassword() {
     <AdminAuthShell>
       <div className="flex items-center justify-center gap-2.5 md:justify-start">
         <KeyRound size={15} className="text-[#caa83e]" />
-        <span className="dh-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa83e]">
+        <span className="dh-cinzel text-xs font-medium text-[#caa83e]">
           Step {step} of 3
         </span>
       </div>
 
-      <h2 className="dh-montserrat mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2] md:text-left">
+      <h2 className="dh-montserrat mt-3 text-center text-2xl font-medium text-[#f4efe2] md:text-left">
         {heading}
       </h2>
       <p className="mt-1.5 break-words text-center text-[13px] text-[#9fb3a4] md:text-left">
@@ -255,7 +255,7 @@ export default function AdminForgotPassword() {
                   // Only the first box takes a paste, so one paste fills the row.
                   onPaste={index === 0 ? handleOtpPaste : undefined}
                   disabled={isLoading}
-                  className="h-13 w-full rounded-xl border border-[#caa83e]/35 bg-[#02130a] py-3 text-center text-xl font-bold text-[#f4efe2] outline-none transition-colors focus:border-[#caa83e] focus:ring-0"
+                  className="h-13 w-full rounded-xl border border-[#caa83e]/35 bg-[#02130a] py-3 text-center text-xl font-medium text-[#f4efe2] outline-none transition-colors focus:border-[#caa83e] focus:ring-0"
                 />
               ))}
             </div>
@@ -266,7 +266,7 @@ export default function AdminForgotPassword() {
               type="button"
               onClick={() => setStep(1)}
               disabled={isLoading}
-              className="flex items-center gap-1.5 font-semibold text-[#9fb3a4] transition-colors hover:text-[#f4efe2]"
+              className="flex items-center gap-1.5 font-medium text-[#9fb3a4] transition-colors hover:text-[#f4efe2]"
             >
               <ArrowLeft size={13} />
               Change email
@@ -275,7 +275,7 @@ export default function AdminForgotPassword() {
               type="button"
               onClick={handleResendOtp}
               disabled={resendTimer > 0 || isLoading}
-              className="font-semibold text-[#caa83e] transition-colors hover:text-[#e8c558] disabled:text-[#5d7264]"
+              className="font-medium text-[#caa83e] transition-colors hover:text-[#e8c558] disabled:text-[#5d7264]"
             >
               {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend code"}
             </button>
@@ -349,7 +349,7 @@ export default function AdminForgotPassword() {
       <button
         type="button"
         onClick={() => navigate("/admin/login")}
-        className="mt-7 flex w-full items-center justify-center gap-1.5 text-[12px] font-semibold text-[#9fb3a4] transition-colors hover:text-[#f4efe2] md:justify-start"
+        className="mt-7 flex w-full items-center justify-center gap-1.5 text-[12px] font-medium text-[#9fb3a4] transition-colors hover:text-[#f4efe2] md:justify-start"
       >
         <ArrowLeft size={13} />
         Back to sign in

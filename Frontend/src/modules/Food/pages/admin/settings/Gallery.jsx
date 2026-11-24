@@ -145,20 +145,20 @@ export default function Gallery() {
   const currentFolderItems = currentPath ? (fileSystem[currentPath]?.items || []) : []
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
-              <Folder className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Folder className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">File Manager</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">File manager</h1>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
           {/* Top Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-4">
@@ -167,13 +167,13 @@ export default function Gallery() {
                 Local storage
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-slate-700">Public</span>
-                <span className="px-2.5 py-0.5 bg-slate-200 text-slate-700 rounded-full text-xs font-medium">
+                <span className="text-sm text-neutral-700">Public</span>
+                <span className="px-2.5 py-0.5 bg-neutral-200 text-neutral-700 rounded-full text-xs font-medium">
                   {folders.length}
                 </span>
               </div>
               {currentPath && (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
+                <div className="flex items-center gap-2 text-sm text-neutral-600">
                   <span>/</span>
                   <span className="font-medium">{currentPath}</span>
                 </div>
@@ -184,7 +184,7 @@ export default function Gallery() {
               {currentPath && (
                 <button 
                   onClick={handleBack}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium flex items-center gap-2"
+                  className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-colors text-sm font-medium flex items-center gap-2"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
@@ -192,17 +192,17 @@ export default function Gallery() {
               )}
               <button 
                 onClick={() => setIsFolderDialogOpen(true)}
-                className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors text-sm font-medium flex items-center gap-2"
+                className="px-4 py-2 bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300 transition-colors text-sm font-medium flex items-center gap-2"
               >
                 <Folder className="w-4 h-4" />
-                New Folder
+                New folder
               </button>
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Add New
+                Add new
               </button>
               <input
                 ref={fileInputRef}
@@ -217,13 +217,13 @@ export default function Gallery() {
           {/* Search Bar */}
           <div className="mb-6">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <Input
                 type="text"
-                placeholder="Search folders..."
+                placeholder="Search folders"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 text-sm border-slate-300 rounded-lg"
+                className="pl-10 pr-4 py-2 text-sm border-neutral-300 rounded-lg"
               />
             </div>
           </div>
@@ -232,11 +232,11 @@ export default function Gallery() {
           {currentPath ? (
             <div>
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-slate-700">Files in {currentPath}</h3>
+                <h3 className="text-sm font-medium text-neutral-700">Files in {currentPath}</h3>
               </div>
               {currentFolderItems.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <File className="w-12 h-12 mx-auto mb-2 text-slate-300" />
+                <div className="text-center py-12 text-neutral-500">
+                  <File className="w-12 h-12 mx-auto mb-2 text-neutral-300" />
                   <p className="text-sm">No files in this folder</p>
                 </div>
               ) : (
@@ -246,14 +246,14 @@ export default function Gallery() {
                       key={index}
                       className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity group relative"
                     >
-                      <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-2">
+                      <div className="w-16 h-16 bg-neutral-100 rounded-lg flex items-center justify-center mb-2">
                         {file.type?.startsWith("image/") ? (
-                          <Image className="w-8 h-8 text-blue-600" />
+                          <Image className="w-8 h-8 text-[#0a4d2b]" />
                         ) : (
-                          <File className="w-8 h-8 text-blue-600" />
+                          <File className="w-8 h-8 text-[#0a4d2b]" />
                         )}
                       </div>
-                      <span className="text-xs text-slate-700 text-center max-w-full truncate">
+                      <span className="text-xs text-neutral-700 text-center max-w-full truncate">
                         {file.name}
                       </span>
                       <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -283,7 +283,7 @@ export default function Gallery() {
                   <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center mb-2">
                     <Folder className="w-8 h-8 text-yellow-600" />
                   </div>
-                  <span className="text-xs text-slate-700 text-center max-w-full truncate">
+                  <span className="text-xs text-neutral-700 text-center max-w-full truncate">
                     {folder}
                   </span>
                   <div className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -308,16 +308,16 @@ export default function Gallery() {
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent className="max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle>Upload Files</DialogTitle>
+            <DialogTitle>Upload files</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <p className="text-sm text-slate-600 mb-2">
+              <p className="text-sm text-neutral-600 mb-2">
                 {selectedFiles.length} file(s) selected:
               </p>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="text-xs text-slate-700 bg-slate-50 p-2 rounded">
+                  <div key={index} className="text-xs text-neutral-700 bg-neutral-50 p-2 rounded">
                     {file.name} ({(file.size / 1024).toFixed(2)} KB)
                   </div>
                 ))}
@@ -329,7 +329,7 @@ export default function Gallery() {
                   setIsUploadDialogOpen(false)
                   setSelectedFiles([])
                 }}
-                className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300"
+                className="px-4 py-2 text-sm bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300"
               >
                 Cancel
               </button>
@@ -348,7 +348,7 @@ export default function Gallery() {
       <Dialog open={isFolderDialogOpen} onOpenChange={setIsFolderDialogOpen}>
         <DialogContent className="max-w-md bg-white">
           <DialogHeader>
-            <DialogTitle>Create New Folder</DialogTitle>
+            <DialogTitle>Create new folder</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Input
@@ -369,7 +369,7 @@ export default function Gallery() {
                   setIsFolderDialogOpen(false)
                   setNewFolderName("")
                 }}
-                className="px-4 py-2 text-sm bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300"
+                className="px-4 py-2 text-sm bg-neutral-200 text-neutral-700 rounded-lg hover:bg-neutral-300"
               >
                 Cancel
               </button>

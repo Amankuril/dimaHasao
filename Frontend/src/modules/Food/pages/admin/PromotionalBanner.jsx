@@ -63,25 +63,25 @@ export default function PromotionalBanner() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <Edit className="w-5 h-5 text-slate-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Promotional Banner</h1>
+            <Edit className="w-5 h-5 text-neutral-600" />
+            <h1 className="text-2xl font-medium text-neutral-900">Promotional banner</h1>
           </div>
 
           {/* Language Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+          <div className="flex items-center gap-2 border-b border-neutral-200 mb-6">
             {languageTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveLanguage(tab.key)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeLanguage === tab.key
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
+                    ? "border-[#0a4d2b] text-[#0a4d2b]"
+                    : "border-transparent text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {tab.label}
@@ -92,30 +92,30 @@ export default function PromotionalBanner() {
           <form onSubmit={handleSubmit}>
             {/* Title Input */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Title ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label})
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               />
             </div>
 
             {/* Upload Banner Section */}
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-3">
-                <h2 className="text-lg font-semibold text-slate-900">Upload Banner</h2>
-                <Info className="w-4 h-4 text-slate-400" />
+                <h2 className="text-lg font-medium text-neutral-900">Upload banner</h2>
+                <Info className="w-4 h-4 text-neutral-400" />
               </div>
 
               {/* Banner Preview */}
-              <div className="border-2 border-slate-200 rounded-lg overflow-hidden mb-4">
+              <div className="border-2 border-neutral-200 rounded-lg overflow-hidden mb-4">
                 <div className="relative w-full" style={{ aspectRatio: "5/1", minHeight: "200px" }}>
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-900 flex items-center justify-center">
+                  <div className="absolute inset-0 flex items-center justify-center bg-neutral-800">
                     <div className="text-white text-center px-8">
-                      <p className="text-2xl font-bold mb-2">Fresh Flavors Delivered Right to You</p>
+                      <p className="text-2xl font-medium mb-2">Fresh flavors delivered right to you</p>
                     </div>
                   </div>
                   <div className="absolute right-0 top-0 bottom-0 w-1/2">
@@ -132,17 +132,17 @@ export default function PromotionalBanner() {
               </div>
 
               {/* Upload Instructions */}
-              <div className="text-sm text-slate-600 space-y-1">
+              <div className="text-sm text-neutral-600 space-y-1">
                 <p>Min Size for Better Resolution 5:1</p>
                 <p>Image format: jpeg, jpg, png, gif, webp | maximum size: 2 MB</p>
               </div>
 
               {/* Upload Button */}
               <div className="mt-4">
-                <label className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer block">
-                  <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                  <p className="text-sm font-medium text-blue-600 mb-1">Click to upload</p>
-                  <p className="text-xs text-slate-500">Or drag and drop</p>
+                <label className="border-2 border-dashed border-neutral-300 rounded-lg p-8 text-center hover:border-[#0a4d2b] transition-colors cursor-pointer block">
+                  <Upload className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-[#0a4d2b] mb-1">Click to upload</p>
+                  <p className="text-xs text-neutral-500">Or drag and drop</p>
                   <input type="file" accept="image/*" onChange={handleBannerUpload} className="hidden" />
                 </label>
               </div>
@@ -152,7 +152,7 @@ export default function PromotionalBanner() {
             <div className="flex items-center justify-end">
               <button
                 type="submit"
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Save
               </button>

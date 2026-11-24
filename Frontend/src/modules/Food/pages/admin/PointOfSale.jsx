@@ -408,7 +408,7 @@ export default function PointOfSale() {
         
         {/* Header Section */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#334257] mb-2">Restaurant POS Analytics & Benefits</h1>
+          <h1 className="text-2xl font-medium text-[#334257] mb-2">Restaurant POS analytics & benefits</h1>
           <p className="text-sm text-[#8a94aa]">Track restaurant performance, profits, and commission details</p>
                 </div>
 
@@ -417,10 +417,10 @@ export default function PointOfSale() {
           <div className="flex flex-col gap-4">
                 <div>
                   <label className="block text-sm font-medium text-[#334257] mb-2">
-                Search Restaurant by Name or ID <span className="text-red-500">*</span>
+                Search restaurant by name or ID <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500 w-5 h-5 z-10" />
                     <input
                       type="text"
                       value={searchQuery}
@@ -434,13 +434,13 @@ export default function PointOfSale() {
                     // Delay to allow click on results
                     setTimeout(() => setShowSearchResults(false), 200)
                   }}
-                  placeholder="Type restaurant name or ID to search..."
+                  placeholder="Type restaurant name or ID to search"
                   className="w-full h-11 pl-10 pr-3 rounded-md border border-[#e3e6ef] bg-white text-sm text-[#4a5671] focus:outline-none focus:ring-1 focus:ring-[#006fbd]"
                 />
                 
                 {/* Search Results Dropdown */}
                 {showSearchResults && filteredRestaurants.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#e3e6ef] rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#e3e6ef] rounded-md shadow-sm max-h-60 overflow-y-auto">
                     {filteredRestaurants.map(restaurant => (
                       <button
                         key={restaurant._id}
@@ -467,7 +467,7 @@ export default function PointOfSale() {
                 
                 {/* No Results Message */}
                 {showSearchResults && searchQuery.trim() && filteredRestaurants.length === 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#e3e6ef] rounded-md shadow-lg p-4">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#e3e6ef] rounded-md shadow-sm p-4">
                     <p className="text-sm text-[#8a94aa] text-center">No restaurants found matching "{searchQuery}"</p>
                   </div>
                 )}
@@ -515,12 +515,12 @@ export default function PointOfSale() {
             <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-[#334257] mb-1">{getSelectedRestaurantName()}</h2>
+                  <h2 className="text-xl font-medium text-[#334257] mb-1">{getSelectedRestaurantName()}</h2>
                   <p className="text-sm text-[#8a94aa]">
                     Restaurant ID: {restaurants.find(r => r._id === selectedRestaurant)?.restaurantId || formatRestaurantDisplayId(selectedRestaurant)}
                   </p>
                 </div>
-                <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                <div className={`px-4 py-2 rounded-full text-sm font-medium ${
                   analyticsData.status === 'active' 
                     ? 'bg-green-100 text-green-700' 
                     : 'bg-red-100 text-red-700'
@@ -535,13 +535,13 @@ export default function PointOfSale() {
               {/* Total Orders */}
               <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-blue-100 rounded-lg">
-                    <ShoppingCart className="w-6 h-6 text-blue-600" />
+                  <div className="p-3 bg-neutral-100 rounded-lg">
+                    <ShoppingCart className="w-6 h-6 text-[#0a4d2b]" />
                   </div>
                   <TrendingUp className="w-5 h-5 text-green-500" />
                 </div>
-                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Total Orders</h3>
-                <p className="text-2xl font-bold text-[#334257]">{formatNumber(analyticsData.totalOrders)}</p>
+                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Total orders</h3>
+                <p className="text-2xl font-medium text-[#334257]">{formatNumber(analyticsData.totalOrders)}</p>
                 <p className="text-xs text-[#8a94aa] mt-2">Completed: {formatNumber(analyticsData.completedOrders)}</p>
                 </div>
 
@@ -551,11 +551,11 @@ export default function PointOfSale() {
                   <div className="p-3 bg-red-100 rounded-lg">
                     <XCircle className="w-6 h-6 text-red-600" />
                   </div>
-                  <span className="text-sm font-semibold text-red-600">{analyticsData.cancellationRate.toFixed(1)}%</span>
+                  <span className="text-sm font-medium text-red-600">{analyticsData.cancellationRate.toFixed(1)}%</span>
                 </div>
-                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Cancelled Orders</h3>
-                <p className="text-2xl font-bold text-[#334257]">{formatNumber(analyticsData.cancelledOrders)}</p>
-                <p className="text-xs text-[#8a94aa] mt-2">Cancellation Rate</p>
+                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Cancelled orders</h3>
+                <p className="text-2xl font-medium text-[#334257]">{formatNumber(analyticsData.cancelledOrders)}</p>
+                <p className="text-xs text-[#8a94aa] mt-2">Cancellation rate</p>
                 </div>
 
               {/* Average Rating */}
@@ -564,24 +564,24 @@ export default function PointOfSale() {
                   <div className="p-3 bg-yellow-100 rounded-lg">
                     <Star className="w-6 h-6 text-yellow-600 fill-yellow-600" />
                   </div>
-                  <span className="text-sm font-semibold text-[#334257]">{analyticsData.averageRating.toFixed(1)}</span>
+                  <span className="text-sm font-medium text-[#334257]">{analyticsData.averageRating.toFixed(1)}</span>
                 </div>
-                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Average Rating</h3>
-                <p className="text-2xl font-bold text-[#334257]">{analyticsData.averageRating.toFixed(1)}</p>
+                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Average rating</h3>
+                <p className="text-2xl font-medium text-[#334257]">{analyticsData.averageRating.toFixed(1)}</p>
                 <p className="text-xs text-[#8a94aa] mt-2">From {formatNumber(analyticsData.totalRatings)} reviews</p>
               </div>
 
               {/* Commission Rate */}
               <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <Award className="w-6 h-6 text-purple-600" />
+                  <div className="p-3 bg-neutral-100 rounded-lg">
+                    <Award className="w-6 h-6 text-[#0a4d2b]" />
                   </div>
-                  <span className="text-sm font-semibold text-purple-600">{analyticsData.commissionPercentage}%</span>
+                  <span className="text-sm font-medium text-[#0a4d2b]">{analyticsData.commissionPercentage}%</span>
                   </div>
-                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Commission Rate</h3>
-                <p className="text-2xl font-bold text-[#334257]">{analyticsData.commissionPercentage}%</p>
-                <p className="text-xs text-[#8a94aa] mt-2">Set Commission</p>
+                <h3 className="text-sm font-medium text-[#8a94aa] mb-1">Commission rate</h3>
+                <p className="text-2xl font-medium text-[#334257]">{analyticsData.commissionPercentage}%</p>
+                <p className="text-xs text-[#8a94aa] mt-2">Set commission</p>
                   </div>
                   </div>
 
@@ -595,22 +595,22 @@ export default function PointOfSale() {
                       <Calendar className="w-6 h-6 text-green-600" />
                   </div>
                     <div>
-                      <h3 className="text-base font-semibold text-[#334257]">Monthly Profit</h3>
-                      <p className="text-xs text-[#8a94aa]">Current Month</p>
+                      <h3 className="text-base font-medium text-[#334257]">Monthly profit</h3>
+                      <p className="text-xs text-[#8a94aa]">Current month</p>
                   </div>
                   </div>
                   <TrendingUp className="w-5 h-5 text-green-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-3xl font-bold text-[#334257] mb-2">{formatCurrency(analyticsData.monthlyProfit)}</p>
+                  <p className="text-3xl font-medium text-[#334257] mb-2">{formatCurrency(analyticsData.monthlyProfit)}</p>
                   <div className="flex items-center gap-4 mt-4 text-sm">
                     <div>
                       <span className="text-[#8a94aa]">Orders: </span>
-                      <span className="font-semibold text-[#334257]">{formatNumber(analyticsData.monthlyOrders)}</span>
+                      <span className="font-medium text-[#334257]">{formatNumber(analyticsData.monthlyOrders)}</span>
                     </div>
                     <div>
                       <span className="text-[#8a94aa]">Avg/Month: </span>
-                      <span className="font-semibold text-[#334257]">{formatCurrency(analyticsData.averageMonthlyProfit)}</span>
+                      <span className="font-medium text-[#334257]">{formatCurrency(analyticsData.averageMonthlyProfit)}</span>
                     </div>
                   </div>
                 </div>
@@ -620,26 +620,26 @@ export default function PointOfSale() {
               <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <BarChart3 className="w-6 h-6 text-blue-600" />
+                    <div className="p-3 bg-neutral-100 rounded-lg">
+                      <BarChart3 className="w-6 h-6 text-[#0a4d2b]" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-[#334257]">Yearly Profit</h3>
-                      <p className="text-xs text-[#8a94aa]">Current Year</p>
+                      <h3 className="text-base font-medium text-[#334257]">Yearly profit</h3>
+                      <p className="text-xs text-[#8a94aa]">Current year</p>
                     </div>
                   </div>
                   <TrendingUp className="w-5 h-5 text-green-500" />
                 </div>
                 <div className="mt-4">
-                  <p className="text-3xl font-bold text-[#334257] mb-2">{formatCurrency(analyticsData.yearlyProfit)}</p>
+                  <p className="text-3xl font-medium text-[#334257] mb-2">{formatCurrency(analyticsData.yearlyProfit)}</p>
                   <div className="flex items-center gap-4 mt-4 text-sm">
                     <div>
                       <span className="text-[#8a94aa]">Orders: </span>
-                      <span className="font-semibold text-[#334257]">{formatNumber(analyticsData.yearlyOrders)}</span>
+                      <span className="font-medium text-[#334257]">{formatNumber(analyticsData.yearlyOrders)}</span>
               </div>
                     <div>
                       <span className="text-[#8a94aa]">Avg/Year: </span>
-                      <span className="font-semibold text-[#334257]">{formatCurrency(analyticsData.averageYearlyProfit)}</span>
+                      <span className="font-medium text-[#334257]">{formatCurrency(analyticsData.averageYearlyProfit)}</span>
             </div>
           </div>
         </div>
@@ -648,42 +648,42 @@ export default function PointOfSale() {
 
             {/* Detailed Financial Breakdown */}
             <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-              <h3 className="text-lg font-semibold text-[#334257] mb-4">Financial Breakdown</h3>
+              <h3 className="text-lg font-medium text-[#334257] mb-4">Financial breakdown</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
                     <span className="text-sm text-[#8a94aa]">Subtotal (Dish Price)</span>
-                    <span className="text-base font-semibold text-[#334257]">{formatCurrency(paymentSummary?.subtotal || 0)}</span>
+                    <span className="text-base font-medium text-[#334257]">{formatCurrency(paymentSummary?.subtotal || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Total Revenue</span>
-                    <span className="text-base font-semibold text-[#334257]">{formatCurrency(analyticsData.totalRevenue)}</span>
+                    <span className="text-sm text-[#8a94aa]">Total revenue</span>
+                    <span className="text-base font-medium text-[#334257]">{formatCurrency(analyticsData.totalRevenue)}</span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
                     <span className="text-sm text-[#8a94aa]">Total Commission (Admin)</span>
-                    <span className="text-base font-semibold text-[#006fbd]">{formatCurrency(analyticsData.totalCommission)}</span>
+                    <span className="text-base font-medium text-[#006fbd]">{formatCurrency(analyticsData.totalCommission)}</span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Restaurant Share</span>
-                    <span className="text-base font-semibold text-green-600">{formatCurrency(analyticsData.restaurantEarning)}</span>
+                    <span className="text-sm text-[#8a94aa]">Restaurant share</span>
+                    <span className="text-base font-medium text-green-600">{formatCurrency(analyticsData.restaurantEarning)}</span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Restaurant Profit</span>
-                    <span className="text-base font-semibold text-emerald-700">{formatCurrency(analyticsData.restaurantProfit)}</span>
+                    <span className="text-sm text-[#8a94aa]">Restaurant profit</span>
+                    <span className="text-base font-medium text-emerald-700">{formatCurrency(analyticsData.restaurantProfit)}</span>
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Average Order Value</span>
-                    <span className="text-base font-semibold text-[#334257]">{formatCurrency(analyticsData.averageOrderValue)}</span>
+                    <span className="text-sm text-[#8a94aa]">Average order value</span>
+                    <span className="text-base font-medium text-[#334257]">{formatCurrency(analyticsData.averageOrderValue)}</span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Completion Rate</span>
-                    <span className="text-base font-semibold text-green-600">{analyticsData.completionRate.toFixed(1)}%</span>
+                    <span className="text-sm text-[#8a94aa]">Completion rate</span>
+                    <span className="text-base font-medium text-green-600">{analyticsData.completionRate.toFixed(1)}%</span>
                   </div>
                   <div className="flex justify-between items-center py-3 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Commission Percentage</span>
-                    <span className="text-base font-semibold text-[#334257]">
+                    <span className="text-sm text-[#8a94aa]">Commission percentage</span>
+                    <span className="text-base font-medium text-[#334257]">
                       {analyticsData.commissionPercentage !== undefined && analyticsData.commissionPercentage !== null
                         ? `${analyticsData.commissionPercentage}%`
                         : '0%'}
@@ -695,7 +695,7 @@ export default function PointOfSale() {
 
             {/* Restaurant Payments (delivered orders) */}
             <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-              <h3 className="text-lg font-semibold text-[#334257] mb-4">Restaurant Payments (Completed Orders)</h3>
+              <h3 className="text-lg font-medium text-[#334257] mb-4">Restaurant Payments (Completed Orders)</h3>
               <p className="text-xs text-[#8a94aa] mb-4">
                 Breakdown from delivered orders (same basis as Transaction Report). “Subtotal” reflects total dish value (food price).
               </p>
@@ -703,46 +703,46 @@ export default function PointOfSale() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
                     <span className="text-sm text-[#8a94aa]">Subtotal (Dish Price)</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.subtotal || 0)}</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.subtotal || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
                     <span className="text-sm text-[#8a94aa]">Tax</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.tax || 0)}</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.tax || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Delivery Fee</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.deliveryFee || 0)}</span>
+                    <span className="text-sm text-[#8a94aa]">Delivery fee</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.deliveryFee || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Platform Fee</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.platformFee || 0)}</span>
+                    <span className="text-sm text-[#8a94aa]">Platform fee</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.platformFee || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
                     <span className="text-sm text-[#8a94aa]">Discount</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.discount || 0)}</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.discount || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm font-semibold text-[#334257]">Total Order Value</span>
-                    <span className="text-sm font-bold text-[#006fbd]">{formatCurrency(paymentSummary?.total || 0)}</span>
+                    <span className="text-sm font-medium text-[#334257]">Total order value</span>
+                    <span className="text-sm font-medium text-[#006fbd]">{formatCurrency(paymentSummary?.total || 0)}</span>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Restaurant Share</span>
-                    <span className="text-sm font-semibold text-green-700">{formatCurrency(paymentSummary?.restaurantShare || 0)}</span>
+                    <span className="text-sm text-[#8a94aa]">Restaurant share</span>
+                    <span className="text-sm font-medium text-green-700">{formatCurrency(paymentSummary?.restaurantShare || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
                     <span className="text-sm text-[#8a94aa]">Restaurant Commission (Admin)</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.restaurantCommission || 0)}</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.restaurantCommission || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2 border-b border-[#e3e6ef]">
-                    <span className="text-sm text-[#8a94aa]">Rider Share</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.riderShare || 0)}</span>
+                    <span className="text-sm text-[#8a94aa]">Rider share</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.riderShare || 0)}</span>
                   </div>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-sm text-[#8a94aa]">Platform Net Profit</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatCurrency(paymentSummary?.platformNetProfit || 0)}</span>
+                    <span className="text-sm text-[#8a94aa]">Platform net profit</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatCurrency(paymentSummary?.platformNetProfit || 0)}</span>
                   </div>
                 </div>
               </div>
@@ -753,23 +753,23 @@ export default function PointOfSale() {
               {/* Customer Statistics */}
               <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-indigo-100 rounded-lg">
-                    <Users className="w-5 h-5 text-indigo-600" />
+                  <div className="p-2 bg-neutral-100 rounded-lg">
+                    <Users className="w-5 h-5 text-[#0a4d2b]" />
                   </div>
-                  <h3 className="text-base font-semibold text-[#334257]">Customer Statistics</h3>
+                  <h3 className="text-base font-medium text-[#334257]">Customer statistics</h3>
                   </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#8a94aa]">Total Customers</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatNumber(analyticsData.totalCustomers)}</span>
+                    <span className="text-sm text-[#8a94aa]">Total customers</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatNumber(analyticsData.totalCustomers)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#8a94aa]">Repeat Customers</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatNumber(analyticsData.repeatCustomers)}</span>
+                    <span className="text-sm text-[#8a94aa]">Repeat customers</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatNumber(analyticsData.repeatCustomers)}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#8a94aa]">Customer Retention</span>
-                    <span className="text-sm font-semibold text-green-600">
+                    <span className="text-sm text-[#8a94aa]">Customer retention</span>
+                    <span className="text-sm font-medium text-green-600">
                       {analyticsData.totalCustomers > 0 
                         ? ((analyticsData.repeatCustomers / analyticsData.totalCustomers) * 100).toFixed(1) 
                         : '0'}%
@@ -784,12 +784,12 @@ export default function PointOfSale() {
                   <div className="p-2 bg-orange-100 rounded-lg">
                     <Package className="w-5 h-5 text-orange-600" />
                   </div>
-                  <h3 className="text-base font-semibold text-[#334257]">Restaurant Details</h3>
+                  <h3 className="text-base font-medium text-[#334257]">Restaurant details</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#8a94aa]">Join Date</span>
-                    <span className="text-sm font-semibold text-[#334257]">
+                    <span className="text-sm text-[#8a94aa]">Join date</span>
+                    <span className="text-sm font-medium text-[#334257]">
                       {new Date(analyticsData.joinDate).toLocaleDateString('en-IN', {
                         year: 'numeric',
                         month: 'long',
@@ -799,7 +799,7 @@ export default function PointOfSale() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-[#8a94aa]">Status</span>
-                    <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                    <span className={`text-sm font-medium px-2 py-1 rounded ${
                       analyticsData.status === 'active' 
                         ? 'bg-green-100 text-green-700' 
                         : 'bg-red-100 text-red-700'
@@ -808,8 +808,8 @@ export default function PointOfSale() {
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-[#8a94aa]">Total Reviews</span>
-                    <span className="text-sm font-semibold text-[#334257]">{formatNumber(analyticsData.totalRatings)}</span>
+                    <span className="text-sm text-[#8a94aa]">Total reviews</span>
+                    <span className="text-sm font-medium text-[#334257]">{formatNumber(analyticsData.totalRatings)}</span>
                   </div>
           </div>
               </div>
@@ -817,23 +817,23 @@ export default function PointOfSale() {
 
             {/* Order Statistics Summary */}
             <div className="bg-white rounded-lg shadow-sm border border-[#e3e6ef] p-6">
-              <h3 className="text-lg font-semibold text-[#334257] mb-4">Order Statistics Summary</h3>
+              <h3 className="text-lg font-medium text-[#334257] mb-4">Order statistics summary</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-2xl font-bold text-blue-600">{formatNumber(analyticsData.totalOrders)}</p>
-                  <p className="text-xs text-[#8a94aa] mt-1">Total Orders</p>
+                <div className="text-center p-4 bg-neutral-50 rounded-lg">
+                  <p className="text-2xl font-medium text-[#0a4d2b]">{formatNumber(analyticsData.totalOrders)}</p>
+                  <p className="text-xs text-[#8a94aa] mt-1">Total orders</p>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <p className="text-2xl font-bold text-green-600">{formatNumber(analyticsData.completedOrders)}</p>
+                  <p className="text-2xl font-medium text-green-600">{formatNumber(analyticsData.completedOrders)}</p>
                   <p className="text-xs text-[#8a94aa] mt-1">Completed</p>
                 </div>
                 <div className="text-center p-4 bg-red-50 rounded-lg">
-                  <p className="text-2xl font-bold text-red-600">{formatNumber(analyticsData.cancelledOrders)}</p>
+                  <p className="text-2xl font-medium text-red-600">{formatNumber(analyticsData.cancelledOrders)}</p>
                   <p className="text-xs text-[#8a94aa] mt-1">Cancelled</p>
                 </div>
                 <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                  <p className="text-2xl font-bold text-yellow-600">{analyticsData.completionRate.toFixed(1)}%</p>
-                  <p className="text-xs text-[#8a94aa] mt-1">Success Rate</p>
+                  <p className="text-2xl font-medium text-yellow-600">{analyticsData.completionRate.toFixed(1)}%</p>
+                  <p className="text-xs text-[#8a94aa] mt-1">Success rate</p>
                 </div>
               </div>
             </div>
@@ -849,9 +849,9 @@ export default function PointOfSale() {
             <div className="w-16 h-16 rounded-full border-2 border-dashed border-[#d1d7e6] flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-[#8a94aa]" />
             </div>
-            <p className="text-base font-medium text-[#334257] mb-2">Select a Restaurant</p>
+            <p className="text-base font-medium text-[#334257] mb-2">Select a restaurant</p>
             <p className="text-sm text-[#8a94aa] max-w-md mx-auto">
-              Please select a restaurant from the dropdown above to view detailed analytics, profit information, and commission details.
+              Please select a restaurant from the dropdown above to view detailed analytics, profit information, and commission details
             </p>
           </div>
         )}

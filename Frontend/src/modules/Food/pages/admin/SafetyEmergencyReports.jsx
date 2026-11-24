@@ -135,8 +135,8 @@ export default function SafetyEmergencyReports() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      unread: { label: 'Unread', className: 'bg-blue-100 text-blue-700' },
-      read: { label: 'Read', className: 'bg-slate-100 text-slate-700' },
+      unread: { label: 'Unread', className: 'bg-neutral-100 text-[#0a4d2b]' },
+      read: { label: 'Read', className: 'bg-neutral-100 text-neutral-700' },
       resolved: { label: 'Resolved', className: 'bg-green-100 text-green-700' },
       urgent: { label: 'Urgent', className: 'bg-red-100 text-red-700' }
     }
@@ -151,10 +151,10 @@ export default function SafetyEmergencyReports() {
 
   const getPriorityBadge = (priority) => {
     const priorityConfig = {
-      low: { label: 'Low', className: 'bg-gray-100 text-gray-700' },
+      low: { label: 'Low', className: 'bg-neutral-100 text-neutral-700' },
       medium: { label: 'Medium', className: 'bg-yellow-100 text-yellow-700' },
       high: { label: 'High', className: 'bg-orange-100 text-orange-700' },
-      critical: { label: 'Critical', className: 'bg-red-100 text-red-700 font-bold' }
+      critical: { label: 'Critical', className: 'bg-red-100 text-red-700 font-medium' }
     }
     
     const config = priorityConfig[priority] || priorityConfig.medium
@@ -167,26 +167,26 @@ export default function SafetyEmergencyReports() {
 
   if (loading && reports.length === 0) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-red-600 mx-auto mb-4" />
-          <p className="text-slate-600">Loading safety emergency reports...</p>
+          <p className="text-neutral-600">Loading safety emergency reports...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-6 w-6 text-red-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Safety Emergency Reports</h1>
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+            <h1 className="text-2xl font-medium text-neutral-900">Safety emergency reports</h1>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
               {loading ? (
-                <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
               ) : (
                 reports.length
               )}
@@ -201,7 +201,7 @@ export default function SafetyEmergencyReports() {
                 setPriorityFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
             >
               <option value="all">All Priority</option>
               <option value="low">Low</option>
@@ -217,7 +217,7 @@ export default function SafetyEmergencyReports() {
                 setStatusFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
             >
               <option value="all">All Status</option>
               <option value="unread">Unread</option>
@@ -236,75 +236,75 @@ export default function SafetyEmergencyReports() {
                   setSearchQuery(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>SI</span>
-                    <ChevronDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ChevronDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Name</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Email</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Priority</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Status</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">
                   <div className="flex items-center justify-center gap-2">
                     <span>Action</span>
-                    <Settings className="w-3 h-3 text-slate-400" />
+                    <Settings className="w-3 h-3 text-neutral-400" />
                   </div>
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {filteredReports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-20">
                     <div className="flex flex-col items-center justify-center">
                       <div className="relative mb-6">
-                        <div className="w-32 h-32 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center shadow-inner">
-                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-md relative overflow-visible">
-                            <Folder className="w-12 h-12 text-slate-400" />
+                        <div className="w-32 h-32 rounded-2xl flex items-center justify-center shadow-inner bg-neutral-100">
+                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm relative overflow-visible">
+                            <Folder className="w-12 h-12 text-neutral-400" />
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-orange-500 rounded-t-md z-10"></div>
                             <div className="absolute top-3 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center z-10">
-                              <span className="text-white text-xs font-bold">!</span>
+                              <span className="text-white text-xs font-medium">!</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <p className="text-lg font-semibold text-slate-700">No Safety Emergency Reports Found</p>
+                      <p className="text-lg font-medium text-neutral-700">No safety emergency reports found</p>
                     </div>
                   </td>
                 </tr>
@@ -312,20 +312,20 @@ export default function SafetyEmergencyReports() {
                 filteredReports.map((report, index) => (
                   <tr
                     key={report._id}
-                    className={`hover:bg-slate-50 transition-colors ${
+                    className={`hover:bg-neutral-50 transition-colors ${
                       report.priority === 'critical' ? 'bg-red-50/50' : ''
                     }`}
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-neutral-700">
                         {(currentPage - 1) * 10 + index + 1}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-900">{report.userName}</span>
+                      <span className="text-sm font-medium text-neutral-900">{report.userName}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{report.userEmail}</span>
+                      <span className="text-sm text-neutral-700">{report.userEmail}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {getPriorityBadge(report.priority)}
@@ -336,7 +336,7 @@ export default function SafetyEmergencyReports() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
+                          <button className="p-1.5 rounded text-neutral-600 hover:bg-neutral-100 transition-colors">
                             <Settings className="w-4 h-4" />
                           </button>
                         </DropdownMenuTrigger>
@@ -349,7 +349,7 @@ export default function SafetyEmergencyReports() {
                         >
                           <DropdownMenuItem onClick={() => handleViewReport(report)}>
                             <Eye className="w-4 h-4 mr-2" />
-                            View Details
+                            View details
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
 
@@ -366,7 +366,7 @@ export default function SafetyEmergencyReports() {
                                 <DropdownMenuItem
                                   key={`status-${status}`}
                                   onClick={() => handleUpdateStatus(report._id, status)}
-                                  className={report.status === status ? "font-semibold" : undefined}
+                                  className={report.status === status ? "font-medium" : undefined}
                                 >
                                   {status.charAt(0).toUpperCase() + status.slice(1)}
                                 </DropdownMenuItem>
@@ -387,7 +387,7 @@ export default function SafetyEmergencyReports() {
                                 <DropdownMenuItem
                                   key={`priority-${priority}`}
                                   onClick={() => handleUpdatePriority(report._id, priority)}
-                                  className={report.priority === priority ? "font-semibold" : undefined}
+                                  className={report.priority === priority ? "font-medium" : undefined}
                                 >
                                   {priority.charAt(0).toUpperCase() + priority.slice(1)}
                                 </DropdownMenuItem>
@@ -415,8 +415,8 @@ export default function SafetyEmergencyReports() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-            <div className="text-sm text-slate-600">
+          <div className="px-6 py-4 border-t border-neutral-200 flex items-center justify-between">
+            <div className="text-sm text-neutral-600">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex gap-2">
@@ -444,49 +444,49 @@ export default function SafetyEmergencyReports() {
       {/* View Report Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
-            <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200 dark:border-neutral-700">
+            <DialogTitle className="text-2xl font-medium text-neutral-900 dark:text-white flex items-center gap-2">
               <AlertTriangle className="h-6 w-6 text-red-600" />
-              Safety Emergency Report Details
+              Safety emergency report details
             </DialogTitle>
-            <DialogDescription className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+            <DialogDescription className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
               Complete information about the safety emergency report
             </DialogDescription>
           </DialogHeader>
           {selectedReport && (
             <div className="px-6 py-6 space-y-6">
               {/* User Information Section */}
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-3">
-                  <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
-                  User Information
+              <div className="rounded-xl p-5 border border-neutral-200 dark:border-neutral-700 bg-neutral-50">
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-5 flex items-center gap-3">
+                  <div className="w-1 h-6 rounded-full bg-neutral-500"></div>
+                  User information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">User Name</label>
-                    <p className="text-base font-semibold text-slate-900 dark:text-white">{selectedReport.userName || 'N/A'}</p>
+                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">User name</label>
+                    <p className="text-base font-medium text-neutral-900 dark:text-white">{selectedReport.userName || 'N/A'}</p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
-                    <p className="text-base font-semibold text-slate-900 dark:text-white break-all">{selectedReport.userEmail || 'N/A'}</p>
+                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Email address</label>
+                    <p className="text-base font-medium text-neutral-900 dark:text-white break-all">{selectedReport.userEmail || 'N/A'}</p>
                   </div>
                   {selectedReport.userId?.phone && (
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phone Number</label>
-                      <p className="text-base font-semibold text-slate-900 dark:text-white">{selectedReport.userId.phone}</p>
+                      <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Phone number</label>
+                      <p className="text-base font-medium text-neutral-900 dark:text-white">{selectedReport.userId.phone}</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Emergency Report Section */}
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 rounded-xl p-5 border border-red-200 dark:border-red-800">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-3">
-                  <div className="w-1 h-6 bg-gradient-to-b from-red-500 to-orange-600 rounded-full"></div>
-                  Safety Emergency Report
+              <div className="rounded-xl p-5 border border-red-200 dark:border-red-800 bg-red-50">
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-5 flex items-center gap-3">
+                  <div className="w-1 h-6 rounded-full bg-red-500"></div>
+                  Safety emergency report
                 </h3>
-                <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                  <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                <div className="bg-white dark:bg-neutral-800 rounded-lg p-5 border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
                     {selectedReport.message}
                   </p>
                 </div>
@@ -494,20 +494,20 @@ export default function SafetyEmergencyReports() {
 
               {/* Priority and Status Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">Priority</label>
+                <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
+                  <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-2">Priority</label>
                   <div>{getPriorityBadge(selectedReport.priority)}</div>
                 </div>
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">Status</label>
+                <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
+                  <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-2">Status</label>
                   <div>{getStatusBadge(selectedReport.status)}</div>
                 </div>
               </div>
 
               {/* Metadata Section */}
-              <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">Reported At</label>
-                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+              <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
+                <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-2">Reported at</label>
+                <p className="text-sm font-medium text-neutral-900 dark:text-white">
                   {new Date(selectedReport.createdAt).toLocaleString('en-US', {
                     year: 'numeric',
                     month: 'long',
@@ -520,17 +520,17 @@ export default function SafetyEmergencyReports() {
 
               {/* Admin Response Section */}
               {selectedReport.adminResponse && (
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-800">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-3">
-                    <div className="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-600 rounded-full"></div>
-                    Admin Response
+                <div className="rounded-xl p-5 border border-green-200 dark:border-green-800 bg-green-50">
+                  <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-5 flex items-center gap-3">
+                    <div className="w-1 h-6 rounded-full bg-green-500"></div>
+                    Admin response
                   </h3>
-                  <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  <div className="bg-white dark:bg-neutral-800 rounded-lg p-5 border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
                       {selectedReport.adminResponse}
                     </p>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="mt-4 flex flex-wrap gap-4 text-xs text-neutral-500 dark:text-neutral-400">
                     {selectedReport.respondedAt && (
                       <span>
                         Responded on: {new Date(selectedReport.respondedAt).toLocaleString('en-US', {
@@ -544,7 +544,7 @@ export default function SafetyEmergencyReports() {
                     )}
                     {selectedReport.respondedBy?.name && (
                       <span>
-                        Responded by: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedReport.respondedBy.name}</span>
+                        Responded by: <span className="font-medium text-neutral-700 dark:text-neutral-300">{selectedReport.respondedBy.name}</span>
                       </span>
                     )}
                   </div>
@@ -552,7 +552,7 @@ export default function SafetyEmergencyReports() {
               )}
 
               {/* Close Button */}
-              <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex justify-end pt-4 border-t border-neutral-200 dark:border-neutral-700">
                 <Button
                   variant="outline"
                   onClick={() => setIsViewDialogOpen(false)}

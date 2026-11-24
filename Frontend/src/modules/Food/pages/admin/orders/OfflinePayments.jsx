@@ -36,9 +36,9 @@ export default function OfflinePayments() {
   } = useOrdersManagement(offlinePaymentsOrders, "offline-payments", "Offline Payments")
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen w-full max-w-full overflow-x-hidden">
       <div className="mb-4">
-        <p className="rounded-md bg-rose-50 px-3 py-2 text-[11px] text-rose-600">
+        <p className="rounded-md bg-rose-50 px-3 py-2 text-xs text-rose-600">
           For Offline Payments Please Verify If The Payments Are Safely Received To Your Account.
           Customer Is Not Liable If You Confirm And Deliver The Orders Without Checking Payment
           Transactions.

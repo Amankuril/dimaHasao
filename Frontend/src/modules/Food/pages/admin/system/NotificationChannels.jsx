@@ -284,10 +284,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
@@ -393,23 +393,23 @@ export default function NotificationChannels() {
   }
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-6xl">
         {/* Page Title */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-3 mb-3">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center">
               <Bell className="w-3.5 h-3.5 text-white" />
             </div>
-            <h1 className="text-lg font-bold text-slate-900">Notification Channels Setup</h1>
+            <h1 className="text-lg font-medium text-neutral-900">Notification channels setup</h1>
           </div>
-          <p className="text-xs text-slate-600 ml-9">
+          <p className="text-xs text-neutral-600 ml-9">
             From here you setup who can see what types of notification from StackFood
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-2 mb-3">
           <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
@@ -417,8 +417,8 @@ export default function NotificationChannels() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-neutral-900 text-white"
+                    : "text-neutral-600 hover:bg-neutral-100"
                 }`}
               >
                 {tab.label}
@@ -428,28 +428,28 @@ export default function NotificationChannels() {
         </div>
 
         {/* Search and Actions Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-3 mb-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="relative flex-1 min-w-[250px]">
               <input
                 type="text"
-                placeholder="Search by topic or description..."
+                placeholder="Search by topic or description"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 pr-2 py-1.5 w-full text-xs rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="pl-7 pr-2 py-1.5 w-full text-xs rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
               />
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-1 transition-all">
+                <button className="px-4 py-1.5 text-xs font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-1 transition-colors">
                   <Download className="w-3.5 h-3.5" />
-                  <span className="font-bold">Export</span>
+                  <span className="font-medium">Export</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
+                <DropdownMenuLabel>Export format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                   <FileText className="w-4 h-4 mr-2" />
@@ -471,7 +471,7 @@ export default function NotificationChannels() {
             </DropdownMenu>
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+              className="p-1.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
             >
               <Settings className="w-4 h-4" />
             </button>
@@ -479,83 +479,83 @@ export default function NotificationChannels() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
           <div className="mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-slate-700">Notifications</span>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+              <span className="text-xs font-medium text-neutral-700">Notifications</span>
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700">
                 {filteredNotifications.length}
               </span>
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
                   {visibleColumns.si && (
-                    <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
                         <span>SI</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.topics && (
-                    <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
                         <span>Topics</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.pushNotification && (
-                    <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
-                        <span>Push Notification</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <span>Push notification</span>
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.mail && (
-                    <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
                         <span>Mail</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                   {visibleColumns.sms && (
-                    <th className="px-3 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-neutral-700">
                       <div className="flex items-center gap-2">
                         <span>SMS</span>
-                        <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                        <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                       </div>
                     </th>
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredNotifications.length === 0 ? (
                   <tr>
                     <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center">
-                      <p className="text-xs text-slate-500">No notifications found</p>
+                      <p className="text-xs text-neutral-500">No notifications found</p>
                     </td>
                   </tr>
                 ) : (
                   filteredNotifications.map((notification, index) => (
-                    <tr key={notification.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={notification.id} className="hover:bg-neutral-50 transition-colors">
                       {visibleColumns.si && (
                         <td className="px-3 py-3">
-                          <span className="text-xs text-slate-700">{index + 1}</span>
+                          <span className="text-xs text-neutral-700">{index + 1}</span>
                         </td>
                       )}
                       {visibleColumns.topics && (
                         <td className="px-3 py-3">
                           <div>
-                            <p className="text-xs font-medium text-slate-900 mb-1">
+                            <p className="text-xs font-medium text-neutral-900 mb-1">
                               {notification.topic}
                             </p>
-                            <p className="text-[10px] text-slate-600">
+                            <p className="text-xs text-neutral-600">
                               {notification.description}
                             </p>
                           </div>
@@ -565,7 +565,7 @@ export default function NotificationChannels() {
                         <td className="px-3 py-3">
                           <button
                             type="button"
-                            className="px-2 py-1 text-[10px] font-medium bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                            className="px-2 py-1 text-xs font-medium bg-neutral-50 text-[#0a4d2b] rounded hover:bg-neutral-100 transition-colors"
                           >
                             {notification.pushNotification}
                           </button>
@@ -589,7 +589,7 @@ export default function NotificationChannels() {
                           ) : (
                             <button
                               type="button"
-                              className="px-2 py-1 text-[10px] font-medium bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition-colors"
+                              className="px-2 py-1 text-xs font-medium bg-neutral-50 text-[#0a4d2b] rounded hover:bg-neutral-100 transition-colors"
                             >
                               N/A
                             </button>
@@ -611,28 +611,28 @@ export default function NotificationChannels() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-4 h-4" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-xs font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-xs font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-xs text-slate-700">{label}</span>
+                    <span className="text-xs text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -640,16 +640,16 @@ export default function NotificationChannels() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-xs font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-xs font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-xs font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>

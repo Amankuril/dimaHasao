@@ -466,13 +466,13 @@ export default function OrderDetectDelivery() {
   // Error state
   if (error && orders.length === 0 && !isLoading) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 max-w-md text-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-8 max-w-md text-center">
           <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <XCircle className="w-8 h-8 text-red-600" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Error Loading Orders</h3>
-          <p className="text-sm text-slate-600 mb-4">{error}</p>
+          <h3 className="text-lg font-medium text-neutral-900 mb-2">Error loading orders</h3>
+          <p className="text-sm text-neutral-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
@@ -485,19 +485,19 @@ export default function OrderDetectDelivery() {
   }
 
   const statCards = [
-    { key: "total", label: "Total Orders", value: stats.total, color: "text-slate-900", iconBg: "bg-blue-50", Icon: Package, iconColor: "text-blue-600" },
-    { key: "ordered", label: "Ordered", value: stats.ordered, color: "text-blue-600", iconBg: "bg-blue-50", Icon: Clock, iconColor: "text-blue-600" },
+    { key: "total", label: "Total Orders", value: stats.total, color: "text-neutral-900", iconBg: "bg-neutral-50", Icon: Package, iconColor: "text-[#0a4d2b]" },
+    { key: "ordered", label: "Ordered", value: stats.ordered, color: "text-[#0a4d2b]", iconBg: "bg-neutral-50", Icon: Clock, iconColor: "text-[#0a4d2b]" },
     { key: "restaurantAccepted", label: "Restaurant Accepted", value: stats.restaurantAccepted, color: "text-emerald-600", iconBg: "bg-emerald-50", Icon: CheckCircle, iconColor: "text-emerald-600" },
     { key: "rejected", label: "Rejected", value: stats.rejected, color: "text-red-600", iconBg: "bg-red-50", Icon: XCircle, iconColor: "text-red-600" },
-    { key: "deliveryBoyAssigned", label: "Delivery Boy Assigned", value: stats.deliveryBoyAssigned, color: "text-purple-600", iconBg: "bg-purple-50", Icon: Truck, iconColor: "text-purple-600" },
+    { key: "deliveryBoyAssigned", label: "Delivery Boy Assigned", value: stats.deliveryBoyAssigned, color: "text-[#0a4d2b]", iconBg: "bg-neutral-50", Icon: Truck, iconColor: "text-[#0a4d2b]" },
     { key: "reachedPickup", label: "Delivery Boy Reached Pickup", value: stats.reachedPickup, color: "text-orange-600", iconBg: "bg-orange-50", Icon: Package, iconColor: "text-orange-600" },
-    { key: "orderIdAccepted", label: "Order ID Accepted", value: stats.orderIdAccepted, color: "text-indigo-600", iconBg: "bg-indigo-50", Icon: CheckCircle, iconColor: "text-indigo-600" },
+    { key: "orderIdAccepted", label: "Order ID Accepted", value: stats.orderIdAccepted, color: "text-[#0a4d2b]", iconBg: "bg-neutral-50", Icon: CheckCircle, iconColor: "text-[#0a4d2b]" },
     { key: "reachedDrop", label: "Reached Drop", value: stats.reachedDrop, color: "text-amber-600", iconBg: "bg-amber-50", Icon: Truck, iconColor: "text-amber-600" },
     { key: "delivered", label: "Delivered", value: stats.delivered, color: "text-emerald-600", iconBg: "bg-emerald-50", Icon: CheckCircle, iconColor: "text-emerald-600" },
   ]
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <OrdersTopbar 
         title="Order Detect Delivery" 
         count={totalOrders} 
@@ -516,7 +516,7 @@ export default function OrderDetectDelivery() {
           ? Array.from({ length: 9 }, (_, index) => (
               <div
                 key={`stat-skel-${index}`}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-5"
+                className="bg-white rounded-xl border border-neutral-900/[0.08] p-5"
               >
                 <div className="flex items-center justify-between">
                   <div className="space-y-2">
@@ -528,11 +528,11 @@ export default function OrderDetectDelivery() {
               </div>
             ))
           : statCards.map(({ key, label, value, color, iconBg, Icon, iconColor }) => (
-              <div key={key} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+              <div key={key} className="bg-white rounded-xl border border-neutral-900/[0.08] p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-500 mb-1">{label}</p>
-                    <p className={`text-2xl font-bold ${color}`}>{value}</p>
+                    <p className="text-sm text-neutral-500 mb-1">{label}</p>
+                    <p className={`text-2xl font-medium ${color}`}>{value}</p>
                   </div>
                   <div className={`p-3 ${iconBg} rounded-lg`}>
                     <Icon className={`w-6 h-6 ${iconColor}`} />

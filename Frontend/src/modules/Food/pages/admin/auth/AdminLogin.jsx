@@ -80,16 +80,16 @@ export default function AdminLogin() {
     <AdminAuthShell>
       <div className="flex items-center justify-center gap-2.5 md:justify-start">
         <ShieldCheck size={15} className="text-[#caa83e]" />
-        <span className="dh-cinzel text-[11px] font-bold uppercase tracking-[0.22em] text-[#caa83e]">
+        <span className="dh-cinzel text-xs font-medium text-[#caa83e]">
           Administrator
         </span>
       </div>
 
-      <h2 className="dh-montserrat mt-3 text-center text-2xl font-black tracking-wide text-[#f4efe2] md:text-left">
+      <h2 className="dh-montserrat mt-3 text-center text-2xl font-medium text-[#f4efe2] md:text-left">
         Sign in
       </h2>
       <p className="mt-1.5 text-center text-[13px] text-[#9fb3a4] md:text-left">
-        Accounts are issued by a platform superadmin.
+        Accounts are issued by a platform superadmin
       </p>
 
       <form onSubmit={handleLogin} className="mt-7 space-y-4" noValidate>
@@ -114,7 +114,7 @@ export default function AdminLogin() {
               className={`${authInputClass} pr-3`}
             />
           </div>
-          {errors.email && <p className="mt-1.5 text-[11px] text-red-300">{errors.email}</p>}
+          {errors.email && <p className="mt-1.5 text-xs text-red-300">{errors.email}</p>}
         </div>
 
         <div>
@@ -146,7 +146,7 @@ export default function AdminLogin() {
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          {errors.password && <p className="mt-1.5 text-[11px] text-red-300">{errors.password}</p>}
+          {errors.password && <p className="mt-1.5 text-xs text-red-300">{errors.password}</p>}
         </div>
 
         <div className="flex justify-end">
@@ -155,7 +155,7 @@ export default function AdminLogin() {
           <button
             type="button"
             onClick={() => navigate("/admin/forgot-password")}
-            className="text-[12px] font-semibold text-[#caa83e] transition-colors hover:text-[#e8c558]"
+            className="text-[12px] font-medium text-[#caa83e] transition-colors hover:text-[#e8c558]"
           >
             Forgot password?
           </button>
@@ -166,7 +166,7 @@ export default function AdminLogin() {
         </button>
       </form>
 
-      <p className="mt-7 text-center text-[11px] leading-relaxed text-[#5d7264] md:text-left">
+      <p className="mt-7 text-center text-xs leading-relaxed text-[#5d7264] md:text-left">
         Authorised access only. Every action in this console is recorded against
         your account.
       </p>

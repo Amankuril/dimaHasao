@@ -75,26 +75,26 @@ export default function SubscriptionPackages() {
   };
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-xl lg:text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <h1 className="text-xl lg:text-2xl font-medium text-neutral-900 flex items-center gap-2">
           <span role="img" aria-label="subscription">
             ??
           </span>
-          <span>Subscription Package List</span>
-          <span className="inline-flex items-center justify-center text-[11px] font-semibold rounded-full bg-slate-100 text-slate-700 px-2 py-0.5">
+          <span>Subscription package list</span>
+          <span className="inline-flex items-center justify-center text-xs font-medium rounded-full bg-neutral-100 text-neutral-700 px-2 py-0.5">
             3
           </span>
         </h1>
       </div>
 
       {/* Overview section */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 py-3 border-b border-slate-100 gap-3">
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 mb-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between px-4 py-3 border-b border-neutral-100 gap-3">
           <div>
-            <h2 className="text-sm font-semibold text-slate-900">Overview</h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <h2 className="text-sm font-medium text-neutral-900">Overview</h2>
+            <p className="text-xs text-neutral-500 mt-1">
               See overview of all the packages earnings
             </p>
           </div>
@@ -107,10 +107,10 @@ export default function SubscriptionPackages() {
                   key={label}
                   type="button"
                   onClick={() => setActiveFilter(label)}
-                  className={`px-3 py-1 rounded-full font-semibold border text-xs transition-all ${
+                  className={`px-3 py-1 rounded-full font-medium border text-xs transition-colors ${
                     active
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                      ? "bg-neutral-900 text-white border-[#0a4d2b]"
+                      : "bg-neutral-50 text-neutral-700 border-neutral-200 hover:bg-neutral-100"
                   }`}
                 >
                   {label}
@@ -125,7 +125,7 @@ export default function SubscriptionPackages() {
             title="Basic"
             amount="$ 399.00"
             previous="$ 399.00"
-            bgColor="bg-sky-50"
+            bgColor="bg-neutral-50"
           />
           <OverviewCard
             title="Standard"
@@ -137,13 +137,13 @@ export default function SubscriptionPackages() {
             title="Pro"
             amount="$ 3,597.00"
             previous="$ 3,597.00"
-            bgColor="bg-sky-50"
+            bgColor="bg-neutral-50"
           />
         </div>
       </div>
 
       {/* Search + actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-4">
+      <div className="bg-white rounded-lg shadow-sm border border-neutral-200 mb-4">
         <div className="px-4 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex-1 md:flex-none">
             <div className="relative w-full md:w-72">
@@ -152,23 +152,23 @@ export default function SubscriptionPackages() {
                 placeholder="Search by name"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-8 pr-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
               />
-              <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                   <Download className="w-4 h-4" />
-                  <span className="text-black font-bold">Export</span>
+                  <span className="text-black font-medium">Export</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                <DropdownMenuLabel>Export format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                   <FileText className="w-4 h-4 mr-2" />
@@ -190,108 +190,108 @@ export default function SubscriptionPackages() {
             </DropdownMenu>
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+              className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
             >
               <Settings className="w-5 h-5" />
             </button>
-            <button className="inline-flex items-center gap-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md">
+            <button className="inline-flex items-center gap-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm">
               <Plus className="w-4 h-4" />
-              <span>Add Subscription Package</span>
+              <span>Add subscription package</span>
             </button>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto border-t border-slate-100">
-          <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50 border-b border-slate-200">
+        <div className="overflow-x-auto border-t border-neutral-100">
+          <table className="min-w-full divide-y divide-neutral-100">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
                 {visibleColumns.si && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>SI</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.name && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Package Name</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Package name</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.pricing && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>Pricing</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.duration && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>Duration</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.subscribers && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
-                      <span>Current Subscriber</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <span>Current subscriber</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.status && (
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-2">
                       <span>Status</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                     </div>
                   </th>
                 )}
                 {visibleColumns.actions && (
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Actions</th>
                 )}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-slate-500">
+                  <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-neutral-500">
                     No subscription packages found
                   </td>
                 </tr>
               ) : (
                 filtered.map((pkg, index) => (
-                  <tr key={pkg.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={pkg.id} className="hover:bg-neutral-50 transition-colors">
                     {visibleColumns.si && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{index + 1}</span>
+                        <span className="text-sm font-medium text-neutral-700">{index + 1}</span>
                       </td>
                     )}
                     {visibleColumns.name && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{pkg.name}</span>
+                        <span className="text-sm text-neutral-700">{pkg.name}</span>
                       </td>
                     )}
                     {visibleColumns.pricing && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{pkg.price}</span>
+                        <span className="text-sm text-neutral-700">{pkg.price}</span>
                       </td>
                     )}
                     {visibleColumns.duration && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{pkg.duration}</span>
+                        <span className="text-sm text-neutral-700">{pkg.duration}</span>
                       </td>
                     )}
                     {visibleColumns.subscribers && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{pkg.subscribers}</span>
+                        <span className="text-sm text-neutral-700">{pkg.subscribers}</span>
                       </td>
                     )}
                     {visibleColumns.status && (
@@ -305,10 +305,10 @@ export default function SubscriptionPackages() {
                     {visibleColumns.actions && (
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="flex items-center justify-center gap-2">
-                          <button className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors" title="View">
+                          <button className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors" title="View">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors" title="Edit">
+                          <button className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors" title="Edit">
                             <Edit3 className="w-4 h-4" />
                           </button>
                         </div>
@@ -328,28 +328,28 @@ export default function SubscriptionPackages() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -357,16 +357,16 @@ export default function SubscriptionPackages() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>
@@ -386,9 +386,9 @@ function OverviewCard({ title, amount, previous, bgColor }) {
           ??
         </span>
       </div>
-      <p className="text-sm font-semibold text-slate-700 mb-1">{title}</p>
-      <p className="text-2xl font-bold text-sky-700 mb-1">{amount}</p>
-      <p className="text-sm font-semibold line-through text-slate-400">
+      <p className="text-sm font-medium text-neutral-700 mb-1">{title}</p>
+      <p className="text-2xl font-medium text-[#0a4d2b] mb-1">{amount}</p>
+      <p className="text-sm font-medium line-through text-neutral-400">
         {previous}
       </p>
     </div>
@@ -400,10 +400,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />

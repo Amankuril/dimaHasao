@@ -192,24 +192,24 @@ export default function NewAdvertisement() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Form Section */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h1 className="text-2xl font-bold text-slate-900 mb-6">Create Advertisement</h1>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+              <h1 className="text-2xl font-medium text-neutral-900 mb-6">Create advertisement</h1>
 
               {/* Language Tabs */}
-              <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+              <div className="flex items-center gap-2 border-b border-neutral-200 mb-6">
                 {languageTabs.map((tab) => (
                   <button
                     key={tab.key}
                     onClick={() => setActiveLanguage(tab.key)}
                     className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                       activeLanguage === tab.key
-                        ? "border-blue-600 text-blue-600"
-                        : "border-transparent text-slate-600 hover:text-slate-900"
+                        ? "border-[#0a4d2b] text-[#0a4d2b]"
+                        : "border-transparent text-neutral-600 hover:text-neutral-900"
                     }`}
                   >
                     {tab.label}
@@ -220,16 +220,16 @@ export default function NewAdvertisement() {
               <form onSubmit={handleSubmit}>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
                       Advertisement Title ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label}) <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.title}
                       onChange={(e) => handleInputChange("title", e.target.value)}
-                      placeholder="Exclusive Offer"
-                      className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                        formErrors.title ? "border-red-500" : "border-slate-300"
+                      placeholder="Exclusive offer"
+                      className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                        formErrors.title ? "border-red-500" : "border-neutral-300"
                       }`}
                     />
                     {formErrors.title && (
@@ -238,28 +238,28 @@ export default function NewAdvertisement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
                       Short Description ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label})
                     </label>
                     <input
                       type="text"
                       value={formData.shortDescription}
                       onChange={(e) => handleInputChange("shortDescription", e.target.value)}
-                      placeholder="Get Discount"
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Get discount"
+                      className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Select Restaurant <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Select restaurant <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={formData.restaurant}
                         onChange={(e) => handleInputChange("restaurant", e.target.value)}
-                        className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                          formErrors.restaurant ? "border-red-500" : "border-slate-300"
+                        className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                          formErrors.restaurant ? "border-red-500" : "border-neutral-300"
                         }`}
                       >
                         <option value="">Select Restaurant</option>
@@ -272,13 +272,13 @@ export default function NewAdvertisement() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-slate-700 mb-2">
-                        Select Priority
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        Select priority
                       </label>
                       <select
                         value={formData.priority}
                         onChange={(e) => handleInputChange("priority", e.target.value)}
-                        className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                       >
                         <option value="Priority">Priority</option>
                         <option value="High">High</option>
@@ -289,13 +289,13 @@ export default function NewAdvertisement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      Advertisement Type
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      Advertisement type
                     </label>
                     <select
                       value={formData.advertisementType}
                       onChange={(e) => handleInputChange("advertisementType", e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                     >
                       <option value="Restaurant Promotion">Restaurant Promotion</option>
                       <option value="Video promotion">Video promotion</option>
@@ -303,7 +303,7 @@ export default function NewAdvertisement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
                       Validity <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
@@ -311,11 +311,11 @@ export default function NewAdvertisement() {
                         type="date"
                         value={formData.validity}
                         onChange={(e) => handleInputChange("validity", e.target.value)}
-                        className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                          formErrors.validity ? "border-red-500" : "border-slate-300"
+                        className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                          formErrors.validity ? "border-red-500" : "border-neutral-300"
                         }`}
                       />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                     </div>
                     {formErrors.validity && (
                       <p className="text-xs text-red-500 mt-1">{formErrors.validity}</p>
@@ -323,8 +323,8 @@ export default function NewAdvertisement() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-3">
-                      Show Review & Ratings
+                    <label className="block text-sm font-medium text-neutral-700 mb-3">
+                      Show review & ratings
                     </label>
                     <div className="flex items-center gap-6">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -332,30 +332,30 @@ export default function NewAdvertisement() {
                           type="checkbox"
                           checked={formData.showReview}
                           onChange={(e) => handleInputChange("showReview", e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                         />
-                        <span className="text-sm text-slate-700">Review</span>
+                        <span className="text-sm text-neutral-700">Review</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.showRatings}
                           onChange={(e) => handleInputChange("showRatings", e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                         />
-                        <span className="text-sm text-slate-700">Rating</span>
+                        <span className="text-sm text-neutral-700">Rating</span>
                       </label>
                     </div>
                   </div>
 
                   {/* Upload Related Files */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-4">
-                      Upload Related Files
+                    <label className="block text-sm font-medium text-neutral-700 mb-4">
+                      Upload related files
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
+                        <label className="block text-sm font-medium text-neutral-600 mb-2">
                           Profile Image (Ratio - 1:1)
                         </label>
                         <input
@@ -370,7 +370,7 @@ export default function NewAdvertisement() {
                           className="hidden"
                         />
                         {profilePreview ? (
-                          <div className="relative border-2 border-slate-300 rounded-lg overflow-hidden">
+                          <div className="relative border-2 border-neutral-300 rounded-lg overflow-hidden">
                             <img
                               src={profilePreview}
                               alt="Profile preview"
@@ -387,13 +387,13 @@ export default function NewAdvertisement() {
                         ) : (
                           <div
                             onClick={() => profileInputRef.current?.click()}
-                            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer ${
-                              formErrors.profileImage ? "border-red-500" : "border-slate-300"
+                            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-[#0a4d2b] transition-colors cursor-pointer ${
+                              formErrors.profileImage ? "border-red-500" : "border-neutral-300"
                             }`}
                           >
-                            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-blue-600 mb-1">Click to Upload Profile Image</p>
-                            <p className="text-xs text-slate-500">Supports: PNG, JPG, JPEG, WEBP Maximum 2 MB</p>
+                            <Upload className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-[#0a4d2b] mb-1">Click to upload profile image</p>
+                            <p className="text-xs text-neutral-500">Supports: PNG, JPG, JPEG, WEBP Maximum 2 MB</p>
                           </div>
                         )}
                         {formErrors.profileImage && (
@@ -402,7 +402,7 @@ export default function NewAdvertisement() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-slate-600 mb-2">
+                        <label className="block text-sm font-medium text-neutral-600 mb-2">
                           Upload Cover (Ratio - 2:1)
                         </label>
                         <input
@@ -417,7 +417,7 @@ export default function NewAdvertisement() {
                           className="hidden"
                         />
                         {coverPreview ? (
-                          <div className="relative border-2 border-slate-300 rounded-lg overflow-hidden">
+                          <div className="relative border-2 border-neutral-300 rounded-lg overflow-hidden">
                             <img
                               src={coverPreview}
                               alt="Cover preview"
@@ -434,13 +434,13 @@ export default function NewAdvertisement() {
                         ) : (
                           <div
                             onClick={() => coverInputRef.current?.click()}
-                            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-500 transition-colors cursor-pointer ${
-                              formErrors.coverImage ? "border-red-500" : "border-slate-300"
+                            className={`border-2 border-dashed rounded-lg p-6 text-center hover:border-[#0a4d2b] transition-colors cursor-pointer ${
+                              formErrors.coverImage ? "border-red-500" : "border-neutral-300"
                             }`}
                           >
-                            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                            <p className="text-sm font-medium text-blue-600 mb-1">Click to Upload Cover Image</p>
-                            <p className="text-xs text-slate-500">Supports: PNG, JPG, JPEG, WEBP Maximum 2 MB</p>
+                            <Upload className="w-8 h-8 text-neutral-400 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-[#0a4d2b] mb-1">Click to upload cover image</p>
+                            <p className="text-xs text-neutral-500">Supports: PNG, JPG, JPEG, WEBP Maximum 2 MB</p>
                           </div>
                         )}
                         {formErrors.coverImage && (
@@ -458,14 +458,14 @@ export default function NewAdvertisement() {
                       type="button"
                       onClick={handleReset}
                       disabled={isSubmitting}
-                      className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Reset
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
                       {isSubmitting ? (
                         <>
@@ -487,10 +487,10 @@ export default function NewAdvertisement() {
 
           {/* Advertisement Preview */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sticky top-6">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Advertisement Preview</h2>
-              <div className="border-2 border-slate-200 rounded-lg overflow-hidden">
-                <div className="relative bg-gradient-to-br from-slate-50 to-slate-100" style={{ aspectRatio: "2/1" }}>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 sticky top-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">Advertisement preview</h2>
+              <div className="border-2 border-neutral-200 rounded-lg overflow-hidden">
+                <div className="relative bg-neutral-50" style={{ aspectRatio: "2/1" }}>
                   {/* Cover Image Area */}
                   <div className="absolute inset-0">
                     {coverPreview ? (
@@ -514,7 +514,7 @@ export default function NewAdvertisement() {
                   {/* Content Overlay */}
                   <div className="absolute inset-0 p-4 flex flex-col justify-between">
                     <div className="flex items-start justify-between">
-                      <div className="w-16 h-16 rounded-full bg-white border-2 border-white shadow-md overflow-hidden">
+                      <div className="w-16 h-16 rounded-full bg-white border-2 border-white shadow-sm overflow-hidden">
                         {profilePreview ? (
                           <img
                             src={profilePreview}
@@ -538,16 +538,16 @@ export default function NewAdvertisement() {
                     </div>
                     
                     <div className="bg-white/90 backdrop-blur-sm rounded-lg p-3">
-                      <h3 className="text-sm font-semibold text-slate-900 mb-1">
+                      <h3 className="text-sm font-medium text-neutral-900 mb-1">
                         {formData.title || "Title"}
                       </h3>
-                      <p className="text-xs text-slate-600 mb-2">
+                      <p className="text-xs text-neutral-600 mb-2">
                         {formData.shortDescription || "Description"}
                       </p>
                       {formData.showRatings && (
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          <span className="text-xs font-medium text-slate-900">4.7 (25+)</span>
+                          <span className="text-xs font-medium text-neutral-900">4.7 (25+)</span>
                         </div>
                       )}
                     </div>
@@ -572,11 +572,11 @@ export default function NewAdvertisement() {
               </div>
             </div>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900 mb-2">
-                Advertisement Created Successfully!
+              <DialogTitle className="text-2xl font-medium text-neutral-900 mb-2">
+                Advertisement Created Successfully
               </DialogTitle>
-              <DialogDescription className="text-sm text-slate-600">
-                The advertisement has been successfully created and is now active in the system.
+              <DialogDescription className="text-sm text-neutral-600">
+                The advertisement has been successfully created and is now active in the system
               </DialogDescription>
             </DialogHeader>
           </div>

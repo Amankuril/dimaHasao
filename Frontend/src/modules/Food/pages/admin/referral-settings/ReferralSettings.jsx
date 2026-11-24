@@ -89,26 +89,26 @@ export default function ReferralSettings() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
-            <Gift className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+            <Gift className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Referral Settings</h1>
+          <h1 className="text-2xl font-medium text-neutral-900">Referral settings</h1>
         </div>
-        <p className="text-sm text-slate-600">
-          Configure referral reward amounts and maximum credits per referrer.
+        <p className="text-sm text-neutral-600">
+          Configure referral reward amounts and maximum credits per referrer
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Configuration</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                These values apply instantly to new referrals.
+              <h2 className="text-xl font-medium text-neutral-900">Configuration</h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                These values apply instantly to new referrals
               </p>
             </div>
             <Button
@@ -124,7 +124,7 @@ export default function ReferralSettings() {
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Save Settings
+                  Save settings
                 </>
               )}
             </Button>
@@ -136,42 +136,42 @@ export default function ReferralSettings() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="border border-slate-200 rounded-xl p-4">
-                <h3 className="font-semibold text-slate-900 mb-3">User Referral</h3>
-                <label className="block text-sm text-slate-600 mb-1">Reward amount (₹)</label>
+              <div className="border border-neutral-200 rounded-xl p-4">
+                <h3 className="font-medium text-neutral-900 mb-3">User referral</h3>
+                <label className="block text-sm text-neutral-600 mb-1">Reward amount (₹)</label>
                 <input
                   value={settings.referralRewardUser}
                   onChange={onChange("referralRewardUser")}
                   inputMode="numeric"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2"
                   placeholder="e.g. 50"
                 />
-                <label className="block text-sm text-slate-600 mb-1 mt-3">Max credits per referrer</label>
+                <label className="block text-sm text-neutral-600 mb-1 mt-3">Max credits per referrer</label>
                 <input
                   value={settings.referralLimitUser}
                   onChange={onChange("referralLimitUser")}
                   inputMode="numeric"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2"
                   placeholder="e.g. 10"
                 />
               </div>
 
-              <div className="border border-slate-200 rounded-xl p-4">
-                <h3 className="font-semibold text-slate-900 mb-3">Delivery Partner Referral</h3>
-                <label className="block text-sm text-slate-600 mb-1">Reward amount (₹)</label>
+              <div className="border border-neutral-200 rounded-xl p-4">
+                <h3 className="font-medium text-neutral-900 mb-3">Delivery partner referral</h3>
+                <label className="block text-sm text-neutral-600 mb-1">Reward amount (₹)</label>
                 <input
                   value={settings.referralRewardDelivery}
                   onChange={onChange("referralRewardDelivery")}
                   inputMode="numeric"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2"
                   placeholder="e.g. 2000"
                 />
-                <label className="block text-sm text-slate-600 mb-1 mt-3">Max credits per referrer</label>
+                <label className="block text-sm text-neutral-600 mb-1 mt-3">Max credits per referrer</label>
                 <input
                   value={settings.referralLimitDelivery}
                   onChange={onChange("referralLimitDelivery")}
                   inputMode="numeric"
-                  className="w-full border border-slate-200 rounded-lg px-3 py-2"
+                  className="w-full border border-neutral-200 rounded-lg px-3 py-2"
                   placeholder="e.g. 5"
                 />
               </div>

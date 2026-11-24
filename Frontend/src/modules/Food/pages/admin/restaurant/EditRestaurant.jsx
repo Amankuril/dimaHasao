@@ -385,20 +385,20 @@ export default function EditRestaurant() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/admin/food/restaurants")}
-              className="p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50"
+              className="p-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50"
               title="Back"
             >
-              <ArrowLeft className="w-4 h-4 text-slate-700" />
+              <ArrowLeft className="w-4 h-4 text-neutral-700" />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Edit Restaurant</h1>
-              <p className="text-sm text-slate-500">
+              <h1 className="text-2xl font-medium text-neutral-900">Edit restaurant</h1>
+              <p className="text-sm text-neutral-500">
                 {restaurant?.name || restaurant?.restaurantName || restaurantId}
               </p>
             </div>
@@ -406,19 +406,19 @@ export default function EditRestaurant() {
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-10 flex items-center justify-center gap-2 text-slate-600">
+          <div className="bg-white rounded-xl border border-neutral-200 p-10 flex items-center justify-center gap-2 text-neutral-600">
             <Loader2 className="w-4 h-4 animate-spin" />
             Loading...
           </div>
         ) : error ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-200 p-6">
             <p className="text-red-600 text-sm">{error}</p>
           </div>
         ) : (
           <div className="space-y-6">
-            <section className="bg-white rounded-xl border border-slate-200 p-6">
+            <section className="bg-white rounded-xl border border-neutral-200 p-6">
               <div className="flex items-center justify-between gap-3 mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">Basic Details</h2>
+                <h2 className="text-lg font-medium text-neutral-900">Basic details</h2>
                 <Button onClick={handleSaveDetails} disabled={savingDetails}>
                   {savingDetails ? (
                     <span className="inline-flex items-center gap-2">
@@ -433,19 +433,19 @@ export default function EditRestaurant() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>Restaurant Name</Label>
+                  <Label>Restaurant name</Label>
                   <Input value={detailsForm.name} onChange={(e) => setDetailsForm((p) => ({ ...p, name: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Pure Veg</Label>
+                  <Label>Pure veg</Label>
                   <div className="mt-2 flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setDetailsForm((p) => ({ ...p, pureVegRestaurant: true }))}
                       className={`px-3 py-1.5 text-xs rounded-full border ${
                         detailsForm.pureVegRestaurant === true
-                          ? "bg-green-600 text-white border-green-600"
-                          : "bg-white text-slate-700 border-slate-300"
+                          ? "bg-[#0a4d2b] text-white border-green-600"
+                          : "bg-white text-neutral-700 border-neutral-300"
                       }`}
                     >
                       Yes
@@ -455,8 +455,8 @@ export default function EditRestaurant() {
                       onClick={() => setDetailsForm((p) => ({ ...p, pureVegRestaurant: false }))}
                       className={`px-3 py-1.5 text-xs rounded-full border ${
                         detailsForm.pureVegRestaurant === false
-                          ? "bg-slate-900 text-white border-slate-900"
-                          : "bg-white text-slate-700 border-slate-300"
+                          ? "bg-neutral-900 text-white border-neutral-900"
+                          : "bg-white text-neutral-700 border-neutral-300"
                       }`}
                     >
                       No
@@ -464,23 +464,23 @@ export default function EditRestaurant() {
                   </div>
                 </div>
                 <div>
-                  <Label>Primary Email</Label>
+                  <Label>Primary email</Label>
                   <Input value={detailsForm.email} onChange={(e) => setDetailsForm((p) => ({ ...p, email: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Owner Name</Label>
+                  <Label>Owner name</Label>
                   <Input value={detailsForm.ownerName} onChange={(e) => setDetailsForm((p) => ({ ...p, ownerName: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Owner Email</Label>
+                  <Label>Owner email</Label>
                   <Input value={detailsForm.ownerEmail} onChange={(e) => setDetailsForm((p) => ({ ...p, ownerEmail: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Owner Phone</Label>
+                  <Label>Owner phone</Label>
                   <Input value={detailsForm.ownerPhone} onChange={(e) => setDetailsForm((p) => ({ ...p, ownerPhone: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Primary Contact Number</Label>
+                  <Label>Primary contact number</Label>
                   <Input value={detailsForm.primaryContactNumber} onChange={(e) => setDetailsForm((p) => ({ ...p, primaryContactNumber: e.target.value }))} />
                 </div>
                 <div className="md:col-span-2">
@@ -500,15 +500,15 @@ export default function EditRestaurant() {
                   <Input value={detailsForm.offer} onChange={(e) => setDetailsForm((p) => ({ ...p, offer: e.target.value }))} />
                 </div>
                 <div>
-                  <Label>Takeaway (Pickup) Enabled</Label>
+                  <Label>Takeaway (pickup) enabled</Label>
                   <div className="mt-2 flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setDetailsForm((p) => ({ ...p, takeawayEnabled: true }))}
                       className={`px-3 py-1.5 text-xs rounded-full border ${
                         detailsForm.takeawayEnabled === true
-                          ? "bg-green-600 text-white border-green-600"
-                          : "bg-white text-slate-700 border-slate-300"
+                          ? "bg-[#0a4d2b] text-white border-green-600"
+                          : "bg-white text-neutral-700 border-neutral-300"
                       }`}
                     >
                       Enabled
@@ -518,8 +518,8 @@ export default function EditRestaurant() {
                       onClick={() => setDetailsForm((p) => ({ ...p, takeawayEnabled: false }))}
                       className={`px-3 py-1.5 text-xs rounded-full border ${
                         detailsForm.takeawayEnabled === false
-                          ? "bg-slate-900 text-white border-slate-900"
-                          : "bg-white text-slate-700 border-slate-300"
+                          ? "bg-neutral-900 text-white border-neutral-900"
+                          : "bg-white text-neutral-700 border-neutral-300"
                       }`}
                     >
                       Disabled
@@ -529,12 +529,12 @@ export default function EditRestaurant() {
               </div>
             </section>
 
-            <section className="bg-white rounded-xl border border-slate-200 p-6">
+            <section className="bg-white rounded-xl border border-neutral-200 p-6">
               <div className="flex items-center justify-between gap-3 mb-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-900">Location</h2>
+                  <h2 className="text-lg font-medium text-neutral-900">Location</h2>
                   {currentZoneLabel ? (
-                    <p className="text-xs text-slate-500 mt-1">Current Zone: {currentZoneLabel}</p>
+                    <p className="text-xs text-neutral-500 mt-1">Current Zone: {currentZoneLabel}</p>
                   ) : null}
                 </div>
                 <Button onClick={handleSaveLocation} disabled={savingLocation}>
@@ -557,7 +557,7 @@ export default function EditRestaurant() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
-                  <Label>Service Zone</Label>
+                  <Label>Service zone</Label>
                   <select
                     value={locationForm.zoneId || ""}
                     onChange={(e) => setLocationForm((p) => ({ ...p, zoneId: e.target.value }))}
@@ -581,34 +581,34 @@ export default function EditRestaurant() {
                   <Label>Search location</Label>
                   <Input
                     ref={locationSearchInputRef}
-                    placeholder="Start typing your restaurant address..."
-                    className="mt-1 bg-white text-sm text-black! dark:text-white! placeholder:text-gray-500 dark:placeholder:text-gray-400 caret-black dark:caret-white"
+                    placeholder="Start typing your restaurant address"
+                    className="mt-1 bg-white text-sm text-black! dark:text-white! placeholder:text-neutral-500 dark:placeholder:text-neutral-500 caret-black dark:caret-white"
                     style={{ color: "#000", WebkitTextFillColor: "#000" }}
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">
-                    Select a suggestion from the dropdown to fill address + coordinates.
+                  <p className="text-xs text-neutral-500 mt-1">
+                    Select a suggestion from the dropdown to fill address + coordinates
                   </p>
                 </div>
 
                 <div className="md:col-span-2">
-                  <Label>Formatted Address</Label>
-                  <Input value={locationForm.formattedAddress} readOnly className="mt-1 bg-slate-50" />
+                  <Label>Formatted address</Label>
+                  <Input value={locationForm.formattedAddress} readOnly className="mt-1 bg-neutral-50" />
                 </div>
                 <div>
                   <Label>Area</Label>
-                  <Input value={locationForm.area} readOnly className="mt-1 bg-slate-50" />
+                  <Input value={locationForm.area} readOnly className="mt-1 bg-neutral-50" />
                 </div>
                 <div>
                   <Label>City</Label>
-                  <Input value={locationForm.city} readOnly className="mt-1 bg-slate-50" />
+                  <Input value={locationForm.city} readOnly className="mt-1 bg-neutral-50" />
                 </div>
                 <div>
                   <Label>State</Label>
-                  <Input value={locationForm.state} readOnly className="mt-1 bg-slate-50" />
+                  <Input value={locationForm.state} readOnly className="mt-1 bg-neutral-50" />
                 </div>
                 <div>
                   <Label>Pincode</Label>
-                  <Input value={locationForm.pincode} readOnly className="mt-1 bg-slate-50" />
+                  <Input value={locationForm.pincode} readOnly className="mt-1 bg-neutral-50" />
                 </div>
                 <div className="md:col-span-2">
                   <Label>Landmark</Label>

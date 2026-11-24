@@ -193,28 +193,28 @@ export default function DeliveryEarnings() {
 
   if (loading && earnings.length === 0) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen w-full max-w-full overflow-x-hidden flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-          <p className="text-gray-600">Loading delivery earnings...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
+          <p className="text-neutral-600">Loading delivery earnings...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen w-full max-w-full overflow-x-hidden">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen w-full max-w-full overflow-x-hidden">
       <div className="w-full mx-auto">
         {/* Page Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-600 flex items-center justify-center">
-                <DollarSign className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <DollarSign className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Delivery Earning</h1>
-                <p className="text-sm text-slate-600">View all delivery boy earnings and details</p>
+                <h1 className="text-2xl font-medium text-neutral-900">Delivery earning</h1>
+                <p className="text-sm text-neutral-600">View all delivery boy earnings and details</p>
               </div>
             </div>
           </div>
@@ -222,50 +222,50 @@ export default function DeliveryEarnings() {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total Delivery Boys</p>
-                <p className="text-2xl font-bold text-slate-900">{summary.totalDeliveryPartners || 0}</p>
+                <p className="text-sm text-neutral-600 mb-1">Total delivery boys</p>
+                <p className="text-2xl font-medium text-neutral-900">{summary.totalDeliveryPartners || 0}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <DollarSign className="w-6 h-6" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total Earnings</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalEarnings || 0)}</p>
+                <p className="text-sm text-neutral-600 mb-1">Total earnings</p>
+                <p className="text-2xl font-medium text-green-600">{formatCurrency(summary.totalEarnings || 0)}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <DollarSign className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <DollarSign className="w-6 h-6" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600 mb-1">Total Orders</p>
-                <p className="text-2xl font-bold text-slate-900">{summary.totalOrders || 0}</p>
+                <p className="text-sm text-neutral-600 mb-1">Total orders</p>
+                <p className="text-2xl font-medium text-neutral-900">{summary.totalOrders || 0}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-purple-600" />
+              <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <FileText className="w-6 h-6" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Period</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Period</label>
               <select
                 value={filters.period}
                 onChange={(e) => handleFilterChange('period', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               >
                 <option value="all">All Time</option>
                 <option value="today">Today</option>
@@ -274,11 +274,11 @@ export default function DeliveryEarnings() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Delivery Boy</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Delivery boy</label>
               <select
                 value={filters.deliveryPartnerId}
                 onChange={(e) => handleFilterChange('deliveryPartnerId', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               >
                 <option value="">All Delivery Boys</option>
                 {deliveryPartners.map(dp => (
@@ -287,50 +287,50 @@ export default function DeliveryEarnings() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">From Date</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">From date</label>
               <input
                 type="date"
                 value={filters.fromDate}
                 onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">To Date</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">To date</label>
               <input
                 type="date"
                 value={filters.toDate}
                 onChange={(e) => handleFilterChange('toDate', e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
           </div>
         </div>
 
         {/* Search and Export */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-4">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
             <div className="relative flex-1 w-full sm:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Search by name, phone, order ID..."
+                placeholder="Search by name, phone, order ID"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2">
+                <button className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 flex items-center gap-2">
                   <Download className="w-4 h-4" />
                   <span>Export</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuLabel>Export format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport("csv")}>
                   <FileText className="w-4 h-4 mr-2" />
@@ -350,7 +350,7 @@ export default function DeliveryEarnings() {
         </div>
 
         {/* Earnings Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
               {error}
@@ -359,51 +359,51 @@ export default function DeliveryEarnings() {
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">SI</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Delivery Boy</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Phone</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Order ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Restaurant</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Earning</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Order Total</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-bold text-slate-700 uppercase">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">SI</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Delivery boy</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Phone</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Order ID</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Restaurant</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Earning</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Order total</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-neutral-100">
                 {earnings.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-lg font-semibold text-slate-700 mb-1">No Earnings Found</p>
-                        <p className="text-sm text-slate-500">No earnings match your filters</p>
+                        <p className="text-lg font-medium text-neutral-700 mb-1">No earnings found</p>
+                        <p className="text-sm text-neutral-500">No earnings match your filters</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   earnings.map((earning, index) => (
-                    <tr key={earning.transactionId || index} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                    <tr key={earning.transactionId || index} className="hover:bg-neutral-50">
+                      <td className="px-4 py-3 text-sm text-neutral-700">
                         {(currentPage - 1) * pageSize + index + 1}
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900">
+                      <td className="px-4 py-3 text-sm font-medium text-neutral-900">
                         {earning.deliveryPartnerName || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-neutral-700">
                         {earning.deliveryPartnerPhone || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-blue-600 font-medium">
+                      <td className="px-4 py-3 text-sm text-[#0a4d2b] font-medium">
                         {earning.orderId || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-neutral-700">
                         {earning.restaurantName || 'N/A'}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-green-600">
+                      <td className="px-4 py-3 text-sm font-medium text-green-600">
                         {formatCurrency(earning.amount)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-neutral-700">
                         {formatCurrency(earning.orderTotal)}
                       </td>
                       <td className="px-4 py-3 text-sm">
@@ -415,7 +415,7 @@ export default function DeliveryEarnings() {
                           {earning.orderStatus || 'N/A'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-700">
+                      <td className="px-4 py-3 text-sm text-neutral-700">
                         {formatDate(earning.createdAt)}
                       </td>
                     </tr>

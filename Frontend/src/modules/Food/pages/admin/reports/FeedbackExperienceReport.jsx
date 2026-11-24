@@ -162,7 +162,7 @@ export default function FeedbackExperienceReport() {
     if (rating <= 1) return 'bg-red-100 text-red-700'
     if (rating <= 2) return 'bg-orange-100 text-orange-700'
     if (rating <= 3) return 'bg-yellow-100 text-yellow-700'
-    if (rating <= 4) return 'bg-blue-100 text-blue-700'
+    if (rating <= 4) return 'bg-neutral-100 text-[#0a4d2b]'
     return 'bg-green-100 text-green-700'
   }
 
@@ -183,27 +183,27 @@ export default function FeedbackExperienceReport() {
     (filters.rating ? 1 : 0) + (filters.experience ? 1 : 0) + (filters.module ? 1 : 0)
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen overflow-x-hidden">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen overflow-x-hidden">
       <div className="w-full max-w-full">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-purple-600 flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <MessageSquare className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Feedback Experience Report</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Feedback experience report</h1>
           </div>
         </div>
 
         {/* Filter Options Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className="flex items-center justify-between w-full mb-4"
           >
-            <h3 className="text-sm font-semibold text-slate-700">Filter Options</h3>
+            <h3 className="text-sm font-medium text-neutral-700">Filter options</h3>
             <ChevronDown
-              className={`w-5 h-5 text-slate-600 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
+              className={`w-5 h-5 text-neutral-600 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
             />
           </button>
           
@@ -211,33 +211,33 @@ export default function FeedbackExperienceReport() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    From Date
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    From date
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                     <input
                       type="date"
                       value={filters.fromDate}
                       max={today}
                       onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value > today ? today : e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                     />
                   </div>
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    To Date
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    To date
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                     <input
                       type="date"
                       value={filters.toDate}
                       max={today}
                       onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value > today ? today : e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                     />
                   </div>
                 </div>
@@ -245,30 +245,30 @@ export default function FeedbackExperienceReport() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Rating
                   </label>
                   <select
                     value={filters.rating}
                     onChange={(e) => setFilters(prev => ({ ...prev, rating: e.target.value }))}
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                   >
                     <option value="">All Ratings</option>
                     {[0, 1, 2, 3, 4, 5].map(r => (
                       <option key={r} value={r}>{r}/5</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Experience
                   </label>
                   <select
                     value={filters.experience}
                     onChange={(e) => setFilters(prev => ({ ...prev, experience: e.target.value }))}
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                   >
                     <option value="">All Experiences</option>
                     <option value="very_bad">Very Bad</option>
@@ -279,45 +279,45 @@ export default function FeedbackExperienceReport() {
                     <option value="good">Good</option>
                     <option value="very_good">Very Good</option>
                   </select>
-                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Module
                   </label>
                   <select
                     value={filters.module}
                     onChange={(e) => setFilters(prev => ({ ...prev, module: e.target.value }))}
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                   >
                     <option value="">All Modules</option>
                     <option value="user">User</option>
                     <option value="restaurant">Restaurant</option>
                     <option value="delivery">Delivery</option>
                   </select>
-                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={handleReset}
-                  className="px-6 py-2.5 text-sm font-medium rounded-lg border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 transition-all flex items-center gap-2"
+                  className="px-6 py-2.5 text-sm font-medium rounded-lg border border-[#0a4d2b] text-[#0a4d2b] bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Reset
                 </button>
                 <button 
                   onClick={fetchFeedbackExperiences}
-                  className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all flex items-center gap-2 relative ${
-                    activeFiltersCount > 0 ? "ring-2 ring-blue-300" : ""
+                  className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-900 transition-colors flex items-center gap-2 relative ${
+                    activeFiltersCount > 0 ? "ring-2 ring-[#0a4d2b]/30" : ""
                   }`}
                 >
                   <Filter className="w-4 h-4" />
                   Filter
                   {activeFiltersCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -330,52 +330,52 @@ export default function FeedbackExperienceReport() {
         {/* Summary Cards */}
         {statistics && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">Total Feedback</p>
-                  <p className="text-2xl font-bold text-slate-900">{statistics.totalFeedback || 0}</p>
+                  <p className="text-sm font-medium text-neutral-600 mb-1">Total feedback</p>
+                  <p className="text-2xl font-medium text-neutral-900">{statistics.totalFeedback || 0}</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <MessageSquare className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">Average Rating</p>
-                  <p className="text-2xl font-bold text-slate-900">
+                  <p className="text-sm font-medium text-neutral-600 mb-1">Average rating</p>
+                  <p className="text-2xl font-medium text-neutral-900">
                     {statistics.averageRating ? statistics.averageRating.toFixed(1) : '0.0'}/5
                   </p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-yellow-600" />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <Star className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">Min Rating</p>
-                  <p className="text-2xl font-bold text-slate-900">{statistics.minRating || 0}/5</p>
+                  <p className="text-sm font-medium text-neutral-600 mb-1">Min rating</p>
+                  <p className="text-2xl font-medium text-neutral-900">{statistics.minRating || 0}/5</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <Star className="w-6 h-6" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 mb-1">Max Rating</p>
-                  <p className="text-2xl font-bold text-slate-900">{statistics.maxRating || 0}/5</p>
+                  <p className="text-sm font-medium text-neutral-600 mb-1">Max rating</p>
+                  <p className="text-2xl font-medium text-neutral-900">{statistics.maxRating || 0}/5</p>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <Star className="w-6 h-6" />
                 </div>
               </div>
             </div>
@@ -383,86 +383,86 @@ export default function FeedbackExperienceReport() {
         )}
 
         {/* Search and Export Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by user name, email, phone..."
-                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Search by user name, email, phone"
+                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
               />
             </div>
 
             <DropdownMenu>
-              <DropdownMenuTrigger className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+              <DropdownMenuTrigger className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                 <Download className="w-4 h-4" />
                 <span>Export</span>
                 <ChevronDown className="w-3 h-3" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuLabel>Export format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport('csv')}>CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport('excel')}>Excel</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport('pdf')}>PDF</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('json')}>JSON</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('json')}>Json</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
 
         {/* Feedback Table Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Feedback Experiences</h2>
-            <p className="text-sm text-slate-600">Total: {totalItems}</p>
+            <h2 className="text-xl font-medium text-neutral-900">Feedback experiences</h2>
+            <p className="text-sm text-neutral-600">Total: {totalItems}</p>
           </div>
 
           {loading ? (
             <div className="text-center py-20">
-              <p className="text-slate-600">Loading...</p>
+              <p className="text-neutral-600">Loading...</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">User</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Experience</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Module</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">SI</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">User</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Rating</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Experience</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Module</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {feedbackExperiences.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                          <p className="text-sm text-slate-500">No feedback experiences match your search</p>
+                          <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                          <p className="text-sm text-neutral-500">No feedback experiences match your search</p>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     feedbackExperiences.map((feedback, idx) => (
-                      <tr key={feedback._id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={feedback._id} className="hover:bg-neutral-50 transition-colors">
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + idx + 1}</span>
+                          <span className="text-sm font-medium text-neutral-700">{(currentPage - 1) * pageSize + idx + 1}</span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{feedback.userName || 'N/A'}</span>
+                            <span className="text-sm font-medium text-neutral-900">{feedback.userName || 'N/A'}</span>
                             {feedback.userEmail && (
-                              <span className="text-xs text-slate-500">{feedback.userEmail}</span>
+                              <span className="text-xs text-neutral-500">{feedback.userEmail}</span>
                             )}
                             {feedback.userPhone && (
-                              <span className="text-xs text-slate-500">{feedback.userPhone}</span>
+                              <span className="text-xs text-neutral-500">{feedback.userPhone}</span>
                             )}
                           </div>
                         </td>
@@ -472,15 +472,15 @@ export default function FeedbackExperienceReport() {
                                 </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-sm text-slate-700">{getExperienceLabel(feedback.experience)}</span>
+                          <span className="text-sm text-neutral-700">{getExperienceLabel(feedback.experience)}</span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 capitalize">
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-neutral-100 text-[#0a4d2b] capitalize">
                             {feedback.module || 'N/A'}
                           </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="text-xs text-slate-700">
+                          <span className="text-xs text-neutral-700">
                             {new Date(feedback.createdAt).toLocaleDateString()} {new Date(feedback.createdAt).toLocaleTimeString()}
                           </span>
                         </td>
@@ -488,7 +488,7 @@ export default function FeedbackExperienceReport() {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleViewDetails(feedback)}
-                              className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-neutral-50 text-[#0a4d2b] transition-colors"
                               title="View Details"
                             >
                               <Eye className="w-4 h-4" />
@@ -530,8 +530,8 @@ export default function FeedbackExperienceReport() {
       {/* Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="max-w-2xl bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="text-xl font-bold text-slate-900">Feedback Details</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+            <DialogTitle className="text-xl font-medium text-neutral-900">Feedback details</DialogTitle>
           </DialogHeader>
           {selectedFeedback && (
             <div className="px-6 py-6">
@@ -539,20 +539,20 @@ export default function FeedbackExperienceReport() {
                 {/* Left Column */}
                 <div className="space-y-5">
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">User Name</label>
-                    <p className="text-sm text-slate-900 mt-1">{selectedFeedback.userName || 'N/A'}</p>
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">User name</label>
+                    <p className="text-sm text-neutral-900 mt-1">{selectedFeedback.userName || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">Email</label>
-                    <p className="text-sm text-slate-900 mt-1 break-words">{selectedFeedback.userEmail || 'N/A'}</p>
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">Email</label>
+                    <p className="text-sm text-neutral-900 mt-1 break-words">{selectedFeedback.userEmail || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">Experience</label>
-                    <p className="text-sm text-slate-900 mt-1">{getExperienceLabel(selectedFeedback.experience)}</p>
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">Experience</label>
+                    <p className="text-sm text-neutral-900 mt-1">{getExperienceLabel(selectedFeedback.experience)}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">Date</label>
-                    <p className="text-sm text-slate-900 mt-1">
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">Date</label>
+                    <p className="text-sm text-neutral-900 mt-1">
                       {new Date(selectedFeedback.createdAt).toLocaleString()}
                     </p>
                   </div>
@@ -561,21 +561,21 @@ export default function FeedbackExperienceReport() {
                 {/* Right Column */}
                 <div className="space-y-5">
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">Rating</label>
-                    <p className="text-sm text-slate-900 mt-1">
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">Rating</label>
+                    <p className="text-sm text-neutral-900 mt-1">
                       <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-medium ${getRatingColor(selectedFeedback.rating)}`}>
                         {selectedFeedback.rating}/10
                       </span>
                     </p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">Phone</label>
-                    <p className="text-sm text-slate-900 mt-1">{selectedFeedback.userPhone || 'N/A'}</p>
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">Phone</label>
+                    <p className="text-sm text-neutral-900 mt-1">{selectedFeedback.userPhone || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-slate-700 mb-1 block">Module</label>
-                    <p className="text-sm text-slate-900 mt-1">
-                      <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 capitalize">
+                    <label className="text-sm font-medium text-neutral-700 mb-1 block">Module</label>
+                    <p className="text-sm text-neutral-900 mt-1">
+                      <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-neutral-100 text-[#0a4d2b] capitalize">
                         {selectedFeedback.module || 'N/A'}
                       </span>
                     </p>
@@ -584,10 +584,10 @@ export default function FeedbackExperienceReport() {
               </div>
             </div>
           )}
-          <DialogFooter className="px-6 pb-6 pt-4 border-t border-slate-200">
+          <DialogFooter className="px-6 pb-6 pt-4 border-t border-neutral-200">
             <button
               onClick={() => setShowDetailsDialog(false)}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-sm"
+              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
             >
               Close
             </button>

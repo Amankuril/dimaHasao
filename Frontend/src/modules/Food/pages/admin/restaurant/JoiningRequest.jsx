@@ -203,8 +203,8 @@ export default function JoiningRequest() {
   }
 
   const getSortIconClassName = (key) => {
-    if (sortConfig.key !== key) return "w-3 h-3 text-slate-400"
-    return sortConfig.direction === "asc" ? "w-3 h-3 text-blue-600" : "w-3 h-3 text-slate-700"
+    if (sortConfig.key !== key) return "w-3 h-3 text-neutral-400"
+    return sortConfig.direction === "asc" ? "w-3 h-3 text-blue-600" : "w-3 h-3 text-neutral-700"
   }
 
   const clearFilters = () => {
@@ -363,14 +363,14 @@ export default function JoiningRequest() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <UtensilsCrossed className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <UtensilsCrossed className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">New Restaurant Join Request</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">New restaurant join request</h1>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -381,25 +381,25 @@ export default function JoiningRequest() {
                   placeholder="Ex: Search by restaurant na"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <button 
                 onClick={() => setShowFilterDialog(true)}
-                className={`px-4 py-2.5 text-sm font-medium rounded-lg border transition-all flex items-center gap-2 ${
+                className={`px-4 py-2.5 text-sm font-medium rounded-lg border transition-colors flex items-center gap-2 ${
                   hasActiveFilters 
-                    ? "border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100" 
-                    : "border-slate-300 bg-white hover:bg-slate-50 text-slate-700"
+                    ? "border-[#0a4d2b] bg-neutral-50 text-[#0a4d2b] hover:bg-neutral-100" 
+                    : "border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700"
                 }`}
               >
                 <Filter className="w-4 h-4" />
                 Filter
                 {hasActiveFilters && (
-                  <span className="ml-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs rounded-full">
+                  <span className="ml-1 px-1.5 py-0.5 bg-neutral-900 text-white text-xs rounded-full">
                     {[filters.zone, filters.dateFrom, filters.dateTo].filter(Boolean).length}
                   </span>
                 )}
@@ -410,62 +410,62 @@ export default function JoiningRequest() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <button type="button" onClick={() => handleSort("sl")} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                    <button type="button" onClick={() => handleSort("sl")} className="flex items-center gap-1 hover:text-neutral-900 transition-colors">
                       <span>SL</span>
                       <ArrowUpDown className={getSortIconClassName("sl")} />
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <button type="button" onClick={() => handleSort("restaurantName")} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
-                      <span>Restaurant Info</span>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                    <button type="button" onClick={() => handleSort("restaurantName")} className="flex items-center gap-1 hover:text-neutral-900 transition-colors">
+                      <span>Restaurant info</span>
                       <ArrowUpDown className={getSortIconClassName("restaurantName")} />
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <button type="button" onClick={() => handleSort("ownerName")} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
-                      <span>Owner Info</span>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                    <button type="button" onClick={() => handleSort("ownerName")} className="flex items-center gap-1 hover:text-neutral-900 transition-colors">
+                      <span>Owner info</span>
                       <ArrowUpDown className={getSortIconClassName("ownerName")} />
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <button type="button" onClick={() => handleSort("zone")} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                    <button type="button" onClick={() => handleSort("zone")} className="flex items-center gap-1 hover:text-neutral-900 transition-colors">
                       <span>Zone</span>
                       <ArrowUpDown className={getSortIconClassName("zone")} />
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                    <button type="button" onClick={() => handleSort("status")} className="flex items-center gap-1 hover:text-slate-900 transition-colors">
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                    <button type="button" onClick={() => handleSort("status")} className="flex items-center gap-1 hover:text-neutral-900 transition-colors">
                       <span>Status</span>
                       <ArrowUpDown className={getSortIconClassName("status")} />
                     </button>
                   </th>
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {loading ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-20 text-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-3" />
-                      <p className="text-lg font-semibold text-slate-700">Loading restaurant requests...</p>
+                      <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b] mx-auto mb-3" />
+                      <p className="text-lg font-medium text-neutral-700">Loading restaurant requests...</p>
                     </td>
                   </tr>
                 ) : error ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-20 text-center">
-                      <p className="text-lg font-semibold text-red-600 mb-1">Error: {error}</p>
-                      <p className="text-sm text-slate-500">Failed to load restaurant requests. Please try again.</p>
+                      <p className="text-lg font-medium text-red-600 mb-1">Error: {error}</p>
+                      <p className="text-sm text-neutral-500">Failed to load restaurant requests. Please try again.</p>
                     </td>
                   </tr>
                 ) : sortedRequests.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                        <p className="text-sm text-slate-500">No restaurant requests match your search</p>
+                        <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                        <p className="text-sm text-neutral-500">No restaurant requests match your search</p>
                       </div>
                     </td>
                   </tr>
@@ -473,14 +473,14 @@ export default function JoiningRequest() {
                   sortedRequests.map((request, index) => {
                     const isRowProcessing = processingRequestId === request._id
                     return (
-                    <tr key={request._id || index} className={`hover:bg-slate-50 transition-colors ${isRowProcessing ? "bg-blue-50/50" : ""}`}>
+                    <tr key={request._id || index} className={`hover:bg-neutral-50 transition-colors ${isRowProcessing ? "bg-neutral-50/50" : ""}`}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{request.sl ?? index + 1}</span>
+                        <span className="text-sm font-medium text-neutral-700">{request.sl ?? index + 1}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-all"
+                            className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-colors"
                             onClick={() => handleViewDetails(request)}
                           >
                             <img
@@ -499,7 +499,7 @@ export default function JoiningRequest() {
                             />
                           </div>
                           <span 
-                            className="text-sm font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
+                            className="text-sm font-medium text-neutral-900 cursor-pointer hover:text-[#0a4d2b] transition-colors"
                             onClick={() => handleViewDetails(request)}
                           >
                             {request.restaurantName}
@@ -508,12 +508,12 @@ export default function JoiningRequest() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-900">{request.ownerName}</span>
-                          <span className="text-xs text-slate-500">{formatPhone(request.ownerPhone)}</span>
+                          <span className="text-sm font-medium text-neutral-900">{request.ownerName}</span>
+                          <span className="text-xs text-neutral-500">{formatPhone(request.ownerPhone)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{request.zone || "—"}</span>
+                        <span className="text-sm text-neutral-700">{request.zone || "—"}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {isRowProcessing ? (
@@ -524,7 +524,7 @@ export default function JoiningRequest() {
                         ) : (
                         <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
                           String(request.status || "").toLowerCase() === "pending"
-                            ? "bg-blue-100 text-blue-700"
+                            ? "bg-neutral-100 text-[#0a4d2b]"
                             : "bg-red-100 text-red-700"
                         }`}>
                           {request.status}
@@ -535,7 +535,7 @@ export default function JoiningRequest() {
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => handleViewDetails(request)}
-                            className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                            className="p-1.5 rounded-full bg-neutral-50 text-[#0a4d2b] hover:bg-neutral-100 transition-colors"
                             title="View Details"
                           >
                             <Eye className="w-4 h-4" />
@@ -589,24 +589,24 @@ export default function JoiningRequest() {
 
       {/* Filter Dialog */}
       {showFilterDialog && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFilterDialog(false)}>
+        <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowFilterDialog(false)}>
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Filter className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                    <Filter className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">Filter Requests</h3>
-                    <p className="text-xs text-slate-500">Apply filters to refine your search</p>
+                    <h3 className="text-lg font-medium text-neutral-900">Filter requests</h3>
+                    <p className="text-xs text-neutral-500">Apply filters to refine your search</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowFilterDialog(false)}
-                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                 >
-                  <X className="w-5 h-5 text-slate-600" />
+                  <X className="w-5 h-5 text-neutral-600" />
                 </button>
               </div>
 
@@ -614,13 +614,13 @@ export default function JoiningRequest() {
                 {/* Zone Filter */}
                 {filterOptions.zones.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
                       Zone
                     </label>
                     <select
                       value={filters.zone}
                       onChange={(e) => setFilters({ ...filters, zone: e.target.value })}
-                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                     >
                       <option value="">All Zones</option>
                       {filterOptions.zones.map((zone) => (
@@ -633,8 +633,8 @@ export default function JoiningRequest() {
                 {/* Date Range Filters */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      From Date
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      From date
                     </label>
                     <input
                       type="date"
@@ -648,12 +648,12 @@ export default function JoiningRequest() {
                           dateTo: filters.dateTo && filters.dateTo < selected ? selected : filters.dateTo
                         })
                       }}
-                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      To Date
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      To date
                     </label>
                     <input
                       type="date"
@@ -664,25 +664,25 @@ export default function JoiningRequest() {
                         setFilters({ ...filters, dateTo: selected })
                       }}
                       min={filters.dateFrom}
-                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-6 pt-6 border-t border-slate-200">
+              <div className="flex items-center gap-3 mt-6 pt-6 border-t border-neutral-200">
                 <button
                   onClick={clearFilters}
                   disabled={!hasActiveFilters}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Clear All
+                  Clear all
                 </button>
                 <button
                   onClick={() => setShowFilterDialog(false)}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white transition-colors"
                 >
-                  Apply Filters
+                  Apply filters
                 </button>
               </div>
             </div>
@@ -694,10 +694,10 @@ export default function JoiningRequest() {
       <Dialog open={isApproveOpen} onOpenChange={(open) => { if (!processing) setIsApproveOpen(open) }}>
         <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>Approve Request</DialogTitle>
+            <DialogTitle>Approve request</DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-neutral-700">
               Are you sure you want to approve "{selectedRequest?.restaurantName}"'s join request?
             </p>
           </div>
@@ -705,14 +705,14 @@ export default function JoiningRequest() {
             <button
               onClick={() => setIsApproveOpen(false)}
               disabled={processing}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={confirmApprove}
               disabled={processing}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-all shadow-md disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm disabled:opacity-50 flex items-center gap-2"
             >
               {processing && <Loader2 className="w-4 h-4 animate-spin" />}
               Approve
@@ -723,32 +723,32 @@ export default function JoiningRequest() {
 
       {/* Reject Confirmation Dialog */}
       {showRejectDialog && selectedRequest && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { if (!processing) setShowRejectDialog(false) }}>
+        <div className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { if (!processing) setShowRejectDialog(false) }}>
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <X className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <X className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Reject Restaurant Request</h3>
-                  <p className="text-sm text-slate-600">{selectedRequest.restaurantName}</p>
+                  <h3 className="text-lg font-medium text-neutral-900">Reject restaurant request</h3>
+                  <p className="text-sm text-neutral-600">{selectedRequest.restaurantName}</p>
                 </div>
               </div>
               
-              <p className="text-sm text-slate-700 mb-4">
+              <p className="text-sm text-neutral-700 mb-4">
                 Are you sure you want to reject this restaurant request? Please provide a reason for rejection.
               </p>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Rejection Reason <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Rejection reason <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Enter reason for rejection..."
-                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                  placeholder="Enter reason for rejection"
+                  className="w-full px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
                   rows={4}
                 />
               </div>
@@ -761,7 +761,7 @@ export default function JoiningRequest() {
                     setRejectionReason("")
                   }}
                   disabled={processing}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -788,23 +788,23 @@ export default function JoiningRequest() {
       {/* Restaurant Details Side Panel */}
       {showDetailsModal && selectedRequest && (
         <div className="fixed inset-0 z-[60] flex justify-end">
-          <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-sm transition-opacity" onClick={closeDetailsModal} />
+          <div className="fixed inset-0 bg-neutral-900/10 backdrop-blur-sm transition-opacity" onClick={closeDetailsModal} />
           
           <div 
             className="relative w-full max-w-4xl bg-white h-full shadow-2xl overflow-y-auto animate-in slide-in-from-right duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Panel Header */}
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-6 py-5 flex items-center justify-between z-10">
+            <div className="sticky top-0 bg-white border-b border-neutral-100 px-6 py-5 flex items-center justify-between z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                  <UtensilsCrossed className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <UtensilsCrossed className="w-5 h-5" />
                 </div>
-                <h2 className="text-xl font-bold text-slate-900">Restaurant Details - {selectedRequest.restaurantName || "N/A"}</h2>
+                <h2 className="text-xl font-medium text-neutral-900">Restaurant Details - {selectedRequest.restaurantName || "N/A"}</h2>
               </div>
               <button
                 onClick={closeDetailsModal}
-                className="p-2 rounded-xl hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-600 border border-transparent hover:border-slate-200"
+                className="p-2 rounded-xl hover:bg-neutral-100 transition-colors text-neutral-400 hover:text-neutral-600 border border-transparent hover:border-neutral-200"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -814,8 +814,8 @@ export default function JoiningRequest() {
             <div className="p-6">
               {loadingDetails && (
                 <div className="flex items-center justify-center py-20">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  <span className="ml-3 text-slate-600">Loading details...</span>
+                  <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
+                  <span className="ml-3 text-neutral-600">Loading details...</span>
                 </div>
               )}
               {!loadingDetails && (restaurantDetails || selectedRequest) && (() => {
@@ -832,8 +832,8 @@ export default function JoiningRequest() {
                 return (
                 <div className="space-y-6">
                   {/* Restaurant Basic Info */}
-                  <div className="flex items-start gap-6 pb-6 border-b border-slate-200">
-                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-slate-100 shrink-0">
+                  <div className="flex items-start gap-6 pb-6 border-b border-neutral-200">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-neutral-100 shrink-0">
                       <img
                         src={profileImgUrl || "https://via.placeholder.com/96"}
                         alt={r?.restaurantName || r?.name || "Restaurant"}
@@ -844,19 +844,19 @@ export default function JoiningRequest() {
                       />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-slate-900 mb-2">
+                      <h3 className="text-2xl font-medium text-neutral-900 mb-2">
                         {r?.restaurantName || r?.name || "N/A"}
                       </h3>
                       <div className="flex items-center gap-4 flex-wrap">
                         {r?.rating != null && (
                           <div className="flex items-center gap-1">
                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="text-sm font-medium text-slate-700">
+                            <span className="text-sm font-medium text-neutral-700">
                               {Number(r.rating).toFixed(1)} ({(r.totalRatings || 0)} reviews)
                             </span>
                           </div>
                         )}
-                        <div className="flex items-center gap-1 text-slate-600">
+                        <div className="flex items-center gap-1 text-neutral-600">
                           <Building2 className="w-4 h-4" />
                           <span className="text-sm">{r?.restaurantId || r?._id || "N/A"}</span>
                         </div>
@@ -872,28 +872,28 @@ export default function JoiningRequest() {
                   {/* Owner Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Owner Information</h4>
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Owner information</h4>
                       <div className="space-y-3">
                         <div className="flex items-center gap-3">
-                          <User className="w-5 h-5 text-slate-400" />
+                          <User className="w-5 h-5 text-neutral-400" />
                           <div>
-                            <p className="text-xs text-slate-500">Owner Name</p>
-                            <p className="text-sm font-medium text-slate-900">{r?.ownerName || "N/A"}</p>
+                            <p className="text-xs text-neutral-500">Owner name</p>
+                            <p className="text-sm font-medium text-neutral-900">{r?.ownerName || "N/A"}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Phone className="w-5 h-5 text-slate-400" />
+                          <Phone className="w-5 h-5 text-neutral-400" />
                           <div>
-                            <p className="text-xs text-slate-500">Phone</p>
-                            <p className="text-sm font-medium text-slate-900">{r?.ownerPhone || r?.phone || "N/A"}</p>
+                            <p className="text-xs text-neutral-500">Phone</p>
+                            <p className="text-sm font-medium text-neutral-900">{r?.ownerPhone || r?.phone || "N/A"}</p>
                           </div>
                         </div>
                         {(r?.ownerEmail || r?.email) && (
                           <div className="flex items-center gap-3">
-                            <Mail className="w-5 h-5 text-slate-400" />
+                            <Mail className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500">Email</p>
-                              <p className="text-sm font-medium text-slate-900">{r.ownerEmail || r.email}</p>
+                              <p className="text-xs text-neutral-500">Email</p>
+                              <p className="text-sm font-medium text-neutral-900">{r.ownerEmail || r.email}</p>
                             </div>
                           </div>
                         )}
@@ -902,33 +902,33 @@ export default function JoiningRequest() {
 
                     {/* Location & Contact */}
                     <div>
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Location & Contact</h4>
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Location & contact</h4>
                       <div className="space-y-3">
                         {(() => {
                           const fullAddress = getRestaurantDisplayAddress(r) || r?.zone || null
                           return fullAddress ? (
                             <div className="flex items-start gap-3">
-                              <MapPin className="w-5 h-5 text-slate-400 mt-0.5 shrink-0" />
+                              <MapPin className="w-5 h-5 text-neutral-400 mt-0.5 shrink-0" />
                               <div>
-                                <p className="text-xs text-slate-500">Address</p>
-                                <p className="text-sm font-medium text-slate-900">{fullAddress}</p>
+                                <p className="text-xs text-neutral-500">Address</p>
+                                <p className="text-sm font-medium text-neutral-900">{fullAddress}</p>
                               </div>
                             </div>
                           ) : null
                         })()}
                         {r?.pureVegRestaurant != null && (
                           <div className="flex items-center gap-3">
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${r.pureVegRestaurant ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${r.pureVegRestaurant ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
                               {r.pureVegRestaurant ? "🟢 Pure Veg" : "🟠 Mixed Menu"}
                             </span>
                           </div>
                         )}
                         {(r?.primaryContactNumber || r?.phone) && (
                           <div className="flex items-center gap-3">
-                            <Phone className="w-5 h-5 text-slate-400" />
+                            <Phone className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500">Primary Contact</p>
-                              <p className="text-sm font-medium text-slate-900">{r.primaryContactNumber || r.phone}</p>
+                              <p className="text-xs text-neutral-500">Primary contact</p>
+                              <p className="text-sm font-medium text-neutral-900">{r.primaryContactNumber || r.phone}</p>
                             </div>
                           </div>
                         )}
@@ -938,14 +938,14 @@ export default function JoiningRequest() {
 
                   {/* Timings */}
                   <div>
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Timings & Status</h4>
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Timings & status</h4>
                       <div className="space-y-3">
                         {(openingTime || closingTime) && (
                           <div className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-slate-400" />
+                            <Clock className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500">Opening / Closing</p>
-                              <p className="text-sm font-medium text-slate-900">
+                              <p className="text-xs text-neutral-500">Opening / closing</p>
+                              <p className="text-sm font-medium text-neutral-900">
                                 {formatTime12Hour(openingTime)} – {formatTime12Hour(closingTime)}
                               </p>
                             </div>
@@ -953,16 +953,16 @@ export default function JoiningRequest() {
                         )}
                         {r?.estimatedDeliveryTime && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Estimated Delivery Time</p>
-                            <p className="text-sm font-medium text-slate-900">{r.estimatedDeliveryTime}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Estimated delivery time</p>
+                            <p className="text-sm font-medium text-neutral-900">{r.estimatedDeliveryTime}</p>
                           </div>
                         )}
                         {r?.openDays && Array.isArray(r.openDays) && r.openDays.length > 0 && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Open Days</p>
+                            <p className="text-xs text-neutral-500 mb-1">Open days</p>
                             <div className="flex flex-wrap gap-2">
                               {r.openDays.map((day, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-medium capitalize">
+                                <span key={idx} className="px-2 py-1 bg-neutral-100 text-neutral-700 rounded text-xs font-medium capitalize">
                                   {day}
                                 </span>
                               ))}
@@ -970,7 +970,7 @@ export default function JoiningRequest() {
                           </div>
                         )}
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Approval Status</p>
+                          <p className="text-xs text-neutral-500 mb-1">Approval status</p>
                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                             approvalStatus === "approved" ? "bg-green-100 text-green-700" : approvalStatus === "rejected" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
                           }`}>
@@ -982,8 +982,8 @@ export default function JoiningRequest() {
 
                   {/* Registration Documents – flat schema (PAN, GST, FSSAI, Bank) */}
                   {restaurantPhotoList.length > 0 && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Restaurant Photos</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Restaurant photos</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {restaurantPhotoList.map((restaurantImg, idx) => {
                           const imgUrl = getNormalizedImageUrl(restaurantImg)
@@ -993,7 +993,7 @@ export default function JoiningRequest() {
                               href={imgUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded-lg overflow-hidden border border-slate-200 hover:border-blue-500 transition-colors"
+                              className="rounded-lg overflow-hidden border border-neutral-200 hover:border-[#0a4d2b] transition-colors"
                             >
                               <img
                                 src={imgUrl}
@@ -1011,40 +1011,40 @@ export default function JoiningRequest() {
                   )}
 
                   {(hasFlatDocs || r?.onboarding?.step3) && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration Documents</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration documents</h4>
                       <div className="space-y-6">
                         {/* PAN – flat: panNumber, nameOnPan, panImage */}
                         {(r.panNumber || r.panImage || r?.onboarding?.step3?.pan) && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
-                              PAN Details
+                              PAN details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.panNumber || r?.onboarding?.step3?.pan?.panNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">PAN Number</p>
-                                  <p className="font-medium text-slate-900">{r.panNumber || r.onboarding?.step3?.pan?.panNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">PAN number</p>
+                                  <p className="font-medium text-neutral-900">{r.panNumber || r.onboarding?.step3?.pan?.panNumber}</p>
                                 </div>
                               )}
                               {(r.nameOnPan || r?.onboarding?.step3?.pan?.nameOnPan) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Name on PAN</p>
-                                  <p className="font-medium text-slate-900">{r.nameOnPan || r.onboarding?.step3?.pan?.nameOnPan}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Name on PAN</p>
+                                  <p className="font-medium text-neutral-900">{r.nameOnPan || r.onboarding?.step3?.pan?.nameOnPan}</p>
                                 </div>
                               )}
                               {(typeof r.panImage === "string" ? r.panImage : r?.panImage?.url || r?.onboarding?.step3?.pan?.image?.url) && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-2">PAN Document</p>
+                                  <p className="text-xs text-neutral-500 mb-2">PAN document</p>
                                   <a
                                     href={typeof r.panImage === "string" ? r.panImage : (r.panImage?.url || r.onboarding?.step3?.pan?.image?.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                    className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]"
                                   >
                                     <ImageIcon className="w-4 h-4" />
-                                    <span>View PAN Document</span>
+                                    <span>View PAN document</span>
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
@@ -1055,47 +1055,47 @@ export default function JoiningRequest() {
 
                         {/* GST – flat: gstRegistered, gstNumber, gstLegalName, gstAddress, gstImage */}
                         {(r.gstRegistered != null || r.gstNumber || r?.onboarding?.step3?.gst) && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
-                              GST Details
+                              GST details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <p className="text-xs text-slate-500 mb-1">GST Registered</p>
-                                <p className="font-medium text-slate-900">
+                                <p className="text-xs text-neutral-500 mb-1">GST registered</p>
+                                <p className="font-medium text-neutral-900">
                                   {r.gstRegistered != null ? (r.gstRegistered ? "Yes" : "No") : (r?.onboarding?.step3?.gst?.isRegistered ? "Yes" : "No")}
                                 </p>
                               </div>
                               {(r.gstNumber || r?.onboarding?.step3?.gst?.gstNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">GST Number</p>
-                                  <p className="font-medium text-slate-900">{r.gstNumber || r.onboarding?.step3?.gst?.gstNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">GST number</p>
+                                  <p className="font-medium text-neutral-900">{r.gstNumber || r.onboarding?.step3?.gst?.gstNumber}</p>
                                 </div>
                               )}
                               {(r.gstLegalName || r?.onboarding?.step3?.gst?.legalName) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Legal Name</p>
-                                  <p className="font-medium text-slate-900">{r.gstLegalName || r.onboarding?.step3?.gst?.legalName}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Legal name</p>
+                                  <p className="font-medium text-neutral-900">{r.gstLegalName || r.onboarding?.step3?.gst?.legalName}</p>
                                 </div>
                               )}
                               {(r.gstAddress || r?.onboarding?.step3?.gst?.address) && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-1">GST Address</p>
-                                  <p className="font-medium text-slate-900">{r.gstAddress || r.onboarding?.step3?.gst?.address}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">GST address</p>
+                                  <p className="font-medium text-neutral-900">{r.gstAddress || r.onboarding?.step3?.gst?.address}</p>
                                 </div>
                               )}
                               {(typeof r.gstImage === "string" ? r.gstImage : r?.gstImage?.url || r?.onboarding?.step3?.gst?.image?.url) && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-2">GST Document</p>
+                                  <p className="text-xs text-neutral-500 mb-2">GST document</p>
                                   <a
                                     href={typeof r.gstImage === "string" ? r.gstImage : (r.gstImage?.url || r.onboarding?.step3?.gst?.image?.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                    className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]"
                                   >
                                     <ImageIcon className="w-4 h-4" />
-                                    <span>View GST Document</span>
+                                    <span>View GST document</span>
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
@@ -1106,22 +1106,22 @@ export default function JoiningRequest() {
 
                         {/* FSSAI – flat: fssaiNumber, fssaiExpiry, fssaiImage */}
                         {(r.fssaiNumber || r.fssaiExpiry || r?.onboarding?.step3?.fssai) && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
-                              FSSAI Details
+                              FSSAI details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.fssaiNumber || r?.onboarding?.step3?.fssai?.registrationNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">FSSAI Registration Number</p>
-                                  <p className="font-medium text-slate-900">{r.fssaiNumber || r.onboarding?.step3?.fssai?.registrationNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">FSSAI registration number</p>
+                                  <p className="font-medium text-neutral-900">{r.fssaiNumber || r.onboarding?.step3?.fssai?.registrationNumber}</p>
                                 </div>
                               )}
                               {(r.fssaiExpiry || r?.onboarding?.step3?.fssai?.expiryDate) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">FSSAI Expiry Date</p>
-                                  <p className="font-medium text-slate-900">
+                                  <p className="text-xs text-neutral-500 mb-1">FSSAI expiry date</p>
+                                  <p className="font-medium text-neutral-900">
                                     {new Date(r.fssaiExpiry || r.onboarding?.step3?.fssai?.expiryDate).toLocaleDateString('en-IN', {
                                       year: 'numeric',
                                       month: 'long',
@@ -1132,15 +1132,15 @@ export default function JoiningRequest() {
                               )}
                               {(typeof r.fssaiImage === "string" ? r.fssaiImage : r?.fssaiImage?.url || r?.onboarding?.step3?.fssai?.image?.url) && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-2">FSSAI Document</p>
+                                  <p className="text-xs text-neutral-500 mb-2">FSSAI document</p>
                                   <a
                                     href={typeof r.fssaiImage === "string" ? r.fssaiImage : (r.fssaiImage?.url || r.onboarding?.step3?.fssai?.image?.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                                    className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]"
                                   >
                                     <ImageIcon className="w-4 h-4" />
-                                    <span>View FSSAI Document</span>
+                                    <span>View FSSAI document</span>
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
@@ -1151,34 +1151,34 @@ export default function JoiningRequest() {
 
                         {/* Bank – flat: accountNumber, ifscCode, accountHolderName, accountType */}
                         {(r.accountNumber || r.ifscCode || r?.onboarding?.step3?.bank) && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <CreditCard className="w-4 h-4" />
-                              Bank Details
+                              Bank details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.accountNumber || r?.onboarding?.step3?.bank?.accountNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Account Number</p>
-                                  <p className="font-medium text-slate-900">{r.accountNumber || r.onboarding?.step3?.bank?.accountNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Account number</p>
+                                  <p className="font-medium text-neutral-900">{r.accountNumber || r.onboarding?.step3?.bank?.accountNumber}</p>
                                 </div>
                               )}
                               {(r.ifscCode || r?.onboarding?.step3?.bank?.ifscCode) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">IFSC Code</p>
-                                  <p className="font-medium text-slate-900">{r.ifscCode || r.onboarding?.step3?.bank?.ifscCode}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">IFSC code</p>
+                                  <p className="font-medium text-neutral-900">{r.ifscCode || r.onboarding?.step3?.bank?.ifscCode}</p>
                                 </div>
                               )}
                               {(r.accountHolderName || r?.onboarding?.step3?.bank?.accountHolderName) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Account Holder Name</p>
-                                  <p className="font-medium text-slate-900">{r.accountHolderName || r.onboarding?.step3?.bank?.accountHolderName}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Account holder name</p>
+                                  <p className="font-medium text-neutral-900">{r.accountHolderName || r.onboarding?.step3?.bank?.accountHolderName}</p>
                                 </div>
                               )}
                               {(r.accountType || r?.onboarding?.step3?.bank?.accountType) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Account Type</p>
-                                  <p className="font-medium text-slate-900 capitalize">{r.accountType || r.onboarding?.step3?.bank?.accountType}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Account type</p>
+                                  <p className="font-medium text-neutral-900 capitalize">{r.accountType || r.onboarding?.step3?.bank?.accountType}</p>
                                 </div>
                               )}
                             </div>
@@ -1190,8 +1190,8 @@ export default function JoiningRequest() {
 
                   {/* Menu Images */}
                   {menuImgList.length > 0 && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Menu Images</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Menu images</h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {menuImgList.map((menuImg, idx) => {
                           const imgUrl = typeof menuImg === "string" ? menuImg : (menuImg?.url || menuImg)
@@ -1201,7 +1201,7 @@ export default function JoiningRequest() {
                               href={imgUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="rounded-lg overflow-hidden border border-slate-200 hover:border-blue-500 transition-colors"
+                              className="rounded-lg overflow-hidden border border-neutral-200 hover:border-[#0a4d2b] transition-colors"
                             >
                               <img
                                 src={imgUrl}
@@ -1220,15 +1220,15 @@ export default function JoiningRequest() {
 
                   {/* Registration & approval info */}
                   {(r?.createdAt || r?.restaurantId || r?.businessModel || r?.approvedAt != null) && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration & Approval</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration & approval</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {r.createdAt && (
                           <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-slate-400" />
+                            <Calendar className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500 mb-1">Registration Date & Time</p>
-                              <p className="font-medium text-slate-900">
+                              <p className="text-xs text-neutral-500 mb-1">Registration date & time</p>
+                              <p className="font-medium text-neutral-900">
                                 {new Date(r.createdAt).toLocaleString('en-IN', {
                                   year: 'numeric',
                                   month: 'long',
@@ -1242,38 +1242,38 @@ export default function JoiningRequest() {
                         )}
                         {r.restaurantId && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Restaurant ID</p>
-                            <p className="font-medium text-slate-900">{r.restaurantId}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Restaurant ID</p>
+                            <p className="font-medium text-neutral-900">{r.restaurantId}</p>
                           </div>
                         )}
                         {r.approvedAt != null && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Approved At</p>
-                            <p className="font-medium text-slate-900">{new Date(r.approvedAt).toLocaleString('en-IN')}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Approved at</p>
+                            <p className="font-medium text-neutral-900">{new Date(r.approvedAt).toLocaleString('en-IN')}</p>
                           </div>
                         )}
                         {r.businessModel && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Business Model</p>
-                            <p className="font-medium text-slate-900">{r.businessModel}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Business model</p>
+                            <p className="font-medium text-neutral-900">{r.businessModel}</p>
                           </div>
                         )}
                         {r.phoneVerified !== undefined && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Phone Verified</p>
-                            <p className="font-medium text-slate-900">{r.phoneVerified ? "Yes" : "No"}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Phone verified</p>
+                            <p className="font-medium text-neutral-900">{r.phoneVerified ? "Yes" : "No"}</p>
                           </div>
                         )}
                         {r.signupMethod && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Signup Method</p>
-                            <p className="font-medium text-slate-900 capitalize">{r.signupMethod}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Signup method</p>
+                            <p className="font-medium text-neutral-900 capitalize">{r.signupMethod}</p>
                           </div>
                         )}
                         {r?.onboarding?.completedSteps != null && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Onboarding Steps Completed</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.completedSteps} / 4</p>
+                            <p className="text-xs text-neutral-500 mb-1">Onboarding steps completed</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.completedSteps} / 4</p>
                           </div>
                         )}
                       </div>
@@ -1282,9 +1282,9 @@ export default function JoiningRequest() {
 
                   {/* Rejection Reason (if rejected) */}
                   {r?.rejectionReason && (
-                    <div className="pt-6 border-t border-slate-200">
+                    <div className="pt-6 border-t border-neutral-200">
                       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <h4 className="text-lg font-semibold text-red-900 mb-2">Rejection Reason</h4>
+                        <h4 className="text-lg font-medium text-red-900 mb-2">Rejection reason</h4>
                         <p className="text-sm text-red-800">{r.rejectionReason}</p>
                         {r.rejectedAt && (
                           <p className="text-xs text-red-600 mt-2">
@@ -1299,8 +1299,8 @@ export default function JoiningRequest() {
               })()}
               {!loadingDetails && !restaurantDetails && !selectedRequest && (
                 <div className="flex flex-col items-center justify-center py-20">
-                  <p className="text-lg font-semibold text-slate-700 mb-2">No Details Available</p>
-                  <p className="text-sm text-slate-500">Unable to load restaurant details</p>
+                  <p className="text-lg font-medium text-neutral-700 mb-2">No details available</p>
+                  <p className="text-sm text-neutral-500">Unable to load restaurant details</p>
                 </div>
               )}
             </div>

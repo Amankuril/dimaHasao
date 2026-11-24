@@ -34,10 +34,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
@@ -69,11 +69,11 @@ export default function AddonActivation() {
   }
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-5xl">
         {/* Page Title */}
         <div className="mb-4">
-          <h1 className="text-lg font-bold text-slate-900">Add on activation</h1>
+          <h1 className="text-lg font-medium text-neutral-900">Add on activation</h1>
         </div>
 
         {/* Addon Cards */}
@@ -81,15 +81,15 @@ export default function AddonActivation() {
           {addons.map((addon) => (
             <div
               key={addon.id}
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-4"
+              className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4"
             >
               <div className="flex items-start justify-between gap-4">
                 {/* Left: Title and Description */}
                 <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-slate-900 mb-1">
+                  <h2 className="text-sm font-medium text-neutral-900 mb-1">
                     {addon.title}
                   </h2>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-neutral-600">
                     {addon.description}
                   </p>
                 </div>
@@ -100,7 +100,7 @@ export default function AddonActivation() {
                   <button
                     type="button"
                     onClick={() => handleView(addon.id)}
-                    className="flex items-center gap-1 text-xs text-slate-700 hover:text-slate-900"
+                    className="flex items-center gap-1 text-xs text-neutral-700 hover:text-neutral-900"
                   >
                     <span>View</span>
                     <ChevronDown className="w-3 h-3" />
@@ -117,7 +117,7 @@ export default function AddonActivation() {
                     <button
                       type="button"
                       onClick={() => handleSettings(addon.id)}
-                      className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition-colors"
+                      className="p-1.5 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded transition-colors"
                     >
                       <Settings className="w-4 h-4" />
                     </button>

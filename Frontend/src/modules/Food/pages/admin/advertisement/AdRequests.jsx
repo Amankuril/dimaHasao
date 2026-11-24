@@ -149,28 +149,28 @@ export default function AdRequests() {
   ]
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">Advertisement Requests</h1>
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+            <h1 className="text-2xl font-medium text-neutral-900">Advertisement requests</h1>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
               {filteredRequests.length}
             </span>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex items-center gap-2 border-b border-slate-200 mb-4">
+        <div className="flex items-center gap-2 border-b border-neutral-200 mb-4">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.key
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "border-[#0a4d2b] text-[#0a4d2b]"
+                  : "border-transparent text-neutral-600 hover:text-neutral-900"
               }`}
             >
               {tab.label}
@@ -180,8 +180,8 @@ export default function AdRequests() {
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-slate-900">Advertisement</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h2 className="text-lg font-medium text-neutral-900">Advertisement</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredRequests.length}
               </span>
             </div>
@@ -193,21 +193,21 @@ export default function AdRequests() {
                   placeholder="Search by ads ID or restaurant"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileDown className="w-4 h-4 mr-2" />
@@ -230,14 +230,14 @@ export default function AdRequests() {
 
               <button 
                 onClick={() => setIsFilterOpen(true)}
-                className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${
+                className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors relative ${
                   activeFiltersCount > 0 ? "border-emerald-500 bg-emerald-50" : ""
                 }`}
               >
                 <Filter className="w-4 h-4" />
-                <span className="text-black font-bold">Filters</span>
+                <span className="text-black font-medium">Filters</span>
                 {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                     {activeFiltersCount}
                   </span>
                 )}
@@ -245,7 +245,7 @@ export default function AdRequests() {
 
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -254,87 +254,87 @@ export default function AdRequests() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="overflow-x-hidden">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                {visibleColumns.si && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>}
-                {visibleColumns.adsId && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads ID</th>}
-                {visibleColumns.adsTitle && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Title</th>}
-                {visibleColumns.restaurantInfo && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Info</th>}
-                {visibleColumns.adsType && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Type</th>}
-                {visibleColumns.duration && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Duration</th>}
-                {visibleColumns.actions && <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>}
+                {visibleColumns.si && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>}
+                {visibleColumns.adsId && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Ads ID</th>}
+                {visibleColumns.adsTitle && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Ads title</th>}
+                {visibleColumns.restaurantInfo && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Restaurant info</th>}
+                {visibleColumns.adsType && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Ads type</th>}
+                {visibleColumns.duration && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Duration</th>}
+                {visibleColumns.actions && <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {filteredRequests.length === 0 ? (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-20 text-center">
-                    <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                    <p className="text-sm text-slate-500">No requests match your search</p>
+                    <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                    <p className="text-sm text-neutral-500">No requests match your search</p>
                   </td>
                 </tr>
               ) : (
                 filteredRequests.map((request) => (
                   <tr
                     key={request.sl}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="hover:bg-neutral-50 transition-colors"
                   >
                     {visibleColumns.si && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{request.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{request.sl}</span>
                       </td>
                     )}
                     {visibleColumns.adsId && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-900">{request.adsId}</span>
+                        <span className="text-sm font-medium text-neutral-900">{request.adsId}</span>
                       </td>
                     )}
                     {visibleColumns.adsTitle && (
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-900">{request.adsTitle}</span>
+                        <span className="text-sm font-medium text-neutral-900">{request.adsTitle}</span>
                       </td>
                     )}
                     {visibleColumns.restaurantInfo && (
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-5 h-5 text-orange-600" />
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-100 text-neutral-500">
+                            <Building2 className="w-5 h-5" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{request.restaurantName}</span>
-                            <span className="text-xs text-slate-500">{request.restaurantEmail}</span>
+                            <span className="text-sm font-medium text-neutral-900">{request.restaurantName}</span>
+                            <span className="text-xs text-neutral-500">{request.restaurantEmail}</span>
                           </div>
                         </div>
                       </td>
                     )}
                     {visibleColumns.adsType && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{request.adsType}</span>
+                        <span className="text-sm text-neutral-700">{request.adsType}</span>
                       </td>
                     )}
                     {visibleColumns.duration && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{request.duration}</span>
+                        <span className="text-sm text-neutral-700">{request.duration}</span>
                       </td>
                     )}
                     {visibleColumns.actions && (
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
+                            <button className="p-1.5 rounded text-neutral-600 hover:bg-neutral-100 transition-colors">
                               <MoreVertical className="w-4 h-4" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                          <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
                             <DropdownMenuItem 
                               onClick={() => handleViewRequest(request)}
                               className="cursor-pointer"
                             >
                               <Eye className="w-4 h-4 mr-2" />
-                              View Details
+                              View details
                             </DropdownMenuItem>
                             {activeTab === "new" && (
                               <>
@@ -373,18 +373,18 @@ export default function AdRequests() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Filter Requests
+              Filter requests
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Ads Type
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Ads type
               </label>
               <select
                 value={filters.adsType}
                 onChange={(e) => setFilters(prev => ({ ...prev, adsType: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               >
                 <option value="">All Types</option>
                 {adsTypes.map(type => (
@@ -393,13 +393,13 @@ export default function AdRequests() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Restaurant
               </label>
               <select
                 value={filters.restaurant}
                 onChange={(e) => setFilters(prev => ({ ...prev, restaurant: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               >
                 <option value="">All Restaurants</option>
                 {restaurants.map(restaurant => (
@@ -407,16 +407,16 @@ export default function AdRequests() {
                 ))}
               </select>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={handleResetFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Apply
               </button>
@@ -439,34 +439,34 @@ export default function AdRequests() {
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="max-w-2xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>Advertisement Request Details</DialogTitle>
+            <DialogTitle>Advertisement request details</DialogTitle>
           </DialogHeader>
           {selectedRequest && (
             <div className="px-6 pb-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Ads ID</p>
-                  <p className="text-sm text-slate-900">{selectedRequest.adsId}</p>
+                  <p className="text-sm font-medium text-neutral-700">Ads ID</p>
+                  <p className="text-sm text-neutral-900">{selectedRequest.adsId}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Ads Title</p>
-                  <p className="text-sm text-slate-900">{selectedRequest.adsTitle}</p>
+                  <p className="text-sm font-medium text-neutral-700">Ads title</p>
+                  <p className="text-sm text-neutral-900">{selectedRequest.adsTitle}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Restaurant Name</p>
-                  <p className="text-sm text-slate-900">{selectedRequest.restaurantName}</p>
+                  <p className="text-sm font-medium text-neutral-700">Restaurant name</p>
+                  <p className="text-sm text-neutral-900">{selectedRequest.restaurantName}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Restaurant Email</p>
-                  <p className="text-sm text-slate-900">{selectedRequest.restaurantEmail}</p>
+                  <p className="text-sm font-medium text-neutral-700">Restaurant email</p>
+                  <p className="text-sm text-neutral-900">{selectedRequest.restaurantEmail}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Ads Type</p>
-                  <p className="text-sm text-slate-900">{selectedRequest.adsType}</p>
+                  <p className="text-sm font-medium text-neutral-700">Ads type</p>
+                  <p className="text-sm text-neutral-900">{selectedRequest.adsType}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Duration</p>
-                  <p className="text-sm text-slate-900">{selectedRequest.duration}</p>
+                  <p className="text-sm font-medium text-neutral-700">Duration</p>
+                  <p className="text-sm text-neutral-900">{selectedRequest.duration}</p>
                 </div>
               </div>
             </div>

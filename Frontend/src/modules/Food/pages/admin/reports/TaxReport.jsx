@@ -192,39 +192,39 @@ export default function TaxReport() {
 
   if (loading && reports.length === 0) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-gray-600">Loading tax report...</p>
+          <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+          <p className="text-neutral-600">Loading tax report...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen overflow-x-hidden">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen overflow-x-hidden">
       <div className="w-full max-w-full">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">Generate Tax Report</h1>
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+          <h1 className="text-2xl font-medium text-neutral-900">Generate tax report</h1>
         </div>
 
         {/* Admin Tax Report Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-2">Admin Tax Report</h2>
-          <p className="text-sm text-slate-600 mb-6">
-            To generate you tax report please select & input following field and submit for the result.
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+          <h2 className="text-lg font-medium text-neutral-900 mb-2">Admin tax report</h2>
+          <p className="text-sm text-neutral-600 mb-6">
+            To generate you tax report please select & input following field and submit for the result
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="relative">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Date Range Type
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Date range type
               </label>
               <select
                 value={filters.dateRangeType}
                 onChange={(e) => setFilters(prev => ({ ...prev, dateRangeType: e.target.value }))}
-                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               >
                 <option value="All Time">All Time</option>
                 <option value="Today">Today</option>
@@ -232,33 +232,33 @@ export default function TaxReport() {
                 <option value="This Month">This Month</option>
                 <option value="This Year">This Year</option>
               </select>
-              <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Select How to calculate tax
               </label>
               <select
                 value={filters.calculateTax}
                 onChange={(e) => setFilters(prev => ({ ...prev, calculateTax: e.target.value }))}
-                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               >
                 <option value="Percentage">Percentage</option>
                 <option value="Fixed Amount">Fixed Amount</option>
                 <option value="Tiered">Tiered</option>
               </select>
-              <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
             </div>
 
             <div className="relative">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Select Tax Rates
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Select tax rates
               </label>
               <select
                 value={filters.taxRate}
                 onChange={(e) => setFilters(prev => ({ ...prev, taxRate: e.target.value }))}
-                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               >
                 <option value="Select Tax Rate">Select Tax Rate</option>
                 <option value="5%">5%</option>
@@ -267,20 +267,20 @@ export default function TaxReport() {
                 <option value="18%">18%</option>
                 <option value="20%">20%</option>
               </select>
-              <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
             </div>
           </div>
 
           <div className="flex items-center justify-end gap-3">
             <button
               onClick={handleReset}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Reset
             </button>
             <button
               onClick={handleSubmit}
-              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all"
+              className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors"
             >
               Submit
             </button>
@@ -290,62 +290,62 @@ export default function TaxReport() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Total Income Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Total Income</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.totalIncome}</p>
+                <p className="text-sm font-medium text-neutral-600 mb-1">Total income</p>
+                <p className="text-2xl font-medium text-[#0a4d2b]">{stats.totalIncome}</p>
               </div>
-              <div className="w-14 h-14 rounded-lg bg-yellow-100 flex items-center justify-center">
-                <DollarSign className="w-8 h-8 text-yellow-600" />
+              <div className="w-14 h-14 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <DollarSign className="w-8 h-8" />
               </div>
             </div>
           </div>
 
           {/* Total Tax Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Total Tax</p>
-                <p className="text-2xl font-bold text-red-600">{stats.totalTax}</p>
+                <p className="text-sm font-medium text-neutral-600 mb-1">Total tax</p>
+                <p className="text-2xl font-medium text-red-600">{stats.totalTax}</p>
               </div>
-              <div className="w-14 h-14 rounded-lg bg-pink-100 flex items-center justify-center">
-                <FileText className="w-8 h-8 text-purple-600" />
+              <div className="w-14 h-14 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <FileText className="w-8 h-8" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Tax Report List Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-xl font-bold text-slate-900">Tax Report List ({totalItems})</h2>
+            <h2 className="text-xl font-medium text-neutral-900">Tax Report List ({totalItems})</h2>
 
             <div className="flex items-center gap-3">
               <div className="relative flex-1 sm:flex-initial min-w-[220px]">
                 <input
                   type="text"
-                  placeholder="Search income source..."
+                  placeholder="Search income source"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-4 pr-10 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-4 pr-10 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                 {isRefreshing && (
-                  <Loader2 className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 animate-spin" />
+                  <Loader2 className="absolute right-9 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 animate-spin" />
                 )}
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -367,7 +367,7 @@ export default function TaxReport() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -378,11 +378,11 @@ export default function TaxReport() {
           {reports.length === 0 ? (
             <div className="py-20 text-center">
               <div className="flex flex-col items-center justify-center">
-                <div className="w-20 h-20 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
-                  <FileText className="w-12 h-12 text-purple-600" />
+                <div className="w-20 h-20 rounded-lg bg-neutral-100 flex items-center justify-center mb-4">
+                  <FileText className="w-12 h-12 text-[#0a4d2b]" />
                 </div>
-                <p className="text-lg font-semibold text-slate-700 mb-2">No Tax Report Generated</p>
-                <p className="text-sm text-slate-500 max-w-md">
+                <p className="text-lg font-medium text-neutral-700 mb-2">No tax report generated</p>
+                <p className="text-sm text-neutral-500 max-w-md">
                   To generate your tax report please select & input above field and submit for the result
                 </p>
               </div>
@@ -390,44 +390,44 @@ export default function TaxReport() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                       SI
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      Income Source
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
+                      Income source
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      Total Income
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
+                      Total income
                     </th>
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                      Total Tax
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
+                      Total tax
                     </th>
-                    <th className="px-4 py-3 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-neutral-700">
                       Action
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {reports.map((report) => (
-                    <tr key={report.sl} className="hover:bg-slate-50 transition-colors">
+                    <tr key={report.sl} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{report.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{report.sl}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{report.incomeSource}</span>
+                        <span className="text-sm text-neutral-700">{report.incomeSource}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-900">{report.totalIncome}</span>
+                        <span className="text-sm font-medium text-neutral-900">{report.totalIncome}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-900">{report.totalTax}</span>
+                        <span className="text-sm font-medium text-neutral-900">{report.totalTax}</span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <button 
                           onClick={() => handleViewDetails(report)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-[#0a4d2b] hover:text-neutral-900 text-sm font-medium"
                         >
                           View
                         </button>
@@ -462,18 +462,18 @@ export default function TaxReport() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Report Settings
+              Report settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Tax report settings and preferences will be available here.
+            <p className="text-sm text-neutral-700">
+              Tax report settings and preferences will be available here
             </p>
           </div>
           <div className="px-6 pb-6 flex items-center justify-end">
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Close
             </button>
@@ -484,10 +484,10 @@ export default function TaxReport() {
       {/* View Details Dialog */}
       <Dialog open={!!selectedReport} onOpenChange={(open) => { if (!open) setSelectedReport(null); }}>
         <DialogContent className="max-w-2xl bg-white p-0 overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-100">
             <DialogTitle className="flex items-center justify-between">
               <span className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600" />
+                <FileText className="w-5 h-5 text-[#0a4d2b]" />
                 Tax Details: {selectedReport?.incomeSource}
               </span>
             </DialogTitle>
@@ -496,27 +496,27 @@ export default function TaxReport() {
           <div className="p-6 max-h-[70vh] overflow-y-auto">
             {detailLoading ? (
               <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 text-blue-600 animate-spin mb-4" />
-                <p className="text-slate-600">Fetching order details...</p>
+                <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin mb-4" />
+                <p className="text-neutral-600">Fetching order details...</p>
               </div>
             ) : reportDetail?.orders?.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                  <thead className="bg-neutral-50 border-b border-neutral-200">
                     <tr>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Order ID</th>
-                      <th className="px-4 py-2 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</th>
-                      <th className="px-4 py-2 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">Tax</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">Order ID</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-neutral-700">Date</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-neutral-700">Amount</th>
+                      <th className="px-4 py-2 text-right text-xs font-medium text-neutral-700">Tax</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-neutral-100">
                     {reportDetail.orders.map((order) => (
-                      <tr key={order.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-4 py-3 text-sm font-medium text-slate-900">{order.orderId}</td>
-                        <td className="px-4 py-3 text-sm text-slate-600">{new Date(order.date).toLocaleDateString('en-IN')}</td>
-                        <td className="px-4 py-3 text-sm text-right text-slate-700">{order.totalAmount}</td>
-                        <td className="px-4 py-3 text-sm text-right font-semibold text-red-600">{order.taxAmount}</td>
+                      <tr key={order.id} className="hover:bg-neutral-50 transition-colors">
+                        <td className="px-4 py-3 text-sm font-medium text-neutral-900">{order.orderId}</td>
+                        <td className="px-4 py-3 text-sm text-neutral-600">{new Date(order.date).toLocaleDateString('en-IN')}</td>
+                        <td className="px-4 py-3 text-sm text-right text-neutral-700">{order.totalAmount}</td>
+                        <td className="px-4 py-3 text-sm text-right font-medium text-red-600">{order.taxAmount}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -524,19 +524,19 @@ export default function TaxReport() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-slate-500">No detailed orders found for this period.</p>
+                <p className="text-neutral-500">No detailed orders found for this period</p>
               </div>
             )}
           </div>
 
-          <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between">
             <div className="text-sm">
-              <span className="text-slate-500">Total Tax: </span>
-              <span className="font-bold text-red-600">{selectedReport?.totalTax}</span>
+              <span className="text-neutral-500">Total Tax: </span>
+              <span className="font-medium text-red-600">{selectedReport?.totalTax}</span>
             </div>
             <button
               onClick={() => setSelectedReport(null)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Close
             </button>

@@ -53,10 +53,10 @@ function ToggleSwitch({ enabled, onToggle }) {
     <button
       type="button"
       onClick={onToggle}
-      className={`inline-flex items-center w-11 h-6 rounded-full border transition-all ${
+      className={`inline-flex items-center w-11 h-6 rounded-full border transition-colors ${
         enabled
-          ? "bg-blue-600 border-blue-600 justify-end"
-          : "bg-slate-200 border-slate-300 justify-start"
+          ? "bg-neutral-900 border-[#0a4d2b] justify-end"
+          : "bg-neutral-200 border-neutral-300 justify-start"
       }`}
     >
       <span className="h-5 w-5 rounded-full bg-white shadow-sm" />
@@ -89,17 +89,17 @@ export default function AnalyticsScript() {
   }
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-6xl">
         {/* Page Title */}
         <div className="mb-3">
-          <h1 className="text-lg font-bold text-slate-900">Marketing Tool</h1>
+          <h1 className="text-lg font-medium text-neutral-900">Marketing tool</h1>
         </div>
 
         {/* Info Banner */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 flex items-start gap-3">
-          <Lightbulb className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-slate-700">
+        <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-3 mb-4 flex items-start gap-3">
+          <Lightbulb className="w-4 h-4 text-[#0a4d2b] flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-neutral-700">
             In this page you can add credentials to show your analytics on the platform make sure fill with proper data other wise you can not see the analytics properly
           </p>
         </div>
@@ -109,18 +109,18 @@ export default function AnalyticsScript() {
           {marketingTools.map((tool) => (
             <div
               key={tool.id}
-              className="bg-white rounded-lg shadow-sm border border-slate-200 p-4"
+              className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4"
             >
               <div className="mb-3">
-                <h3 className="text-sm font-semibold text-slate-900 mb-2">
+                <h3 className="text-sm font-medium text-neutral-900 mb-2">
                   {tool.name}
                 </h3>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-neutral-600">
                   {tool.description.split("How it works")[0]}
                   <a
                     href="#"
                     onClick={handleHowItWorks}
-                    className="text-blue-600 hover:underline"
+                    className="text-[#0a4d2b] hover:underline"
                   >
                     How it works
                   </a>
@@ -132,7 +132,7 @@ export default function AnalyticsScript() {
                 <button
                   type="button"
                   onClick={() => handleView(tool.id)}
-                  className="flex items-center gap-1 text-xs text-slate-700 hover:text-slate-900"
+                  className="flex items-center gap-1 text-xs text-neutral-700 hover:text-neutral-900"
                 >
                   <span>View</span>
                   <ChevronDown className="w-3 h-3" />

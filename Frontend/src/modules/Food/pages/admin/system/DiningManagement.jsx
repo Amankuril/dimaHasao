@@ -204,23 +204,23 @@ export default function DiningManagement() {
     ]
 
     return (
-        <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+        <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-                            <UtensilsCrossed className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                            <UtensilsCrossed className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-slate-900">Dining Management</h1>
-                            <p className="text-sm text-slate-600 mt-1">Manage dining categories, restaurant links, banners, and stories</p>
+                            <h1 className="text-2xl font-medium text-neutral-900">Dining management</h1>
+                            <p className="text-sm text-neutral-600 mt-1">Manage dining categories, restaurant links, banners, and stories</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Tabs */}
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-6">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-2 mb-6">
                     <div className="flex gap-2">
                         {tabs.map((tab) => {
                             const Icon = tab.icon
@@ -228,7 +228,7 @@ export default function DiningManagement() {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-100'
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${activeTab === tab.id ? 'bg-neutral-900 text-white' : 'text-neutral-600 hover:bg-neutral-100'
                                         }`}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -247,9 +247,9 @@ export default function DiningManagement() {
                 {activeTab === 'categories' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
                                 <div className="flex items-center justify-between gap-3 mb-4">
-                                    <h2 className="text-lg font-bold text-slate-900">{editingCategoryId ? "Edit Category" : "Add Category"}</h2>
+                                    <h2 className="text-lg font-medium text-neutral-900">{editingCategoryId ? "Edit Category" : "Add Category"}</h2>
                                     {editingCategoryId && (
                                         <Button type="button" variant="outline" onClick={resetCategoryForm} className="gap-2">
                                             <X className="w-4 h-4" />
@@ -260,37 +260,37 @@ export default function DiningManagement() {
                                 <div className="space-y-4">
                                     <div>
                                         <Label>Name</Label>
-                                        <Input value={categoryName} onChange={e => setCategoryName(e.target.value)} placeholder="Category Name" className="mt-1" />
+                                        <Input value={categoryName} onChange={e => setCategoryName(e.target.value)} placeholder="Category name" className="mt-1" />
                                     </div>
                                     <div>
                                         <Label>{editingCategoryId ? "Replace Image" : "Image"}</Label>
                                         <Input type="file" ref={categoryFileInputRef} onChange={e => setCategoryFile(e.target.files[0])} accept="image/*" className="mt-1" />
                                         {editingCategoryId && editingCategoryImageUrl && !categoryFile && (
                                             <div className="mt-3">
-                                                <img src={editingCategoryImageUrl} alt={categoryName || "Current category"} className="w-24 h-24 rounded-lg object-cover border border-slate-200" />
-                                                <p className="text-xs text-slate-500 mt-2">Current image will be kept unless you select a new one.</p>
+                                                <img src={editingCategoryImageUrl} alt={categoryName || "Current category"} className="w-24 h-24 rounded-lg object-cover border border-neutral-200" />
+                                                <p className="text-xs text-neutral-500 mt-2">Current image will be kept unless you select a new one</p>
                                             </div>
                                         )}
                                     </div>
-                                    <Button onClick={handleSubmitCategory} disabled={categoriesUploading} className="w-full bg-blue-600 hover:bg-blue-700">
+                                    <Button onClick={handleSubmitCategory} disabled={categoriesUploading} className="w-full bg-neutral-900 hover:bg-neutral-800">
                                         {categoriesUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingCategoryId ? "Update Category" : "Create Category")}
                                     </Button>
                                 </div>
                             </div>
                         </div>
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <h2 className="text-lg font-bold text-slate-900 mb-4">Categories List</h2>
-                                {categoriesLoading ? <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div> : (
+                            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+                                <h2 className="text-lg font-medium text-neutral-900 mb-4">Categories list</h2>
+                                {categoriesLoading ? <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" /></div> : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {categories.map(cat => (
                                             <div key={cat._id} className="border rounded-lg overflow-hidden group relative">
                                                 <img src={cat.imageUrl} alt={cat.name} className="w-full h-32 object-cover" />
                                                 <div className="p-3 bg-white">
-                                                    <p className="font-medium text-slate-900">{cat.name}</p>
+                                                    <p className="font-medium text-neutral-900">{cat.name}</p>
                                                 </div>
                                                 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={() => handleEditCategory(cat)} className="p-1.5 bg-blue-100 text-blue-600 rounded-full">
+                                                    <button onClick={() => handleEditCategory(cat)} className="p-1.5 bg-neutral-100 text-[#0a4d2b] rounded-full">
                                                         <Edit className="w-4 h-4" />
                                                     </button>
                                                     <button onClick={() => handleDeleteCategory(cat._id)} className="p-1.5 bg-red-100 text-red-600 rounded-full">
@@ -299,7 +299,7 @@ export default function DiningManagement() {
                                                 </div>
                                             </div>
                                         ))}
-                                        {categories.length === 0 && <p className="text-slate-500 text-center col-span-full py-8">No categories found.</p>}
+                                        {categories.length === 0 && <p className="text-neutral-500 text-center col-span-full py-8">No categories found</p>}
                                     </div>
                                 )}
                             </div>
@@ -310,10 +310,10 @@ export default function DiningManagement() {
                 {activeTab === 'banners' && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div className="lg:col-span-1">
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <h2 className="text-lg font-bold text-slate-900 mb-2">Add Dining Page Banner</h2>
-                                <p className="text-sm text-slate-500 mb-4">
-                                    This banner shows on the user dining page and is not linked to any restaurant.
+                            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+                                <h2 className="text-lg font-medium text-neutral-900 mb-2">Add dining page banner</h2>
+                                <p className="text-sm text-neutral-500 mb-4">
+                                    This banner shows on the user dining page and is not linked to any restaurant
                                 </p>
                                 <div className="space-y-4">
                                     <div>
@@ -330,31 +330,31 @@ export default function DiningManagement() {
                                         />
                                     </div>
                                     <div>
-                                        <Label>Promo Text</Label>
+                                        <Label>Promo text</Label>
                                         <Input value={bannerPercentageOff} onChange={e => { setBannerPercentageOff(e.target.value); setError(null) }} placeholder="Optional, e.g. 50% OFF" className="mt-1" />
                                     </div>
                                     <div>
                                         <Label>Tagline</Label>
                                         <Input value={bannerTagline} onChange={e => { setBannerTagline(e.target.value); setError(null) }} placeholder="Optional, e.g. Weekend dining specials" className="mt-1" />
                                     </div>
-                                    <Button onClick={handleSubmitBanner} disabled={bannersUploading} className="w-full bg-blue-600 hover:bg-blue-700">
+                                    <Button onClick={handleSubmitBanner} disabled={bannersUploading} className="w-full bg-neutral-900 hover:bg-neutral-800">
                                         {bannersUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create Banner"}
                                     </Button>
                                 </div>
                             </div>
                         </div>
                         <div className="lg:col-span-2">
-                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                                <h2 className="text-lg font-bold text-slate-900 mb-4">Dining Page Banners</h2>
-                                {bannersLoading ? <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-blue-600" /></div> : (
+                            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+                                <h2 className="text-lg font-medium text-neutral-900 mb-4">Dining page banners</h2>
+                                {bannersLoading ? <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" /></div> : (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         {banners.map(banner => (
                                             <div key={banner._id} className="border rounded-lg overflow-hidden group relative">
                                                 <img src={banner.imageUrl} alt={banner.title || "Dining banner"} className="w-full h-32 object-cover" />
                                                 <div className="p-3 bg-white">
-                                                    {banner.ctaText && <p className="font-bold text-slate-900">{banner.ctaText}</p>}
-                                                    {banner.title && <p className="text-sm text-slate-600">{banner.title}</p>}
-                                                    <p className="text-xs text-slate-500 mt-1">
+                                                    {banner.ctaText && <p className="font-medium text-neutral-900">{banner.ctaText}</p>}
+                                                    {banner.title && <p className="text-sm text-neutral-600">{banner.title}</p>}
+                                                    <p className="text-xs text-neutral-500 mt-1">
                                                         {banner.isActive === false ? "Inactive" : "Active on dining page"}
                                                     </p>
                                                 </div>
@@ -363,7 +363,7 @@ export default function DiningManagement() {
                                                 </button>
                                             </div>
                                         ))}
-                                        {banners.length === 0 && <p className="text-slate-500 text-center col-span-full py-8">No banners found.</p>}
+                                        {banners.length === 0 && <p className="text-neutral-500 text-center col-span-full py-8">No banners found</p>}
                                     </div>
                                 )}
                             </div>

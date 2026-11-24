@@ -144,7 +144,7 @@ export default function AdminSettings() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-neutral-900">Settings</h1>
+        <h1 className="text-3xl font-medium text-neutral-900">Settings</h1>
         <p className="text-neutral-600 mt-1">
           Manage your account settings and preferences
         </p>
@@ -189,7 +189,7 @@ export default function AdminSettings() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-neutral-700" />
-            <CardTitle>Change Password</CardTitle>
+            <CardTitle>Change password</CardTitle>
           </div>
           <CardDescription>
             Update your password to keep your account secure
@@ -200,7 +200,7 @@ export default function AdminSettings() {
             <div className="space-y-2">
               <Label htmlFor="currentPassword" className="flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                Current Password
+                Current password
               </Label>
               <div className="relative">
                 <Input
@@ -238,7 +238,7 @@ export default function AdminSettings() {
             <div className="space-y-2">
               <Label htmlFor="newPassword" className="flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                New Password
+                New password
               </Label>
               <div className="relative">
                 <Input
@@ -279,7 +279,7 @@ export default function AdminSettings() {
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="flex items-center gap-2">
                 <Lock className="w-4 h-4" />
-                Confirm New Password
+                Confirm new password
               </Label>
               <div className="relative">
                 <Input
@@ -318,7 +318,7 @@ export default function AdminSettings() {
               <Button
                 type="submit"
                 disabled={saving}
-                className="bg-black text-white hover:bg-neutral-900 h-11 px-8"
+                className="bg-neutral-900 text-white hover:bg-neutral-900 h-11 px-8"
               >
                 {saving ? (
                   <>
@@ -328,7 +328,7 @@ export default function AdminSettings() {
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Change Password
+                    Change password
                   </>
                 )}
               </Button>

@@ -95,9 +95,9 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
           <DialogTitle className="flex items-center gap-2">
-            {campaign ? <Pencil className="w-5 h-5 text-blue-600" /> : <Plus className="w-5 h-5 text-blue-600" />}
+            {campaign ? <Pencil className="w-5 h-5 text-[#0a4d2b]" /> : <Plus className="w-5 h-5 text-[#0a4d2b]" />}
             {campaign ? "Edit Food Campaign" : "Add New Food Campaign"}
           </DialogTitle>
           <DialogDescription>
@@ -108,7 +108,7 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
         <form onSubmit={handleSubmit}>
           <div className="px-6 py-6 space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -116,8 +116,8 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Enter campaign title"
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                  errors.title ? "border-red-500" : "border-slate-300"
+                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                  errors.title ? "border-red-500" : "border-neutral-300"
                 }`}
                 required
               />
@@ -128,20 +128,20 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Start Date <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Start date <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type="date"
                     value={formData.dateStart}
                     onChange={(e) => setFormData(prev => ({ ...prev, dateStart: e.target.value }))}
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                      errors.dateStart ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                      errors.dateStart ? "border-red-500" : "border-neutral-300"
                     }`}
                     required
                   />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
                 {errors.dateStart && (
                   <p className="text-xs text-red-500 mt-1">{errors.dateStart}</p>
@@ -149,20 +149,20 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  End Date <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  End date <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type="date"
                     value={formData.dateEnd}
                     onChange={(e) => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                      errors.dateEnd ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                      errors.dateEnd ? "border-red-500" : "border-neutral-300"
                     }`}
                     required
                   />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
                 {errors.dateEnd && (
                   <p className="text-xs text-red-500 mt-1">{errors.dateEnd}</p>
@@ -172,20 +172,20 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Start Time <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Start time <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type="time"
                     value={formData.timeStart}
                     onChange={(e) => setFormData(prev => ({ ...prev, timeStart: e.target.value }))}
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                      errors.timeStart ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                      errors.timeStart ? "border-red-500" : "border-neutral-300"
                     }`}
                     required
                   />
-                  <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
                 {errors.timeStart && (
                   <p className="text-xs text-red-500 mt-1">{errors.timeStart}</p>
@@ -193,20 +193,20 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  End Time <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  End time <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
                     type="time"
                     value={formData.timeEnd}
                     onChange={(e) => setFormData(prev => ({ ...prev, timeEnd: e.target.value }))}
-                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                      errors.timeEnd ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                      errors.timeEnd ? "border-red-500" : "border-neutral-300"
                     }`}
                     required
                   />
-                  <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
                 {errors.timeEnd && (
                   <p className="text-xs text-red-500 mt-1">{errors.timeEnd}</p>
@@ -215,7 +215,7 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Price ($) <span className="text-red-500">*</span>
               </label>
               <div className="relative">
@@ -226,12 +226,12 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
                   value={formData.price}
                   onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                   placeholder="0.00"
-                  className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
-                    errors.price ? "border-red-500" : "border-slate-300"
+                  className={`w-full px-4 py-2.5 pr-10 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] text-sm ${
+                    errors.price ? "border-red-500" : "border-neutral-300"
                   }`}
                   required
                 />
-                <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
               </div>
               {errors.price && (
                 <p className="text-xs text-red-500 mt-1">{errors.price}</p>
@@ -239,17 +239,17 @@ export default function AddEditFoodCampaignDialog({ isOpen, onOpenChange, campai
             </div>
           </div>
 
-          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+          <div className="px-6 py-4 border-t border-neutral-200 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => onOpenChange(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
             >
               {campaign ? "Update Campaign" : "Create Campaign"}
             </button>

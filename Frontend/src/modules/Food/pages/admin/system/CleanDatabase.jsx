@@ -174,11 +174,11 @@ export default function CleanDatabase() {
   const column3 = databaseTables.slice(84)
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-7xl">
         {/* Page Title */}
         <div className="mb-3">
-          <h1 className="text-lg font-bold text-slate-900">Clean Database</h1>
+          <h1 className="text-lg font-medium text-neutral-900">Clean database</h1>
         </div>
 
         {/* Warning Banner */}
@@ -192,14 +192,14 @@ export default function CleanDatabase() {
         </div>
 
         {/* Database Tables Grid */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Column 1 */}
             <div className="space-y-2">
               {column1.map((table) => (
                 <div
                   key={table.name}
-                  className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                  className="flex items-center gap-2 p-2 hover:bg-neutral-50 rounded cursor-pointer"
                   onClick={() => handleToggleTable(table.name)}
                 >
                   <input
@@ -207,10 +207,10 @@ export default function CleanDatabase() {
                     checked={selectedTables.has(table.name)}
                     onChange={() => handleToggleTable(table.name)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                   />
-                  <span className="text-xs text-slate-700 flex-1">{table.name}</span>
-                  <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-700 rounded-full">
+                  <span className="text-xs text-neutral-700 flex-1">{table.name}</span>
+                  <span className="px-2 py-0.5 text-xs font-medium bg-neutral-200 text-neutral-700 rounded-full">
                     {table.count}
                   </span>
                 </div>
@@ -222,7 +222,7 @@ export default function CleanDatabase() {
               {column2.map((table) => (
                 <div
                   key={table.name}
-                  className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                  className="flex items-center gap-2 p-2 hover:bg-neutral-50 rounded cursor-pointer"
                   onClick={() => handleToggleTable(table.name)}
                 >
                   <input
@@ -230,10 +230,10 @@ export default function CleanDatabase() {
                     checked={selectedTables.has(table.name)}
                     onChange={() => handleToggleTable(table.name)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                   />
-                  <span className="text-xs text-slate-700 flex-1">{table.name}</span>
-                  <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-700 rounded-full">
+                  <span className="text-xs text-neutral-700 flex-1">{table.name}</span>
+                  <span className="px-2 py-0.5 text-xs font-medium bg-neutral-200 text-neutral-700 rounded-full">
                     {table.count}
                   </span>
                 </div>
@@ -245,7 +245,7 @@ export default function CleanDatabase() {
               {column3.map((table) => (
                 <div
                   key={table.name}
-                  className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                  className="flex items-center gap-2 p-2 hover:bg-neutral-50 rounded cursor-pointer"
                   onClick={() => handleToggleTable(table.name)}
                 >
                   <input
@@ -253,10 +253,10 @@ export default function CleanDatabase() {
                     checked={selectedTables.has(table.name)}
                     onChange={() => handleToggleTable(table.name)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
+                    className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30 cursor-pointer"
                   />
-                  <span className="text-xs text-slate-700 flex-1">{table.name}</span>
-                  <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-200 text-slate-700 rounded-full">
+                  <span className="text-xs text-neutral-700 flex-1">{table.name}</span>
+                  <span className="px-2 py-0.5 text-xs font-medium bg-neutral-200 text-neutral-700 rounded-full">
                     {table.count}
                   </span>
                 </div>
@@ -269,7 +269,7 @@ export default function CleanDatabase() {
         <div className="flex justify-end">
           <button
             onClick={handleClear}
-            className="px-6 py-2.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-6 py-2.5 text-xs font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
           >
             Clear
           </button>

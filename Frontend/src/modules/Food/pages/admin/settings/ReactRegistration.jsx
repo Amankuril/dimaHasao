@@ -64,15 +64,15 @@ export default function ReactRegistration() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-slate-900">React Registration Page</h1>
+          <h1 className="text-2xl font-medium text-neutral-900">React registration page</h1>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-6">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-2 mb-6">
           <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
@@ -80,8 +80,8 @@ export default function ReactRegistration() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? "bg-blue-600 text-white"
-                    : "text-slate-600 hover:bg-slate-100"
+                    ? "bg-neutral-900 text-white"
+                    : "text-neutral-600 hover:bg-neutral-100"
                 }`}
               >
                 {tab.label}
@@ -92,13 +92,13 @@ export default function ReactRegistration() {
 
         {/* Hero Section Content */}
         {activeTab === "hero-section" && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Hero Section Image</h2>
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+            <h2 className="text-lg font-medium text-neutral-900 mb-4">Hero section image</h2>
             
             {/* Image Upload Area */}
             <div className="mb-4">
               {heroImagePreview ? (
-                <div className="relative border-2 border-slate-200 rounded-lg p-4 bg-slate-50">
+                <div className="relative border-2 border-neutral-200 rounded-lg p-4 bg-neutral-50">
                   <img
                     src={heroImagePreview}
                     alt="Hero section preview"
@@ -113,11 +113,11 @@ export default function ReactRegistration() {
                   </button>
                 </div>
               ) : (
-                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors bg-slate-50">
+                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-neutral-300 rounded-lg cursor-pointer hover:border-[#0a4d2b] transition-colors bg-neutral-50">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload className="w-10 h-10 text-slate-400 mb-3" />
-                    <p className="text-sm font-medium text-slate-700 mb-1">Upload Image</p>
-                    <p className="text-xs text-slate-500">JPG, JPEG, PNG Less Than 5MB (1200 x 750 px)</p>
+                    <Upload className="w-10 h-10 text-neutral-400 mb-3" />
+                    <p className="text-sm font-medium text-neutral-700 mb-1">Upload image</p>
+                    <p className="text-xs text-neutral-500">JPG, JPEG, PNG Less Than 5MB (1200 x 750 px)</p>
                   </div>
                   <input
                     type="file"
@@ -130,7 +130,7 @@ export default function ReactRegistration() {
             </div>
 
             {/* File Requirements */}
-            <div className="text-xs text-slate-500 mb-6">
+            <div className="text-xs text-neutral-500 mb-6">
               <p>JPG, JPEG, PNG Less Than 5MB (1200 x 750 px)</p>
             </div>
           </div>
@@ -138,21 +138,21 @@ export default function ReactRegistration() {
 
         {/* Steeper Section */}
         {activeTab === "steeper" && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Steeper Section</h2>
-            <p className="text-sm text-slate-600 mb-6">
-              Configure step-by-step registration process display.
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+            <h2 className="text-lg font-medium text-neutral-900 mb-4">Steeper section</h2>
+            <p className="text-sm text-neutral-600 mb-6">
+              Configure step-by-step registration process display
             </p>
             
             <div className="space-y-6">
               {steeperSteps.map((step, index) => (
-                <div key={step.id} className="border border-slate-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-4">Step {step.id}</h3>
+                <div key={step.id} className="border border-neutral-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-neutral-700 mb-4">Step {step.id}</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Step Title
-                        <Info className="w-3 h-3 text-slate-400" />
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 flex items-center gap-1.5">
+                        Step title
+                        <Info className="w-3 h-3 text-neutral-400" />
                       </label>
                       <input
                         type="text"
@@ -163,13 +163,13 @@ export default function ReactRegistration() {
                           setSteeperSteps(updated)
                         }}
                         placeholder={`Enter step ${step.id} title`}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Step Description
-                        <Info className="w-3 h-3 text-slate-400" />
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 flex items-center gap-1.5">
+                        Step description
+                        <Info className="w-3 h-3 text-neutral-400" />
                       </label>
                       <textarea
                         rows={3}
@@ -180,7 +180,7 @@ export default function ReactRegistration() {
                           setSteeperSteps(updated)
                         }}
                         placeholder={`Enter step ${step.id} description`}
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
                   </div>
@@ -192,21 +192,21 @@ export default function ReactRegistration() {
 
         {/* Opportunities Section */}
         {activeTab === "opportunities" && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">Opportunities Section</h2>
-            <p className="text-sm text-slate-600 mb-6">
-              Configure available opportunities for registration.
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+            <h2 className="text-lg font-medium text-neutral-900 mb-4">Opportunities section</h2>
+            <p className="text-sm text-neutral-600 mb-6">
+              Configure available opportunities for registration
             </p>
             
             <div className="space-y-6">
               {opportunities.map((opp, index) => (
-                <div key={opp.id} className="border border-slate-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-4">Opportunity {opp.id}</h3>
+                <div key={opp.id} className="border border-neutral-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-neutral-700 mb-4">Opportunity {opp.id}</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Opportunity Title
-                        <Info className="w-3 h-3 text-slate-400" />
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 flex items-center gap-1.5">
+                        Opportunity title
+                        <Info className="w-3 h-3 text-neutral-400" />
                       </label>
                       <input
                         type="text"
@@ -217,13 +217,13 @@ export default function ReactRegistration() {
                           setOpportunities(updated)
                         }}
                         placeholder="Enter opportunity title"
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                        Opportunity Description
-                        <Info className="w-3 h-3 text-slate-400" />
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 flex items-center gap-1.5">
+                        Opportunity description
+                        <Info className="w-3 h-3 text-neutral-400" />
                       </label>
                       <textarea
                         rows={3}
@@ -234,12 +234,12 @@ export default function ReactRegistration() {
                           setOpportunities(updated)
                         }}
                         placeholder="Enter opportunity description"
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5">
-                        Opportunity Icon
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5">
+                        Opportunity icon
                       </label>
                       <div className="relative inline-block">
                         {opp.icon ? (
@@ -247,7 +247,7 @@ export default function ReactRegistration() {
                             <img
                               src={opp.icon}
                               alt="Icon"
-                              className="w-24 h-24 object-cover rounded-lg border border-slate-300"
+                              className="w-24 h-24 object-cover rounded-lg border border-neutral-300"
                             />
                             <button
                               type="button"
@@ -263,8 +263,8 @@ export default function ReactRegistration() {
                           </div>
                         ) : (
                           <label className="cursor-pointer">
-                            <div className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center hover:border-blue-500 transition-colors">
-                              <Upload className="w-6 h-6 text-slate-400" />
+                            <div className="w-24 h-24 border-2 border-dashed border-neutral-300 rounded-lg flex items-center justify-center hover:border-[#0a4d2b] transition-colors">
+                              <Upload className="w-6 h-6 text-neutral-400" />
                             </div>
                             <input
                               type="file"
@@ -295,10 +295,10 @@ export default function ReactRegistration() {
                 onClick={() => {
                   setOpportunities([...opportunities, { id: opportunities.length + 1, title: "", description: "", icon: null }])
                 }}
-                className="w-full py-2 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 border-2 border-dashed border-neutral-300 rounded-lg text-neutral-600 hover:border-[#0a4d2b] hover:text-[#0a4d2b] transition-colors flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Add New Opportunity
+                Add new opportunity
               </button>
             </div>
           </div>
@@ -306,21 +306,21 @@ export default function ReactRegistration() {
 
         {/* FAQ Section */}
         {activeTab === "faq" && (
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">FAQ Section</h2>
-            <p className="text-sm text-slate-600 mb-6">
-              Configure frequently asked questions for registration.
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6">
+            <h2 className="text-lg font-medium text-neutral-900 mb-4">FAQ section</h2>
+            <p className="text-sm text-neutral-600 mb-6">
+              Configure frequently asked questions for registration
             </p>
             
             <div className="space-y-6">
               {faqs.map((faq, index) => (
-                <div key={faq.id} className="border border-slate-200 rounded-lg p-4">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-4">FAQ {faq.id}</h3>
+                <div key={faq.id} className="border border-neutral-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-neutral-700 mb-4">FAQ {faq.id}</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 flex items-center gap-1.5">
                         Question
-                        <Info className="w-3 h-3 text-slate-400" />
+                        <Info className="w-3 h-3 text-neutral-400" />
                       </label>
                       <input
                         type="text"
@@ -331,13 +331,13 @@ export default function ReactRegistration() {
                           setFaqs(updated)
                         }}
                         placeholder="Enter question"
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                      <label className="block text-xs sm:text-sm font-medium text-neutral-700 mb-1.5 flex items-center gap-1.5">
                         Answer
-                        <Info className="w-3 h-3 text-slate-400" />
+                        <Info className="w-3 h-3 text-neutral-400" />
                       </label>
                       <textarea
                         rows={4}
@@ -348,7 +348,7 @@ export default function ReactRegistration() {
                           setFaqs(updated)
                         }}
                         placeholder="Enter answer"
-                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
                   </div>
@@ -359,10 +359,10 @@ export default function ReactRegistration() {
                 onClick={() => {
                   setFaqs([...faqs, { id: faqs.length + 1, question: "", answer: "" }])
                 }}
-                className="w-full py-2 border-2 border-dashed border-slate-300 rounded-lg text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 border-2 border-dashed border-neutral-300 rounded-lg text-neutral-600 hover:border-[#0a4d2b] hover:text-[#0a4d2b] transition-colors flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Add New FAQ
+                Add new FAQ
               </button>
             </div>
           </div>
@@ -373,7 +373,7 @@ export default function ReactRegistration() {
           <button
             type="button"
             onClick={handleReset}
-            className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium flex items-center gap-2"
+            className="px-6 py-2.5 bg-white border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors font-medium flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" />
             Reset
@@ -381,7 +381,7 @@ export default function ReactRegistration() {
           <button
             type="button"
             onClick={handleSubmit}
-            className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2"
+            className="px-6 py-2.5 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors font-medium flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             Save

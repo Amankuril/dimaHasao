@@ -381,79 +381,79 @@ export default function AllZonesMap() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-neutral-50">
       <div className="p-4 lg:p-6">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate("/admin/food/zone-setup")}
-            className="p-2 hover:bg-slate-200 rounded-lg transition-colors"
+            className="p-2 hover:bg-neutral-200 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ArrowLeft className="w-5 h-5 text-neutral-600" />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <MapPin className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">All Zones Map</h1>
-              <p className="text-sm text-slate-600">View all restaurant delivery zones on map</p>
+              <h1 className="text-2xl font-medium text-neutral-900">All zones map</h1>
+              <p className="text-sm text-neutral-600">View all restaurant delivery zones on map</p>
             </div>
           </div>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
             <input
               ref={autocompleteInputRef}
               type="text"
-              placeholder="Search location on map..."
+              placeholder="Search location on map"
               value={locationSearch}
               onChange={(e) => setLocationSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2.5 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
             />
           </div>
         </div>
 
         {/* Map Container */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4">
           <div className="relative" style={{ height: "calc(100vh - 250px)", minHeight: "600px" }}>
             <div ref={mapRef} className="w-full h-full rounded-lg" />
             
             {mapLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-slate-600">Loading map...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a4d2b] mx-auto mb-4"></div>
+                  <p className="text-neutral-600">Loading map...</p>
                 </div>
               </div>
             )}
 
             {loading && !mapLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-slate-600">Loading zones...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0a4d2b] mx-auto mb-4"></div>
+                  <p className="text-neutral-600">Loading zones...</p>
                 </div>
               </div>
             )}
 
             {!googleMapsApiKey && !mapLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg">
                 <div className="text-center p-6">
-                  <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-sm text-slate-600">Google Maps API key not found</p>
+                  <MapPin className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                  <p className="text-sm text-neutral-600">Google Maps API key not found</p>
                 </div>
               </div>
             )}
 
             {!loading && !mapLoading && zones.length === 0 && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-100 rounded-lg">
+              <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 rounded-lg">
                 <div className="text-center p-6">
-                  <MapPin className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-sm text-slate-600">No zones found</p>
+                  <MapPin className="w-12 h-12 text-neutral-400 mx-auto mb-4" />
+                  <p className="text-sm text-neutral-600">No zones found</p>
                 </div>
               </div>
             )}
@@ -461,17 +461,17 @@ export default function AllZonesMap() {
 
           {/* Legend */}
           {!mapLoading && (
-            <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h3 className="text-sm font-semibold text-slate-900 mb-2">Map Information</h3>
-              <div className="text-xs text-slate-600 space-y-1">
+            <div className="mt-4 p-4 bg-neutral-50 rounded-lg border border-neutral-200">
+              <h3 className="text-sm font-medium text-neutral-900 mb-2">Map information</h3>
+              <div className="text-xs text-neutral-600 space-y-1">
                 {zones.length > 0 && (
                   <p>
-                    Click on any <span className="font-semibold text-blue-600">zone</span> on the map to view details. Total zones: <strong>{zones.length}</strong>
+                    Click on any <span className="font-medium text-[#0a4d2b]">zone</span> on the map to view details. Total zones: <strong>{zones.length}</strong>
                   </p>
                 )}
                 {restaurants.length > 0 && (
                   <p>
-                    Click on any <span className="font-semibold text-red-600">red marker</span> to view restaurant name and details. Total restaurants: <strong>{restaurants.length}</strong>
+                    Click on any <span className="font-medium text-red-600">red marker</span> to view restaurant name and details. Total restaurants: <strong>{restaurants.length}</strong>
                   </p>
                 )}
               </div>

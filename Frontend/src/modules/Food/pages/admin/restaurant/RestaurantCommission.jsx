@@ -339,15 +339,15 @@ export default function RestaurantCommission() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">Restaurant Commission</h1>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+              <h1 className="text-2xl font-medium text-neutral-900">Restaurant commission</h1>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
                 {loading ? (
-                  <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                  <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
                 ) : (
                   filteredCommissions.length
                 )}
@@ -357,10 +357,10 @@ export default function RestaurantCommission() {
             <div className="flex items-center gap-2">
               <button 
                 onClick={handleAdd}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 transition-all shadow-md"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 flex items-center gap-2 transition-colors shadow-sm"
               >
                 <Plus className="w-4 h-4" />
-                Add Commission
+                Add commission
               </button>
             </div>
           </div>
@@ -372,86 +372,86 @@ export default function RestaurantCommission() {
                 placeholder="Search by restaurant name or ID"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     {visibleColumns.si && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>S.No</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.restaurant && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        Restaurant Name
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                        Restaurant name
                       </th>
                     )}
                     {visibleColumns.restaurantId && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         Restaurant ID
                       </th>
                     )}
                     {visibleColumns.defaultCommission && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                        Default Commission
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
+                        Default commission
                       </th>
                     )}
                     {visibleColumns.status && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         Status
                       </th>
                     )}
                     {visibleColumns.actions && (
-                      <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                      <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {filteredCommissions.length === 0 ? (
                     <tr>
-                      <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-slate-500">
+                      <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-neutral-500">
                         No commissions found
                       </td>
                     </tr>
                   ) : (
                     filteredCommissions.map((commission) => (
-                      <tr key={commission._id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={commission._id} className="hover:bg-neutral-50 transition-colors">
                         {visibleColumns.si && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-slate-700">{commission.sl || '-'}</span>
+                            <span className="text-sm font-medium text-neutral-700">{commission.sl || '-'}</span>
                           </td>
                         )}
                         {visibleColumns.restaurant && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-blue-600">
+                            <span className="text-sm font-medium text-[#0a4d2b]">
                               {commission.restaurantName || commission.restaurant?.name || '-'}
                             </span>
                           </td>
                         )}
                         {visibleColumns.restaurantId && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm text-slate-700">
+                            <span className="text-sm text-neutral-700">
                               {commission.restaurantId || commission.restaurant?.restaurantId || '-'}
                             </span>
                           </td>
                         )}
                         {visibleColumns.defaultCommission && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-slate-900">
+                            <span className="text-sm font-medium text-neutral-900">
                               {commission.defaultCommission?.type === 'percentage' ? (
                                 <>{commission.defaultCommission.value}%</>
                               ) : (
@@ -464,8 +464,8 @@ export default function RestaurantCommission() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <button
                               onClick={() => handleToggleStatus(commission)}
-                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                                commission.status ? "bg-green-600" : "bg-slate-300"
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:ring-offset-2 ${
+                                commission.status ? "bg-green-600" : "bg-neutral-300"
                               }`}
                             >
                               <span
@@ -481,7 +481,7 @@ export default function RestaurantCommission() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => handleEdit(commission)}
-                                className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                                className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                                 title="Edit"
                               >
                                 <Edit className="w-4 h-4" />
@@ -509,19 +509,19 @@ export default function RestaurantCommission() {
       {/* Restaurant Selection Dialog */}
       <Dialog open={isRestaurantSelectOpen} onOpenChange={setIsRestaurantSelectOpen}>
         <DialogContent className="max-w-xl bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Select Restaurant</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+            <DialogTitle className="text-lg font-medium text-neutral-900">Select restaurant</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 px-6 py-4">
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search restaurants..."
+                placeholder="Search restaurants"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="pl-10 pr-4 py-2 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
             <div className="max-h-80 overflow-y-auto space-y-2">
               {filteredRestaurants
@@ -530,19 +530,19 @@ export default function RestaurantCommission() {
                   <button
                     key={restaurant._id}
                     onClick={() => handleSelectRestaurant(restaurant)}
-                    className="w-full p-3 text-left rounded-lg border border-slate-200 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                    className="w-full p-3 text-left rounded-lg border border-neutral-200 hover:bg-neutral-50 hover:border-neutral-200 transition-colors"
                   >
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium text-sm text-slate-900">{restaurant.name}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{restaurant.restaurantId}</p>
+                        <p className="font-medium text-sm text-neutral-900">{restaurant.name}</p>
+                        <p className="text-xs text-neutral-500 mt-0.5">{restaurant.restaurantId}</p>
                       </div>
-                      <Building2 className="w-4 h-4 text-slate-400" />
+                      <Building2 className="w-4 h-4 text-neutral-400" />
                     </div>
                   </button>
                 ))}
               {filteredRestaurants.filter(r => !r.hasCommissionSetup).length === 0 && (
-                <p className="text-center text-sm text-slate-500 py-4">No restaurants available</p>
+                <p className="text-center text-sm text-neutral-500 py-4">No restaurants available</p>
               )}
             </div>
           </div>
@@ -552,24 +552,24 @@ export default function RestaurantCommission() {
       {/* Add/Edit Dialog */}
       <Dialog open={isAddEditOpen} onOpenChange={setIsAddEditOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="text-lg font-semibold text-slate-900">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+            <DialogTitle className="text-lg font-medium text-neutral-900">
               {selectedCommission ? "Edit Restaurant Commission" : "Add Restaurant Commission"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 px-6 py-4">
             {/* Restaurant Info */}
             {selectedRestaurant && (
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                <p className="font-semibold text-sm text-slate-900">{selectedRestaurant.name}</p>
-                <p className="text-xs text-slate-600 mt-0.5">{selectedRestaurant.restaurantId || '-'}</p>
+              <div className="p-3 bg-neutral-50 rounded-lg border border-neutral-200">
+                <p className="font-medium text-sm text-neutral-900">{selectedRestaurant.name}</p>
+                <p className="text-xs text-neutral-600 mt-0.5">{selectedRestaurant.restaurantId || '-'}</p>
               </div>
             )}
 
             {/* Default Commission */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Default Commission <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Default commission <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -588,7 +588,7 @@ export default function RestaurantCommission() {
                         },
                       }))
                     }}
-                    className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                   >
                     <option value="percentage">Percentage (%)</option>
                     <option value="amount">Fixed Amount (₹)</option>
@@ -604,12 +604,12 @@ export default function RestaurantCommission() {
                       ...prev,
                       defaultCommission: { ...prev.defaultCommission, value: e.target.value }
                     }))}
-                    className={`w-full px-3 py-2 text-sm border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      formErrors.defaultCommission ? "border-red-500" : "border-slate-300"
+                    className={`w-full px-3 py-2 text-sm border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-[#0a4d2b] ${
+                      formErrors.defaultCommission ? "border-red-500" : "border-neutral-300"
                     }`}
                     placeholder={formData.defaultCommission.type === "percentage" ? "e.g., 18" : "e.g., 50"}
                   />
-                  <p className="text-[11px] text-slate-500 mt-1">
+                  <p className="text-xs text-neutral-500 mt-1">
                     {formData.defaultCommission.type === "percentage"
                       ? "Platform default: 18%"
                       : "Suggested default: ₹50 per order (change as needed)"}
@@ -623,29 +623,29 @@ export default function RestaurantCommission() {
 
             {/* Notes */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Notes <span className="text-slate-400 font-normal">(Optional)</span>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Notes <span className="text-neutral-400 font-normal">(Optional)</span>
               </label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                className="w-full px-3 py-2 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 resize-none"
                 rows="2"
-                placeholder="Add any notes or remarks..."
+                placeholder="Add any notes or remarks"
               />
             </div>
           </div>
-          <DialogFooter className="px-6 py-4 border-t border-slate-200 bg-slate-50">
+          <DialogFooter className="px-6 py-4 border-t border-neutral-200 bg-neutral-50">
             <button
               onClick={() => setIsAddEditOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {selectedCommission ? "Update" : "Create"}
@@ -659,16 +659,16 @@ export default function RestaurantCommission() {
         <DialogContent className="max-w-md bg-white p-0 overflow-hidden">
           <div className="px-6 pt-6 pb-4 pr-14">
             <div className="flex items-start gap-3">
-              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-50 border border-red-100">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
+              <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-neutral-100 text-neutral-500">
+                <AlertTriangle className="h-5 w-5" />
               </div>
               <div className="min-w-0 space-y-1.5">
-                <DialogTitle className="text-base font-semibold text-slate-900 leading-snug">
-                  Delete Restaurant Commission
+                <DialogTitle className="text-base font-medium text-neutral-900 leading-snug">
+                  Delete restaurant commission
                 </DialogTitle>
-                <p className="text-sm text-slate-600 leading-relaxed break-words">
+                <p className="text-sm text-neutral-600 leading-relaxed break-words">
                   Remove commission settings for{" "}
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-medium text-neutral-900">
                     {selectedCommission?.restaurantName ||
                       selectedCommission?.restaurant?.name ||
                       "this restaurant"}
@@ -678,11 +678,11 @@ export default function RestaurantCommission() {
               </div>
             </div>
           </div>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-6 py-4 bg-slate-50 border-t border-slate-200">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-6 py-4 bg-neutral-50 border-t border-neutral-200">
             <button
               type="button"
               onClick={() => setIsDeleteOpen(false)}
-              className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition-all"
+              className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-100 transition-colors"
             >
               Cancel
             </button>
@@ -690,7 +690,7 @@ export default function RestaurantCommission() {
               type="button"
               onClick={confirmDelete}
               disabled={deleting}
-              className="px-4 py-2.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="px-4 py-2.5 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
               Delete

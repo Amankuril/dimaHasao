@@ -100,7 +100,7 @@ export default function ContactMessages() {
         <div className="flex items-center gap-0.5">
           {stars}
         </div>
-        <span className="text-xs font-bold text-amber-700 leading-none">
+        <span className="text-xs font-medium text-amber-700 leading-none">
           {rating}
         </span>
       </div>
@@ -108,15 +108,15 @@ export default function ContactMessages() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900">User Feedback</h1>
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+            <h1 className="text-2xl font-medium text-neutral-900">User feedback</h1>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
               {loading ? (
-                <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
               ) : (
                 feedbacks.length
               )}
@@ -131,9 +131,9 @@ export default function ContactMessages() {
                 setRatingFilter(e.target.value)
                 setCurrentPage(1)
               }}
-              className="px-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="px-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
             >
-              <option value="all">All Ratings</option>
+              <option value="all">All ratings</option>
               <option value="5">5 Stars</option>
               <option value="4">4 Stars</option>
               <option value="3">3 Stars</option>
@@ -151,9 +151,9 @@ export default function ContactMessages() {
                   setSearchQuery(e.target.value)
                   setCurrentPage(1)
                 }}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
         </div>
@@ -163,66 +163,66 @@ export default function ContactMessages() {
       {loading ? (
         <TableSkeleton rows={8} columns={6} />
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>SI</span>
-                    <ChevronDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ChevronDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Name</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Email</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Feedback</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Rating</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
-                <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">
                   <div className="flex items-center justify-center gap-2">
                     <span>Action</span>
-                    <Settings className="w-3 h-3 text-slate-400" />
+                    <Settings className="w-3 h-3 text-neutral-400" />
                   </div>
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {feedbacks.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="px-6 py-20">
                     <div className="flex flex-col items-center justify-center">
                       <div className="relative mb-6">
-                        <div className="w-32 h-32 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center shadow-inner">
-                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-md relative overflow-visible">
-                            <Folder className="w-12 h-12 text-slate-400" />
+                        <div className="w-32 h-32 rounded-2xl flex items-center justify-center shadow-inner bg-neutral-100">
+                          <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm relative overflow-visible">
+                            <Folder className="w-12 h-12 text-neutral-400" />
                             <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-orange-500 rounded-t-md z-10"></div>
                             <div className="absolute top-3 right-2 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center z-10">
-                              <span className="text-white text-xs font-bold">!</span>
+                              <span className="text-white text-xs font-medium">!</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <p className="text-lg font-semibold text-slate-700">No Feedback Found</p>
+                      <p className="text-lg font-medium text-neutral-700">No feedback found</p>
                     </div>
                   </td>
                 </tr>
@@ -230,21 +230,21 @@ export default function ContactMessages() {
                 feedbacks.map((feedback, index) => (
                   <tr
                     key={feedback._id}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="hover:bg-neutral-50 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-neutral-700">
                         {(currentPage - 1) * 10 + index + 1}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-900">{feedback.customer?.name || 'NA'}</span>
+                      <span className="text-sm font-medium text-neutral-900">{feedback.customer?.name || 'NA'}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{feedback.customer?.email || 'NA'}</span>
+                      <span className="text-sm text-neutral-700">{feedback.customer?.email || 'NA'}</span>
                     </td>
                     <td className="px-6 py-4 max-w-md">
-                      <span className="text-sm text-slate-700 line-clamp-2">
+                      <span className="text-sm text-neutral-700 line-clamp-2">
                         {feedback.comment || 'No comment provided'}
                       </span>
                     </td>
@@ -254,14 +254,14 @@ export default function ContactMessages() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
+                          <button className="p-1.5 rounded text-neutral-600 hover:bg-neutral-100 transition-colors">
                             <Settings className="w-4 h-4" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleViewFeedback(feedback)}>
                             <Eye className="w-4 h-4 mr-2" />
-                            View Details
+                            View details
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -275,8 +275,8 @@ export default function ContactMessages() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-            <div className="text-sm text-slate-600">
+          <div className="px-6 py-4 border-t border-neutral-200 flex items-center justify-between">
+            <div className="text-sm text-neutral-600">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex gap-2">
@@ -305,50 +305,50 @@ export default function ContactMessages() {
       {/* View Feedback Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200 dark:border-slate-700">
-            <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-white">Feedback Details</DialogTitle>
-            <DialogDescription className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200 dark:border-neutral-700">
+            <DialogTitle className="text-2xl font-medium text-neutral-900 dark:text-white">Feedback details</DialogTitle>
+            <DialogDescription className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
               Complete information about the user and their feedback
             </DialogDescription>
           </DialogHeader>
           {selectedFeedback && (
             <div className="px-6 py-6 space-y-6">
               {/* User Information Section */}
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-700">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-3">
-                  <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full"></div>
-                  Customer Information
+              <div className="rounded-xl p-5 border border-neutral-200 dark:border-neutral-700 bg-neutral-50">
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-5 flex items-center gap-3">
+                  <div className="w-1 h-6 rounded-full bg-neutral-500"></div>
+                  Customer information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer Name</label>
-                    <p className="text-base font-semibold text-slate-900 dark:text-white">{selectedFeedback.customer?.name || 'NA'}</p>
+                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Customer name</label>
+                    <p className="text-base font-medium text-neutral-900 dark:text-white">{selectedFeedback.customer?.name || 'NA'}</p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
-                    <p className="text-base font-semibold text-slate-900 dark:text-white break-all">{selectedFeedback.customer?.email || 'NA'}</p>
+                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Email address</label>
+                    <p className="text-base font-medium text-neutral-900 dark:text-white break-all">{selectedFeedback.customer?.email || 'NA'}</p>
                   </div>
                   {selectedFeedback.customer?.phone && (
                     <div className="space-y-1">
-                      <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phone Number</label>
-                      <p className="text-base font-semibold text-slate-900 dark:text-white">{selectedFeedback.customer.phone}</p>
+                      <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Phone number</label>
+                      <p className="text-base font-medium text-neutral-900 dark:text-white">{selectedFeedback.customer.phone}</p>
                     </div>
                   )}
                 </div>
               </div>
 
                {/* Rating Section */}
-               <div className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-5 border border-yellow-200 dark:border-yellow-800">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-3">
-                  <div className="w-1 h-6 bg-gradient-to-b from-yellow-500 to-orange-600 rounded-full"></div>
+               <div className="rounded-xl p-5 border border-yellow-200 dark:border-yellow-800 bg-yellow-50">
+                <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-5 flex items-center gap-3">
+                  <div className="w-1 h-6 rounded-full bg-yellow-500"></div>
                   Rating
                 </h3>
-                <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+                <div className="bg-white dark:bg-neutral-800 rounded-lg p-5 border border-neutral-200 dark:border-neutral-700 shadow-sm">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
                       {renderStars(selectedFeedback.rating)}
                     </div>
-                    <span className="text-lg font-bold text-slate-900 dark:text-white">
+                    <span className="text-lg font-medium text-neutral-900 dark:text-white">
                       {selectedFeedback.rating} / 5
                     </span>
                   </div>
@@ -357,13 +357,13 @@ export default function ContactMessages() {
 
               {/* Feedback Message Section */}
               {selectedFeedback.comment && (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-800">
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-5 flex items-center gap-3">
-                    <div className="w-1 h-6 bg-gradient-to-b from-blue-500 to-indigo-600 rounded-full"></div>
-                    Feedback Comment
+                <div className="rounded-xl p-5 border border-neutral-200 dark:border-[#0a4d2b] bg-neutral-50">
+                  <h3 className="text-lg font-medium text-neutral-900 dark:text-white mb-5 flex items-center gap-3">
+                    <div className="w-1 h-6 rounded-full bg-neutral-500"></div>
+                    Feedback comment
                   </h3>
-                  <div className="bg-white dark:bg-slate-800 rounded-lg p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  <div className="bg-white dark:bg-neutral-800 rounded-lg p-5 border border-neutral-200 dark:border-neutral-700 shadow-sm">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed">
                       {selectedFeedback.comment}
                     </p>
                   </div>
@@ -372,9 +372,9 @@ export default function ContactMessages() {
 
               {/* Order Details Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">Submitted At</label>
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
+                  <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400 block mb-2">Submitted at</label>
+                  <p className="text-sm font-medium text-neutral-900 dark:text-white">
                     {selectedFeedback.submittedAt ? new Date(selectedFeedback.submittedAt).toLocaleString('en-US', {
                       year: 'numeric',
                       month: 'long',
@@ -387,7 +387,7 @@ export default function ContactMessages() {
               </div>
 
               {/* Close Button */}
-              <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex justify-end pt-4 border-t border-neutral-200 dark:border-neutral-700">
                 <Button
                   variant="outline"
                   onClick={() => setIsViewDialogOpen(false)}

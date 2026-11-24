@@ -98,24 +98,24 @@ export default function Banners() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Add New Banner Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <Plus className="w-5 h-5 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Add New Banner</h1>
+            <Plus className="w-5 h-5 text-[#0a4d2b]" />
+            <h1 className="text-2xl font-medium text-neutral-900">Add new banner</h1>
           </div>
 
           {/* Language Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+          <div className="flex items-center gap-2 border-b border-neutral-200 mb-6">
             {languageTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveLanguage(tab.key)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeLanguage === tab.key
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "border-[#0a4d2b] text-[#0a4d2b]"
+                  : "border-transparent text-neutral-600 hover:text-neutral-900"
                   }`}
               >
                 {tab.label}
@@ -126,7 +126,7 @@ export default function Banners() {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Banner Title ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label}) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -134,18 +134,18 @@ export default function Banners() {
                   value={formData.title}
                   onChange={(e) => handleInputChange("title", e.target.value)}
                   placeholder="New banner"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Zone <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.zone}
                   onChange={(e) => handleInputChange("zone", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-neutral-400 text-sm"
                 >
                   <option value="">---Select---</option>
                   <option value="asia">Asia</option>
@@ -154,13 +154,13 @@ export default function Banners() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Banner Type <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Banner type <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.bannerType}
                   onChange={(e) => handleInputChange("bannerType", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-neutral-400 text-sm"
                 >
                   <option value="Restaurant wise">Restaurant wise</option>
                   <option value="Zone wise">Zone wise</option>
@@ -168,13 +168,13 @@ export default function Banners() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Restaurant <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.restaurant}
                   onChange={(e) => handleInputChange("restaurant", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-neutral-400 text-sm"
                 >
                   <option value="">Select</option>
                   <option value="cafe-monarch">Café Monarch</option>
@@ -185,15 +185,15 @@ export default function Banners() {
 
             {/* Banner Image Upload */}
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Banner Image <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Banner image <span className="text-red-500">*</span>
               </label>
-              <p className="text-sm text-slate-600 mb-3">Upload your image here</p>
-              <div className="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center hover:border-blue-500 transition-colors cursor-pointer">
-                <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
-                <p className="text-sm font-medium text-blue-600 mb-1">Click to upload</p>
-                <p className="text-xs text-slate-500 mb-2">Or drag and drop</p>
-                <p className="text-xs text-slate-500">Supported format : JPG, JPEG, PNG, Gif image size : Max 2 MB (2:1)</p>
+              <p className="text-sm text-neutral-600 mb-3">Upload your image here</p>
+              <div className="border-2 border-dashed border-neutral-300 rounded-lg p-12 text-center hover:border-[#0a4d2b] transition-colors cursor-pointer">
+                <Upload className="w-12 h-12 text-neutral-400 mx-auto mb-3" />
+                <p className="text-sm font-medium text-[#0a4d2b] mb-1">Click to upload</p>
+                <p className="text-xs text-neutral-500 mb-2">Or drag and drop</p>
+                <p className="text-xs text-neutral-500">Supported format : JPG, JPEG, PNG, Gif image size : Max 2 MB (2:1)</p>
               </div>
             </div>
 
@@ -201,13 +201,13 @@ export default function Banners() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Submit
               </button>
@@ -216,11 +216,11 @@ export default function Banners() {
         </div>
 
         {/* Banner List Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-slate-900">Banner List</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h2 className="text-xl font-medium text-neutral-900">Banner list</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredBanners.length}
               </span>
             </div>
@@ -229,7 +229,7 @@ export default function Banners() {
               <select
                 value={bannerType}
                 onChange={(e) => setBannerType(e.target.value)}
-                className="px-4 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                className="px-4 py-2.5 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400"
               >
                 <option value="all">All Banner</option>
                 <option value="Restaurant wise">Restaurant wise</option>
@@ -239,12 +239,12 @@ export default function Banners() {
               <div className="relative flex-1 sm:flex-initial min-w-[200px]">
                 <input
                   type="text"
-                  placeholder="Ex: Search by title ..."
+                  placeholder="Ex: Search by title"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
             </div>
           </div>
@@ -252,25 +252,25 @@ export default function Banners() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Banner Info</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Banner Type</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Banner info</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Zone</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Banner type</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredBanners.map((banner) => (
-                  <tr key={banner.sl} className="hover:bg-slate-50 transition-colors">
+                  <tr key={banner.sl} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-700">{banner.sl}</span>
+                      <span className="text-sm font-medium text-neutral-700">{banner.sl}</span>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-neutral-100 flex-shrink-0">
                           <img
                             src={bannerImages[banner.sl] || bannerImage1}
                             alt={banner.title}
@@ -280,19 +280,19 @@ export default function Banners() {
                             }}
                           />
                         </div>
-                        <span className="text-sm font-medium text-slate-900">{banner.title}</span>
+                        <span className="text-sm font-medium text-neutral-900">{banner.title}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{banner.zone}</span>
+                      <span className="text-sm text-neutral-700">{banner.zone}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{banner.bannerType}</span>
+                      <span className="text-sm text-neutral-700">{banner.bannerType}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(banner.sl)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${banner.status ? "bg-green-600" : "bg-slate-300"
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${banner.status ? "bg-green-600" : "bg-neutral-300"
                           }`}
                       >
                         <span
@@ -304,7 +304,7 @@ export default function Banners() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />

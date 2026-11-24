@@ -142,7 +142,7 @@ export default function NewRefundRequests() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <OrdersTopbar 
         title="Requested Orders" 
         count={count} 
@@ -175,59 +175,59 @@ export default function NewRefundRequests() {
         order={selectedOrder}
       />
       {isLoading ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-20">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-20">
           <div className="flex flex-col items-center justify-center">
             <Loader2 className="w-8 h-8 animate-spin text-orange-500 mb-4" />
-            <p className="text-sm text-slate-600">Loading refund requests...</p>
+            <p className="text-sm text-neutral-600">Loading refund requests...</p>
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">SI</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">Order ID</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">Order Date</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">Customer</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">Restaurant</th>
-                  <th className="px-6 py-4 text-right text-[10px] font-bold text-slate-700 uppercase">Total Amount</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">Cancellation Reason</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase">Refund Status</th>
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Order ID</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Order date</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Customer</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Restaurant</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-neutral-700">Total amount</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Cancellation reason</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Refund status</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredData.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-6 py-20 text-center">
-                      <p className="text-sm text-slate-500">No refund requests found</p>
+                      <p className="text-sm text-neutral-500">No refund requests found</p>
                     </td>
                   </tr>
                 ) : (
                   filteredData.map((order, index) => (
-                    <tr key={order.orderId} className="hover:bg-slate-50">
+                    <tr key={order.orderId} className="hover:bg-neutral-50">
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{index + 1}</span>
+                        <span className="text-sm font-medium text-neutral-700">{index + 1}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-900">{order.orderId}</span>
+                        <span className="text-sm font-medium text-neutral-900">{order.orderId}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{order.date}, {order.time}</span>
+                        <span className="text-sm font-medium text-neutral-700">{order.date}, {order.time}</span>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-700">{order.customerName}</span>
-                          <span className="text-xs text-slate-500 mt-0.5">{order.customerPhone}</span>
+                          <span className="text-sm font-medium text-neutral-700">{order.customerName}</span>
+                          <span className="text-xs text-neutral-500 mt-0.5">{order.customerPhone}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{order.restaurant}</span>
+                        <span className="text-sm font-medium text-neutral-700">{order.restaurant}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="text-sm font-medium text-slate-900">
+                        <div className="text-sm font-medium text-neutral-900">
                           {"\u20B9"}{order.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                         <div className="text-xs text-emerald-600 mt-0.5">{order.paymentStatus}</div>
@@ -262,7 +262,7 @@ export default function NewRefundRequests() {
                             <button 
                               onClick={() => handleProcessRefund(order)}
                               disabled={processingRefund === order.id}
-                              className="p-1.5 rounded bg-emerald-600 text-white hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                              className="p-1.5 rounded bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                               title="Process Refund"
                             >
                               {processingRefund === order.id ? (

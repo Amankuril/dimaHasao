@@ -338,7 +338,7 @@ export default function AdminProfile() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-neutral-900">Profile</h1>
+        <h1 className="text-3xl font-medium text-neutral-900">Profile</h1>
         <p className="text-neutral-600 mt-1">Manage your admin profile information</p>
       </div>
 
@@ -346,7 +346,7 @@ export default function AdminProfile() {
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Profile Information</CardTitle>
+              <CardTitle>Profile information</CardTitle>
               <CardDescription>
                 {isEditMode ? "Update your profile details below" : "View your admin profile details"}
               </CardDescription>
@@ -355,7 +355,7 @@ export default function AdminProfile() {
               <Button
                 type="button"
                 onClick={handleStartEditing}
-                className="bg-black text-white hover:bg-neutral-900"
+                className="bg-neutral-900 text-white hover:bg-neutral-900"
               >
                 <Pencil className="w-4 h-4 mr-2" />
                 Edit
@@ -375,7 +375,7 @@ export default function AdminProfile() {
                   type="submit"
                   form="admin-profile-form"
                   disabled={saving || uploading}
-                  className="bg-black text-white hover:bg-neutral-900 h-10 px-6"
+                  className="bg-neutral-900 text-white hover:bg-neutral-900 h-10 px-6"
                 >
                   {uploading ? (
                     <>
@@ -390,7 +390,7 @@ export default function AdminProfile() {
                   ) : (
                     <>
                       <Save className="w-4 h-4 mr-2" />
-                      Save Changes
+                      Save changes
                     </>
                   )}
                 </Button>
@@ -410,7 +410,7 @@ export default function AdminProfile() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl font-semibold text-neutral-600">
+                  <span className="text-2xl font-medium text-neutral-600">
                     {getInitials(profile.name)}
                   </span>
                 )}
@@ -429,7 +429,7 @@ export default function AdminProfile() {
               <div className="space-y-2">
                 <Label htmlFor="name" className="flex items-center gap-2">
                   <User className="w-4 h-4" />
-                  Full Name
+                  Full name
                 </Label>
                 <Input
                   id="name"
@@ -446,7 +446,7 @@ export default function AdminProfile() {
               <div className="space-y-2">
                 <Label htmlFor="email" className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  Email Address
+                  Email address
                 </Label>
                 <Input
                   id="email"
@@ -464,7 +464,7 @@ export default function AdminProfile() {
               <div className="space-y-2">
                 <Label htmlFor="phone" className="flex items-center gap-2">
                   <Phone className="w-4 h-4" />
-                  Phone Number
+                  Phone number
                 </Label>
                 <Input
                   id="phone"
@@ -478,7 +478,7 @@ export default function AdminProfile() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="profileImage">Profile Image</Label>
+                <Label htmlFor="profileImage">Profile image</Label>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -497,18 +497,18 @@ export default function AdminProfile() {
                     />
                     {isEditMode && (
                       <>
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <div className="absolute inset-0 bg-neutral-900 bg-opacity-0 group-hover:bg-opacity-40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                           <label
                             htmlFor="profileImage"
                             className="cursor-pointer bg-white text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-neutral-100 transition-colors"
                           >
-                            Change Image
+                            Change image
                           </label>
                         </div>
                         <button
                           type="button"
                           onClick={handleRemoveImage}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-lg z-10"
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm z-10"
                           title="Remove image"
                         >
                           <X className="w-4 h-4" />
@@ -543,7 +543,7 @@ export default function AdminProfile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Old Password</Label>
+                <Label htmlFor="currentPassword">Old password</Label>
                 <div className="relative">
                   <Input
                     id="currentPassword"
@@ -581,7 +581,7 @@ export default function AdminProfile() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">New password</Label>
                 <div className="relative">
                   <Input
                     id="newPassword"
@@ -619,7 +619,7 @@ export default function AdminProfile() {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword">Confirm password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -660,14 +660,14 @@ export default function AdminProfile() {
             {/* Additional Info */}
             <div className="pt-4 border-t border-neutral-200 space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-600">Account Status</span>
+                <span className="text-neutral-600">Account status</span>
                 <span className={`font-medium ${profile.isActive !== false ? "text-green-600" : "text-red-600"}`}>
                   {profile.isActive !== false ? "Active" : "Inactive"}
                 </span>
               </div>
               {profile.lastLogin && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-600">Last Login</span>
+                  <span className="text-neutral-600">Last login</span>
                   <span className="text-neutral-900">
                     {new Date(profile.lastLogin).toLocaleString()}
                   </span>
@@ -675,13 +675,13 @@ export default function AdminProfile() {
               )}
               {profile.loginCount !== undefined && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-600">Total Logins</span>
+                  <span className="text-neutral-600">Total logins</span>
                   <span className="text-neutral-900">{profile.loginCount}</span>
                 </div>
               )}
               {profile.createdAt && (
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-600">Member Since</span>
+                  <span className="text-neutral-600">Member since</span>
                   <span className="text-neutral-900">
                     {new Date(profile.createdAt).toLocaleDateString()}
                   </span>

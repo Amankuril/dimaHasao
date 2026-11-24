@@ -159,40 +159,40 @@ export default function RestaurantSettings() {
   };
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center">
-            <Settings className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+            <Settings className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">Restaurant Settings</h1>
+          <h1 className="text-2xl font-medium text-neutral-900">Restaurant settings</h1>
         </div>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-neutral-600">
           Configure platform-wide restaurant behaviour. More options will be added here over time.
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="p-6">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-9 h-9 rounded-lg bg-rose-50 flex items-center justify-center shrink-0">
-              <Clock className="w-5 h-5 text-rose-600" />
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-neutral-100 text-neutral-500">
+              <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Accept Order Time</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                Set separate accept windows for delivery and takeaway orders before auto-rejection.
+              <h2 className="text-lg font-medium text-neutral-900">Accept order time</h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                Set separate accept windows for delivery and takeaway orders before auto-rejection
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="rounded-xl border border-slate-200 p-5 space-y-4">
+            <div className="rounded-xl border border-neutral-200 p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Truck className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <Truck className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">Delivery Accept Order Time</h3>
+                <h3 className="text-base font-medium text-neutral-900">Delivery accept order time</h3>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="deliveryAcceptOrderTimeMinutes">Time limit (minutes)</Label>
@@ -206,7 +206,7 @@ export default function RestaurantSettings() {
                   disabled={loading || savingDelivery}
                   placeholder={savedDeliveryMinutes ? undefined : "e.g. 4"}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-neutral-500">
                   {savedDeliveryMinutes
                     ? `Currently set: ${savedDeliveryMinutes} min. Click the field, clear it, then enter a new value.`
                     : "No time set yet. Enter a value between 1–60 minutes."}{" "}
@@ -226,18 +226,18 @@ export default function RestaurantSettings() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save Settings
+                    Save settings
                   </>
                 )}
               </Button>
             </div>
 
-            <div className="rounded-xl border border-slate-200 p-5 space-y-4">
+            <div className="rounded-xl border border-neutral-200 p-5 space-y-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <ShoppingBag className="w-4 h-4 text-amber-600" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <ShoppingBag className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-semibold text-slate-900">Takeaway Accept Order Time</h3>
+                <h3 className="text-base font-medium text-neutral-900">Takeaway accept order time</h3>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="takeawayAcceptOrderTimeMinutes">Time limit (minutes)</Label>
@@ -251,7 +251,7 @@ export default function RestaurantSettings() {
                   disabled={loading || savingTakeaway}
                   placeholder={savedTakeawayMinutes ? undefined : "e.g. 6"}
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-neutral-500">
                   {savedTakeawayMinutes
                     ? `Currently set: ${savedTakeawayMinutes} min. Click the field, clear it, then enter a new value.`
                     : "No time set yet. Enter a value between 1–60 minutes."}{" "}
@@ -271,7 +271,7 @@ export default function RestaurantSettings() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save Settings
+                    Save settings
                   </>
                 )}
               </Button>

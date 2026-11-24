@@ -186,10 +186,10 @@ export default function EarningAddonHistory() {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      pending: { bg: "bg-blue-100", text: "text-blue-700", label: "Pending", icon: Clock },
+      pending: { bg: "bg-neutral-100", text: "text-[#0a4d2b]", label: "Pending", icon: Clock },
       credited: { bg: "bg-green-100", text: "text-green-700", label: "Credited", icon: CheckCircle },
       failed: { bg: "bg-red-100", text: "text-red-700", label: "Failed", icon: XCircle },
-      cancelled: { bg: "bg-gray-100", text: "text-gray-700", label: "Cancelled", icon: XCircle },
+      cancelled: { bg: "bg-neutral-100", text: "text-neutral-700", label: "Cancelled", icon: XCircle },
     }
     const config = statusConfig[status] || statusConfig.pending
     const Icon = config.icon
@@ -235,13 +235,13 @@ export default function EarningAddonHistory() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">Earning Addon History</h1>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h1 className="text-2xl font-medium text-neutral-900">Earning addon history</h1>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {totalItems}
               </span>
             </div>
@@ -250,7 +250,7 @@ export default function EarningAddonHistory() {
               <button
                 onClick={handleCheckAllCompletions}
                 disabled={isCheckingCompletions}
-                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
+                className="px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 disabled:bg-neutral-200 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
                 title="Check all delivery partners for completed offers"
               >
                 <RefreshCw className={`w-4 h-4 ${isCheckingCompletions ? 'animate-spin' : ''}`} />
@@ -262,20 +262,20 @@ export default function EarningAddonHistory() {
                   placeholder="Ex: search delivery man or offer"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -297,7 +297,7 @@ export default function EarningAddonHistory() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -308,80 +308,80 @@ export default function EarningAddonHistory() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mb-4"></div>
-              <div className="text-slate-500">Loading earning addon history...</div>
+              <div className="text-neutral-500">Loading earning addon history...</div>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     {visibleColumns.si && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>SI</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.deliveryman && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Deliveryman</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.offerTitle && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>Offer Title</span>
+                          <span>Offer title</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.ordersCompleted && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Orders</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.earningAmount && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
-                          <span>Earning Amount</span>
+                          <span>Earning amount</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.date && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Date</span>
-                          <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                          <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                         </div>
                       </th>
                     )}
                     {visibleColumns.status && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         <div className="flex items-center gap-2">
                           <span>Status</span>
                         </div>
                       </th>
                     )}
                     {visibleColumns.actions && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                         Actions
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {history.length === 0 ? (
                     <tr>
                       <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-12 text-center">
                         <div className="flex flex-col items-center gap-2">
-                          <FileText className="w-10 h-10 text-slate-300 mb-1" />
-                          <p className="text-slate-500 font-medium">No earning addon history found</p>
-                          <p className="text-sm text-slate-400 mt-1">
+                          <FileText className="w-10 h-10 text-neutral-300 mb-1" />
+                          <p className="text-neutral-500 font-medium">No earning addon history found</p>
+                          <p className="text-sm text-neutral-400 mt-1">
                             {searchQuery ? 'Try adjusting your search query' : 'History will appear when delivery boys complete earning addon offers'}
                           </p>
                         </div>
@@ -389,40 +389,40 @@ export default function EarningAddonHistory() {
                     </tr>
                   ) : (
                     history.map((item, index) => (
-                      <tr key={item._id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={item._id} className="hover:bg-neutral-50 transition-colors">
                         {visibleColumns.si && (
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</span>
+                            <span className="text-sm font-medium text-neutral-700">{(currentPage - 1) * pageSize + index + 1}</span>
                           </td>
                         )}
                         {visibleColumns.deliveryman && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-blue-600">
+                              <span className="text-sm font-medium text-[#0a4d2b]">
                                 {item.deliveryman || 'Unknown'}
                               </span>
                               {item.deliveryId && (
-                                <span className="text-xs text-slate-500 mt-0.5">ID: {item.deliveryId}</span>
+                                <span className="text-xs text-neutral-500 mt-0.5">ID: {item.deliveryId}</span>
                               )}
                               {item.deliveryPhone && item.deliveryPhone !== 'N/A' && (
-                                <span className="text-xs text-slate-400 mt-0.5">{item.deliveryPhone}</span>
+                                <span className="text-xs text-neutral-400 mt-0.5">{item.deliveryPhone}</span>
                               )}
                             </div>
                           </td>
                         )}
                         {visibleColumns.offerTitle && (
                           <td className="px-6 py-4">
-                            <span className="text-sm text-slate-700">{item.offerTitle}</span>
+                            <span className="text-sm text-neutral-700">{item.offerTitle}</span>
                           </td>
                         )}
                         {visibleColumns.ordersCompleted && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-slate-900">
+                              <span className="text-sm font-medium text-neutral-900">
                                 {item.ordersCompleted || 0} / {item.ordersRequired || 0}
                               </span>
                               {item.ordersRequired > 0 && (
-                                <span className="text-xs text-slate-500 mt-0.5">
+                                <span className="text-xs text-neutral-500 mt-0.5">
                                   {Math.round(((item.ordersCompleted || 0) / item.ordersRequired) * 100)}% Complete
                                 </span>
                               )}
@@ -433,16 +433,16 @@ export default function EarningAddonHistory() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center gap-1">
                               <DollarSign className="w-4 h-4 text-emerald-500" />
-                              <span className="text-sm font-medium text-slate-900">{"\u20B9"}{item.totalEarning?.toFixed(2) || item.earningAmount?.toFixed(2) || '0.00'}</span>
+                              <span className="text-sm font-medium text-neutral-900">{"\u20B9"}{item.totalEarning?.toFixed(2) || item.earningAmount?.toFixed(2) || '0.00'}</span>
                             </div>
                           </td>
                         )}
                         {visibleColumns.date && (
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex flex-col">
-                              <span className="text-sm text-slate-700">{formatDate(item.date || item.completedAt)}</span>
+                              <span className="text-sm text-neutral-700">{formatDate(item.date || item.completedAt)}</span>
                               {item.completedAt && (
-                                <span className="text-xs text-slate-400 mt-0.5">
+                                <span className="text-xs text-neutral-400 mt-0.5">
                                   {new Date(item.completedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               )}
@@ -460,7 +460,7 @@ export default function EarningAddonHistory() {
                               {item.status === 'pending' && (
                                 <button
                                   onClick={() => handleOpenCreditDialog(item)}
-                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all"
+                                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors"
                                   title="Credit to Wallet"
                                 >
                                   Credit
@@ -469,7 +469,7 @@ export default function EarningAddonHistory() {
                               {item.status === 'pending' && (
                                 <button
                                   onClick={() => handleCancel(item._id)}
-                                  className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                                  className="p-2 rounded-lg hover:bg-neutral-100 transition-colors"
                                   title="Cancel"
                                 >
                                   <XCircle className="w-4 h-4 text-red-500" />
@@ -506,13 +506,13 @@ export default function EarningAddonHistory() {
 
       {/* Credit Dialog */}
       <Dialog open={isCreditDialogOpen} onOpenChange={setIsCreditDialogOpen}>
-        <DialogContent className="max-w-lg bg-gradient-to-br from-white via-slate-50 to-white p-0 border-0 shadow-2xl">
+        <DialogContent className="max-w-lg p-0 border-0 shadow-2xl">
           {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-5 rounded-t-lg">
+          <div className="px-6 py-5 rounded-t-lg bg-emerald-500">
             <DialogHeader className="mb-0">
-              <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
+              <DialogTitle className="text-xl font-medium text-white flex items-center gap-2">
                 <Wallet className="w-5 h-5" />
-                Credit Earning to Wallet
+                Credit earning to wallet
               </DialogTitle>
             </DialogHeader>
           </div>
@@ -522,29 +522,29 @@ export default function EarningAddonHistory() {
               {/* Information Cards */}
               <div className="space-y-3">
                 {/* Deliveryman Info */}
-                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <User className="w-5 h-5 text-blue-600" />
+                <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+                  <div className="p-2 bg-neutral-100 rounded-lg">
+                    <User className="w-5 h-5 text-[#0a4d2b]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Deliveryman</p>
-                    <p className="text-sm font-semibold text-slate-900 truncate">{selectedHistory.deliveryman || 'N/A'}</p>
+                    <p className="text-xs font-medium text-neutral-500 mb-1">Deliveryman</p>
+                    <p className="text-sm font-medium text-neutral-900 truncate">{selectedHistory.deliveryman || 'N/A'}</p>
                     {selectedHistory.deliveryId && (
-                      <p className="text-xs text-slate-500 mt-0.5">ID: {selectedHistory.deliveryId}</p>
+                      <p className="text-xs text-neutral-500 mt-0.5">ID: {selectedHistory.deliveryId}</p>
                     )}
                   </div>
                 </div>
 
                 {/* Offer Info */}
-                <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Package className="w-5 h-5 text-purple-600" />
+                <div className="flex items-start gap-3 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+                  <div className="p-2 bg-neutral-100 rounded-lg">
+                    <Package className="w-5 h-5 text-[#0a4d2b]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Offer</p>
-                    <p className="text-sm font-semibold text-slate-900">{selectedHistory.offerTitle || 'N/A'}</p>
+                    <p className="text-xs font-medium text-neutral-500 mb-1">Offer</p>
+                    <p className="text-sm font-medium text-neutral-900">{selectedHistory.offerTitle || 'N/A'}</p>
                     {selectedHistory.ordersCompleted && selectedHistory.ordersRequired && (
-                      <p className="text-xs text-slate-500 mt-0.5">
+                      <p className="text-xs text-neutral-500 mt-0.5">
                         {selectedHistory.ordersCompleted} / {selectedHistory.ordersRequired} orders completed
                       </p>
                     )}
@@ -552,13 +552,13 @@ export default function EarningAddonHistory() {
                 </div>
 
                 {/* Amount Info - Highlighted */}
-                <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-50 to-green-50 rounded-xl border-2 border-emerald-200">
+                <div className="flex items-center gap-3 p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50">
                   <div className="p-2 bg-emerald-100 rounded-lg">
                     <DollarSign className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-emerald-700 uppercase tracking-wide mb-1">Amount to Credit</p>
-                    <p className="text-2xl font-bold text-emerald-600">
+                    <p className="text-xs font-medium text-emerald-700 mb-1">Amount to credit</p>
+                    <p className="text-2xl font-medium text-emerald-600">
                       {"\u20B9"}{selectedHistory.totalEarning?.toFixed(2) || selectedHistory.earningAmount?.toFixed(2) || '0.00'}
                     </p>
                   </div>
@@ -567,38 +567,38 @@ export default function EarningAddonHistory() {
 
               {/* Notes Section */}
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-slate-700 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-slate-500" />
-                  Notes <span className="text-xs font-normal text-slate-400">(Optional)</span>
+                <label className="block text-sm font-medium text-neutral-700 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-neutral-500" />
+                  Notes <span className="text-xs font-normal text-neutral-400">(Optional)</span>
                 </label>
                 <textarea
                   value={creditNotes}
                   onChange={(e) => setCreditNotes(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all resize-none text-sm text-slate-700 placeholder:text-slate-400"
+                  className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors resize-none text-sm text-neutral-700 placeholder:text-neutral-400"
                   rows={4}
-                  placeholder="Add any notes about this credit transaction..."
+                  placeholder="Add any notes about this credit transaction"
                 />
-                <p className="text-xs text-slate-400">This note will be saved with the transaction record.</p>
+                <p className="text-xs text-neutral-400">This note will be saved with the transaction record</p>
               </div>
 
               {/* Action Buttons */}
-              <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+              <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
                 <button
                   onClick={() => {
                     setIsCreditDialogOpen(false)
                     setSelectedHistory(null)
                     setCreditNotes("")
                   }}
-                  className="px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-all"
+                  className="px-5 py-2.5 text-sm font-medium rounded-xl border-2 border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 hover:border-neutral-400 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCredit}
-                  className="px-5 py-2.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2"
+                  className="px-5 py-2.5 text-sm font-medium rounded-xl text-white shadow-sm shadow-emerald-500/30 transition-colors flex items-center gap-2 bg-[#0a4d2b]"
                 >
                   <Wallet className="w-4 h-4" />
-                  Credit to Wallet
+                  Credit to wallet
                 </button>
               </DialogFooter>
             </div>
@@ -612,28 +612,28 @@ export default function EarningAddonHistory() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -641,16 +641,16 @@ export default function EarningAddonHistory() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e]"
               >
                 Apply
               </button>

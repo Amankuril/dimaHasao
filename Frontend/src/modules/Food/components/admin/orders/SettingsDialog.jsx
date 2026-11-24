@@ -32,28 +32,28 @@ export default function SettingsDialog({ isOpen, onOpenChange, visibleColumns, t
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
-            Table Settings
+            Table settings
           </DialogTitle>
         </DialogHeader>
         <div className="px-6 pb-6 space-y-4">
           <div>
-            <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
               <Columns className="w-4 h-4" />
-              Visible Columns
+              Visible columns
             </h3>
             <div className="space-y-2">
               {Object.entries(columnLabels).map(([key, label]) => (
                 <label
                   key={key}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                 >
                   <input
                     type="checkbox"
                     checked={visibleColumns[key]}
                     onChange={() => toggleColumn(key)}
-                    className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                    className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                   />
-                  <span className="text-sm text-slate-700">{label}</span>
+                  <span className="text-sm text-neutral-700">{label}</span>
                   {visibleColumns[key] && (
                     <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                   )}
@@ -61,16 +61,16 @@ export default function SettingsDialog({ isOpen, onOpenChange, visibleColumns, t
               ))}
             </div>
           </div>
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
             <button
               onClick={resetColumns}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Reset
             </button>
             <button
               onClick={() => onOpenChange(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Apply
             </button>

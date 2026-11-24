@@ -293,7 +293,7 @@ export default function CashConfirmations() {
 
     if (s === "pending") return "bg-amber-100 text-amber-700"
 
-    return "bg-slate-100 text-slate-700"
+    return "bg-neutral-100 text-neutral-700"
 
   }
 
@@ -375,11 +375,11 @@ export default function CashConfirmations() {
 
   return (
 
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
 
       <div className="max-w-full mx-auto">
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
 
           <div className="flex items-center justify-between gap-4">
 
@@ -389,11 +389,11 @@ export default function CashConfirmations() {
 
               <div className="min-w-0">
 
-                <h1 className="text-2xl font-bold text-slate-900">Cash Confirmations</h1>
+                <h1 className="text-2xl font-medium text-neutral-900">Cash confirmations</h1>
 
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="text-sm text-neutral-600 mt-1">
 
-                  Cash submissions need admin confirmation before the delivery partner&apos;s limit is restored.
+                  Cash submissions need admin confirmation before the delivery partner&apos;s limit is restored
 
                 </p>
 
@@ -407,7 +407,7 @@ export default function CashConfirmations() {
 
               disabled={loading}
 
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 shrink-0"
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 shrink-0"
 
             >
 
@@ -423,7 +423,7 @@ export default function CashConfirmations() {
 
 
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
 
@@ -441,9 +441,9 @@ export default function CashConfirmations() {
 
                     activeTab === tab.key
 
-                      ? "bg-slate-900 text-white border-slate-900"
+                      ? "bg-neutral-900 text-white border-neutral-900"
 
-                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
+                      : "bg-white text-neutral-700 border-neutral-300 hover:bg-neutral-50"
 
                   }`}
 
@@ -469,11 +469,11 @@ export default function CashConfirmations() {
 
                 onChange={(e) => setSearchQuery(e.target.value)}
 
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400"
 
               />
 
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
 
             </div>
 
@@ -487,7 +487,7 @@ export default function CashConfirmations() {
 
               <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-4" />
 
-              <p className="text-slate-600">Loading confirmations...</p>
+              <p className="text-neutral-600">Loading confirmations...</p>
 
             </div>
 
@@ -497,31 +497,31 @@ export default function CashConfirmations() {
 
               <table className="w-full min-w-[900px]">
 
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
 
                   <tr>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">S.No</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">S.No</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Date</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Delivery Boy</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Delivery boy</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Phone</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Phone</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Amount</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Method</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Method</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Status</th>
 
-                    <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">Action</th>
 
                   </tr>
 
                 </thead>
 
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
 
                   {transactions.length === 0 ? (
 
@@ -531,11 +531,11 @@ export default function CashConfirmations() {
 
                         <div className="flex flex-col items-center justify-center">
 
-                          <Package className="w-16 h-16 text-slate-400 mb-4" />
+                          <Package className="w-16 h-16 text-neutral-400 mb-4" />
 
-                          <p className="text-lg font-semibold text-slate-700">No cash submissions found</p>
+                          <p className="text-lg font-medium text-neutral-700">No cash submissions found</p>
 
-                          <p className="text-sm text-slate-500 mt-1">
+                          <p className="text-sm text-neutral-500 mt-1">
 
                             {searchQuery
 
@@ -555,23 +555,23 @@ export default function CashConfirmations() {
 
                     transactions.map((tx, i) => (
 
-                      <tr key={tx.id || i} className="hover:bg-slate-50 transition-colors">
+                      <tr key={tx.id || i} className="hover:bg-neutral-50 transition-colors">
 
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-500">{(page - 1) * limit + i + 1}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-neutral-500">{(page - 1) * limit + i + 1}</td>
 
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{formatDateOnly(tx.createdAt)}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-neutral-600">{formatDateOnly(tx.createdAt)}</td>
 
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-slate-800">{tx.deliveryName || "\u2014"}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-neutral-800">{tx.deliveryName || "\u2014"}</td>
 
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{tx.deliveryPhone || "\u2014"}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-neutral-600">{tx.deliveryPhone || "\u2014"}</td>
 
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-emerald-700">{formatCurrency(tx.amount)}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-emerald-700">{formatCurrency(tx.amount)}</td>
 
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600">{tx.paymentMethod || "Cash"}</td>
+                        <td className="px-4 py-4 whitespace-nowrap text-sm text-neutral-600">{tx.paymentMethod || "Cash"}</td>
 
                         <td className="px-4 py-4 whitespace-nowrap">
 
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${getStatusBadge(tx.status)}`}>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusBadge(tx.status)}`}>
 
                             {String(tx.status || "Pending")}
 
@@ -589,17 +589,17 @@ export default function CashConfirmations() {
 
                               onClick={() => setSelectedTx(tx)}
 
-                              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800"
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800"
 
                             >
 
-                              Confirm Cash
+                              Confirm cash
 
                             </button>
 
                           ) : (
 
-                            <span className={`text-xs font-bold ${
+                            <span className={`text-xs font-medium ${
 
                               tx.actionLabel === "Received" ? "text-emerald-700" : "text-red-600"
 
@@ -631,9 +631,9 @@ export default function CashConfirmations() {
 
           {pages > 1 && (
 
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-200">
 
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-neutral-600">
 
                 Page {page} of {pages} &middot; {total} total
 
@@ -647,7 +647,7 @@ export default function CashConfirmations() {
 
                   disabled={page <= 1}
 
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
 
                 >
 
@@ -661,7 +661,7 @@ export default function CashConfirmations() {
 
                   disabled={page >= pages}
 
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed"
 
                 >
 
@@ -683,19 +683,19 @@ export default function CashConfirmations() {
 
       <Dialog open={Boolean(selectedTx)} onOpenChange={(open) => !open && setSelectedTx(null)}>
 
-        <DialogContent className="sm:max-w-lg w-[calc(100%-2rem)] p-0 overflow-hidden border border-slate-200 bg-white shadow-2xl gap-0">
+        <DialogContent className="sm:max-w-lg w-[calc(100%-2rem)] p-0 overflow-hidden border border-neutral-200 bg-white shadow-2xl gap-0">
 
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-100 text-left">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-100 text-left">
 
-            <DialogTitle className="text-lg font-bold text-slate-900">Confirm Cash Submission</DialogTitle>
+            <DialogTitle className="text-lg font-medium text-neutral-900">Confirm cash submission</DialogTitle>
 
             {selectedTx && (
 
-              <p className="text-sm text-slate-600 font-normal mt-2 leading-relaxed">
+              <p className="text-sm text-neutral-600 font-normal mt-2 leading-relaxed">
 
-                Have you received <span className="font-bold text-slate-900">{formatCurrency(selectedTx.amount)}</span> cash from{" "}
+                Have you received <span className="font-medium text-neutral-900">{formatCurrency(selectedTx.amount)}</span> cash from{" "}
 
-                <span className="font-bold text-slate-900">{selectedTx.deliveryName || "this delivery boy"}</span>?
+                <span className="font-medium text-neutral-900">{selectedTx.deliveryName || "this delivery boy"}</span>?
 
               </p>
 
@@ -711,15 +711,15 @@ export default function CashConfirmations() {
 
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-5 text-center">
 
-                <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Amount</p>
+                <p className="text-xs font-medium text-emerald-700">Amount</p>
 
-                <p className="text-3xl font-bold text-emerald-700 mt-1">{formatCurrency(selectedTx.amount)}</p>
+                <p className="text-3xl font-medium text-emerald-700 mt-1">{formatCurrency(selectedTx.amount)}</p>
 
               </div>
 
 
 
-              <div className="rounded-xl border border-slate-200 divide-y divide-slate-100 overflow-hidden">
+              <div className="rounded-xl border border-neutral-200 divide-y divide-neutral-100 overflow-hidden">
 
                 {[
 
@@ -735,9 +735,9 @@ export default function CashConfirmations() {
 
                   <div key={label} className="flex items-center justify-between gap-4 px-4 py-3 bg-white">
 
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide shrink-0">{label}</span>
+                    <span className="text-xs font-medium text-neutral-500 shrink-0">{label}</span>
 
-                    <span className="text-sm font-semibold text-slate-900 text-right break-all">{value}</span>
+                    <span className="text-sm font-medium text-neutral-900 text-right break-all">{value}</span>
 
                   </div>
 
@@ -753,9 +753,9 @@ export default function CashConfirmations() {
 
                   Confirm only after you have physically received this cash from{" "}
 
-                  <span className="font-bold">{selectedTx.deliveryName || "the delivery boy"}</span>.
+                  <span className="font-medium">{selectedTx.deliveryName || "the delivery boy"}</span>.
 
-                  Selecting <span className="font-bold">Received</span> will restore their available cash limit instantly.
+                  Selecting <span className="font-medium">Received</span> will restore their available cash limit instantly.
 
                 </p>
 
@@ -767,7 +767,7 @@ export default function CashConfirmations() {
 
 
 
-          <DialogFooter className="px-6 py-4 bg-slate-50 border-t border-slate-100 gap-3 sm:justify-stretch flex-col sm:flex-row">
+          <DialogFooter className="px-6 py-4 bg-neutral-50 border-t border-neutral-100 gap-3 sm:justify-stretch flex-col sm:flex-row">
 
             <button
 
@@ -777,7 +777,7 @@ export default function CashConfirmations() {
 
               onClick={() => handleSettlementAction("received")}
 
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-600 text-white font-semibold text-sm hover:bg-green-700 active:scale-[0.98] transition-all disabled:opacity-50 shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#0a4d2b] text-white font-medium text-sm hover:bg-[#06381e] transition-colors disabled:opacity-50 shadow-sm"
 
             >
 
@@ -795,7 +795,7 @@ export default function CashConfirmations() {
 
               onClick={() => handleSettlementAction("not_received")}
 
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold text-sm hover:bg-red-700 active:scale-[0.98] transition-all disabled:opacity-50 shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 text-white font-medium text-sm hover:bg-red-700 transition-colors disabled:opacity-50 shadow-sm"
 
             >
 

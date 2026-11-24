@@ -93,7 +93,7 @@ export default function DeliveryWithdrawal() {
     if (status === "Approved" || status === "Processed") return "bg-green-100 text-green-700"
     if (status === "Pending") return "bg-amber-100 text-amber-700"
     if (status === "Rejected") return "bg-red-100 text-red-700"
-    return "bg-slate-100 text-slate-700"
+    return "bg-neutral-100 text-neutral-700"
   }
 
   const handleView = (req) => {
@@ -169,20 +169,20 @@ export default function DeliveryWithdrawal() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3">
             <Wallet className="w-5 h-5 text-emerald-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Delivery Withdrawal</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Delivery withdrawal</h1>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-sm text-neutral-600 mt-1">
             View and manage delivery boy withdrawal requests. Pending requests can be approved or rejected.
           </p>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-          <div className="flex gap-2 border-b border-slate-200">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+          <div className="flex gap-2 border-b border-neutral-200">
             {TABS.map((tab) => (
               <button
                 key={tab.key}
@@ -190,7 +190,7 @@ export default function DeliveryWithdrawal() {
                 className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
                   activeTab === tab.key
                     ? "border-emerald-600 text-emerald-600"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
+                    : "border-transparent text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {tab.label}
@@ -199,11 +199,11 @@ export default function DeliveryWithdrawal() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-slate-900">Withdrawal Requests</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h2 className="text-xl font-medium text-neutral-900">Withdrawal requests</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {totalItems}
               </span>
             </div>
@@ -213,39 +213,39 @@ export default function DeliveryWithdrawal() {
                 placeholder="Search by delivery name, ID, phone"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
 
           {loading ? (
             <div className="py-20 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mx-auto mb-4" />
-              <p className="text-slate-600">Loading withdrawal requests…</p>
+              <p className="text-neutral-600">Loading withdrawal requests…</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">#</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Delivery Boy</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">ID</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Request Time</th>
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">#</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Amount</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Delivery boy</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">ID</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Request time</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
+                    <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {filteredRequests.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <Package className="w-16 h-16 text-slate-400 mb-4" />
-                          <p className="text-lg font-semibold text-slate-700">No requests</p>
-                          <p className="text-sm text-slate-500">
+                          <Package className="w-16 h-16 text-neutral-400 mb-4" />
+                          <p className="text-lg font-medium text-neutral-700">No requests</p>
+                          <p className="text-sm text-neutral-500">
                             No {activeTab.toLowerCase()} withdrawal requests.
                           </p>
                         </div>
@@ -253,14 +253,14 @@ export default function DeliveryWithdrawal() {
                     </tr>
                   ) : (
                     filteredRequests.map((req, index) => (
-                      <tr key={req.id} className="hover:bg-slate-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{index + 1}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{formatCurrency(req.amount)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{req.deliveryName || "N/A"}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{req.deliveryIdString || "N/A"}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">{formatDate(req.requestedAt || req.createdAt)}</td>
+                      <tr key={req.id} className="hover:bg-neutral-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{index + 1}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{formatCurrency(req.amount)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{req.deliveryName || "N/A"}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{req.deliveryIdString || "N/A"}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-neutral-700">{formatDate(req.requestedAt || req.createdAt)}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(req.status)}`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(req.status)}`}>
                             {req.status}
                           </span>
                         </td>
@@ -335,33 +335,33 @@ export default function DeliveryWithdrawal() {
             {selectedRequest && (
               <div className="px-6 pb-6 space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Amount</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{formatCurrency(selectedRequest.amount)}</p>
+                  <label className="text-xs font-medium text-neutral-500">Amount</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{formatCurrency(selectedRequest.amount)}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Delivery boy</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.deliveryName || "N/A"}</p>
+                  <label className="text-xs font-medium text-neutral-500">Delivery boy</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.deliveryName || "N/A"}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Delivery ID</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.deliveryIdString || "N/A"}</p>
+                  <label className="text-xs font-medium text-neutral-500">Delivery ID</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.deliveryIdString || "N/A"}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Phone</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.deliveryPhone || "N/A"}</p>
+                  <label className="text-xs font-medium text-neutral-500">Phone</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.deliveryPhone || "N/A"}</p>
                 </div>
                 {selectedRequest.upiId && (
                   <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-100 mb-2">
                     <div className="flex items-center gap-2 mb-1">
                       <QrCode className="w-4 h-4 text-emerald-600" />
-                      <label className="text-xs font-bold text-emerald-800 uppercase">UPI Information</label>
+                      <label className="text-xs font-medium text-emerald-800">UPI information</label>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold text-slate-900">{selectedRequest.upiId}</p>
+                      <p className="text-sm font-medium text-neutral-900">{selectedRequest.upiId}</p>
                       {selectedRequest.upiQrCode && (
                         <button 
                           onClick={() => window.open(selectedRequest.upiQrCode, '_blank')}
-                          className="text-[10px] bg-emerald-600 text-white px-2 py-1 rounded hover:bg-emerald-700 transition-colors flex items-center gap-1"
+                          className="text-xs bg-[#0a4d2b] text-white px-2 py-1 rounded hover:bg-[#06381e] transition-colors flex items-center gap-1"
                         >
                           <Eye className="w-3 h-3" />
                           View QR
@@ -372,52 +372,52 @@ export default function DeliveryWithdrawal() {
                 )}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Bank Name</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.bankDetails?.bankName || "N/A"}</p>
+                    <label className="text-xs font-medium text-neutral-500">Bank name</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.bankDetails?.bankName || "N/A"}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Account Number</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.bankDetails?.accountNumber || "N/A"}</p>
+                    <label className="text-xs font-medium text-neutral-500">Account number</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.bankDetails?.accountNumber || "N/A"}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">IFSC Code</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1 uppercase text-emerald-600">{selectedRequest.bankDetails?.ifscCode || "N/A"}</p>
+                    <label className="text-xs font-medium text-neutral-500">IFSC code</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1 text-emerald-600">{selectedRequest.bankDetails?.ifscCode || "N/A"}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Holder Name</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.bankDetails?.accountHolderName || "N/A"}</p>
+                    <label className="text-xs font-medium text-neutral-500">Holder name</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.bankDetails?.accountHolderName || "N/A"}</p>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Request time</label>
-                  <p className="text-sm font-medium text-slate-900 mt-1">{formatDate(selectedRequest.requestedAt || selectedRequest.createdAt)}</p>
+                  <label className="text-xs font-medium text-neutral-500">Request time</label>
+                  <p className="text-sm font-medium text-neutral-900 mt-1">{formatDate(selectedRequest.requestedAt || selectedRequest.createdAt)}</p>
                 </div>
                 {(selectedRequest.status === "Approved" || selectedRequest.status === "Processed") && selectedRequest.processedAt && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Processed at</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1">{formatDate(selectedRequest.processedAt)}</p>
+                    <label className="text-xs font-medium text-neutral-500">Processed at</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1">{formatDate(selectedRequest.processedAt)}</p>
                   </div>
                 )}
                 {selectedRequest.status === "Rejected" && selectedRequest.processedAt && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Rejected at</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1">{formatDate(selectedRequest.processedAt)}</p>
+                    <label className="text-xs font-medium text-neutral-500">Rejected at</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1">{formatDate(selectedRequest.processedAt)}</p>
                   </div>
                 )}
                 <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase">Status</label>
+                  <label className="text-xs font-medium text-neutral-500">Status</label>
                   <p className="mt-1">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(selectedRequest.status)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(selectedRequest.status)}`}>
                       {selectedRequest.status}
                     </span>
                   </p>
                 </div>
                 {selectedRequest.rejectionReason && (
                   <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase">Rejection reason</label>
-                    <p className="text-sm font-medium text-slate-900 mt-1">{selectedRequest.rejectionReason}</p>
+                    <label className="text-xs font-medium text-neutral-500">Rejection reason</label>
+                    <p className="text-sm font-medium text-neutral-900 mt-1">{selectedRequest.rejectionReason}</p>
                   </div>
                 )}
               </div>
@@ -425,7 +425,7 @@ export default function DeliveryWithdrawal() {
             <DialogFooter className="px-6 pb-6">
               <button
                 onClick={() => setIsViewOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors"
               >
                 Close
               </button>
@@ -441,15 +441,15 @@ export default function DeliveryWithdrawal() {
             </DialogHeader>
             <div className="px-6 pb-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Rejection reason (optional)
                 </label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="Enter reason for rejection…"
+                  placeholder="Enter reason for rejection"
                   rows={4}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
+                  className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
                 />
               </div>
             </div>
@@ -460,7 +460,7 @@ export default function DeliveryWithdrawal() {
                   setRejectionReason("")
                   setSelectedRequest(null)
                 }}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
               >
                 Cancel
               </button>

@@ -89,27 +89,27 @@ export default function Cashback() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Create Cashback Offer Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
-              <RefreshCw className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <RefreshCw className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Create Cashback Offer</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Create cashback offer</h1>
           </div>
 
           {/* Language Tabs */}
-          <div className="flex items-center gap-2 border-b border-slate-200 mb-6">
+          <div className="flex items-center gap-2 border-b border-neutral-200 mb-6">
             {languageTabs.map((tab) => (
               <button
                 key={tab.key}
                 onClick={() => setActiveLanguage(tab.key)}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeLanguage === tab.key
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-slate-600 hover:text-slate-900"
+                    ? "border-[#0a4d2b] text-[#0a4d2b]"
+                    : "border-transparent text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {tab.label}
@@ -120,38 +120,38 @@ export default function Cashback() {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Title ({activeLanguage === "default" ? "Default" : languageTabs.find(t => t.key === activeLanguage)?.label})
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange("title", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Select Customer
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Select customer
                 </label>
                 <select
                   value={formData.customer}
                   onChange={(e) => handleInputChange("customer", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 >
                   <option value="">Select customer</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Cashback Type <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Cashback type <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.cashbackType}
                   onChange={(e) => handleInputChange("cashbackType", e.target.value)}
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 >
                   <option value="Percentage (%)">Percentage (%)</option>
                   <option value="Amount ($)">Amount ($)</option>
@@ -159,7 +159,7 @@ export default function Cashback() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Cashback Amount ({formData.cashbackType === "Percentage (%)" ? "%" : "$"}) <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -167,12 +167,12 @@ export default function Cashback() {
                   value={formData.cashbackAmount}
                   onChange={(e) => handleInputChange("cashbackAmount", e.target.value)}
                   placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Minimum Purchase ($)
                 </label>
                 <input
@@ -180,12 +180,12 @@ export default function Cashback() {
                   value={formData.minPurchase}
                   onChange={(e) => handleInputChange("minPurchase", e.target.value)}
                   placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
                   Maximum Discount ($)
                 </label>
                 <input
@@ -193,50 +193,50 @@ export default function Cashback() {
                   value={formData.maxDiscount}
                   onChange={(e) => handleInputChange("maxDiscount", e.target.value)}
                   placeholder="Ex: 100"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Start Date
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Start date
                 </label>
                 <div className="relative">
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange("startDate", e.target.value)}
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  End Date
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  End date
                 </label>
                 <div className="relative">
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => handleInputChange("endDate", e.target.value)}
-                    className="w-full px-4 py-2.5 pr-10 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="w-full px-4 py-2.5 pr-10 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                   />
-                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  Limit For Same User
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Limit for same user
                 </label>
                 <input
                   type="number"
                   value={formData.limitForSameUser}
                   onChange={(e) => handleInputChange("limitForSameUser", e.target.value)}
                   placeholder="Ex: 5"
-                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
                 />
               </div>
             </div>
@@ -245,13 +245,13 @@ export default function Cashback() {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Submit
               </button>
@@ -260,11 +260,11 @@ export default function Cashback() {
         </div>
 
         {/* Cashback List Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold text-slate-900">Cashback List</h2>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h2 className="text-xl font-medium text-neutral-900">Cashback list</h2>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredCashbacks.length}
               </span>
             </div>
@@ -273,7 +273,7 @@ export default function Cashback() {
               <select
                 value={cashbackType}
                 onChange={(e) => setCashbackType(e.target.value)}
-                className="px-4 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                className="px-4 py-2.5 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400"
               >
                 <option value="all">All CashBacks</option>
                 <option value="Percentage">Percentage</option>
@@ -286,9 +286,9 @@ export default function Cashback() {
                   placeholder="Ex: Search by title"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
             </div>
           </div>
@@ -296,44 +296,44 @@ export default function Cashback() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">CashBack Type</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Duration</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Total Used</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Name</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">CashBack type</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Amount</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Duration</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Total used</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredCashbacks.map((cashback) => (
-                  <tr key={cashback.sl} className="hover:bg-slate-50 transition-colors">
+                  <tr key={cashback.sl} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-700">{cashback.sl}</span>
+                      <span className="text-sm font-medium text-neutral-700">{cashback.sl}</span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-sm font-medium text-slate-900">{cashback.name}</span>
+                      <span className="text-sm font-medium text-neutral-900">{cashback.name}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{cashback.cashbackType}</span>
+                      <span className="text-sm text-neutral-700">{cashback.cashbackType}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-900">{cashback.amount}</span>
+                      <span className="text-sm font-medium text-neutral-900">{cashback.amount}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{cashback.duration}</span>
+                      <span className="text-sm text-neutral-700">{cashback.duration}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-slate-700">{cashback.totalUsed}</span>
+                      <span className="text-sm text-neutral-700">{cashback.totalUsed}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(cashback.sl)}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                          cashback.status ? "bg-blue-600" : "bg-slate-300"
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:ring-offset-2 ${
+                          cashback.status ? "bg-neutral-900" : "bg-neutral-300"
                         }`}
                       >
                         <span
@@ -346,7 +346,7 @@ export default function Cashback() {
                     <td className="px-6 py-4 whitespace-nowrap text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
-                          className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />

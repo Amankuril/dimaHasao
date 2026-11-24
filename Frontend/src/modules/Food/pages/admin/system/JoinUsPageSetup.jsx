@@ -118,67 +118,67 @@ export default function JoinUsPageSetup() {
   }
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto max-w-7xl">
         {/* Page Title */}
         <div className="mb-3">
-          <h1 className="text-lg font-bold text-slate-900">New Join Request Form Setup</h1>
+          <h1 className="text-lg font-medium text-neutral-900">New join request form setup</h1>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-2 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-2 mb-3">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab("restaurant")}
               className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors border-b-2 ${
                 activeTab === "restaurant"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "border-[#0a4d2b] text-[#0a4d2b]"
+                  : "border-transparent text-neutral-600 hover:text-neutral-900"
               }`}
             >
-              Restaurant Registration Form
+              Restaurant registration form
             </button>
             <button
               onClick={() => setActiveTab("deliveryman")}
               className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors border-b-2 ${
                 activeTab === "deliveryman"
-                  ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
+                  ? "border-[#0a4d2b] text-[#0a4d2b]"
+                  : "border-transparent text-neutral-600 hover:text-neutral-900"
               }`}
             >
-              DeliveryMan Registration Form
+              DeliveryMan registration form
             </button>
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
           {/* Default Input Fields */}
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-3 relative">
-            <h2 className="text-sm font-semibold text-slate-900 mb-3">Default Input Fields</h2>
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-3 relative">
+            <h2 className="text-sm font-medium text-neutral-900 mb-3">Default input fields</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               {defaultFields.map((field, index) => (
                 <div
                   key={index}
-                  className="px-3 py-2 bg-slate-50 rounded-lg border border-slate-200"
+                  className="px-3 py-2 bg-neutral-50 rounded-lg border border-neutral-200"
                 >
-                  <span className="text-xs text-slate-700">{field}</span>
+                  <span className="text-xs text-neutral-700">{field}</span>
                 </div>
               ))}
             </div>
-            <Settings className="absolute top-4 right-4 w-4 h-4 text-slate-400" />
+            <Settings className="absolute top-4 right-4 w-4 h-4 text-neutral-400" />
           </div>
 
           {/* Custom Input Fields */}
-          <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-4 mb-3">
+          <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-4 mb-3">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-slate-900">Custom Input Fields</h2>
+              <h2 className="text-sm font-medium text-neutral-900">Custom input fields</h2>
               <button
                 type="button"
                 onClick={handleAddField}
-                className="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-xs font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors flex items-center gap-1"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Add New Field</span>
+                <span>Add new field</span>
               </button>
             </div>
 
@@ -186,54 +186,54 @@ export default function JoinUsPageSetup() {
               {customFields.map((field) => (
                 <div
                   key={field.id}
-                  className="p-4 border border-slate-200 rounded-lg bg-slate-50"
+                  className="p-4 border border-neutral-200 rounded-lg bg-neutral-50"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                     {/* Type Dropdown */}
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      <label className="block text-xs font-medium text-neutral-700 mb-1.5">
                         Type
                       </label>
                       <div className="relative">
                         <select
                           value={field.type}
                           onChange={(e) => handleFieldChange(field.id, "type", e.target.value)}
-                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer"
+                          className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 appearance-none cursor-pointer"
                         >
                           {fieldTypes.map((type) => (
                             <option key={type} value={type}>{type}</option>
                           ))}
                         </select>
-                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-400 pointer-events-none" />
                       </div>
                     </div>
 
                     {/* Input Field Title */}
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                        Input Field Title
+                      <label className="block text-xs font-medium text-neutral-700 mb-1.5">
+                        Input field title
                       </label>
                       <input
                         type="text"
                         value={field.title}
                         onChange={(e) => handleFieldChange(field.id, "title", e.target.value)}
                         placeholder="Enter field title"
-                        className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       />
                     </div>
 
                     {/* Place Holder */}
                     {field.type !== "File Upload" && (
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                          Place Holder
+                        <label className="block text-xs font-medium text-neutral-700 mb-1.5">
+                          Place holder
                         </label>
                         <input
                           type="text"
                           value={field.placeholder}
                           onChange={(e) => handleFieldChange(field.id, "placeholder", e.target.value)}
                           placeholder="Enter placeholder"
-                          className="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                         />
                       </div>
                     )}
@@ -247,13 +247,13 @@ export default function JoinUsPageSetup() {
                           type="checkbox"
                           checked={field.uploadMultiple}
                           onChange={(e) => handleFieldChange(field.id, "uploadMultiple", e.target.checked)}
-                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                         />
-                        <label className="text-xs text-slate-700">Upload Multiple Files</label>
+                        <label className="text-xs text-neutral-700">Upload multiple files</label>
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-2">
-                          File Format
+                        <label className="block text-xs font-medium text-neutral-700 mb-2">
+                          File format
                         </label>
                         <div className="flex flex-wrap gap-3">
                           <div className="flex items-center gap-2">
@@ -261,27 +261,27 @@ export default function JoinUsPageSetup() {
                               type="checkbox"
                               checked={field.fileFormats.jpg}
                               onChange={() => handleFileFormatChange(field.id, "jpg")}
-                              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                              className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                             />
-                            <label className="text-xs text-slate-700">JPG JPEG or PNG</label>
+                            <label className="text-xs text-neutral-700">JPG JPEG or PNG</label>
                           </div>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               checked={field.fileFormats.pdf}
                               onChange={() => handleFileFormatChange(field.id, "pdf")}
-                              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                              className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                             />
-                            <label className="text-xs text-slate-700">PDF</label>
+                            <label className="text-xs text-neutral-700">PDF</label>
                           </div>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
                               checked={field.fileFormats.docs}
                               onChange={() => handleFileFormatChange(field.id, "docs")}
-                              className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                              className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                             />
-                            <label className="text-xs text-slate-700">DOCS</label>
+                            <label className="text-xs text-neutral-700">Docs</label>
                           </div>
                         </div>
                       </div>
@@ -295,9 +295,9 @@ export default function JoinUsPageSetup() {
                         type="checkbox"
                         checked={field.isRequired}
                         onChange={(e) => handleFieldChange(field.id, "isRequired", e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-[#0a4d2b] border-neutral-300 rounded focus:ring-[#0a4d2b]/30"
                       />
-                      <label className="text-xs text-slate-700">Is Required ?</label>
+                      <label className="text-xs text-neutral-700">Is Required ?</label>
                     </div>
                     <button
                       type="button"
@@ -317,13 +317,13 @@ export default function JoinUsPageSetup() {
             <button
               type="button"
               onClick={handleReset}
-              className="px-4 py-2 text-xs font-medium bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-xs font-medium bg-white border border-neutral-300 text-neutral-700 rounded-lg hover:bg-neutral-50 transition-colors"
             >
               Reset
             </button>
             <button
               type="submit"
-              className="px-4 py-2 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-xs font-medium bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
             >
               Submit
             </button>

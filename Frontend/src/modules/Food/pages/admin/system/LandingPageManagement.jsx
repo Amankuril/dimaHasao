@@ -1346,27 +1346,27 @@ export default function LandingPageManagement() {
   }, [selectedZoneId, exploreMoreSubTab]);
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Page Title */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-              <Layout className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Layout className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Landing Page Management</h1>
-              <p className="text-sm text-slate-600 mt-1">Manage hero banners</p>
+              <h1 className="text-2xl font-medium text-neutral-900">Landing page management</h1>
+              <p className="text-sm text-neutral-600 mt-1">Manage hero banners</p>
 
             </div>
             
             <div className="flex items-center gap-2 mt-4 sm:mt-0 ml-auto">
-              <Label htmlFor="zone-select" className="text-sm font-medium text-slate-700 whitespace-nowrap">Filter by Zone:</Label>
+              <Label htmlFor="zone-select" className="text-sm font-medium text-neutral-700 whitespace-nowrap">Filter by Zone:</Label>
               <select
                 id="zone-select"
                 value={selectedZoneId}
                 onChange={(e) => setSelectedZoneId(e.target.value)}
-                className="px-3 py-2 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm w-48"
+                className="px-3 py-2 bg-white border border-neutral-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm w-48"
                 disabled={zonesLoading}
               >
                 <option value="">Global / All Zones</option>
@@ -1382,7 +1382,7 @@ export default function LandingPageManagement() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-2 mb-6">
           <div className="flex gap-2 overflow-x-auto">
             {tabs.map((tab) => {
               const Icon = tab.icon
@@ -1391,8 +1391,8 @@ export default function LandingPageManagement() {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${activeTab === tab.id
-                    ? 'bg-blue-500 text-white'
-                    : 'text-slate-600 hover:bg-slate-100'
+                    ? 'bg-neutral-900 text-white'
+                    : 'text-neutral-600 hover:bg-neutral-100'
                     }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -1422,10 +1422,10 @@ export default function LandingPageManagement() {
         {activeTab === 'banners' && (
           <>
             {/* Upload Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Upload New Banner(s)</h2>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">Upload New Banner(s)</h2>
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
+                className="border-2 border-dashed border-neutral-200 rounded-lg p-8 text-center bg-neutral-50/30 cursor-pointer transition-colors hover:border-neutral-200 hover:bg-neutral-50/50"
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDrop={(e) => {
@@ -1447,15 +1447,15 @@ export default function LandingPageManagement() {
                 />
                 {bannersUploading ? (
                   <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                    <p className="text-blue-600 font-medium">
+                    <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+                    <p className="text-[#0a4d2b] font-medium">
                       Uploading image {bannersUploadProgress.current} of {bannersUploadProgress.total}...
                     </p>
                     {bannersUploadProgress.total > 0 && (
                       <div className="w-full max-w-xs">
-                        <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div className="w-full bg-neutral-200 rounded-full h-2">
                           <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            className="bg-neutral-900 h-2 rounded-full transition-colors duration-300"
                             style={{ width: `${(bannersUploadProgress.current / bannersUploadProgress.total) * 100}%` }}
                           />
                         </div>
@@ -1464,65 +1464,65 @@ export default function LandingPageManagement() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
-                    <Upload className="w-8 h-8 text-blue-600" />
+                    <Upload className="w-8 h-8 text-[#0a4d2b]" />
                     <div>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); bannersFileInputRef.current?.click(); }}
-                        className="text-blue-600 font-medium hover:text-blue-700 underline"
+                        className="text-[#0a4d2b] font-medium hover:text-[#0a4d2b] underline"
                       >
                         Click to upload
                       </button>
-                      <span className="text-slate-600"> or drag and drop</span>
+                      <span className="text-neutral-600"> or drag and drop</span>
                     </div>
-                    <p className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</p>
+                    <p className="text-xs text-neutral-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Banners List */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span>Banner List</span>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4 flex items-center gap-2">
+                <span>Banner list</span>
                 {bannersLoading ? (
-                  <span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" />
+                  <span className="w-8 h-5 bg-neutral-200 animate-pulse rounded inline-block" />
                 ) : (
                   <span>({banners.length})</span>
                 )}
               </h2>
               {bannersLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
                 </div>
               ) : banners.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <ImageIcon className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <p>No banners uploaded yet.</p>
+                <div className="text-center py-12 text-neutral-500">
+                  <ImageIcon className="w-12 h-12 mx-auto mb-3 text-neutral-400" />
+                  <p>No banners uploaded yet</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {banners.map((banner, index) => (
-                    <div key={banner._id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="relative aspect-video bg-slate-100">
+                    <div key={banner._id} className="border border-neutral-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="relative aspect-video bg-neutral-100">
                         <img src={resolveAssetUrl(banner.imageUrl)} alt={`Hero Banner ${index + 1}`} className="w-full h-full object-cover" />
                         <div className="absolute top-2 right-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-neutral-800'}`}>
                             {banner.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                         <div className="absolute top-2 left-2">
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</span>
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-neutral-100 text-neutral-900">Order: {banner.order}</span>
                         </div>
                       </div>
                       <div className="p-4 bg-white">
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-1">
-                            <button onClick={() => handleBannerOrderChange(banner._id, 'up')} disabled={index === 0} className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50">
-                              <ArrowUp className="w-4 h-4 text-slate-600" />
+                            <button onClick={() => handleBannerOrderChange(banner._id, 'up')} disabled={index === 0} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                              <ArrowUp className="w-4 h-4 text-neutral-600" />
                             </button>
-                            <button onClick={() => handleBannerOrderChange(banner._id, 'down')} disabled={index === banners.length - 1} className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50">
-                              <ArrowDown className="w-4 h-4 text-slate-600" />
+                            <button onClick={() => handleBannerOrderChange(banner._id, 'down')} disabled={index === banners.length - 1} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                              <ArrowDown className="w-4 h-4 text-neutral-600" />
                             </button>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -1535,7 +1535,7 @@ export default function LandingPageManagement() {
                                 }
                                 setShowRestaurantModal(true)
                               }}
-                              className="px-3 py-1.5 rounded text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 flex items-center gap-1"
+                              className="px-3 py-1.5 rounded text-sm font-medium bg-neutral-100 text-neutral-900 hover:bg-neutral-200 flex items-center gap-1"
                             >
                               <Megaphone className="w-4 h-4" />
                               Advertise
@@ -1549,11 +1549,11 @@ export default function LandingPageManagement() {
                           </div>
                         </div>
                         {banner.linkedRestaurants && banner.linkedRestaurants.length > 0 && (
-                          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2 flex-wrap">
-                            <span className="text-xs font-semibold text-slate-500">Linked Restaurant:</span>
-                            <div className="flex items-center gap-1.5 bg-yellow-100/70 hover:bg-yellow-100 border border-yellow-200 rounded-lg px-3 py-1.5 transition-all shadow-sm">
+                          <div className="mt-3 pt-3 border-t border-neutral-100 flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-medium text-neutral-500">Linked Restaurant:</span>
+                            <div className="flex items-center gap-1.5 bg-yellow-100/70 hover:bg-yellow-100 border border-yellow-200 rounded-lg px-3 py-1.5 transition-colors shadow-sm">
                               <Store className="w-3.5 h-3.5 text-yellow-700" />
-                              <span className="text-xs font-bold text-slate-800">
+                              <span className="text-xs font-medium text-neutral-800">
                                 {banner.linkedRestaurants[0].restaurantName || banner.linkedRestaurants[0].name || 'Restaurant'}
                               </span>
                             </div>
@@ -1572,10 +1572,10 @@ export default function LandingPageManagement() {
         {activeTab === 'under-250' && (
           <>
             {/* Upload Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Upload New Banner(s)</h2>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">Upload New Banner(s)</h2>
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
+                className="border-2 border-dashed border-neutral-200 rounded-lg p-8 text-center bg-neutral-50/30 cursor-pointer transition-colors hover:border-neutral-200 hover:bg-neutral-50/50"
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDrop={(e) => {
@@ -1597,15 +1597,15 @@ export default function LandingPageManagement() {
                 />
                 {under250BannersUploading ? (
                   <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                    <p className="text-blue-600 font-medium">
+                    <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+                    <p className="text-[#0a4d2b] font-medium">
                       Uploading image {under250BannersUploadProgress.current} of {under250BannersUploadProgress.total}...
                     </p>
                     {under250BannersUploadProgress.total > 0 && (
                       <div className="w-full max-w-xs">
-                        <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div className="w-full bg-neutral-200 rounded-full h-2">
                           <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            className="bg-neutral-900 h-2 rounded-full transition-colors duration-300"
                             style={{ width: `${(under250BannersUploadProgress.current / under250BannersUploadProgress.total) * 100}%` }}
                           />
                         </div>
@@ -1614,65 +1614,65 @@ export default function LandingPageManagement() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
-                    <Upload className="w-8 h-8 text-blue-600" />
+                    <Upload className="w-8 h-8 text-[#0a4d2b]" />
                     <div>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); under250BannersFileInputRef.current?.click(); }}
-                        className="text-blue-600 font-medium hover:text-blue-700 underline"
+                        className="text-[#0a4d2b] font-medium hover:text-[#0a4d2b] underline"
                       >
                         Click to upload
                       </button>
-                      <span className="text-slate-600"> or drag and drop</span>
+                      <span className="text-neutral-600"> or drag and drop</span>
                     </div>
-                    <p className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</p>
+                    <p className="text-xs text-neutral-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Banners List */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span>Banner List</span>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4 flex items-center gap-2">
+                <span>Banner list</span>
                 {under250BannersLoading ? (
-                  <span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" />
+                  <span className="w-8 h-5 bg-neutral-200 animate-pulse rounded inline-block" />
                 ) : (
                   <span>({under250Banners.length})</span>
                 )}
               </h2>
               {under250BannersLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
                 </div>
               ) : under250Banners.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <Tag className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <p>No under 250 banners uploaded yet.</p>
+                <div className="text-center py-12 text-neutral-500">
+                  <Tag className="w-12 h-12 mx-auto mb-3 text-neutral-400" />
+                  <p>No under 250 banners uploaded yet</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {under250Banners.map((banner, index) => (
-                    <div key={banner._id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="relative aspect-video bg-slate-100">
+                    <div key={banner._id} className="border border-neutral-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="relative aspect-video bg-neutral-100">
                         <img src={resolveAssetUrl(banner.imageUrl)} alt={`Under 250 Banner ${index + 1}`} className="w-full h-full object-cover" />
                         <div className="absolute top-2 right-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-neutral-800'}`}>
                             {banner.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                         <div className="absolute top-2 left-2">
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</span>
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-neutral-100 text-neutral-900">Order: {banner.order}</span>
                         </div>
                       </div>
                       <div className="p-4 bg-white">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1">
-                            <button onClick={() => handleUnder250BannerOrderChange(banner._id, 'up')} disabled={index === 0} className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50">
-                              <ArrowUp className="w-4 h-4 text-slate-600" />
+                            <button onClick={() => handleUnder250BannerOrderChange(banner._id, 'up')} disabled={index === 0} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                              <ArrowUp className="w-4 h-4 text-neutral-600" />
                             </button>
-                            <button onClick={() => handleUnder250BannerOrderChange(banner._id, 'down')} disabled={index === under250Banners.length - 1} className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50">
-                              <ArrowDown className="w-4 h-4 text-slate-600" />
+                            <button onClick={() => handleUnder250BannerOrderChange(banner._id, 'down')} disabled={index === under250Banners.length - 1} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                              <ArrowDown className="w-4 h-4 text-neutral-600" />
                             </button>
                           </div>
                           <button onClick={() => handleToggleUnder250BannerStatus(banner._id, banner.isActive)} className={`px-3 py-1.5 rounded text-sm font-medium ${banner.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
@@ -1695,10 +1695,10 @@ export default function LandingPageManagement() {
         {activeTab === 'dining' && (
           <>
             {/* Upload Section */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4">Upload New Dining Banner(s)</h2>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4">Upload New Dining Banner(s)</h2>
               <div
-                className="border-2 border-dashed border-blue-300 rounded-lg p-8 text-center bg-blue-50/30 cursor-pointer transition-colors hover:border-blue-400 hover:bg-blue-50/50"
+                className="border-2 border-dashed border-neutral-200 rounded-lg p-8 text-center bg-neutral-50/30 cursor-pointer transition-colors hover:border-neutral-200 hover:bg-neutral-50/50"
                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); }}
                 onDrop={(e) => {
@@ -1720,15 +1720,15 @@ export default function LandingPageManagement() {
                 />
                 {diningBannersUploading ? (
                   <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                    <p className="text-blue-600 font-medium">
+                    <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+                    <p className="text-[#0a4d2b] font-medium">
                       Uploading image {diningBannersUploadProgress.current} of {diningBannersUploadProgress.total}...
                     </p>
                     {diningBannersUploadProgress.total > 0 && (
                       <div className="w-full max-w-xs">
-                        <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div className="w-full bg-neutral-200 rounded-full h-2">
                           <div
-                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            className="bg-neutral-900 h-2 rounded-full transition-colors duration-300"
                             style={{ width: `${(diningBannersUploadProgress.current / diningBannersUploadProgress.total) * 100}%` }}
                           />
                         </div>
@@ -1737,65 +1737,65 @@ export default function LandingPageManagement() {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
-                    <Upload className="w-8 h-8 text-blue-600" />
+                    <Upload className="w-8 h-8 text-[#0a4d2b]" />
                     <div>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); diningBannersFileInputRef.current?.click(); }}
-                        className="text-blue-600 font-medium hover:text-blue-700 underline"
+                        className="text-[#0a4d2b] font-medium hover:text-[#0a4d2b] underline"
                       >
                         Click to upload
                       </button>
-                      <span className="text-slate-600"> or drag and drop</span>
+                      <span className="text-neutral-600"> or drag and drop</span>
                     </div>
-                    <p className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</p>
+                    <p className="text-xs text-neutral-500">PNG, JPG, WEBP up to 5MB each (Max 5 images at once)</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Banners List */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span>Banner List</span>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+              <h2 className="text-lg font-medium text-neutral-900 mb-4 flex items-center gap-2">
+                <span>Banner list</span>
                 {diningBannersLoading ? (
-                  <span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" />
+                  <span className="w-8 h-5 bg-neutral-200 animate-pulse rounded inline-block" />
                 ) : (
                   <span>({diningBanners.length})</span>
                 )}
               </h2>
               {diningBannersLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
                 </div>
               ) : diningBanners.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <UtensilsCrossed className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                  <p>No dining banners uploaded yet.</p>
+                <div className="text-center py-12 text-neutral-500">
+                  <UtensilsCrossed className="w-12 h-12 mx-auto mb-3 text-neutral-400" />
+                  <p>No dining banners uploaded yet</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {diningBanners.map((banner, index) => (
-                    <div key={banner._id} className="border border-slate-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                      <div className="relative aspect-video bg-slate-100">
+                    <div key={banner._id} className="border border-neutral-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow">
+                      <div className="relative aspect-video bg-neutral-100">
                         <img src={resolveAssetUrl(banner.imageUrl)} alt={`Dining Banner ${index + 1}`} className="w-full h-full object-cover" />
                         <div className="absolute top-2 right-2">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${banner.isActive ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-neutral-800'}`}>
                             {banner.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
                         <div className="absolute top-2 left-2">
-                          <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Order: {banner.order}</span>
+                          <span className="px-2 py-1 rounded text-xs font-medium bg-neutral-100 text-neutral-900">Order: {banner.order}</span>
                         </div>
                       </div>
                       <div className="p-4 bg-white">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-1">
-                            <button onClick={() => handleDiningBannerOrderChange(banner._id, 'up')} disabled={index === 0} className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50">
-                              <ArrowUp className="w-4 h-4 text-slate-600" />
+                            <button onClick={() => handleDiningBannerOrderChange(banner._id, 'up')} disabled={index === 0} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                              <ArrowUp className="w-4 h-4 text-neutral-600" />
                             </button>
-                            <button onClick={() => handleDiningBannerOrderChange(banner._id, 'down')} disabled={index === diningBanners.length - 1} className="p-1.5 rounded hover:bg-slate-100 disabled:opacity-50">
-                              <ArrowDown className="w-4 h-4 text-slate-600" />
+                            <button onClick={() => handleDiningBannerOrderChange(banner._id, 'down')} disabled={index === diningBanners.length - 1} className="p-1.5 rounded hover:bg-neutral-100 disabled:opacity-50">
+                              <ArrowDown className="w-4 h-4 text-neutral-600" />
                             </button>
                           </div>
                           <button onClick={() => handleToggleDiningBannerStatus(banner._id, banner.isActive)} className={`px-3 py-1.5 rounded text-sm font-medium ${banner.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
@@ -1817,9 +1817,9 @@ export default function LandingPageManagement() {
         {/* Explore More Tab */}
         {activeTab === 'explore-more' && (
           <>
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
               <div className="flex items-center justify-between gap-3 mb-4">
-                <h2 className="text-lg font-bold text-slate-900">Landing Settings</h2>
+                <h2 className="text-lg font-medium text-neutral-900">Landing settings</h2>
                 <Button
                   onClick={handleSaveSettings}
                   disabled={
@@ -1828,7 +1828,7 @@ export default function LandingPageManagement() {
                     (JSON.stringify({...settings, recommendedRestaurantIds: [...(settings.recommendedRestaurantIds || [])].sort()}) === 
                      JSON.stringify({...originalSettings, recommendedRestaurantIds: [...(originalSettings.recommendedRestaurantIds || [])].sort()}))
                   }
-                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  className="bg-neutral-900 hover:bg-neutral-800 text-white"
                 >
                   {settingsSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Save Settings
@@ -1837,18 +1837,18 @@ export default function LandingPageManagement() {
 
               {settingsLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-[#0a4d2b] animate-spin" />
                 </div>
               ) : (
                 <div className="space-y-5">
                   <div>
-                    <Label htmlFor="explore-more-heading">Explore More Heading</Label>
+                    <Label htmlFor="explore-more-heading">Explore more heading</Label>
                     <Input
                       id="explore-more-heading"
                       value={settings.exploreMoreHeading || ""}
                       onChange={(e) => setSettings((prev) => ({ ...prev, exploreMoreHeading: e.target.value }))}
                       className="mt-2"
-                      placeholder="Explore More"
+                      placeholder="Explore more"
                     />
                   </div>
 
@@ -1864,12 +1864,12 @@ export default function LandingPageManagement() {
                       className="mt-2"
                       placeholder="250"
                     />
-                    <p className="text-xs text-slate-500 mt-1">Button will show "Under ₹{settings.under250PriceLimit || 250}" on user home page</p>
+                    <p className="text-xs text-neutral-500 mt-1">Button will show "Under ₹{settings.under250PriceLimit || 250}" on user home page</p>
                   </div>
 
                   <div>
                     <Label>Fest Banner (User Home)</Label>
-                    <p className="text-xs text-slate-500 mt-1 mb-3">
+                    <p className="text-xs text-neutral-500 mt-1 mb-3">
                       Upload a promo image for the home fest banner. If empty, the default design is shown.
                     </p>
                     <div className="flex flex-col gap-3">
@@ -1886,7 +1886,7 @@ export default function LandingPageManagement() {
                           type="button"
                           onClick={() => festBannerFileInputRef.current?.click()}
                           disabled={festBannerUploading}
-                          className="bg-slate-900 hover:bg-slate-800 text-white"
+                          className="bg-neutral-900 hover:bg-neutral-800 text-white"
                         >
                           {festBannerUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                           {festBannerUploading ? 'Uploading...' : 'Upload Banner'}
@@ -1900,33 +1900,33 @@ export default function LandingPageManagement() {
                           }}
                           disabled={festBannerUploading || !settings.festBannerImageUrl}
                         >
-                          Remove Banner
+                          Remove banner
                         </Button>
                       </div>
                       {settings.festBannerImageUrl ? (
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 break-all">
+                        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-700 break-all">
                           {settings.festBannerImageUrl}
                         </div>
                       ) : (
-                        <p className="text-xs text-slate-500">No banner uploaded.</p>
+                        <p className="text-xs text-neutral-500">No banner uploaded</p>
                       )}
                     </div>
                   </div>
 
                   {selectedZoneId !== "" && selectedZoneId != null && (
                   <div>
-                    <Label htmlFor="recommended-search">Recommended For You Restaurants</Label>
-                    <p className="text-xs text-slate-500 mt-1 mb-2">
-                      Choose multiple restaurants to display below filters on the user home page.
+                    <Label htmlFor="recommended-search">Recommended for you restaurants</Label>
+                    <p className="text-xs text-neutral-500 mt-1 mb-2">
+                      Choose multiple restaurants to display below filters on the user home page
                     </p>
 
                     <div className="relative mb-3">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400" />
                       <Input
                         id="recommended-search"
                         value={recommendedSearchQuery}
                         onChange={(e) => setRecommendedSearchQuery(e.target.value)}
-                        placeholder="Search restaurants..."
+                        placeholder="Search restaurants"
                         className="pl-9"
                       />
                     </div>
@@ -1938,28 +1938,28 @@ export default function LandingPageManagement() {
                             key={restaurant._id}
                             type="button"
                             onClick={() => toggleRecommendedRestaurant(restaurant._id)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs hover:bg-blue-100"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neutral-50 text-[#0a4d2b] text-xs hover:bg-neutral-100"
                           >
                             <span>{restaurant.name}</span>
-                            <span className="text-blue-500">x</span>
+                            <span className="text-[#0a4d2b]">x</span>
                           </button>
                         ))}
                       </div>
                     )}
 
-                    <div className="max-h-72 overflow-y-auto border border-slate-200 rounded-lg divide-y divide-slate-100">
+                    <div className="max-h-72 overflow-y-auto border border-neutral-200 rounded-lg divide-y divide-neutral-100">
                       {filteredRestaurantsForRecommended.length === 0 ? (
-                        <div className="p-4 text-sm text-slate-500 text-center">No restaurants found</div>
+                        <div className="p-4 text-sm text-neutral-500 text-center">No restaurants found</div>
                       ) : (
                         filteredRestaurantsForRecommended.map((restaurant) => {
                           const isChecked = (settings.recommendedRestaurantIds || []).some(id => String(id) === String(restaurant._id))
                           return (
                             <label
                               key={restaurant._id}
-                              className="flex items-center justify-between gap-3 px-3 py-2 cursor-pointer hover:bg-slate-50"
+                              className="flex items-center justify-between gap-3 px-3 py-2 cursor-pointer hover:bg-neutral-50"
                             >
                               <div className="min-w-0">
-                                <p className="text-sm font-medium text-slate-800 truncate">{restaurant.name}</p>
+                                <p className="text-sm font-medium text-neutral-800 truncate">{restaurant.name}</p>
                               </div>
                               <Checkbox
                                 checked={isChecked}
@@ -1977,7 +1977,7 @@ export default function LandingPageManagement() {
             </div>
 
             {/* Sub-tabs for Explore More */}
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 mb-6">
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-2 mb-6">
               <div className="flex gap-2 overflow-x-auto">
                 {exploreMoreTabs.map((tab) => {
                   const Icon = tab.icon
@@ -1987,8 +1987,8 @@ export default function LandingPageManagement() {
                       key={tab.id}
                       onClick={() => setExploreMoreSubTab(tab.id)}
                       className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${exploreMoreSubTab === tab.id
-                        ? 'bg-blue-500 text-white'
-                        : 'text-slate-600 hover:bg-slate-100'
+                        ? 'bg-neutral-900 text-white'
+                        : 'text-neutral-600 hover:bg-neutral-100'
                         }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -2003,8 +2003,8 @@ export default function LandingPageManagement() {
 
             {/* Icons Tab Content */}
             {exploreMoreSubTab === 'icons' && (
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-6">Manage Explore More Icons</h2>
+              <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+                <h2 className="text-lg font-medium text-neutral-900 mb-6">Manage explore more icons</h2>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
@@ -2022,10 +2022,10 @@ export default function LandingPageManagement() {
                     const iconSrc = resolveAssetUrl(dbItem?.imageUrl || dbItem?.iconUrl) || null
 
                     return (
-                      <div key={item.id} className="border border-slate-200 rounded-lg p-4 flex flex-col items-center relative">
-                        <span className="text-sm font-semibold text-slate-700 mb-3">{item.label}</span>
+                      <div key={item.id} className="border border-neutral-200 rounded-lg p-4 flex flex-col items-center relative">
+                        <span className="text-sm font-medium text-neutral-700 mb-3">{item.label}</span>
 
-                        <div className="w-24 h-24 mb-4 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden relative group">
+                        <div className="w-24 h-24 mb-4 rounded-lg bg-neutral-50 border border-neutral-100 flex items-center justify-center overflow-hidden relative group">
                           {iconSrc ? (
                             <img
                               src={iconSrc}
@@ -2033,12 +2033,12 @@ export default function LandingPageManagement() {
                               className="w-full h-full object-contain p-2"
                             />
                           ) : (
-                            <ImageIcon className="w-8 h-8 text-slate-300" />
+                            <ImageIcon className="w-8 h-8 text-neutral-300" />
                           )}
 
                           {exploreIconsUploading[item.id] && (
                             <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
-                              <Loader2 className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                              <Loader2 className="w-6 h-6 border-2 border-[#0a4d2b] border-t-transparent rounded-full animate-spin" />
                             </div>
                           )}
                         </div>
@@ -2058,7 +2058,7 @@ export default function LandingPageManagement() {
                           />
                           <label
                             htmlFor={`file-${item.id}`}
-                            className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors cursor-pointer ${exploreIconsUploading[item.id] ? 'opacity-50 pointer-events-none' : ''}`}
+                            className={`w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium rounded-lg border border-neutral-200 bg-neutral-50 text-[#0a4d2b] hover:bg-neutral-100 transition-colors cursor-pointer ${exploreIconsUploading[item.id] ? 'opacity-50 pointer-events-none' : ''}`}
                           >
                             <Upload className="w-3 h-3" />
                             {dbItem ? 'Change Icon' : 'Upload Icon'}
@@ -2074,16 +2074,16 @@ export default function LandingPageManagement() {
             {/* Gourmet Tab Content */}
             {exploreMoreSubTab === 'gourmet' && (
               <>
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Add Restaurant to Gourmet</h2>
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
+                  <h2 className="text-lg font-medium text-neutral-900 mb-4">Add restaurant to gourmet</h2>
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="restaurant-gourmet">Select Restaurant</Label>
+                      <Label htmlFor="restaurant-gourmet">Select restaurant</Label>
                       <select
                         id="restaurant-gourmet"
                         value={selectedRestaurantGourmet}
                         onChange={(e) => setSelectedRestaurantGourmet(e.target.value)}
-                        className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="mt-1 w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                         disabled={restaurantsLoading}
                       >
                         {allRestaurants.length === 0 ? (
@@ -2106,30 +2106,30 @@ export default function LandingPageManagement() {
                     <Button
                       onClick={handleAddGourmetRestaurant}
                       disabled={!selectedRestaurantGourmet}
-                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                      className="bg-neutral-900 hover:bg-neutral-800 text-white"
                     >
-                      Add to Gourmet
+                      Add to gourmet
                     </Button>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                  <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <span>Gourmet Restaurants</span>
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
+                  <h2 className="text-lg font-medium text-neutral-900 mb-4 flex items-center gap-2">
+                    <span>Gourmet restaurants</span>
                     {gourmetLoading ? (
-                      <span className="w-8 h-5 bg-slate-200 animate-pulse rounded inline-block" />
+                      <span className="w-8 h-5 bg-neutral-200 animate-pulse rounded inline-block" />
                     ) : (
                       <span>({gourmetRestaurants.length})</span>
                     )}
                   </h2>
                   {gourmetLoading ? (
                     <div className="flex items-center justify-center py-12">
-                      <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                      <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
                     </div>
                   ) : gourmetRestaurants.length === 0 ? (
-                    <div className="text-center py-12 text-slate-500">
-                      <ChefHat className="w-12 h-12 mx-auto mb-3 text-slate-400" />
-                      <p>No restaurants added to Gourmet yet.</p>
+                    <div className="text-center py-12 text-neutral-500">
+                      <ChefHat className="w-12 h-12 mx-auto mb-3 text-neutral-400" />
+                      <p>No restaurants added to Gourmet yet</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -2152,31 +2152,31 @@ export default function LandingPageManagement() {
                               : (item.restaurant?.profileImage?.url || "https://via.placeholder.com/400"))
 
                           return (
-                            <div key={item._id} className="border border-slate-200 rounded-lg overflow-hidden">
-                              <div className="relative h-32 bg-slate-100">
+                            <div key={item._id} className="border border-neutral-200 rounded-lg overflow-hidden">
+                              <div className="relative h-32 bg-neutral-100">
                                 <img src={restaurantImage} alt={item.restaurant?.name} className="w-full h-full object-cover" />
                                 <div className="absolute top-1 right-1">
-                                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${item.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                                  <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${item.isActive ? 'bg-green-100 text-green-800' : 'bg-neutral-100 text-neutral-800'}`}>
                                     {item.isActive ? 'Active' : 'Inactive'}
                                   </span>
                                 </div>
                               </div>
                               <div className="p-2">
-                                <h3 className="font-semibold text-slate-900 mb-0.5 text-sm line-clamp-1">{item.restaurant?.name || 'N/A'}</h3>
-                                <div className="flex items-center gap-1 text-[10px] text-slate-500 mb-2">
+                                <h3 className="font-medium text-neutral-900 mb-0.5 text-sm line-clamp-1">{item.restaurant?.name || 'N/A'}</h3>
+                                <div className="flex items-center gap-1 text-xs text-neutral-500 mb-2">
                                   <Star className="w-3 h-3 fill-amber-400 text-amber-400 inline" />
-                                  <span className="font-semibold text-slate-700">{item.restaurant?.rating || 0}</span>
+                                  <span className="font-medium text-neutral-700">{item.restaurant?.rating || 0}</span>
                                 </div>
                                 <div className="flex items-center justify-between gap-1">
                                   <div className="flex items-center gap-0.5">
-                                    <button onClick={() => handleGourmetOrderChange(item._id, 'up')} disabled={index === 0} className="p-1 rounded hover:bg-slate-100 disabled:opacity-50">
-                                      <ArrowUp className="w-3 h-3 text-slate-600" />
+                                    <button onClick={() => handleGourmetOrderChange(item._id, 'up')} disabled={index === 0} className="p-1 rounded hover:bg-neutral-100 disabled:opacity-50">
+                                      <ArrowUp className="w-3 h-3 text-neutral-600" />
                                     </button>
-                                    <button onClick={() => handleGourmetOrderChange(item._id, 'down')} disabled={index === gourmetRestaurants.length - 1} className="p-1 rounded hover:bg-slate-100 disabled:opacity-50">
-                                      <ArrowDown className="w-3 h-3 text-slate-600" />
+                                    <button onClick={() => handleGourmetOrderChange(item._id, 'down')} disabled={index === gourmetRestaurants.length - 1} className="p-1 rounded hover:bg-neutral-100 disabled:opacity-50">
+                                      <ArrowDown className="w-3 h-3 text-neutral-600" />
                                     </button>
                                   </div>
-                                  <button onClick={() => handleToggleGourmetStatus(item._id, item.isActive)} className={`px-2 py-1 rounded text-[10px] font-medium ${item.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                  <button onClick={() => handleToggleGourmetStatus(item._id, item.isActive)} className={`px-2 py-1 rounded text-xs font-medium ${item.isActive ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
                                     {item.isActive ? 'Deactivate' : 'Activate'}
                                   </button>
                                   <button onClick={() => handleDeleteGourmetRestaurant(item._id)} disabled={gourmetDeleting === item._id} className="p-1 rounded hover:bg-red-100 text-red-600 disabled:opacity-50">
@@ -2198,29 +2198,29 @@ export default function LandingPageManagement() {
         {/* Restaurant Selection Modal */}
         <Dialog open={showRestaurantModal} onOpenChange={setShowRestaurantModal}>
           <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden flex flex-col p-0">
-            <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-              <DialogTitle className="text-2xl font-bold text-slate-900">Select Restaurant to Link with Banner</DialogTitle>
-              <DialogDescription className="text-slate-600 mt-2">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+              <DialogTitle className="text-2xl font-medium text-neutral-900">Select Restaurant to Link with Banner</DialogTitle>
+              <DialogDescription className="text-neutral-600 mt-2">
                 Select a restaurant that will be linked to this banner. When users click on this banner, they will be redirected to the selected restaurant.
               </DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-hidden flex flex-col">
               {/* Search Bar and Selected Count */}
-              <div className="px-6 pt-4 pb-3 space-y-3 bg-slate-50 border-b border-slate-200">
+              <div className="px-6 pt-4 pb-3 space-y-3 bg-neutral-50 border-b border-neutral-200">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" />
                   <Input
                     type="text"
-                    placeholder="Search restaurants by name or ID..."
+                    placeholder="Search restaurants by name or ID"
                     value={restaurantSearchQuery}
                     onChange={(e) => setRestaurantSearchQuery(e.target.value)}
-                    className="pl-10 h-11 bg-white border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    className="pl-10 h-11 bg-white border-neutral-300 focus:border-neutral-400 focus:ring-[#0a4d2b]/30"
                   />
                 </div>
                 {selectedRestaurantIds.length > 0 && (
                   <div className="flex items-center gap-2">
-                    <div className="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">
+                    <div className="px-3 py-1.5 bg-neutral-100 text-[#0a4d2b] rounded-lg text-sm font-medium">
                       Restaurant selected
                     </div>
                     <Button
@@ -2240,19 +2240,19 @@ export default function LandingPageManagement() {
               <div className="flex-1 overflow-y-auto bg-white">
                 {restaurantsLoading ? (
                   <div className="flex flex-col items-center justify-center py-16">
-                    <Loader2 className="w-10 h-10 text-blue-600 animate-spin mb-3" />
-                    <p className="text-slate-500">Loading restaurants...</p>
+                    <Loader2 className="w-10 h-10 text-[#0a4d2b] animate-spin mb-3" />
+                    <p className="text-neutral-500">Loading restaurants...</p>
                   </div>
                 ) : filteredRestaurantsForModal.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-                    <ImageIcon className="w-16 h-16 text-slate-300 mb-4" />
-                    <p className="text-slate-600 font-medium mb-1">No restaurants found</p>
-                    <p className="text-sm text-slate-500">
+                    <ImageIcon className="w-16 h-16 text-neutral-300 mb-4" />
+                    <p className="text-neutral-600 font-medium mb-1">No restaurants found</p>
+                    <p className="text-sm text-neutral-500">
                       {restaurantSearchQuery ? 'Try a different search term' : 'No restaurants available'}
                     </p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-neutral-100">
                     {filteredRestaurantsForModal.map((restaurant) => {
                       const isSelected = selectedRestaurantIds.includes(restaurant._id)
                       const profileImageUrl = restaurant.profileImage?.url || restaurant.profileImage || null
@@ -2260,9 +2260,9 @@ export default function LandingPageManagement() {
                       return (
                         <div
                           key={restaurant._id}
-                          className={`px-6 py-4 transition-all cursor-pointer ${isSelected
-                            ? 'bg-blue-50 border-l-4 border-l-blue-500'
-                            : 'hover:bg-slate-50'
+                          className={`px-6 py-4 transition-colors cursor-pointer ${isSelected
+                            ? 'bg-neutral-50 border-l-4 border-l-blue-500'
+                            : 'hover:bg-neutral-50'
                             }`}
                           onClick={() => toggleRestaurantSelection(restaurant._id)}
                         >
@@ -2282,7 +2282,7 @@ export default function LandingPageManagement() {
                                 <img
                                   src={profileImageUrl}
                                   alt={restaurant.name}
-                                  className="w-16 h-16 rounded-xl object-cover border-2 border-slate-200"
+                                  className="w-16 h-16 rounded-xl object-cover border-2 border-neutral-200"
                                   onError={(e) => {
                                     e.target.style.display = 'none'
                                     e.target.nextSibling.style.display = 'flex'
@@ -2290,8 +2290,8 @@ export default function LandingPageManagement() {
                                 />
                               ) : null}
                               <div
-                                className={`w-16 h-16 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg ${profileImageUrl ? 'hidden' : 'flex'
-                                  }`}
+                                className={`w-16 h-16 rounded-xl flex items-center justify-center text-white font-medium text-lg ${profileImageUrl ? 'hidden' : 'flex'
+                                  } bg-neutral-200`}
                               >
                                 {restaurant.name?.charAt(0)?.toUpperCase() || 'R'}
                               </div>
@@ -2299,17 +2299,17 @@ export default function LandingPageManagement() {
 
                             {/* Restaurant Info */}
                             <div className="flex-1 min-w-0">
-                              <h3 className={`font-semibold text-base mb-1 ${isSelected ? 'text-blue-900' : 'text-slate-900'
+                              <h3 className={`font-medium text-base mb-1 ${isSelected ? 'text-neutral-900' : 'text-neutral-900'
                                 }`}>
                                 {restaurant.name || 'Unnamed Restaurant'}
                               </h3>
-                              <p className="text-sm text-slate-500 truncate">
+                              <p className="text-sm text-neutral-500 truncate">
                                 ID: {restaurant.restaurantId || restaurant._id}
                               </p>
                               {restaurant.rating !== undefined && restaurant.rating !== null && (
                                 <div className="flex items-center gap-1 mt-1">
                                   <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 inline" />
-                                  <span className="text-xs font-semibold text-slate-700">{restaurant.rating}</span>
+                                  <span className="text-xs font-medium text-neutral-700">{restaurant.rating}</span>
                                 </div>
                               )}
                             </div>
@@ -2317,8 +2317,8 @@ export default function LandingPageManagement() {
                             {/* Selected Indicator */}
                             {isSelected && (
                               <div className="flex-shrink-0">
-                                <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-                                  <CheckCircle2 className="w-5 h-5 text-white" />
+                                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-neutral-100 text-neutral-500">
+                                  <CheckCircle2 className="w-5 h-5" />
                                 </div>
                               </div>
                             )}
@@ -2331,8 +2331,8 @@ export default function LandingPageManagement() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-between gap-3 px-6 py-4 bg-slate-50 border-t border-slate-200">
-                <div className="text-sm text-slate-600">
+              <div className="flex items-center justify-between gap-3 px-6 py-4 bg-neutral-50 border-t border-neutral-200">
+                <div className="text-sm text-neutral-600">
                   {filteredRestaurantsForModal.length} restaurant{filteredRestaurantsForModal.length !== 1 ? 's' : ''} available
                 </div>
                 <div className="flex items-center gap-3">
@@ -2351,7 +2351,7 @@ export default function LandingPageManagement() {
                   <Button
                     onClick={handleLinkRestaurants}
                     disabled={linkingRestaurants}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 min-w-[140px]"
+                    className="bg-neutral-900 hover:bg-neutral-800 text-white px-6 min-w-[140px]"
                   >
                     {linkingRestaurants ? (
                       <>
@@ -2360,12 +2360,12 @@ export default function LandingPageManagement() {
                       </>
                     ) : selectedRestaurantIds.length === 0 ? (
                       <>
-                        Save Selection
+                        Save selection
                       </>
                     ) : (
                       <>
                         <Megaphone className="w-4 h-4 mr-2" />
-                        Link Restaurant
+                        Link restaurant
                       </>
                     )}
                   </Button>
@@ -2381,9 +2381,9 @@ export default function LandingPageManagement() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-red-600">
                 <AlertCircle className="w-5 h-5" />
-                Confirm Deletion
+                Confirm deletion
               </DialogTitle>
-              <DialogDescription className="py-4 text-slate-600 text-base">
+              <DialogDescription className="py-4 text-neutral-600 text-base">
                 Are you sure you want to delete this item? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>

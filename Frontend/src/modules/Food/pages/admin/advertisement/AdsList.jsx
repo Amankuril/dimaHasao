@@ -161,17 +161,17 @@ export default function AdsList() {
   const statuses = [...new Set(ads.map(ad => ad.status))].filter(Boolean)
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Plus className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Plus className="w-5 h-5" />
             </div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-slate-900">Ads List</h1>
-              <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+              <h1 className="text-2xl font-medium text-neutral-900">Ads list</h1>
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
                 {filteredAds.length}
               </span>
             </div>
@@ -179,10 +179,10 @@ export default function AdsList() {
 
           <button 
             onClick={() => navigate("/admin/new-advertisement")}
-            className="px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 transition-all shadow-md"
+            className="px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 flex items-center gap-2 transition-colors shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            New Advertisement
+            New advertisement
           </button>
         </div>
 
@@ -190,7 +190,7 @@ export default function AdsList() {
           <select
             value={adsType}
             onChange={(e) => setAdsType(e.target.value)}
-            className="px-4 py-2.5 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+            className="px-4 py-2.5 text-sm border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400"
           >
             <option value="all">All Ads</option>
             <option value="Restaurant Promotion">Restaurant Promotion</option>
@@ -203,21 +203,21 @@ export default function AdsList() {
               placeholder="Search by ads ID or restaurant"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
             />
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+              <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                 <Download className="w-4 h-4" />
-                <span className="text-black font-bold">Export</span>
+                <span className="text-black font-medium">Export</span>
                 <ChevronDown className="w-3 h-3" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-              <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+            <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
+              <DropdownMenuLabel>Export format</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                 <FileDown className="w-4 h-4 mr-2" />
@@ -240,14 +240,14 @@ export default function AdsList() {
 
           <button 
             onClick={() => setIsFilterOpen(true)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${
+            className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors relative ${
               activeFiltersCount > 0 ? "border-emerald-500 bg-emerald-50" : ""
             }`}
           >
             <Filter className="w-4 h-4" />
-            <span className="text-black font-bold">Filters</span>
+            <span className="text-black font-medium">Filters</span>
             {activeFiltersCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                 {activeFiltersCount}
               </span>
             )}
@@ -255,7 +255,7 @@ export default function AdsList() {
 
           <button 
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+            className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
           >
             <Settings className="w-5 h-5" />
           </button>
@@ -263,46 +263,46 @@ export default function AdsList() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="overflow-x-hidden">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                {visibleColumns.si && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>}
-                {visibleColumns.adsId && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads ID</th>}
-                {visibleColumns.adsTitle && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Title</th>}
-                {visibleColumns.restaurantInfo && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Info</th>}
-                {visibleColumns.adsType && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Ads Type</th>}
-                {visibleColumns.duration && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Duration</th>}
-                {visibleColumns.status && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>}
-                {visibleColumns.priority && <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Priority</th>}
-                {visibleColumns.actions && <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>}
+                {visibleColumns.si && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>}
+                {visibleColumns.adsId && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Ads ID</th>}
+                {visibleColumns.adsTitle && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Ads title</th>}
+                {visibleColumns.restaurantInfo && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Restaurant info</th>}
+                {visibleColumns.adsType && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Ads type</th>}
+                {visibleColumns.duration && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Duration</th>}
+                {visibleColumns.status && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>}
+                {visibleColumns.priority && <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Priority</th>}
+                {visibleColumns.actions && <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {filteredAds.length === 0 ? (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-20 text-center">
-                    <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                    <p className="text-sm text-slate-500">No ads match your search</p>
+                    <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                    <p className="text-sm text-neutral-500">No ads match your search</p>
                   </td>
                 </tr>
               ) : (
                 filteredAds.map((ad) => (
                   <tr
                     key={ad.sl}
-                    className="hover:bg-slate-50 transition-colors"
+                    className="hover:bg-neutral-50 transition-colors"
                   >
                     {visibleColumns.si && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{ad.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{ad.sl}</span>
                       </td>
                     )}
                     {visibleColumns.adsId && (
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button 
                           onClick={() => handleViewAd(ad)}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                          className="text-sm font-medium text-[#0a4d2b] hover:text-[#0a4d2b]"
                         >
                           {ad.adsId}
                         </button>
@@ -310,35 +310,35 @@ export default function AdsList() {
                     )}
                     {visibleColumns.adsTitle && (
                       <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-900">{ad.adsTitle}</span>
+                        <span className="text-sm font-medium text-neutral-900">{ad.adsTitle}</span>
                       </td>
                     )}
                     {visibleColumns.restaurantInfo && (
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-5 h-5 text-orange-600" />
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-neutral-100 text-neutral-500">
+                            <Building2 className="w-5 h-5" />
                           </div>
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{ad.restaurantName}</span>
-                            <span className="text-xs text-slate-500">{ad.restaurantEmail}</span>
+                            <span className="text-sm font-medium text-neutral-900">{ad.restaurantName}</span>
+                            <span className="text-xs text-neutral-500">{ad.restaurantEmail}</span>
                           </div>
                         </div>
                       </td>
                     )}
                     {visibleColumns.adsType && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{ad.adsType}</span>
+                        <span className="text-sm text-neutral-700">{ad.adsType}</span>
                       </td>
                     )}
                     {visibleColumns.duration && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-sm text-slate-700">{ad.duration}</span>
+                        <span className="text-sm text-neutral-700">{ad.duration}</span>
                       </td>
                     )}
                     {visibleColumns.status && (
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-neutral-100 text-[#0a4d2b]">
                           {ad.status}
                         </span>
                       </td>
@@ -348,7 +348,7 @@ export default function AdsList() {
                         <select
                           value={ad.priority || ""}
                           onChange={(e) => handlePriorityChange(ad.sl, e.target.value)}
-                          className="px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+                          className="px-2 py-1 text-xs border border-neutral-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400"
                         >
                           <option value="">N/A</option>
                           <option value="1">1</option>
@@ -361,17 +361,17 @@ export default function AdsList() {
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <button className="p-1.5 rounded text-slate-600 hover:bg-slate-100 transition-colors">
+                            <button className="p-1.5 rounded text-neutral-600 hover:bg-neutral-100 transition-colors">
                               <MoreVertical className="w-4 h-4" />
                             </button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                          <DropdownMenuContent align="end" className="w-48 bg-white border border-neutral-200 rounded-lg shadow-sm z-50">
                             <DropdownMenuItem 
                               onClick={() => handleViewAd(ad)}
                               className="cursor-pointer"
                             >
                               <Eye className="w-4 h-4 mr-2" />
-                              View Details
+                              View details
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleEditAd(ad)}
@@ -406,18 +406,18 @@ export default function AdsList() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Filter Ads
+              Filter ads
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Status
               </label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               >
                 <option value="">All Statuses</option>
                 {statuses.map(status => (
@@ -426,13 +426,13 @@ export default function AdsList() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Restaurant
               </label>
               <select
                 value={filters.restaurant}
                 onChange={(e) => setFilters(prev => ({ ...prev, restaurant: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               >
                 <option value="">All Restaurants</option>
                 {restaurants.map(restaurant => (
@@ -441,13 +441,13 @@ export default function AdsList() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Priority
               </label>
               <select
                 value={filters.priority}
                 onChange={(e) => setFilters(prev => ({ ...prev, priority: e.target.value }))}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm"
               >
                 <option value="">All Priorities</option>
                 <option value="1">1</option>
@@ -455,16 +455,16 @@ export default function AdsList() {
                 <option value="3">3</option>
               </select>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={handleResetFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
               >
                 Apply
               </button>
@@ -487,42 +487,42 @@ export default function AdsList() {
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="max-w-2xl bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>Advertisement Details</DialogTitle>
+            <DialogTitle>Advertisement details</DialogTitle>
           </DialogHeader>
           {selectedAd && (
             <div className="px-6 pb-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Ads ID</p>
-                  <p className="text-sm text-slate-900">{selectedAd.adsId}</p>
+                  <p className="text-sm font-medium text-neutral-700">Ads ID</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.adsId}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Ads Title</p>
-                  <p className="text-sm text-slate-900">{selectedAd.adsTitle}</p>
+                  <p className="text-sm font-medium text-neutral-700">Ads title</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.adsTitle}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Restaurant Name</p>
-                  <p className="text-sm text-slate-900">{selectedAd.restaurantName}</p>
+                  <p className="text-sm font-medium text-neutral-700">Restaurant name</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.restaurantName}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Restaurant Email</p>
-                  <p className="text-sm text-slate-900">{selectedAd.restaurantEmail}</p>
+                  <p className="text-sm font-medium text-neutral-700">Restaurant email</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.restaurantEmail}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Ads Type</p>
-                  <p className="text-sm text-slate-900">{selectedAd.adsType}</p>
+                  <p className="text-sm font-medium text-neutral-700">Ads type</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.adsType}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Duration</p>
-                  <p className="text-sm text-slate-900">{selectedAd.duration}</p>
+                  <p className="text-sm font-medium text-neutral-700">Duration</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.duration}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Status</p>
-                  <p className="text-sm text-slate-900">{selectedAd.status}</p>
+                  <p className="text-sm font-medium text-neutral-700">Status</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.status}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-700">Priority</p>
-                  <p className="text-sm text-slate-900">{selectedAd.priority || "N/A"}</p>
+                  <p className="text-sm font-medium text-neutral-700">Priority</p>
+                  <p className="text-sm text-neutral-900">{selectedAd.priority || "N/A"}</p>
                 </div>
               </div>
             </div>
@@ -534,7 +534,7 @@ export default function AdsList() {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>Delete Advertisement</DialogTitle>
+            <DialogTitle>Delete advertisement</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete this advertisement? This action cannot be undone.
             </DialogDescription>
@@ -542,13 +542,13 @@ export default function AdsList() {
           <div className="px-6 pb-6 flex items-center justify-end gap-3">
             <button
               onClick={() => setIsDeleteOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm"
             >
               Delete
             </button>

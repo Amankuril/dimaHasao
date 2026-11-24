@@ -124,37 +124,37 @@ export default function CustomerWalletReport() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-gray-600">Loading customer wallet report...</p>
+          <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+          <p className="text-neutral-600">Loading customer wallet report...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen overflow-x-hidden">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen overflow-x-hidden">
       <div className="w-full max-w-full">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+              <Wallet className="w-5 h-5" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Customer Wallet Report</h1>
+            <h1 className="text-2xl font-medium text-neutral-900">Customer wallet report</h1>
           </div>
         </div>
 
         {/* Filter Options Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
             className="flex items-center justify-between w-full mb-4"
           >
-            <h3 className="text-sm font-semibold text-slate-700">Filter Options</h3>
+            <h3 className="text-sm font-medium text-neutral-700">Filter options</h3>
             <ChevronDown
-              className={`w-5 h-5 text-slate-600 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
+              className={`w-5 h-5 text-neutral-600 transition-transform ${isFilterOpen ? "rotate-180" : ""}`}
             />
           </button>
           
@@ -162,32 +162,32 @@ export default function CustomerWalletReport() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    From Date
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    From date
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                     <input
                       type="date"
                       value={filters.fromDate}
                       onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       placeholder="dd-mm-yyyy"
                     />
                   </div>
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    To Date
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
+                    To date
                   </label>
                   <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
                     <input
                       type="date"
                       value={filters.toDate}
                       onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                       placeholder="dd-mm-yyyy"
                     />
                   </div>
@@ -196,57 +196,57 @@ export default function CustomerWalletReport() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     All
                   </label>
                   <select
                     value={filters.all}
                     onChange={(e) => setFilters(prev => ({ ...prev, all: e.target.value }))}
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                   >
                     <option value="All">All</option>
                     <option value="Credit">Credit</option>
                     <option value="Debit">Debit</option>
                   </select>
-                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
                 </div>
 
                 <div className="relative">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-medium text-neutral-700 mb-2">
                     Customer
                   </label>
                   <select
                     value={filters.customer}
                     onChange={(e) => setFilters(prev => ({ ...prev, customer: e.target.value }))}
-                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-slate-300 bg-white text-slate-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2.5 pr-8 text-sm rounded-lg border border-neutral-300 bg-white text-neutral-700 appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                   >
                     <option value="Select Customer">Select Customer</option>
                     {customers.map(customer => (
                       <option key={customer} value={customer}>{customer}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-slate-500 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 bottom-2.5 w-4 h-4 text-neutral-500 pointer-events-none" />
                 </div>
               </div>
 
               <div className="flex items-center justify-end gap-3">
                 <button
                   onClick={handleReset}
-                  className="px-6 py-2.5 text-sm font-medium rounded-lg border border-blue-500 text-blue-600 bg-white hover:bg-blue-50 transition-all flex items-center gap-2"
+                  className="px-6 py-2.5 text-sm font-medium rounded-lg border border-[#0a4d2b] text-[#0a4d2b] bg-white hover:bg-neutral-50 transition-colors flex items-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Reset
                 </button>
                 <button 
                   onClick={handleFilterApply}
-                  className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-all flex items-center gap-2 relative ${
-                    activeFiltersCount > 0 ? "ring-2 ring-blue-300" : ""
+                  className={`px-6 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-900 transition-colors flex items-center gap-2 relative ${
+                    activeFiltersCount > 0 ? "ring-2 ring-[#0a4d2b]/30" : ""
                   }`}
                 >
                   <Filter className="w-4 h-4" />
                   Filter
                   {activeFiltersCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                       {activeFiltersCount}
                     </span>
                   )}
@@ -259,11 +259,11 @@ export default function CustomerWalletReport() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* Debit Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Debit</p>
-                <p className="text-2xl font-bold text-slate-900">{walletStats.debit}</p>
+                <p className="text-sm font-medium text-neutral-600 mb-1">Debit</p>
+                <p className="text-2xl font-medium text-neutral-900">{walletStats.debit}</p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
                 <img src={debitIcon} alt="Debit" className="w-8 h-8" />
@@ -272,26 +272,26 @@ export default function CustomerWalletReport() {
           </div>
 
           {/* Credit Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Credit</p>
-                <p className="text-2xl font-bold text-slate-900">{walletStats.credit}</p>
+                <p className="text-sm font-medium text-neutral-600 mb-1">Credit</p>
+                <p className="text-2xl font-medium text-neutral-900">{walletStats.credit}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-pink-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center">
                 <img src={creditIcon} alt="Credit" className="w-8 h-8" />
               </div>
             </div>
           </div>
 
           {/* Balance Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Balance</p>
-                <p className="text-2xl font-bold text-slate-900">{walletStats.balance}</p>
+                <p className="text-sm font-medium text-neutral-600 mb-1">Balance</p>
+                <p className="text-2xl font-medium text-neutral-900">{walletStats.balance}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center">
                 <img src={balanceIcon} alt="Balance" className="w-8 h-8" />
               </div>
             </div>
@@ -299,14 +299,14 @@ export default function CustomerWalletReport() {
         </div>
 
         {/* Transactions Table Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-2">
-              <Plus className="w-5 h-5 text-slate-600" />
-              <h2 className="text-xl font-bold text-slate-900">Transactions</h2>
+              <Plus className="w-5 h-5 text-neutral-600" />
+              <h2 className="text-xl font-medium text-neutral-900">Transactions</h2>
             </div>
 
-            <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+            <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
               <Download className="w-4 h-4" />
               <span>Export</span>
               <ChevronDown className="w-3 h-3" />
@@ -316,110 +316,110 @@ export default function CustomerWalletReport() {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>SI</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Transaction Id</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Transaction id</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>Customer</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>Credit</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>Debit</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>Balance</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Transaction Type</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Transaction type</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
                       <span>Reference</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-neutral-700">
                     <div className="flex items-center gap-1">
-                      <span>Created At</span>
-                      <ArrowUpDown className="w-3 h-3 text-slate-400" />
+                      <span>Created at</span>
+                      <ArrowUpDown className="w-3 h-3 text-neutral-400" />
                     </div>
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredTransactions.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                        <p className="text-sm text-slate-500">No transactions match your search</p>
+                        <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                        <p className="text-sm text-neutral-500">No transactions match your search</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   filteredTransactions.map((transaction) => (
-                    <tr key={transaction.sl} className="hover:bg-slate-50 transition-colors">
+                    <tr key={transaction.sl} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-sm font-medium text-slate-700">{transaction.sl}</span>
+                        <span className="text-sm font-medium text-neutral-700">{transaction.sl}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-xs text-slate-700 font-mono break-all">{transaction.transactionId}</span>
+                        <span className="text-xs text-neutral-700 font-mono break-all">{transaction.transactionId}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
                         <a
                           href={`#customer-${transaction.customer}`}
-                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                          className="text-xs text-[#0a4d2b] hover:text-neutral-900 hover:underline"
                         >
                           {transaction.customer}
                         </a>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs font-medium text-slate-900">{transaction.credit}</span>
+                        <span className="text-xs font-medium text-neutral-900">{transaction.credit}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs font-medium text-slate-900">{transaction.debit}</span>
+                        <span className="text-xs font-medium text-neutral-900">{transaction.debit}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs font-medium text-slate-900">{transaction.balance}</span>
+                        <span className="text-xs font-medium text-neutral-900">{transaction.balance}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="px-2 py-1 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                           {transaction.transactionType}
                         </span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs text-slate-700">{transaction.reference}</span>
+                        <span className="text-xs text-neutral-700">{transaction.reference}</span>
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className="text-xs text-slate-700">{transaction.createdAt}</span>
+                        <span className="text-xs text-neutral-700">{transaction.createdAt}</span>
                       </td>
                     </tr>
                   ))
@@ -436,18 +436,18 @@ export default function CustomerWalletReport() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Report Settings
+              Report settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Customer wallet report settings and preferences will be available here.
+            <p className="text-sm text-neutral-700">
+              Customer wallet report settings and preferences will be available here
             </p>
           </div>
           <div className="px-6 pb-6 flex items-center justify-end">
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Close
             </button>

@@ -213,14 +213,14 @@ export default function AddonsList() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen space-y-6">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen space-y-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-900">Restaurant add-ons</h1>
+              <h1 className="text-2xl font-medium text-neutral-900">Restaurant add-ons</h1>
             </div>
-            <div className="text-sm text-slate-500 mt-1">Manage add-ons submitted by restaurants.</div>
+            <div className="text-sm text-neutral-500 mt-1">Manage add-ons submitted by restaurants</div>
           </div>
 
           <div className="flex items-center gap-2" />
@@ -228,53 +228,53 @@ export default function AddonsList() {
 
         <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             <input
               type="text"
-              placeholder="Search add-ons or restaurant..."
+              placeholder="Search add-ons or restaurant"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+              className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
             />
           </div>
-          <div className="text-sm text-slate-600">
-            Showing <span className="font-semibold">{countLabel}</span>
+          <div className="text-sm text-neutral-600">
+            Showing <span className="font-medium">{countLabel}</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-neutral-50 border-b border-neutral-200">
               <tr>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   SL
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   Image
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   Name
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   Restaurant
                 </th>
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   Price
                 </th>
-                <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">
                   Action
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-slate-100">
+            <tbody className="bg-white divide-y divide-neutral-100">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
-                      <p className="text-sm text-slate-500">Loading add-ons...</p>
+                      <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b] mb-2" />
+                      <p className="text-sm text-neutral-500">Loading add-ons...</p>
                     </div>
                   </td>
                 </tr>
@@ -282,19 +282,19 @@ export default function AddonsList() {
                 <tr>
                   <td colSpan={6} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center justify-center">
-                      <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                      <p className="text-sm text-slate-500">No add-ons match your search</p>
+                      <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                      <p className="text-sm text-neutral-500">No add-ons match your search</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 filteredAddons.map((addon, index) => (
-                  <tr key={String(addon.id || addon._id)} className="hover:bg-slate-50 transition-colors">
+                  <tr key={String(addon.id || addon._id)} className="hover:bg-neutral-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-700">{(currentPage - 1) * pageSize + index + 1}</span>
+                      <span className="text-sm font-medium text-neutral-700">{(currentPage - 1) * pageSize + index + 1}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center">
                         <img
                           src={getAddonImage(addon)}
                           alt={getAddonTitle(addon)}
@@ -307,20 +307,20 @@ export default function AddonsList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm font-medium text-slate-900">{getAddonTitle(addon)}</span>
-                        <span className="text-xs text-slate-500">ID #{formatAddonId(addon.id || addon._id)}</span>
+                        <span className="text-sm font-medium text-neutral-900">{getAddonTitle(addon)}</span>
+                        <span className="text-xs text-neutral-500">ID #{formatAddonId(addon.id || addon._id)}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <span className="text-sm text-slate-900">{addon?.restaurant?.name || "-"}</span>
+                        <span className="text-sm text-neutral-900">{addon?.restaurant?.name || "-"}</span>
                         {addon?.restaurant?.ownerPhone ? (
-                          <span className="text-xs text-slate-500">{addon.restaurant.ownerPhone}</span>
+                          <span className="text-xs text-neutral-500">{addon.restaurant.ownerPhone}</span>
                         ) : null}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-medium text-slate-900">
+                      <span className="text-sm font-medium text-neutral-900">
                         ₹{Number(addon?.draft?.price ?? addon?.price ?? 0).toFixed(2)}
                       </span>
                     </td>
@@ -328,21 +328,21 @@ export default function AddonsList() {
                       <div className="flex items-center justify-center gap-2 flex-wrap">
                         <button
                           onClick={() => handleViewDetails(addon)}
-                          className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                           title="View"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEdit(addon)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-900 text-white hover:bg-neutral-800 transition-colors"
                         >
                           <Pencil className="w-4 h-4" />
                           Edit
                         </button>
                         <button
                           onClick={() => handleDelete(addon)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-700 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                           Delete
@@ -374,8 +374,8 @@ export default function AddonsList() {
 
       <Dialog open={showDetailModal} onOpenChange={setShowDetailModal}>
         <DialogContent className="max-w-xl p-0 overflow-hidden">
-          <DialogHeader className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Add-on Details</DialogTitle>
+          <DialogHeader className="px-6 py-4 border-b border-neutral-200 bg-neutral-50">
+            <DialogTitle className="text-lg font-medium text-neutral-900">Add-on Details</DialogTitle>
           </DialogHeader>
           {selectedAddon && (
             <div className="p-6 space-y-5">
@@ -383,37 +383,37 @@ export default function AddonsList() {
                 <img
                   src={getAddonImage(selectedAddon)}
                   alt={getAddonTitle(selectedAddon)}
-                  className="w-20 h-20 rounded-xl object-cover border border-slate-200"
+                  className="w-20 h-20 rounded-xl object-cover border border-neutral-200"
                   onError={(e) => {
                     e.target.src = "https://via.placeholder.com/64"
                   }}
                 />
                 <div>
-                  <p className="text-lg font-semibold text-slate-900">{getAddonTitle(selectedAddon)}</p>
-                  <p className="text-sm text-slate-500 mt-0.5">
+                  <p className="text-lg font-medium text-neutral-900">{getAddonTitle(selectedAddon)}</p>
+                  <p className="text-sm text-neutral-500 mt-0.5">
                     ID #{formatAddonId(selectedAddon.id || selectedAddon._id)}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <div className="grid grid-cols-2 gap-4 text-sm bg-neutral-50 border border-neutral-200 rounded-lg p-4">
                 <p>
-                  <span className="font-semibold text-slate-700">Restaurant:</span>{" "}
-                  <span className="text-slate-900">{selectedAddon?.restaurant?.name || "-"}</span>
+                  <span className="font-medium text-neutral-700">Restaurant:</span>{" "}
+                  <span className="text-neutral-900">{selectedAddon?.restaurant?.name || "-"}</span>
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-700">Price:</span>{" "}
-                  <span className="text-slate-900">₹{Number(selectedAddon?.draft?.price ?? 0).toFixed(2)}</span>
+                  <span className="font-medium text-neutral-700">Price:</span>{" "}
+                  <span className="text-neutral-900">₹{Number(selectedAddon?.draft?.price ?? 0).toFixed(2)}</span>
                 </p>
                 <p>
-                  <span className="font-semibold text-slate-700">Available:</span>{" "}
-                  <span className="text-slate-900">{selectedAddon?.isAvailable ? "Yes" : "No"}</span>
+                  <span className="font-medium text-neutral-700">Available:</span>{" "}
+                  <span className="text-neutral-900">{selectedAddon?.isAvailable ? "Yes" : "No"}</span>
                 </p>
               </div>
 
               {selectedAddon?.draft?.description ? (
-                <p className="text-sm text-slate-700 leading-relaxed">
-                  <span className="font-semibold text-slate-800">Description:</span> {selectedAddon.draft.description}
+                <p className="text-sm text-neutral-700 leading-relaxed">
+                  <span className="font-medium text-neutral-800">Description:</span> {selectedAddon.draft.description}
                 </p>
               ) : null}
             </div>
@@ -423,8 +423,8 @@ export default function AddonsList() {
 
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-md p-0 overflow-hidden">
-          <DialogHeader className="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Edit Add-on</DialogTitle>
+          <DialogHeader className="px-6 py-4 border-b border-neutral-200 bg-neutral-50">
+            <DialogTitle className="text-lg font-medium text-neutral-900">Edit Add-on</DialogTitle>
           </DialogHeader>
           <div className="p-6 space-y-4">
             <div className="flex items-start gap-3">
@@ -436,12 +436,12 @@ export default function AddonsList() {
                   onError={(e) => (e.target.style.display = "none")}
                 />
               ) : (
-                <div className="w-16 h-16 rounded-md border border-dashed border-slate-300 flex items-center justify-center text-xs text-slate-500">
+                <div className="w-16 h-16 rounded-md border border-dashed border-neutral-300 flex items-center justify-center text-xs text-neutral-500">
                   No image
                 </div>
               )}
               <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">Change Image</label>
+                <label className="block text-sm font-medium text-neutral-700 mb-1">Change image</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -454,36 +454,36 @@ export default function AddonsList() {
                   }}
                   className="text-sm"
                 />
-                <p className="text-xs text-slate-500">PNG, JPG, WEBP up to 5MB</p>
+                <p className="text-xs text-neutral-500">PNG, JPG, WEBP up to 5MB</p>
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">Name</label>
               <input
                 type="text"
                 value={editForm.name}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Price</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">Price</label>
               <input
                 type="number"
                 min="0"
                 step="0.01"
                 value={editForm.price}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, price: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-1">Description</label>
               <textarea
                 rows={3}
                 value={editForm.description}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm"
+                className="w-full px-3 py-2 border border-neutral-300 rounded-md text-sm"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -491,14 +491,14 @@ export default function AddonsList() {
                 checked={editForm.isAvailable}
                 onCheckedChange={(checked) => setEditForm((prev) => ({ ...prev, isAvailable: checked }))}
               />
-              <span className="text-sm text-slate-700">Available</span>
+              <span className="text-sm text-neutral-700">Available</span>
             </div>
           </div>
-          <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-2">
+          <div className="px-6 py-4 border-t border-neutral-200 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setShowEditModal(false)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
@@ -506,7 +506,7 @@ export default function AddonsList() {
               type="button"
               onClick={handleSaveEdit}
               disabled={submittingAction}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-white bg-neutral-900 rounded-md hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submittingAction ? "Saving..." : "Save"}
             </button>
@@ -516,25 +516,25 @@ export default function AddonsList() {
 
       <Dialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && setPendingDelete(null)}>
         <DialogContent className="max-w-md w-full rounded-xl p-0 overflow-hidden shadow-xl">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
-            <DialogTitle className="text-lg font-semibold text-slate-900">Delete add-on?</DialogTitle>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200">
+            <DialogTitle className="text-lg font-medium text-neutral-900">Delete add-on?</DialogTitle>
             <button
               type="button"
               onClick={() => setPendingDelete(null)}
-              className="p-1.5 rounded-full hover:bg-slate-100 transition-colors"
+              className="p-1.5 rounded-full hover:bg-neutral-100 transition-colors"
               aria-label="Close"
             >
               ✕
             </button>
           </div>
           <div className="px-5 pt-4 pb-2">
-            <p className="text-sm text-slate-700">This action cannot be undone.</p>
+            <p className="text-sm text-neutral-700">This action cannot be undone</p>
           </div>
-          <div className="px-5 py-4 border-t border-slate-200 flex justify-end gap-2 bg-slate-50">
+          <div className="px-5 py-4 border-t border-neutral-200 flex justify-end gap-2 bg-neutral-50">
             <button
               type="button"
               onClick={() => setPendingDelete(null)}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-100 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-neutral-700 bg-white border border-neutral-300 rounded-md hover:bg-neutral-100 transition-colors"
             >
               No
             </button>

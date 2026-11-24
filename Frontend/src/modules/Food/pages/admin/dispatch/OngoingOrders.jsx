@@ -142,17 +142,17 @@ export default function OngoingOrders() {
 
   if (loading) {
     return (
-      <div className="p-4 lg:p-6 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-          <p className="text-gray-600">Loading orders...</p>
+          <Loader2 className="w-8 h-8 text-[#0a4d2b] animate-spin" />
+          <p className="text-neutral-600">Loading orders...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <OrdersTopbar 
         title="On Going Orders" 
         count={count} 

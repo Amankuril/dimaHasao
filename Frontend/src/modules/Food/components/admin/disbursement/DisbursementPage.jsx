@@ -99,7 +99,7 @@ export default function DisbursementPage({
   const getStatusColor = (status) => {
     const statusLower = status.toLowerCase()
     if (statusLower === "pending") {
-      return "bg-blue-100 text-blue-700"
+      return "bg-neutral-100 text-[#0a4d2b]"
     }
     if (statusLower === "processing") {
       return "bg-yellow-100 text-yellow-700"
@@ -113,25 +113,25 @@ export default function DisbursementPage({
     if (statusLower === "canceled") {
       return "bg-red-100 text-red-700"
     }
-    return "bg-slate-100 text-slate-700"
+    return "bg-neutral-100 text-neutral-700"
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6 relative">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6 relative">
           <div className="absolute top-6 right-6 flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                <button className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                   <Download className="w-4 h-4" />
-                  <span className="text-black font-bold">Export</span>
+                  <span className="text-black font-medium">Export</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                <DropdownMenuLabel>Export format</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                   <FileText className="w-4 h-4 mr-2" />
@@ -153,26 +153,26 @@ export default function DisbursementPage({
             </DropdownMenu>
             <button 
               onClick={() => setIsSettingsOpen(true)}
-              className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors"
+              className="p-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors"
             >
-              <Settings className="w-5 h-5 text-slate-600" />
+              <Settings className="w-5 h-5 text-neutral-600" />
             </button>
           </div>
 
           <div className="flex items-center gap-3 mb-4">
-            {Icon && <Icon className="w-5 h-5 text-blue-600" />}
-            <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-            <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700">
+            {Icon && <Icon className="w-5 h-5 text-[#0a4d2b]" />}
+            <h1 className="text-2xl font-medium text-neutral-900">{title}</h1>
+            <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700">
               {filteredDisbursements.length}
             </span>
             {onRefresh && (
               <button 
                 onClick={onRefresh}
-                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-colors ml-auto"
+                className="p-2 rounded-lg bg-neutral-100 hover:bg-neutral-200 transition-colors ml-auto"
                 disabled={loading}
               >
                 <div className={loading ? "animate-spin" : ""}>
-                  <RefreshCw className="w-4 h-4 text-slate-600" />
+                  <RefreshCw className="w-4 h-4 text-neutral-600" />
                 </div>
               </button>
             )}
@@ -183,23 +183,23 @@ export default function DisbursementPage({
             <div className="relative flex-1 min-w-[250px]">
               <input
                 type="text"
-                placeholder="Search by ID or status..."
+                placeholder="Search by ID or status"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
             <button 
               onClick={() => setIsFilterOpen(true)}
-              className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all relative ${
+              className={`px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors relative ${
                 activeFiltersCount > 0 ? "border-emerald-500 bg-emerald-50" : ""
               }`}
             >
               <Filter className="w-4 h-4" />
-              <span className="text-black font-bold">Filter</span>
+              <span className="text-black font-medium">Filter</span>
               {activeFiltersCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 text-white rounded-full text-[10px] flex items-center justify-center font-bold">
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#0a4d2b] text-white rounded-full text-xs flex items-center justify-center font-medium">
                   {activeFiltersCount}
                 </span>
               )}
@@ -207,20 +207,20 @@ export default function DisbursementPage({
           </div>
 
           {/* Tabs */}
-          <div className="flex items-center gap-1 border-b border-slate-200">
+          <div className="flex items-center gap-1 border-b border-neutral-200">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab.toLowerCase())}
                 className={`px-4 py-2 text-sm font-medium transition-colors relative ${
                   activeTab === tab.toLowerCase()
-                    ? "text-blue-600"
-                    : "text-slate-600 hover:text-slate-900"
+                    ? "text-[#0a4d2b]"
+                    : "text-neutral-600 hover:text-neutral-900"
                 }`}
               >
                 {tab}
                 {activeTab === tab.toLowerCase() && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600" />
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-neutral-900" />
                 )}
               </button>
             ))}
@@ -230,36 +230,36 @@ export default function DisbursementPage({
         {/* Disbursement Cards */}
         <div className="space-y-4">
           {loading ? (
-             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-                <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-                <p className="text-slate-500">Loading data...</p>
+             <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-12 text-center">
+                <div className="animate-spin w-8 h-8 border-4 border-[#0a4d2b] border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-neutral-500">Loading data...</p>
              </div>
           ) : filteredDisbursements.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center">
-              <p className="text-slate-500">No disbursements found</p>
+            <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-12 text-center">
+              <p className="text-neutral-500">No disbursements found</p>
             </div>
           ) : (
             filteredDisbursements.map((disbursement) => (
               <div
                 key={disbursement.id}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow"
+                className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                   {/* Left Side */}
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-bold text-slate-900">
+                      <h3 className="text-lg font-medium text-neutral-900">
                         {disbursement.restaurantName || "Disbursement"} # {disbursement.id.slice(-6).toUpperCase()}
                       </h3>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
                           disbursement.status
                         )}`}
                       >
                         {disbursement.status}
                       </span>
                     </div>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-neutral-500">
                       Created at {disbursement.createdAt}
                     </p>
                   </div>
@@ -267,8 +267,8 @@ export default function DisbursementPage({
                   {/* Right Side */}
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="text-sm text-slate-500 mb-1">Total amount</p>
-                      <p className="text-lg font-bold text-slate-900">
+                      <p className="text-sm text-neutral-500 mb-1">Total amount</p>
+                      <p className="text-lg font-medium text-neutral-900">
                         ₹ {disbursement.totalAmount.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
@@ -280,7 +280,7 @@ export default function DisbursementPage({
                          <>
                            <button 
                              onClick={() => onAction(disbursement.id, 'approve')}
-                             className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+                             className="px-4 py-2 bg-[#0a4d2b] text-white rounded-lg text-sm font-medium hover:bg-[#06381e] transition-colors shadow-sm"
                            >
                               Approve
                            </button>
@@ -292,7 +292,7 @@ export default function DisbursementPage({
                            </button>
                          </>
                        )}
-                       <button className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200 transition-colors">
+                       <button className="px-4 py-2 bg-neutral-100 text-neutral-700 rounded-lg text-sm font-medium hover:bg-neutral-200 transition-colors">
                         Details
                       </button>
                     </div>
@@ -310,16 +310,16 @@ export default function DisbursementPage({
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Filter className="w-5 h-5" />
-              Filter Options
+              Filter options
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Status</label>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
               >
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
@@ -330,40 +330,40 @@ export default function DisbursementPage({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Start Date</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Start date</label>
               <input
                 type="date"
                 value={filters.dateRange.start}
                 onChange={(e) => setFilters({ ...filters, dateRange: { ...filters.dateRange, start: e.target.value } })}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">End Date</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">End date</label>
               <input
                 type="date"
                 value={filters.dateRange.end}
                 onChange={(e) => setFilters({ ...filters, dateRange: { ...filters.dateRange, end: e.target.value } })}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Min Amount ($)</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Min Amount ($)</label>
               <input
                 type="number"
                 value={filters.amountRange.min}
                 onChange={(e) => setFilters({ ...filters, amountRange: { ...filters.amountRange, min: e.target.value } })}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
                 placeholder="0.00"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Max Amount ($)</label>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">Max Amount ($)</label>
               <input
                 type="number"
                 value={filters.amountRange.max}
                 onChange={(e) => setFilters({ ...filters, amountRange: { ...filters.amountRange, max: e.target.value } })}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-full px-4 py-2.5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm"
                 placeholder="0.00"
               />
             </div>
@@ -371,13 +371,13 @@ export default function DisbursementPage({
           <DialogFooter className="px-6 pb-6">
             <button
               onClick={handleResetFilters}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Reset
             </button>
             <button
               onClick={() => setIsFilterOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm"
             >
               Apply
             </button>
@@ -395,14 +395,14 @@ export default function DisbursementPage({
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Disbursement settings and preferences will be available here.
+            <p className="text-sm text-neutral-700">
+              Disbursement settings and preferences will be available here
             </p>
           </div>
           <DialogFooter className="px-6 pb-6">
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Close
             </button>

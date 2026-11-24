@@ -440,17 +440,17 @@ export default function DeliveryBoyCommission() {
         : String(dialogMinDistance)
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <IndianRupee className="w-5 h-5 text-slate-600" />
+              <IndianRupee className="w-5 h-5 text-neutral-600" />
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">Delivery Boy Payout</h1>
-                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+                <h1 className="text-2xl font-medium text-neutral-900">Delivery boy payout</h1>
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
                   {loading ? (
-                    <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                    <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
                   ) : (
                     filteredCommissions.length
                   )}
@@ -460,14 +460,14 @@ export default function DeliveryBoyCommission() {
 
           <div className="flex items-center gap-2">
               <div className="flex items-center gap-2">
-                <label htmlFor="payout-zone-select" className="text-sm font-medium text-slate-700 whitespace-nowrap">
+                <label htmlFor="payout-zone-select" className="text-sm font-medium text-neutral-700 whitespace-nowrap">
                   Zone:
                 </label>
                 <select
                   id="payout-zone-select"
                   value={selectedZoneId}
                   onChange={(e) => setSelectedZoneId(e.target.value)}
-                  className="px-3 py-2.5 bg-white border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm min-w-[10rem]"
+                  className="px-3 py-2.5 bg-white border border-neutral-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400 text-sm min-w-[10rem]"
                   disabled={zonesLoading || zones.length === 0}
                 >
                   {zones.length === 0 ? (
@@ -484,13 +484,13 @@ export default function DeliveryBoyCommission() {
               <button
                 onClick={handleAdd}
                 disabled={!selectedZoneId}
-                className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-medium transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Add Rule
+                Add rule
               </button>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -498,12 +498,12 @@ export default function DeliveryBoyCommission() {
           </div>
 
           {/* Info Card */}
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-4 p-4 bg-neutral-50 border border-neutral-200 rounded-lg">
             <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-slate-700">
-                <p className="font-semibold text-blue-900 mb-1">Fixed + Extra Distance Payout</p>
-                <p className="text-slate-600">
+              <MapPin className="w-5 h-5 text-[#0a4d2b] mt-0.5" />
+              <div className="text-sm text-neutral-700">
+                <p className="font-medium text-neutral-900 mb-1">Fixed + Extra Distance Payout</p>
+                <p className="text-neutral-600">
                   Payout is calculated as:{" "}
                   <strong>
                     Base payout (0-2 km slab) + (km in each slab × that slab&apos;s amount per km)
@@ -512,7 +512,7 @@ export default function DeliveryBoyCommission() {
                   Example: base ₹25 for 0-2 km, then ₹5/km after 2 km → 6 km
                   earns ₹25 + (4 × ₹5) = ₹45.
                 </p>
-                <p className="text-slate-600 mt-1">
+                <p className="text-neutral-600 mt-1">
                   Only the slab with <strong>min distance = 0</strong> can have a base payout. All other slabs should keep base payout set to 0 and use only amount per km.
                 </p>
               </div>
@@ -526,45 +526,45 @@ export default function DeliveryBoyCommission() {
                 placeholder="Ex: Search by name or distance."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
             </div>
           </div>
 
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
                   {visibleColumns.si && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>
                   )}
                   {visibleColumns.name && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Name</th>
                   )}
                   {visibleColumns.distanceSlab && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Distance Slab (km)</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Distance Slab (km)</th>
                   )}
                   {visibleColumns.commissionPerKm && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Amount Per/Km (₹)</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Amount Per/Km (₹)</th>
                   )}
                   {visibleColumns.basePayout && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Base Payout (₹)</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Base Payout (₹)</th>
                   )}
                   {visibleColumns.status && (
-                    <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
                   )}
                   {visibleColumns.actions && (
-                    <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                   )}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {loading ? (
                   <tr>
                     <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center">
-                      <div className="flex items-center justify-center gap-2 text-slate-500">
+                      <div className="flex items-center justify-center gap-2 text-neutral-500">
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span>Loading payout rules...</span>
                       </div>
@@ -572,47 +572,47 @@ export default function DeliveryBoyCommission() {
                   </tr>
                 ) : filteredCommissions.length === 0 ? (
                   <tr>
-                    <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan={Object.values(visibleColumns).filter(v => v).length} className="px-6 py-8 text-center text-neutral-500">
                       No payout rules found
                     </td>
                   </tr>
                 ) : (
                   filteredCommissions.map((commission) => (
-                    <tr key={commission.sl} className="hover:bg-slate-50 transition-colors">
+                    <tr key={commission.sl} className="hover:bg-neutral-50 transition-colors">
                       {visibleColumns.si && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-700">{commission.sl}</span>
+                          <span className="text-sm font-medium text-neutral-700">{commission.sl}</span>
                         </td>
                       )}
                       {visibleColumns.name && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-900">{commission.name}</span>
+                          <span className="text-sm font-medium text-neutral-900">{commission.name}</span>
                         </td>
                       )}
                       {visibleColumns.distanceSlab && (
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{getDistanceSlabLabel(commission)}</span>
-                            <span className="text-xs text-slate-500">Base payout slab</span>
+                            <span className="text-sm font-medium text-neutral-900">{getDistanceSlabLabel(commission)}</span>
+                            <span className="text-xs text-neutral-500">Base payout slab</span>
                           </div>
                         </td>
                       )}
                       {visibleColumns.commissionPerKm && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-semibold text-green-700">{"\u20B9"}{commission.commissionPerKm}</span>
+                          <span className="text-sm font-medium text-green-700">{"\u20B9"}{commission.commissionPerKm}</span>
                         </td>
                       )}
                       {visibleColumns.basePayout && (
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-semibold text-blue-700">{"\u20B9"}{commission.basePayout}</span>
+                          <span className="text-sm font-medium text-[#0a4d2b]">{"\u20B9"}{commission.basePayout}</span>
                         </td>
                       )}
                       {visibleColumns.status && (
                         <td className="px-6 py-4 whitespace-nowrap">
                           <button
                             onClick={() => handleToggleStatus(commission)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              commission.status ? "bg-green-600" : "bg-slate-300"
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:ring-offset-2 ${
+                              commission.status ? "bg-green-600" : "bg-neutral-300"
                             }`}
                           >
                             <span
@@ -628,7 +628,7 @@ export default function DeliveryBoyCommission() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleEdit(commission)}
-                              className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                               title="Edit"
                             >
                               <Edit className="w-4 h-4" />
@@ -661,22 +661,22 @@ export default function DeliveryBoyCommission() {
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Rule Name
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Rule name
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  formErrors.name ? "border-red-500" : "border-slate-300"
+                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                  formErrors.name ? "border-red-500" : "border-neutral-300"
                 }`}
                 placeholder={`e.g., Base (${dialogBaseCoverage} km)`}
               />
               {formErrors.name && <p className="text-xs text-red-500 mt-1">{formErrors.name}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Minimum Distance Slab (km) <span className="text-red-500">*</span>
               </label>
               <input
@@ -685,19 +685,19 @@ export default function DeliveryBoyCommission() {
                 min="0"
                 value={formData.minDistance}
                 onChange={(e) => setFormData({ ...formData, minDistance: e.target.value })}
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  formErrors.minDistance ? "border-red-500" : "border-slate-300"
+                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                  formErrors.minDistance ? "border-red-500" : "border-neutral-300"
                 }`}
                 placeholder="e.g., 4"
               />
               {formErrors.minDistance && <p className="text-xs text-red-500 mt-1">{formErrors.minDistance}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Maximum Distance Slab (km) <span className="text-slate-400">(optional)</span>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Maximum Distance Slab (km) <span className="text-neutral-400">(optional)</span>
               </label>
               <div className="flex items-center justify-between gap-3 mb-2">
-                <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
+                <label className="flex items-center gap-2 text-sm text-neutral-700 select-none">
                   <input
                     type="checkbox"
                     checked={Boolean(formData.maxDistanceUnlimited)}
@@ -711,7 +711,7 @@ export default function DeliveryBoyCommission() {
                   />
                   Unlimited
                 </label>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-neutral-500">
                   If unlimited, this rule applies for {formData.minDistance || 0}+ km
                 </span>
               </div>
@@ -728,14 +728,14 @@ export default function DeliveryBoyCommission() {
                   })
                 }
                 disabled={Boolean(formData.maxDistanceUnlimited)}
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  formErrors.maxDistance ? "border-red-500" : "border-slate-300"
+                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                  formErrors.maxDistance ? "border-red-500" : "border-neutral-300"
                 }`}
-                placeholder="e.g., 3 (or enable Unlimited)"
+                placeholder="e.g., 3 (or enable unlimited)"
               />
               {formErrors.maxDistance && <p className="text-xs text-red-500 mt-1">{formErrors.maxDistance}</p>}
             </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
               Distance slab:{" "}
               <strong>
                 {formData.maxDistanceUnlimited || !formData.maxDistance
@@ -744,7 +744,7 @@ export default function DeliveryBoyCommission() {
               </strong>
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
                 Extra Per Kilometer (₹) <span className="text-red-500">*</span>
               </label>
               <input
@@ -753,16 +753,16 @@ export default function DeliveryBoyCommission() {
                 min="0"
                 value={formData.commissionPerKm}
                 onChange={(e) => setFormData({ ...formData, commissionPerKm: e.target.value })}
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  formErrors.commissionPerKm ? "border-red-500" : "border-slate-300"
+                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                  formErrors.commissionPerKm ? "border-red-500" : "border-neutral-300"
                 }`}
                 placeholder="e.g., 5"
               />
               {formErrors.commissionPerKm && <p className="text-xs text-red-500 mt-1">{formErrors.commissionPerKm}</p>}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Fixed Base Payout{dialogMinDistance === 0 ? ` for ${dialogBaseCoverage} km` : ""} (₹){" "}
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Fixed base payout{dialogMinDistance === 0 ? ` for ${dialogBaseCoverage} km` : ""} (₹){" "}
                 <span className="text-red-500">*</span>
               </label>
               <input
@@ -771,13 +771,13 @@ export default function DeliveryBoyCommission() {
                 min="0"
                 value={formData.basePayout}
                 onChange={(e) => setFormData({ ...formData, basePayout: e.target.value })}
-                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${
-                  formErrors.basePayout ? "border-red-500" : "border-slate-300"
+                className={`w-full px-4 py-2.5 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-sm ${
+                  formErrors.basePayout ? "border-red-500" : "border-neutral-300"
                 }`}
                 placeholder="e.g., 25"
               />
               {formErrors.basePayout && <p className="text-xs text-red-500 mt-1">{formErrors.basePayout}</p>}
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-neutral-500 mt-1">
                 {dialogMinDistance === 0
                   ? "Base payout is flat for the 0-km slab. Amount per km applies only to km that fall inside each slab."
                   : "Non-base slabs must keep base payout at 0. Only amount per km is used for km inside this slab."}
@@ -787,14 +787,14 @@ export default function DeliveryBoyCommission() {
           <DialogFooter className="px-6 pb-6">
             <button
               onClick={() => setIsAddEditOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {selectedCommission ? "Update" : "Add"}
@@ -807,24 +807,24 @@ export default function DeliveryBoyCommission() {
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="max-w-md bg-white p-0 opacity-0 data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:scale-100 data-[state=closed]:scale-100">
           <DialogHeader className="px-6 pt-6 pb-4">
-            <DialogTitle>Delete Payout Rule</DialogTitle>
+            <DialogTitle>Delete payout rule</DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-neutral-700">
               Are you sure you want to delete "{selectedCommission?.name}"? This action cannot be undone.
             </p>
           </div>
           <DialogFooter className="px-6 pb-6">
             <button
               onClick={() => setIsDeleteOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={confirmDelete}
               disabled={deleting}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {deleting && <Loader2 className="w-4 h-4 animate-spin" />}
               Delete
@@ -839,28 +839,28 @@ export default function DeliveryBoyCommission() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Table Settings
+              Table settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-neutral-700 mb-3 flex items-center gap-2">
                 <Columns className="w-4 h-4" />
-                Visible Columns
+                Visible columns
               </h3>
               <div className="space-y-2">
                 {Object.entries(columnsConfig).map(([key, label]) => (
                   <label
                     key={key}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer"
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-neutral-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       checked={visibleColumns[key]}
                       onChange={() => toggleColumn(key)}
-                      className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                      className="w-4 h-4 text-emerald-600 border-neutral-300 rounded focus:ring-emerald-500"
                     />
-                    <span className="text-sm text-slate-700">{label}</span>
+                    <span className="text-sm text-neutral-700">{label}</span>
                     {visibleColumns[key] && (
                       <Check className="w-4 h-4 text-emerald-600 ml-auto" />
                     )}
@@ -868,16 +868,16 @@ export default function DeliveryBoyCommission() {
                 ))}
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
               <button
                 onClick={resetColumns}
-                className="px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all"
+                className="px-4 py-2 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
               >
                 Apply
               </button>

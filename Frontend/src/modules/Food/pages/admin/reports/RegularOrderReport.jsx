@@ -24,10 +24,10 @@ const debugError = (...args) => {}
 
 const statusMeta = {
   Scheduled: { label: "Scheduled Orders", color: "text-amber-600", bg: "bg-amber-50", icon: scheduledIcon },
-  Pending: { label: "Pending Orders", color: "text-blue-600", bg: "bg-blue-50", icon: pendingIcon },
-  Accepted: { label: "Accepted Orders", color: "text-sky-600", bg: "bg-sky-50", icon: acceptedIcon },
-  Processing: { label: "Processing Orders", color: "text-indigo-600", bg: "bg-indigo-50", icon: processingIcon },
-  "Food On The Way": { label: "Food On The Way", color: "text-cyan-600", bg: "bg-cyan-50", icon: onTheWayIcon },
+  Pending: { label: "Pending Orders", color: "text-[#0a4d2b]", bg: "bg-neutral-50", icon: pendingIcon },
+  Accepted: { label: "Accepted Orders", color: "text-[#0a4d2b]", bg: "bg-neutral-50", icon: acceptedIcon },
+  Processing: { label: "Processing Orders", color: "text-[#0a4d2b]", bg: "bg-neutral-50", icon: processingIcon },
+  "Food On The Way": { label: "Food On The Way", color: "text-[#0a4d2b]", bg: "bg-neutral-50", icon: onTheWayIcon },
   Delivered: { label: "Delivered", color: "text-emerald-600", bg: "bg-emerald-50", icon: deliveredIcon },
   Canceled: { label: "Canceled", color: "text-red-600", bg: "bg-red-50", icon: canceledIcon },
   "Payment Failed": { label: "Payment Failed", color: "text-orange-600", bg: "bg-orange-50", icon: paymentFailedIcon },
@@ -355,25 +355,25 @@ export default function RegularOrderReport() {
     return (
       <div
         key={statusKey}
-        className="flex items-center justify-between bg-white rounded-lg border border-slate-200 px-3 py-2 shadow-sm"
+        className="flex items-center justify-between bg-white rounded-lg border border-neutral-200 px-3 py-2 shadow-sm"
       >
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-lg ${meta.bg} flex items-center justify-center overflow-hidden`}>
             <img src={meta.icon} alt={meta.label} className="w-5 h-5 object-contain" />
           </div>
-          <span className="text-[11px] font-medium text-slate-800">{meta.label}</span>
+          <span className="text-xs font-medium text-neutral-800">{meta.label}</span>
         </div>
-          <span className={`text-xs font-semibold ${meta.color}`}>{statusCounts[statusKey] || 0}</span>
+          <span className={`text-xs font-medium ${meta.color}`}>{statusCounts[statusKey] || 0}</span>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="p-2 lg:p-3 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-          <p className="text-gray-600">Loading orders...</p>
+          <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
+          <p className="text-neutral-600">Loading orders...</p>
         </div>
       </div>
     )
@@ -381,12 +381,12 @@ export default function RegularOrderReport() {
 
   if (error) {
     return (
-      <div className="p-2 lg:p-3 bg-slate-50 min-h-screen flex items-center justify-center">
+      <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 mb-2">Error: {error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800"
           >
             Retry
           </button>
@@ -396,26 +396,26 @@ export default function RegularOrderReport() {
   }
 
   return (
-    <div className="p-2 lg:p-3 bg-slate-50 min-h-screen">
+    <div className="p-2 lg:p-3 bg-neutral-50 min-h-screen">
       <div className="w-full mx-auto">
         {/* Page Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-3 mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center">
               <BarChart3 className="w-3.5 h-3.5 text-white" />
             </div>
-            <h1 className="text-lg font-bold text-slate-900">Order Report</h1>
+            <h1 className="text-lg font-medium text-neutral-900">Order report</h1>
           </div>
         </div>
 
         {/* Search Data Filters */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3 mb-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-3 mb-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="relative flex-1 min-w-0">
               <select
                 value={filters.zone}
                 onChange={(e) => handleFilterChange("zone", e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
+                className="w-full px-2.5 py-1.5 pr-5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-xs appearance-none cursor-pointer"
               >
                 <option value="All Zones">All Zones</option>
                 {zones.map((zone) => (
@@ -424,14 +424,14 @@ export default function RegularOrderReport() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
             </div>
 
             <div className="relative flex-1 min-w-0">
               <select
                 value={filters.restaurant}
                 onChange={(e) => handleFilterChange("restaurant", e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
+                className="w-full px-2.5 py-1.5 pr-5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-xs appearance-none cursor-pointer"
               >
                 <option value="All restaurants">All restaurants</option>
                 {restaurants.map((restaurant) => (
@@ -440,14 +440,14 @@ export default function RegularOrderReport() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
             </div>
 
             <div className="relative flex-1 min-w-0">
               <select
                 value={filters.customer}
                 onChange={(e) => handleFilterChange("customer", e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
+                className="w-full px-2.5 py-1.5 pr-5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-xs appearance-none cursor-pointer"
               >
                 <option value="All customers">All customers</option>
                 {customers.map((customer) => (
@@ -456,21 +456,21 @@ export default function RegularOrderReport() {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
             </div>
 
             <div className="relative flex-1 min-w-0">
               <select
                 value={filters.time}
                 onChange={(e) => handleFilterChange("time", e.target.value)}
-                className="w-full px-2.5 py-1.5 pr-5 border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs appearance-none cursor-pointer"
+                className="w-full px-2.5 py-1.5 pr-5 border border-neutral-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 text-xs appearance-none cursor-pointer"
               >
                 <option key="all-time" value="All Time">All Time</option>
                 <option key="today" value="Today">Today</option>
                 <option key="this-week" value="This Week">This Week</option>
                 <option key="this-month" value="This Month">This Month</option>
               </select>
-              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
             </div>
 
             <button
@@ -479,14 +479,14 @@ export default function RegularOrderReport() {
               disabled={filterLoading || loading}
               title="Refresh"
               aria-label="Refresh"
-              className="p-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50"
+              className="p-1.5 rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors disabled:opacity-50"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${filterLoading ? "animate-spin" : ""}`} />
             </button>
             <button
               type="button"
               onClick={handleResetFilters}
-              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition-all whitespace-nowrap"
+              className="px-3 py-1.5 text-xs font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 transition-colors whitespace-nowrap"
             >
               Reset
             </button>
@@ -507,37 +507,37 @@ export default function RegularOrderReport() {
         </div>
 
         {/* Total Orders & Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-3">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 p-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-            <h2 className="text-base font-bold text-slate-900">
-              Total Orders <span className="text-blue-600">{statusCounts.total}</span>
+            <h2 className="text-base font-medium text-neutral-900">
+              Total orders <span className="text-[#0a4d2b]">{statusCounts.total}</span>
             </h2>
 
             <div className="flex items-center gap-2">
               <div className="relative flex-1 sm:flex-initial min-w-[180px]">
                 <input
                   type="text"
-                  placeholder="Search by Order ID, customer, restaurant"
+                  placeholder="Search by order ID, customer, restaurant"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value)
                     setCurrentPage(1)
                   }}
-                  className="pl-7 pr-2 py-1.5 w-full text-[11px] rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-7 pr-2 py-1.5 w-full text-xs rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
                 <img src={searchIcon} alt="Search" className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-2.5 py-1.5 text-[11px] font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-1 transition-all">
+                  <button className="px-2.5 py-1.5 text-xs font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 flex items-center gap-1 transition-colors">
                     <img src={exportIcon} alt="Export" className="w-3 h-3" />
                     <span>Export</span>
                     <ChevronDown className="w-2.5 h-2.5" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -559,7 +559,7 @@ export default function RegularOrderReport() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-1.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-3 h-3" />
               </button>
@@ -567,8 +567,8 @@ export default function RegularOrderReport() {
           </div>
 
           {filterLoading && (
-            <div className="mb-3 flex items-center gap-2 text-[11px] text-slate-500">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+            <div className="mb-3 flex items-center gap-2 text-xs text-neutral-500">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#0a4d2b]" />
               Updating report...
             </div>
           )}
@@ -576,90 +576,90 @@ export default function RegularOrderReport() {
           {/* Table */}
           <div className="overflow-x-auto scrollbar-hide">
             <table className="w-full" style={{ tableLayout: "fixed", width: "100%" }}>
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "3%" }}>
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "3%" }}>
                     SI
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "8%" }}>
-                    Order Id
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "8%" }}>
+                    Order id
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "12%" }}>
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "12%" }}>
                     Restaurant
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "12%" }}>
-                    Customer Name
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "12%" }}>
+                    Customer name
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "8%" }}>
-                    Total Item Amount
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "8%" }}>
+                    Total item amount
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "7%" }}>
-                    Coupon Discount
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "7%" }}>
+                    Coupon discount
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "6%" }}>
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "6%" }}>
                     Vat/Tax
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "7%" }}>
-                    Delivery Charge
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "7%" }}>
+                    Delivery charge
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "7%" }}>
-                    Platform Fee
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "7%" }}>
+                    Platform fee
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "8%" }}>
-                    Order Amount
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "8%" }}>
+                    Order amount
                   </th>
-                  <th className="px-1.5 py-1 text-left text-[8px] font-bold text-slate-700 uppercase tracking-wider" style={{ width: "5%" }}>
+                  <th className="px-1.5 py-1 text-left text-xs font-medium text-neutral-700" style={{ width: "5%" }}>
                     Status
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {orders.length === 0 ? (
                   <tr>
                     <td colSpan={11} className="px-6 py-20 text-center">
                       <div className="flex flex-col items-center justify-center">
-                        <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                        <p className="text-sm text-slate-500">No orders match your filters</p>
+                        <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                        <p className="text-sm text-neutral-500">No orders match your filters</p>
                       </div>
                     </td>
                   </tr>
                 ) : (
                   orders.map((order, index) => (
-                    <tr key={order.orderId} className="hover:bg-slate-50 transition-colors">
+                    <tr key={order.orderId} className="hover:bg-neutral-50 transition-colors">
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] font-medium text-slate-700">
+                        <span className="text-xs font-medium text-neutral-700">
                           {(currentPage - 1) * pageSize + index + 1}
                         </span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-blue-600 hover:underline cursor-pointer">{order.orderId}</span>
+                        <span className="text-xs text-[#0a4d2b] hover:underline cursor-pointer">{order.orderId}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700 truncate block">{order.restaurant}</span>
+                        <span className="text-xs text-neutral-700 truncate block">{order.restaurant}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700 truncate block">{order.customerName}</span>
+                        <span className="text-xs text-neutral-700 truncate block">{order.customerName}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700">{formatAmount(order.totalAmount)}</span>
+                        <span className="text-xs text-neutral-700">{formatAmount(order.totalAmount)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700">{formatAmount(order.couponDiscount)}</span>
+                        <span className="text-xs text-neutral-700">{formatAmount(order.couponDiscount)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700">{formatAmount(order.vatTax)}</span>
+                        <span className="text-xs text-neutral-700">{formatAmount(order.vatTax)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700">{formatAmount(order.deliveryCharge)}</span>
+                        <span className="text-xs text-neutral-700">{formatAmount(order.deliveryCharge)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] text-slate-700">{formatAmount(order.platformFee)}</span>
+                        <span className="text-xs text-neutral-700">{formatAmount(order.platformFee)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="text-[10px] font-medium text-slate-900">{formatAmount(order.totalAmount || order.totalItemAmount)}</span>
+                        <span className="text-xs font-medium text-neutral-900">{formatAmount(order.totalAmount || order.totalItemAmount)}</span>
                       </td>
                       <td className="px-1.5 py-1">
-                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-slate-100 text-slate-700">
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700">
                           {order.orderStatus}
                         </span>
                       </td>
@@ -691,18 +691,18 @@ export default function RegularOrderReport() {
           <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle className="flex items-center gap-2">
               <Settings className="w-5 h-5" />
-              Report Settings
+              Report settings
             </DialogTitle>
           </DialogHeader>
           <div className="px-6 pb-6">
-            <p className="text-sm text-slate-700">
-              Regular order report settings and preferences will be available here.
+            <p className="text-sm text-neutral-700">
+              Regular order report settings and preferences will be available here
             </p>
           </div>
           <div className="px-6 pb-6 flex items-center justify-end">
             <button
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-all shadow-md"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-[#0a4d2b] text-white hover:bg-[#06381e] transition-colors shadow-sm"
             >
               Close
             </button>

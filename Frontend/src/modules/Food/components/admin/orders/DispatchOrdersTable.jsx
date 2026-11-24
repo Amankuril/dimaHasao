@@ -18,127 +18,127 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
 
   if (orders.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08]">
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-32 h-32 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center mb-6 shadow-inner">
-            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-5xl text-orange-500 font-bold">!</span>
+          <div className="w-32 h-32 rounded-2xl flex items-center justify-center mb-6 shadow-inner bg-neutral-100">
+            <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+              <span className="text-5xl text-orange-500 font-medium">!</span>
             </div>
           </div>
-          <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-          <p className="text-sm text-slate-500">There are no orders matching your criteria</p>
+          <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+          <p className="text-sm text-neutral-500">There are no orders matching your criteria</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
       <div className="overflow-x-hidden">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-neutral-50 border-b border-neutral-200">
             <tr>
               {visibleColumns.sl && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Sl</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.order && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Order</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.date && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Date</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.customer && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Customer</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.restaurant && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
                     <span>Restaurant</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.total && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
-                    <span>Total Amount</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <span>Total amount</span>
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.status && (
-                <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">
                   <div className="flex items-center gap-2">
-                    <span>Order Status</span>
-                    <ArrowUpDown className="w-3 h-3 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <span>Order status</span>
+                    <ArrowUpDown className="w-3 h-3 text-neutral-400 cursor-pointer hover:text-neutral-600" />
                   </div>
                 </th>
               )}
               {visibleColumns.actions && (
-                <th className="px-6 py-4 text-right text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-medium text-neutral-700">
                   Actions
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-slate-100">
+          <tbody className="bg-white divide-y divide-neutral-100">
             {paginatedOrders.map((order, index) => (
               <tr 
                 key={order.id || order.orderId} 
-                className="hover:bg-slate-50 transition-colors"
+                className="hover:bg-neutral-50 transition-colors"
               >
                 {visibleColumns.sl && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-700">{order.sl || (currentPage - 1) * itemsPerPage + index + 1}</span>
+                    <span className="text-sm font-medium text-neutral-700">{order.sl || (currentPage - 1) * itemsPerPage + index + 1}</span>
                   </td>
                 )}
                 {visibleColumns.order && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-900">{order.id || order.orderId}</span>
+                    <span className="text-sm font-medium text-neutral-900">{order.id || order.orderId}</span>
                   </td>
                 )}
                 {visibleColumns.date && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-700">{order.date}</div>
-                    <div className="text-xs text-slate-500 mt-0.5">{order.time}</div>
+                    <div className="text-sm font-medium text-neutral-700">{order.date}</div>
+                    <div className="text-xs text-neutral-500 mt-0.5">{order.time}</div>
                   </td>
                 )}
                 {visibleColumns.customer && (
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-slate-700">{order.customerName}</span>
-                      <span className="text-xs text-slate-500 mt-0.5">{order.customerPhone}</span>
+                      <span className="text-sm font-medium text-neutral-700">{order.customerName}</span>
+                      <span className="text-xs text-neutral-500 mt-0.5">{order.customerPhone}</span>
                     </div>
                   </td>
                 )}
                 {visibleColumns.restaurant && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-medium text-slate-700">{order.restaurant}</span>
+                    <span className="text-sm font-medium text-neutral-700">{order.restaurant}</span>
                   </td>
                 )}
                 {visibleColumns.total && (
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-900">{order.total || `$ ${order.totalAmount?.toFixed(2) || '0.00'}`}</div>
+                    <div className="text-sm font-medium text-neutral-900">{order.total || `$ ${order.totalAmount?.toFixed(2) || '0.00'}`}</div>
                     {order.paymentStatus && (
                       <div className={`text-xs mt-0.5 ${
                         order.paymentStatus === "Paid" ? "text-emerald-600" : "text-red-600"
@@ -151,12 +151,12 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
                 {visibleColumns.status && (
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                      order.orderStatusColor || "bg-slate-100 text-slate-700"
+                      order.orderStatusColor || "bg-neutral-100 text-neutral-700"
                     }`}>
                       {order.orderStatus}
                     </span>
                     {order.deliveryType && (
-                      <div className="text-xs text-slate-500 mt-1">{order.deliveryType}</div>
+                      <div className="text-xs text-neutral-500 mt-1">{order.deliveryType}</div>
                     )}
                   </td>
                 )}
@@ -172,7 +172,7 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
                       </button>
                       <button 
                         onClick={() => onPrintOrder(order)}
-                        className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                        className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                         title="Print Order"
                       >
                         <Printer className="w-4 h-4" />
@@ -187,17 +187,17 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
       </div>
       
       {totalPages > 1 && (
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <div className="text-sm text-slate-600">
-            Showing <span className="font-semibold">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
-            <span className="font-semibold">{Math.min(currentPage * itemsPerPage, orders.length)}</span> of{" "}
-            <span className="font-semibold">{orders.length}</span> orders
+        <div className="px-6 py-4 bg-neutral-50 border-t border-neutral-200 flex items-center justify-between">
+          <div className="text-sm text-neutral-600">
+            Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
+            <span className="font-medium">{Math.min(currentPage * itemsPerPage, orders.length)}</span> of{" "}
+            <span className="font-medium">{orders.length}</span> orders
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-3 py-1.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Previous
             </button>
@@ -217,10 +217,10 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
                   <button
                     key={pageNum}
                     onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                       currentPage === pageNum
-                        ? "bg-emerald-500 text-white shadow-md"
-                        : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                        ? "bg-[#0a4d2b] text-white shadow-sm"
+                        : "border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50"
                     }`}
                   >
                     {pageNum}
@@ -231,7 +231,7 @@ export default function DispatchOrdersTable({ orders, visibleColumns, onViewOrde
             <button
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="px-3 py-1.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Next
             </button>

@@ -378,24 +378,24 @@ export default function TopRestaurants() {
   ]
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 sm:p-6 mb-5">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-5 sm:p-6 mb-5">
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
               <Trophy className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Top Restaurants</h1>
-              <p className="text-sm text-slate-600">
+              <h1 className="text-2xl font-medium text-neutral-900">Top restaurants</h1>
+              <p className="text-sm text-neutral-600">
                 Choose which restaurants appear at the top for users in each zone. Max {MAX_TOP} per zone.
               </p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="mt-4 inline-flex gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
+          <div className="mt-4 inline-flex gap-1 rounded-xl border border-neutral-200 bg-neutral-100 p-1">
             {tabs.map((t) => {
               const Icon = t.icon
               const active = activeTab === t.key
@@ -403,10 +403,10 @@ export default function TopRestaurants() {
                 <button
                   key={t.key}
                   onClick={() => setActiveTab(t.key)}
-                  className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-colors ${
                     active
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                      : "text-slate-500 hover:bg-white hover:text-slate-800"
+                      ? "bg-neutral-900 text-white shadow-sm shadow-blue-600/20"
+                      : "text-neutral-500 hover:bg-white hover:text-neutral-800"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -418,16 +418,16 @@ export default function TopRestaurants() {
         </div>
 
         {/* Controls: search + zone + save */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-5">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-4 mb-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by restaurant, owner or phone..."
-                className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Search by restaurant, owner or phone"
+                className="w-full rounded-lg border border-neutral-300 bg-white py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </div>
 
@@ -436,16 +436,16 @@ export default function TopRestaurants() {
                 onClick={handleReset}
                 disabled={assignedCount === 0 || saving || loading}
                 title="Clear all top selections for this zone"
-                className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <RotateCcw className="h-4 w-4" />
                 Reset
               </button>
               <Select value={selectedZone} onValueChange={setSelectedZone}>
-                <SelectTrigger className="min-w-[180px] border-slate-300 bg-white text-slate-900">
+                <SelectTrigger className="min-w-[180px] border-neutral-300 bg-white text-neutral-900">
                   <SelectValue placeholder="Select zone" />
                 </SelectTrigger>
-                <SelectContent className="border-slate-200 bg-white text-slate-900">
+                <SelectContent className="border-neutral-200 bg-white text-neutral-900">
                   {zones.map((zone) => (
                     <SelectItem key={zone._id || zone.id} value={String(zone._id || zone.id)}>
                       {zone.zoneName || zone.name || "Unnamed Zone"}
@@ -457,15 +457,15 @@ export default function TopRestaurants() {
               <button
                 onClick={handleSave}
                 disabled={!isDirty || saving || loading}
-                className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex items-center gap-2 rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Save Top Restaurants
               </button>
             </div>
           </div>
-          <p className="mt-2 text-xs text-slate-500">
-            {assignedCount}/{MAX_TOP} selected · Pick a number in the <strong>Top No.</strong> dropdown
+          <p className="mt-2 text-xs text-neutral-500">
+            {assignedCount}/{MAX_TOP} selected · Pick a number in the <strong>Top No</strong> dropdown
             to promote a restaurant. Choosing a number that&apos;s already taken lets you replace it.
           </p>
         </div>
@@ -474,26 +474,26 @@ export default function TopRestaurants() {
         {showSkeleton ? (
           <TableSkeleton rows={8} columns={7} />
         ) : (
-        <div ref={tableWrapRef} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div ref={tableWrapRef} className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-neutral-50 border-b border-neutral-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">S.No</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant Info</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Owner Info</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Zone</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</th>
-                  <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Top No.</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">S.No</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Restaurant info</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Owner info</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Zone</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Rating</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Status</th>
+                  <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Top No</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-slate-100">
+              <tbody className="bg-white divide-y divide-neutral-100">
                 {filteredRestaurants.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-6 py-20 text-center">
-                      <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                      <p className="text-sm text-neutral-500">
                         {activeTab === "takeaway"
                           ? "No takeaway-enabled restaurants in this zone"
                           : "No restaurants in this zone"}
@@ -506,13 +506,13 @@ export default function TopRestaurants() {
                     const rank = ranks[id] || ""
                     const hasRank = Boolean(rank)
                     return (
-                      <tr key={id} className={`hover:bg-slate-50 transition-colors ${hasRank ? "bg-blue-50/50" : ""}`}>
+                      <tr key={id} className={`hover:bg-neutral-50 transition-colors ${hasRank ? "bg-neutral-50/50" : ""}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-700">{index + 1}</span>
+                          <span className="text-sm font-medium text-neutral-700">{index + 1}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 border border-slate-100">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 border border-neutral-100">
                               <img
                                 src={getLogo(r)}
                                 alt={r.restaurantName}
@@ -523,8 +523,8 @@ export default function TopRestaurants() {
                               />
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-sm font-medium text-slate-900">{r.restaurantName}</span>
-                              <span className="text-xs text-slate-500">
+                              <span className="text-sm font-medium text-neutral-900">{r.restaurantName}</span>
+                              <span className="text-xs text-neutral-500">
                                 {r.area || r.location?.area || r.city || r.location?.city || ""}
                               </span>
                             </div>
@@ -532,30 +532,30 @@ export default function TopRestaurants() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{r.ownerName || "—"}</span>
-                            <span className="text-xs text-slate-500">{r.ownerPhone || ""}</span>
+                            <span className="text-sm font-medium text-neutral-900">{r.ownerName || "—"}</span>
+                            <span className="text-xs text-neutral-500">{r.ownerPhone || ""}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-700">{getZoneName(r)}</span>
+                          <span className="text-sm text-neutral-700">{getZoneName(r)}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            <span className="text-sm font-semibold text-slate-900">
+                            <span className="text-sm font-medium text-neutral-900">
                               {(Number(r.rating) || 0).toFixed(1)}
                             </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-emerald-100 text-emerald-700">
+                          <span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-medium bg-emerald-100 text-emerald-700">
                             Approved
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center gap-2">
                             {hasRank && (
-                              <span className="inline-flex items-center rounded-md bg-blue-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                              <span className="inline-flex items-center rounded-md bg-neutral-900 px-2 py-0.5 text-xs font-medium text-white">
                                 #Top{rank}
                               </span>
                             )}
@@ -563,7 +563,7 @@ export default function TopRestaurants() {
                               value={rank === "" ? "" : String(rank)}
                               onChange={(e) => handleSelectSlot(id, e.target.value)}
                               title="Set top number"
-                              className="w-24 rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-center text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              className="w-24 rounded-lg border border-neutral-300 bg-white px-2 py-1.5 text-center text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30"
                             >
                               <option value="">Select</option>
                               {Array.from({ length: MAX_TOP }, (_, i) => i + 1).map((n) => (
@@ -587,22 +587,22 @@ export default function TopRestaurants() {
 
       {/* Replace confirmation modal */}
       {replaceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-neutral-100 text-neutral-500">
                 <ArrowLeftRight className="h-5 w-5" />
               </div>
-              <h3 className="text-lg font-bold text-slate-900">
+              <h3 className="text-lg font-medium text-neutral-900">
                 Replace with #Top{replaceModal.targetSlot}
               </h3>
             </div>
-            <p className="mb-1 text-sm text-slate-600">
-              <strong className="text-slate-900">{nameById(replaceModal.occupantId)}</strong> is
+            <p className="mb-1 text-sm text-neutral-600">
+              <strong className="text-neutral-900">{nameById(replaceModal.occupantId)}</strong> is
               currently at <strong>#Top{replaceModal.targetSlot}</strong>.
             </p>
-            <p className="mb-6 text-sm text-slate-600">
-              Replace it with <strong className="text-slate-900">{nameById(replaceModal.editingId)}</strong>?
+            <p className="mb-6 text-sm text-neutral-600">
+              Replace it with <strong className="text-neutral-900">{nameById(replaceModal.editingId)}</strong>?
               {ranks[replaceModal.editingId]
                 ? ` The two restaurants will swap their top positions.`
                 : ` The current one will be removed from the top list.`}
@@ -610,13 +610,13 @@ export default function TopRestaurants() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={cancelReplace}
-                className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-slate-50"
+                className="rounded-lg border border-neutral-300 bg-white px-5 py-2.5 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmReplace}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md transition-all hover:bg-blue-700"
+                className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-neutral-800"
               >
                 Replace
               </button>

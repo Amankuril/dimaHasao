@@ -133,7 +133,7 @@ export default function RestaurantReviews() {
         <div className="flex items-center gap-0.5">
           {stars}
         </div>
-        <span className="text-xs font-bold text-amber-700 leading-none">{rating}</span>
+        <span className="text-xs font-medium text-amber-700 leading-none">{rating}</span>
       </div>
     )
   }
@@ -162,17 +162,17 @@ export default function RestaurantReviews() {
   }
 
   return (
-    <div className="p-4 lg:p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 lg:p-6 bg-neutral-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
               <Utensils className="w-5 h-5 text-emerald-500" />
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold text-slate-900">Restaurant Reviews</h1>
-                <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 text-slate-700 flex items-center justify-center min-w-[2.5rem] h-7">
+                <h1 className="text-2xl font-medium text-neutral-900">Restaurant reviews</h1>
+                <span className="px-3 py-1 rounded-full text-sm font-medium bg-neutral-100 text-neutral-700 flex items-center justify-center min-w-[2.5rem] h-7">
                   {isLoading ? (
-                    <span className="w-5 h-3 rounded bg-slate-300/80 animate-pulse" />
+                    <span className="w-5 h-3 rounded bg-neutral-300/80 animate-pulse" />
                   ) : (
                     totalItems
                   )}
@@ -187,21 +187,21 @@ export default function RestaurantReviews() {
                   placeholder="Search by restaurant or customer"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-slate-400 focus:border-slate-400"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
-                    <span className="text-black font-bold">Export</span>
+                    <span className="text-black font-medium">Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => handleExport("csv")} className="cursor-pointer">
                     <FileText className="w-4 h-4 mr-2" />
@@ -223,7 +223,7 @@ export default function RestaurantReviews() {
               </DropdownMenu>
               <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-all"
+                className="p-2.5 rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors"
               >
                 <Settings className="w-5 h-5" />
               </button>
@@ -233,52 +233,52 @@ export default function RestaurantReviews() {
           <div className="overflow-x-auto">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-                <span className="ml-2 text-sm text-slate-600">Loading reviews...</span>
+                <Loader2 className="w-6 h-6 animate-spin text-neutral-400" />
+                <span className="ml-2 text-sm text-neutral-600">Loading reviews...</span>
               </div>
             ) : filteredReviews.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-slate-500">No reviews found</p>
+                <p className="text-neutral-500">No reviews found</p>
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     {visibleColumns.si && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">SI</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">SI</th>
                     )}
                     {visibleColumns.orderId && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Order ID</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Order ID</th>
                     )}
                     {visibleColumns.restaurant && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Restaurant</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Restaurant</th>
                     )}
                     {visibleColumns.customer && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Customer</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Customer</th>
                     )}
                     {visibleColumns.review && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Review</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Review</th>
                     )}
                     {visibleColumns.rating && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Rating</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Rating</th>
                     )}
                     {visibleColumns.date && (
-                      <th className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider">Date & Time</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-700">Date & time</th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {filteredReviews.map((review) => (
-                    <tr key={review.sl || review.orderId} className="hover:bg-slate-50 transition-colors">
-                      {visibleColumns.si && <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{review.sl}</td>}
-                      {visibleColumns.orderId && <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-700">{review.orderId}</td>}
+                    <tr key={review.sl || review.orderId} className="hover:bg-neutral-50 transition-colors">
+                      {visibleColumns.si && <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">{review.sl}</td>}
+                      {visibleColumns.orderId && <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-neutral-700">{review.orderId}</td>}
                       {visibleColumns.restaurant && <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-emerald-600">{review.restaurant}</td>}
-                      {visibleColumns.customer && <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">{review.customer}</td>}
+                      {visibleColumns.customer && <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[#0a4d2b]">{review.customer}</td>}
                       {visibleColumns.review && (
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-700 truncate max-w-xs">{review.review || 'No review'}</span>
-                            <button onClick={() => { setSelectedReview(review); setIsReviewModalOpen(true); }} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-600"><Eye className="w-4 h-4" /></button>
+                            <span className="text-sm text-neutral-700 truncate max-w-xs">{review.review || 'No review'}</span>
+                            <button onClick={() => { setSelectedReview(review); setIsReviewModalOpen(true); }} className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-600"><Eye className="w-4 h-4" /></button>
                           </div>
                         </td>
                       )}
@@ -287,7 +287,7 @@ export default function RestaurantReviews() {
                           {getRatingBadge(review.rating)}
                         </td>
                       )}
-                      {visibleColumns.date && <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">{formatDateTime(review.submittedAt)}</td>}
+                      {visibleColumns.date && <td className="px-6 py-4 whitespace-nowrap text-sm text-neutral-700">{formatDateTime(review.submittedAt)}</td>}
                     </tr>
                   ))}
                 </tbody>
@@ -314,43 +314,43 @@ export default function RestaurantReviews() {
 
       <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
         <DialogContent className="max-w-2xl bg-white p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-slate-200">
-            <DialogTitle className="flex items-center gap-2 text-xl"><Eye className="w-5 h-5 text-slate-600" />Review Details</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-neutral-200">
+            <DialogTitle className="flex items-center gap-2 text-xl"><Eye className="w-5 h-5 text-neutral-600" />Review details</DialogTitle>
           </DialogHeader>
           {selectedReview && (
             <div className="px-6 py-6 space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4"><p className="text-xs text-slate-500 mb-1">Order ID</p><p className="text-sm font-semibold text-slate-900 font-mono">{selectedReview.orderId}</p></div>
-                <div className="bg-emerald-50 rounded-lg p-4"><p className="text-xs text-emerald-600 mb-1">Restaurant</p><p className="text-sm font-semibold text-emerald-700">{selectedReview.restaurant}</p></div>
+                <div className="bg-neutral-50 rounded-lg p-4"><p className="text-xs text-neutral-500 mb-1">Order ID</p><p className="text-sm font-medium text-neutral-900 font-mono">{selectedReview.orderId}</p></div>
+                <div className="bg-emerald-50 rounded-lg p-4"><p className="text-xs text-emerald-600 mb-1">Restaurant</p><p className="text-sm font-medium text-emerald-700">{selectedReview.restaurant}</p></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-purple-50 rounded-lg p-4"><p className="text-xs text-purple-600 mb-1">Customer</p><p className="text-sm font-semibold text-purple-700">{selectedReview.customer}</p></div>
+                <div className="bg-neutral-50 rounded-lg p-4"><p className="text-xs text-[#0a4d2b] mb-1">Customer</p><p className="text-sm font-medium text-[#0a4d2b]">{selectedReview.customer}</p></div>
                 <div className="bg-orange-50 rounded-lg p-4">
-                  <p className="text-xs text-orange-600 mb-2 font-semibold">Rating</p>
+                  <p className="text-xs text-orange-600 mb-2 font-medium">Rating</p>
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1">
                       {renderStars(selectedReview.rating)}
                     </div>
-                    <span className="text-lg font-bold text-orange-700">
+                    <span className="text-lg font-medium text-orange-700">
                       {selectedReview.rating} / 5
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="bg-slate-50 rounded-lg p-4"><p className="text-xs text-slate-600 mb-2 font-semibold">Review Feedback</p><p className="text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">{selectedReview.review || 'No review text provided'}</p></div>
-              <div className="bg-slate-50 rounded-lg p-4"><p className="text-xs text-slate-600 mb-1">Submitted At</p><p className="text-sm font-medium text-slate-900">{formatDateTime(selectedReview.submittedAt)}</p></div>
+              <div className="bg-neutral-50 rounded-lg p-4"><p className="text-xs text-neutral-600 mb-2 font-medium">Review feedback</p><p className="text-sm text-neutral-800 leading-relaxed whitespace-pre-wrap">{selectedReview.review || 'No review text provided'}</p></div>
+              <div className="bg-neutral-50 rounded-lg p-4"><p className="text-xs text-neutral-600 mb-1">Submitted at</p><p className="text-sm font-medium text-neutral-900">{formatDateTime(selectedReview.submittedAt)}</p></div>
             </div>
           )}
-          <DialogFooter className="px-6 pb-6 pt-4 border-t border-slate-200"><button onClick={() => setIsReviewModalOpen(false)} className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">Close</button></DialogFooter>
+          <DialogFooter className="px-6 pb-6 pt-4 border-t border-neutral-200"><button onClick={() => setIsReviewModalOpen(false)} className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors">Close</button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
         <DialogContent className="max-w-lg bg-white p-0 overflow-hidden">
-          <DialogHeader className="border-b border-slate-200 px-6 py-4">
-            <DialogTitle className="flex items-center gap-2 text-xl text-slate-900">
-              <Columns className="w-5 h-5 text-slate-600" />
-              Review Table Settings
+          <DialogHeader className="border-b border-neutral-200 px-6 py-4">
+            <DialogTitle className="flex items-center gap-2 text-xl text-neutral-900">
+              <Columns className="w-5 h-5 text-neutral-600" />
+              Review table settings
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 px-6 py-5 sm:grid-cols-2">
@@ -359,27 +359,27 @@ export default function RestaurantReviews() {
                 key={columnKey}
                 type="button"
                 onClick={() => toggleColumn(columnKey)}
-                className="w-full flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3 text-left hover:bg-slate-50 transition-colors"
+                className="w-full flex items-center justify-between rounded-lg border border-neutral-200 bg-white px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
               >
-                <span className="text-sm font-medium text-slate-700">{label}</span>
-                <span className={`inline-flex h-5 w-5 items-center justify-center rounded border ${visibleColumns[columnKey] ? "border-emerald-500 bg-emerald-500 text-white" : "border-slate-300 bg-white text-transparent"}`}>
+                <span className="text-sm font-medium text-neutral-700">{label}</span>
+                <span className={`inline-flex h-5 w-5 items-center justify-center rounded border ${visibleColumns[columnKey] ? "border-emerald-500 bg-[#0a4d2b] text-white" : "border-neutral-300 bg-white text-transparent"}`}>
                   <Check className="w-3.5 h-3.5" />
                 </span>
               </button>
             ))}
           </div>
-          <DialogFooter className="border-t border-slate-200 px-6 py-4 gap-2">
+          <DialogFooter className="border-t border-neutral-200 px-6 py-4 gap-2">
             <button
               type="button"
               onClick={resetColumns}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-100 text-neutral-700 hover:bg-neutral-200 transition-colors"
             >
               Reset
             </button>
             <button
               type="button"
               onClick={() => setIsSettingsOpen(false)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all"
+              className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 transition-colors"
             >
               Done
             </button>

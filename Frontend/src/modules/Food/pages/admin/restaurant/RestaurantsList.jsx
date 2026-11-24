@@ -496,10 +496,10 @@ export default function RestaurantsList() {
         {[...Array(5)].map((_, i) => (
           <Star 
             key={i} 
-            className={`w-3.5 h-3.5 ${i < fullStars ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`} 
+            className={`w-3.5 h-3.5 ${i < fullStars ? 'fill-yellow-400 text-yellow-400' : 'text-neutral-300'}`} 
           />
         ))}
-        <span className="ml-1 text-slate-600">({rating || 0})</span>
+        <span className="ml-1 text-neutral-600">({rating || 0})</span>
       </div>
     )
   }
@@ -1097,13 +1097,13 @@ export default function RestaurantsList() {
   }
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50 p-4 lg:p-6">
+    <div className="h-full overflow-y-auto bg-neutral-50 p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-slate-900">Restaurants List</h1>
+              <h1 className="text-2xl font-medium text-neutral-900">Restaurants list</h1>
             </div>
 
           </div>
@@ -1112,137 +1112,137 @@ export default function RestaurantsList() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
           {/* Total Restaurants */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Total restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-neutral-600 mb-1">Total restaurants</p>
+                <p className="text-2xl font-medium text-neutral-900">
                   {loading ? (
-                    <span className="inline-block w-12 h-6 rounded bg-slate-200 animate-pulse" />
+                    <span className="inline-block w-12 h-6 rounded bg-neutral-200 animate-pulse" />
                   ) : (
                     totalRestaurants
                   )}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <Building2 className="w-6 h-6" />
               </div>
             </div>
           </div>
 
           {/* Active Restaurants */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Active restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-neutral-600 mb-1">Active restaurants</p>
+                <p className="text-2xl font-medium text-neutral-900">
                   {loading ? (
-                    <span className="inline-block w-12 h-6 rounded bg-slate-200 animate-pulse" />
+                    <span className="inline-block w-12 h-6 rounded bg-neutral-200 animate-pulse" />
                   ) : (
                     activeRestaurants
                   )}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Utensils className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <Utensils className="w-6 h-6" />
               </div>
             </div>
           </div>
 
           {/* Inactive Restaurants */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Inactive restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-neutral-600 mb-1">Inactive restaurants</p>
+                <p className="text-2xl font-medium text-neutral-900">
                   {loading ? (
-                    <span className="inline-block w-12 h-6 rounded bg-slate-200 animate-pulse" />
+                    <span className="inline-block w-12 h-6 rounded bg-neutral-200 animate-pulse" />
                   ) : (
                     inactiveRestaurants
                   )}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-                <UtensilsCrossed className="w-6 h-6 text-slate-600" />
+              <div className="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <UtensilsCrossed className="w-6 h-6" />
               </div>
             </div>
           </div>
 
           {/* Rejected Restaurants */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Rejected restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-neutral-600 mb-1">Rejected restaurants</p>
+                <p className="text-2xl font-medium text-neutral-900">
                   {loading ? (
-                    <span className="inline-block w-12 h-6 rounded bg-slate-200 animate-pulse" />
+                    <span className="inline-block w-12 h-6 rounded bg-neutral-200 animate-pulse" />
                   ) : (
                     rejectedCount
                   )}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <AlertTriangle className="w-6 h-6" />
               </div>
             </div>
           </div>
 
           {/* Banned Restaurants */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600 mb-1">Banned restaurants</p>
-                <p className="text-2xl font-bold text-slate-900">
+                <p className="text-sm font-medium text-neutral-600 mb-1">Banned restaurants</p>
+                <p className="text-2xl font-medium text-neutral-900">
                   {loading ? (
-                    <span className="inline-block w-12 h-6 rounded bg-slate-200 animate-pulse" />
+                    <span className="inline-block w-12 h-6 rounded bg-neutral-200 animate-pulse" />
                   ) : (
                     bannedCount
                   )}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                <ShieldX className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 rounded-lg flex items-center justify-center bg-neutral-100 text-neutral-500">
+                <ShieldX className="w-6 h-6" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Restaurants List Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setViewMode("active")}
-                className={`px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all outline-none ${
+                className={`px-4 py-2.5 text-sm font-medium rounded-lg border transition-colors outline-none ${
                   viewMode === "active"
-                    ? "border-blue-600 bg-blue-50/50 text-blue-600"
-                    : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50"
+                    ? "border-[#0a4d2b] bg-neutral-50/50 text-[#0a4d2b]"
+                    : "border-neutral-300 bg-white text-neutral-600 hover:bg-neutral-50"
                 }`}
               >
-                Restaurants List
+                Restaurants list
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("rejected")}
-                className={`px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all outline-none ${
+                className={`px-4 py-2.5 text-sm font-medium rounded-lg border transition-colors outline-none ${
                   viewMode === "rejected"
                     ? "border-red-600 bg-red-50/50 text-red-600"
                     : "border-red-200/80 bg-white text-red-500 hover:bg-red-50/50"
                 }`}
               >
-                Rejected Restaurants
+                Rejected restaurants
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode("banned")}
-                className={`px-4 py-2.5 text-sm font-semibold rounded-lg border transition-all outline-none ${
+                className={`px-4 py-2.5 text-sm font-medium rounded-lg border transition-colors outline-none ${
                   viewMode === "banned"
                     ? "border-rose-600 bg-rose-50/50 text-rose-600"
                     : "border-rose-200/80 bg-white text-rose-500 hover:bg-rose-50/50"
                 }`}
               >
-                Banned Restaurants
+                Banned restaurants
               </button>
             </div>
 
@@ -1250,33 +1250,33 @@ export default function RestaurantsList() {
               {viewMode === "active" && (
                 <button
                   onClick={() => navigate("/admin/food/restaurants/add")}
-                  className="px-4 py-2.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2 transition-all"
+                  className="px-4 py-2.5 text-sm font-medium rounded-lg bg-neutral-900 hover:bg-neutral-800 text-white flex items-center gap-2 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Restaurant</span>
+                  <span>Add restaurant</span>
                 </button>
               )}
               <div className="relative flex-1 sm:flex-initial min-w-[250px]">
                 <input
                   type="text"
-                  placeholder="Ex: search by Restaurant n"
+                  placeholder="Ex: search by restaurant n"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="pl-10 pr-4 py-2.5 w-full text-sm rounded-lg border border-neutral-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#0a4d2b]/30 focus:border-neutral-400"
                 />
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 flex items-center gap-2 transition-all">
+                  <button className="px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 flex items-center gap-2 transition-colors">
                     <Download className="w-4 h-4" />
                     <span>Export</span>
                     <ChevronDown className="w-3 h-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-white border border-slate-200 rounded-lg shadow-lg z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
-                  <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                <DropdownMenuContent align="end" className="w-56 bg-white border border-neutral-200 rounded-lg shadow-sm z-50 animate-in fade-in-0 zoom-in-95 duration-200 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+                  <DropdownMenuLabel>Export format</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleExport} className="cursor-pointer flex items-center gap-2">
                     <FileText className="w-4 h-4" />
@@ -1291,89 +1291,89 @@ export default function RestaurantsList() {
           <div className="overflow-x-auto">
             {loading ? (
               <div className="flex items-center justify-center py-20">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                <span className="ml-3 text-slate-600">Loading restaurants...</span>
+                <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
+                <span className="ml-3 text-neutral-600">Loading restaurants...</span>
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center py-20">
-                <p className="text-lg font-semibold text-red-600 mb-1">Error Loading Data</p>
-                <p className="text-sm text-slate-500 mb-4">{error}</p>
+                <p className="text-lg font-medium text-red-600 mb-1">Error loading data</p>
+                <p className="text-sm text-neutral-500 mb-4">{error}</p>
                 <button
                   type="button"
                   onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-neutral-900 text-white rounded-lg hover:bg-neutral-800 transition-colors"
                 >
                   Retry
                 </button>
               </div>
             ) : (
               <table className="w-full">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-neutral-50 border-b border-neutral-200">
                   <tr>
                     <th
-                      className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-700 cursor-pointer hover:bg-neutral-100 transition-colors"
                       onClick={() => handleSort('sl')}
                     >
                       <div className="flex items-center gap-1">
                         <span>SL</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'sl' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'sl' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-700 cursor-pointer hover:bg-neutral-100 transition-colors"
                       onClick={() => handleSort('name')}
                     >
                       <div className="flex items-center gap-1">
-                        <span>Restaurant Info</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'name' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <span>Restaurant info</span>
+                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'name' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-700 cursor-pointer hover:bg-neutral-100 transition-colors"
                       onClick={() => handleSort('owner')}
                     >
                       <div className="flex items-center gap-1">
-                        <span>Owner Info</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'owner' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <span>Owner info</span>
+                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'owner' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-700 cursor-pointer hover:bg-neutral-100 transition-colors"
                       onClick={() => handleSort('zone')}
                     >
                       <div className="flex items-center gap-1">
                         <span>Zone</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'zone' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'zone' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-700 cursor-pointer hover:bg-neutral-100 transition-colors"
                       onClick={() => handleSort('rating')}
                     >
                       <div className="flex items-center gap-1">
                         <span>Rating</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'rating' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'rating' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                       </div>
                     </th>
                     <th
-                      className="px-6 py-4 text-left text-[10px] font-bold text-slate-700 uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-colors"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-700 cursor-pointer hover:bg-neutral-100 transition-colors"
                       onClick={() => handleSort('status')}
                     >
                       <div className="flex items-center gap-1">
                         <span>Status</span>
-                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'status' ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <ArrowUpDown className={`w-3 h-3 ${sortConfig.key === 'status' ? 'text-[#0a4d2b]' : 'text-neutral-400'}`} />
                       </div>
                     </th>
-                    <th className="px-6 py-4 text-center text-[10px] font-bold text-slate-700 uppercase tracking-wider">Action</th>
+                    <th className="px-6 py-4 text-center text-xs font-medium text-neutral-700">Action</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-slate-100">
+                <tbody className="bg-white divide-y divide-neutral-100">
                   {filteredRestaurants.length === 0 ? (
                     <tr>
                       <td colSpan={7} className="px-6 py-20 text-center">
                         <div className="flex flex-col items-center justify-center">
-                          <p className="text-lg font-semibold text-slate-700 mb-1">No Data Found</p>
-                          <p className="text-sm text-slate-500">No restaurants match your search</p>
+                          <p className="text-lg font-medium text-neutral-700 mb-1">No data found</p>
+                          <p className="text-sm text-neutral-500">No restaurants match your search</p>
                         </div>
                       </td>
                     </tr>
@@ -1382,15 +1382,15 @@ export default function RestaurantsList() {
                       return (
                       <tr
                         key={restaurant.id}
-                        className="hover:bg-slate-50 transition-colors"
+                        className="hover:bg-neutral-50 transition-colors"
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-slate-700">{index + 1}</span>
+                          <span className="text-sm font-medium text-neutral-700">{index + 1}</span>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div 
-                              className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-all border border-slate-100"
+                              className="w-10 h-10 rounded-full overflow-hidden bg-neutral-100 flex items-center justify-center shrink-0 cursor-pointer hover:opacity-80 transition-colors border border-neutral-100"
                               onClick={() => handleViewDetails(restaurant)}
                             >
                               <img
@@ -1404,29 +1404,29 @@ export default function RestaurantsList() {
                             </div>
                             <div className="flex flex-col">
                               <span 
-                                className="text-sm font-medium text-slate-900 cursor-pointer hover:text-blue-600 transition-colors"
+                                className="text-sm font-medium text-neutral-900 cursor-pointer hover:text-[#0a4d2b] transition-colors"
                                 onClick={() => handleViewDetails(restaurant)}
                               >
                                 {restaurant.name}
                               </span>
-                              <span className="text-xs text-slate-500">ID #{formatRestaurantId(restaurant.originalData?.restaurantId || restaurant.originalData?._id || restaurant._id || restaurant.id)}</span>
-                              <span className="text-xs text-slate-500">{renderStars(restaurant.rating)}</span>
+                              <span className="text-xs text-neutral-500">ID #{formatRestaurantId(restaurant.originalData?.restaurantId || restaurant.originalData?._id || restaurant._id || restaurant.id)}</span>
+                              <span className="text-xs text-neutral-500">{renderStars(restaurant.rating)}</span>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{restaurant.ownerName}</span>
-                            <span className="text-xs text-slate-500">{formatPhone(restaurant.ownerPhone)}</span>
+                            <span className="text-sm font-medium text-neutral-900">{restaurant.ownerName}</span>
+                            <span className="text-xs text-neutral-500">{formatPhone(restaurant.ownerPhone)}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm text-slate-700">{restaurant.zone}</span>
+                          <span className="text-sm text-neutral-700">{restaurant.zone}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            <span className="text-sm font-semibold text-slate-900">
+                            <span className="text-sm font-medium text-neutral-900">
                               {(Number(restaurant.rating) || 0).toFixed(1)}
                             </span>
                           </div>
@@ -1434,28 +1434,28 @@ export default function RestaurantsList() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           {viewMode === "banned" ? (
                             <div className="flex flex-col gap-1">
-                              <span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-rose-100 text-rose-700">
+                              <span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-medium bg-rose-100 text-rose-700">
                                 Banned
                               </span>
-                              <span className="text-[11px] text-slate-500">
+                              <span className="text-xs text-neutral-500">
                                 Outlet: Offline
                               </span>
                             </div>
                           ) : viewMode === "rejected" ? (
                             <div className="flex flex-col gap-1">
-                              <span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-red-100 text-red-700">
+                              <span className="inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-medium bg-red-100 text-red-700">
                                 Rejected
                               </span>
-                              <span className="text-[11px] text-slate-500">
+                              <span className="text-xs text-neutral-500">
                                 Outlet: Offline
                               </span>
                             </div>
                           ) : (
                             <div className="flex flex-col gap-1">
-                              <span className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold ${approvalStatusBadgeClass(restaurant.approvalStatus)}`}>
+                              <span className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-medium ${approvalStatusBadgeClass(restaurant.approvalStatus)}`}>
                                 {approvalStatusLabel(restaurant.approvalStatus)}
                               </span>
-                              <span className="text-[11px] text-slate-500">
+                              <span className="text-xs text-neutral-500">
                                 Outlet: {restaurant.isActive ? "Active" : "Inactive"}
                               </span>
                             </div>
@@ -1465,7 +1465,7 @@ export default function RestaurantsList() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => handleViewDetails(restaurant)}
-                              className="p-1.5 rounded text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded text-[#0a4d2b] hover:bg-neutral-50 transition-colors"
                               title="View Details"
                             >
                               <Eye className="w-4 h-4" />
@@ -1515,41 +1515,41 @@ export default function RestaurantsList() {
       {/* Restaurant Details Modal */}
       {selectedRestaurant && (
         <div
-          className="fixed inset-0 bg-slate-900/10 backdrop-blur-md z-100 flex items-center justify-center p-4 lg:p-8 transition-all duration-300"
+          className="fixed inset-0 bg-neutral-900/10 backdrop-blur-md z-100 flex items-center justify-center p-4 lg:p-8 transition-colors duration-300"
           onClick={closeDetailsModal}
         >
           <div
-            className="bg-white rounded-3xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border border-slate-200/60 max-w-4xl w-full max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-400"
+            className="bg-white rounded-xl shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] border border-neutral-200/60 max-w-4xl w-full max-h-[92vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-400"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
+            <div className="px-8 py-6 border-b border-neutral-100 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900">Restaurant Details</h2>
-                <p className="text-sm text-slate-500 mt-1">Detailed overview and information</p>
+                <h2 className="text-2xl font-medium text-neutral-900">Restaurant details</h2>
+                <p className="text-sm text-neutral-500 mt-1">Detailed overview and information</p>
               </div>
               <div className="flex items-center gap-2">
                 {normalizeApprovalStatus(restaurantDetails || selectedRestaurant?.originalData || selectedRestaurant) !== "rejected" && (
                   !isEditingDetails ? (
                     <button
                       onClick={handleStartEditDetails}
-                      className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors"
+                      className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-medium transition-colors"
                     >
-                      Edit Details
+                      Edit details
                     </button>
                   ) : (
                     <>
                       <button
                         onClick={handleCancelEditDetails}
                         disabled={savingDetails}
-                        className="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition-colors disabled:opacity-60"
+                        className="px-3 py-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 text-sm font-medium transition-colors disabled:opacity-60"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveDetails}
                         disabled={savingDetails}
-                        className="px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-60 flex items-center gap-2"
+                        className="px-3 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-sm font-medium transition-colors disabled:opacity-60 flex items-center gap-2"
                       >
                         {savingDetails && <Loader2 className="w-4 h-4 animate-spin" />}
                         {savingDetails ? "Saving..." : "Save Changes"}
@@ -1559,7 +1559,7 @@ export default function RestaurantsList() {
                 )}
                 <button
                   onClick={closeDetailsModal}
-                  className="p-2.5 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all duration-200 bg-slate-50"
+                  className="p-2.5 rounded-xl hover:bg-neutral-100 text-neutral-400 hover:text-neutral-600 transition-colors duration-200 bg-neutral-50"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -1572,23 +1572,23 @@ export default function RestaurantsList() {
               {loadingDetails && (
                 <div className="flex flex-col items-center justify-center py-24">
                   <div className="relative">
-                    <div className="w-12 h-12 rounded-full border-4 border-slate-100"></div>
-                    <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-blue-600 border-t-transparent animate-spin"></div>
+                    <div className="w-12 h-12 rounded-full border-4 border-neutral-100"></div>
+                    <div className="absolute inset-0 w-12 h-12 rounded-full border-4 border-[#0a4d2b] border-t-transparent animate-spin"></div>
                   </div>
-                  <span className="mt-4 text-slate-500 font-medium tracking-wide">Fetching restaurant data...</span>
+                  <span className="mt-4 text-neutral-500 font-medium">Fetching restaurant data...</span>
                 </div>
               )}
               {!loadingDetails && isEditingDetails && (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
-                      <p className="text-xs text-slate-500 mb-2">Profile Image</p>
+                      <p className="text-xs text-neutral-500 mb-2">Profile image</p>
                       <div className="flex items-center gap-4">
-                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-slate-100 border border-slate-200">
+                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200">
                           {profileImagePreview ? (
                             <img src={profileImagePreview} alt="Profile preview" className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-slate-400">
+                            <div className="w-full h-full flex items-center justify-center text-neutral-400">
                               <ImageIcon className="w-6 h-6" />
                             </div>
                           )}
@@ -1604,25 +1604,25 @@ export default function RestaurantsList() {
                               setProfileImagePreview(localUrl)
                             }
                           }}
-                          className="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
+                          className="block w-full text-sm text-neutral-700 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-neutral-100 file:text-neutral-700 hover:file:bg-neutral-200"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Restaurant Name</label>
-                      <input type="text" value={detailsForm.name} onChange={(e) => setDetailsForm((prev) => ({ ...prev, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Restaurant name</label>
+                      <input type="text" value={detailsForm.name} onChange={(e) => setDetailsForm((prev) => ({ ...prev, name: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Pure Veg</label>
+                      <label className="block text-xs text-neutral-500 mb-1">Pure veg</label>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setDetailsForm((prev) => ({ ...prev, pureVegRestaurant: true }))}
                           className={`px-3 py-1.5 text-xs rounded-full border ${
                             detailsForm.pureVegRestaurant === true
-                              ? "bg-green-600 text-white border-green-600"
-                              : "bg-white text-slate-700 border-slate-300"
+                              ? "bg-[#0a4d2b] text-white border-green-600"
+                              : "bg-white text-neutral-700 border-neutral-300"
                           }`}
                         >
                           Yes
@@ -1632,8 +1632,8 @@ export default function RestaurantsList() {
                           onClick={() => setDetailsForm((prev) => ({ ...prev, pureVegRestaurant: false }))}
                           className={`px-3 py-1.5 text-xs rounded-full border ${
                             detailsForm.pureVegRestaurant === false
-                              ? "bg-slate-900 text-white border-slate-900"
-                              : "bg-white text-slate-700 border-slate-300"
+                              ? "bg-neutral-900 text-white border-neutral-900"
+                              : "bg-white text-neutral-700 border-neutral-300"
                           }`}
                         >
                           No
@@ -1641,36 +1641,36 @@ export default function RestaurantsList() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Restaurant Email</label>
-                      <input type="email" value={detailsForm.email} onChange={(e) => setDetailsForm((prev) => ({ ...prev, email: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Restaurant email</label>
+                      <input type="email" value={detailsForm.email} onChange={(e) => setDetailsForm((prev) => ({ ...prev, email: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Owner Name</label>
-                      <input type="text" value={detailsForm.ownerName} onChange={(e) => setDetailsForm((prev) => ({ ...prev, ownerName: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Owner name</label>
+                      <input type="text" value={detailsForm.ownerName} onChange={(e) => setDetailsForm((prev) => ({ ...prev, ownerName: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Owner Email</label>
-                      <input type="email" value={detailsForm.ownerEmail} onChange={(e) => setDetailsForm((prev) => ({ ...prev, ownerEmail: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Owner email</label>
+                      <input type="email" value={detailsForm.ownerEmail} onChange={(e) => setDetailsForm((prev) => ({ ...prev, ownerEmail: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Owner Phone</label>
-                      <input type="text" value={detailsForm.ownerPhone} onChange={(e) => setDetailsForm((prev) => ({ ...prev, ownerPhone: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Owner phone</label>
+                      <input type="text" value={detailsForm.ownerPhone} onChange={(e) => setDetailsForm((prev) => ({ ...prev, ownerPhone: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Primary Contact</label>
-                      <input type="text" value={detailsForm.primaryContactNumber} onChange={(e) => setDetailsForm((prev) => ({ ...prev, primaryContactNumber: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Primary contact</label>
+                      <input type="text" value={detailsForm.primaryContactNumber} onChange={(e) => setDetailsForm((prev) => ({ ...prev, primaryContactNumber: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Opening Time</label>
-                      <input type="text" value={detailsForm.openingTime} onChange={(e) => setDetailsForm((prev) => ({ ...prev, openingTime: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Opening time</label>
+                      <input type="text" value={detailsForm.openingTime} onChange={(e) => setDetailsForm((prev) => ({ ...prev, openingTime: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Closing Time</label>
-                      <input type="text" value={detailsForm.closingTime} onChange={(e) => setDetailsForm((prev) => ({ ...prev, closingTime: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Closing time</label>
+                      <input type="text" value={detailsForm.closingTime} onChange={(e) => setDetailsForm((prev) => ({ ...prev, closingTime: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-500 mb-1">Estimated Delivery Time</label>
-                      <input type="text" value={detailsForm.estimatedDeliveryTime} onChange={(e) => setDetailsForm((prev) => ({ ...prev, estimatedDeliveryTime: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                      <label className="block text-xs text-neutral-500 mb-1">Estimated delivery time</label>
+                      <input type="text" value={detailsForm.estimatedDeliveryTime} onChange={(e) => setDetailsForm((prev) => ({ ...prev, estimatedDeliveryTime: e.target.value }))} className="w-full px-3 py-2 rounded-lg border border-neutral-300 text-sm" />
                     </div>
                     <div className="md:col-span-2 flex items-center gap-3">
                       <input
@@ -1678,9 +1678,9 @@ export default function RestaurantsList() {
                         type="checkbox"
                         checked={detailsForm.isActive}
                         onChange={(e) => setDetailsForm((prev) => ({ ...prev, isActive: e.target.checked }))}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                        className="h-4 w-4 rounded border-neutral-300 text-[#0a4d2b]"
                       />
-                      <label htmlFor="restaurant-status-active" className="text-sm text-slate-700">
+                      <label htmlFor="restaurant-status-active" className="text-sm text-neutral-700">
                         Restaurant is active
                       </label>
                     </div>
@@ -1745,17 +1745,17 @@ export default function RestaurantsList() {
                 <div className="space-y-10">
                   {detailsApprovalStatus === "rejected" && r?.rejectionReason && (
                     <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm font-medium">
-                      <p className="font-bold mb-1">Rejection Reason:</p>
+                      <p className="font-medium mb-1">Rejection Reason:</p>
                       <p className="text-red-700 font-normal">{r.rejectionReason}</p>
                     </div>
                   )}
                   {/* Restaurant Basic Info */}
                   <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-                    <div className="w-32 h-32 rounded-3xl overflow-hidden bg-slate-50 shrink-0 shadow-inner group">
+                    <div className="w-32 h-32 rounded-2xl overflow-hidden bg-neutral-50 shrink-0 shadow-inner group">
                       <img
                         src={profileImgUrl || PLACEHOLDER_128}
                         alt={r?.restaurantName || r?.name || "Restaurant"}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-500"
                         onError={(e) => {
                           e.target.src = PLACEHOLDER_128
                         }}
@@ -1763,20 +1763,20 @@ export default function RestaurantsList() {
                     </div>
                     <div className="flex-1 text-center md:text-left pt-2">
                       <div className="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                        <h3 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        <h3 className="text-3xl font-medium text-neutral-900">
                           {r?.restaurantName || r?.name || "N/A"}
                         </h3>
                         <div className="flex items-center justify-center md:justify-start gap-2">
                           {detailsApprovalStatus === "banned" ? (
-                            <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700">
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-700">
                               Banned
                             </span>
                           ) : detailsApprovalStatus === "rejected" ? (
-                            <span className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-100 text-red-700">
+                            <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
                               Rejected
                             </span>
                           ) : (
-                            <span className={`px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${r?.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium   ${r?.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                               {r?.isActive !== false ? 'Active' : 'Inactive'}
                             </span>
                           )}
@@ -1786,7 +1786,7 @@ export default function RestaurantsList() {
                         {(r?.ratings?.average != null) && (
                           <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 rounded-xl">
                             <Star className="w-4 h-4 fill-yellow-400 text-yellow-500" />
-                            <span className="text-sm font-bold text-yellow-700">
+                            <span className="text-sm font-medium text-yellow-700">
                               {(r.ratings?.average ?? 0).toFixed(1)}
                             </span>
                             <span className="text-xs text-yellow-600/70 ml-1 font-medium">
@@ -1794,9 +1794,9 @@ export default function RestaurantsList() {
                             </span>
                           </div>
                         )}
-                        <div className="flex items-center gap-2 text-slate-500 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                        <div className="flex items-center gap-2 text-neutral-500 bg-neutral-50 px-3 py-1.5 rounded-xl border border-neutral-100">
                           <Building2 className="w-4 h-4" />
-                          <span className="text-xs font-bold tracking-wider">{formatRestaurantId(r?.restaurantId || r?._id)}</span>
+                          <span className="text-xs font-medium">{formatRestaurantId(r?.restaurantId || r?._id)}</span>
                         </div>
                       </div>
                     </div>
@@ -1805,41 +1805,41 @@ export default function RestaurantsList() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                     {/* Owner Information */}
                     <div className="space-y-6">
-                      <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                        <User className="w-4 h-4 text-blue-600" />
-                        <h4 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Owner Information</h4>
+                      <div className="flex items-center gap-2 pb-2 border-b border-neutral-100">
+                        <User className="w-4 h-4 text-[#0a4d2b]" />
+                        <h4 className="text-sm font-medium text-neutral-900">Owner information</h4>
                       </div>
                       <div className="space-y-4">
-                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-blue-50/30 border border-blue-100/30">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
-                            <User className="w-5 h-5 text-blue-600" />
+                        <div className="flex items-start gap-4 p-4 rounded-2xl bg-neutral-50/30 border border-neutral-200">
+                          <div className="w-10 h-10 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 bg-neutral-100 text-neutral-500">
+                            <User className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-0.5">Full Name</p>
-                            <p className="text-base font-bold text-slate-800">
+                            <p className="text-xs text-[#0a4d2b] font-medium mb-0.5">Full name</p>
+                            <p className="text-base font-medium text-neutral-800">
                               {r?.ownerName || "N/A"}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-start gap-4 p-4 rounded-2xl bg-emerald-50/30 border border-emerald-100/30">
-                          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-                            <Phone className="w-5 h-5 text-emerald-600" />
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-neutral-100 text-neutral-500">
+                            <Phone className="w-5 h-5" />
                           </div>
                           <div>
-                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Contact Number</p>
-                            <p className="text-base font-bold text-slate-800">
+                            <p className="text-xs text-emerald-600 font-medium mb-0.5">Contact number</p>
+                            <p className="text-base font-medium text-neutral-800">
                               {r?.ownerPhone || r?.phone || "N/A"}
                             </p>
                           </div>
                         </div>
                         {(r?.ownerEmail || r?.email) && (
-                          <div className="flex items-start gap-4 p-4 rounded-2xl bg-indigo-50/30 border border-indigo-100/30">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-                              <Mail className="w-5 h-5 text-indigo-600" />
+                          <div className="flex items-start gap-4 p-4 rounded-2xl bg-neutral-50/30 border border-neutral-200">
+                            <div className="w-10 h-10 rounded-xl bg-neutral-100 flex items-center justify-center shrink-0 bg-neutral-100 text-neutral-500">
+                              <Mail className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider mb-0.5">Email Address</p>
-                              <p className="text-base font-bold text-slate-800">{r.ownerEmail || r.email}</p>
+                              <p className="text-xs text-[#0a4d2b] font-medium mb-0.5">Email address</p>
+                              <p className="text-base font-medium text-neutral-800">{r.ownerEmail || r.email}</p>
                             </div>
                           </div>
                         )}
@@ -1849,46 +1849,46 @@ export default function RestaurantsList() {
                     {/* Location & Contact */}
                     <div>
                       <div className="flex items-center justify-between mb-4">
-                        <h4 className="text-lg font-semibold text-slate-900">Location & Contact</h4>
+                        <h4 className="text-lg font-medium text-neutral-900">Location & contact</h4>
                         {isEditingLocation ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-[#0a4d2b] text-xs font-medium">
                             <Settings className="w-3.5 h-3.5" />
-                            Editable Below
+                            Editable below
                           </span>
                         ) : null}
                       </div>
                       <div className="space-y-3">
                         {!isEditingLocation && hasFlatAddress && (
                           <div className="flex items-start gap-3">
-                            <MapPin className="w-5 h-5 text-slate-400 mt-0.5" />
+                            <MapPin className="w-5 h-5 text-neutral-400 mt-0.5" />
                             <div>
-                              <p className="text-xs text-slate-500">Address</p>
-                              <p className="text-sm font-medium text-slate-900">
+                              <p className="text-xs text-neutral-500">Address</p>
+                              <p className="text-sm font-medium text-neutral-900">
                                 {displayAddress}
                               </p>
                             </div>
                           </div>
                         )}
                         {isEditingLocation && (
-                          <p className="text-xs text-indigo-700 font-medium bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
-                            Location editor is shown at the bottom of this details modal.
+                          <p className="text-xs text-[#0a4d2b] font-medium bg-neutral-50 border border-neutral-200 rounded-lg px-3 py-2">
+                            Location editor is shown at the bottom of this details modal
                           </p>
                         )}
                         {(r?.primaryContactNumber || r?.phone) && (
                           <div className="flex items-center gap-3">
-                            <Phone className="w-5 h-5 text-slate-400" />
+                            <Phone className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500">Primary Contact</p>
-                              <p className="text-sm font-medium text-slate-900">{r.primaryContactNumber || r.phone}</p>
+                              <p className="text-xs text-neutral-500">Primary contact</p>
+                              <p className="text-sm font-medium text-neutral-900">{r.primaryContactNumber || r.phone}</p>
                             </div>
                           </div>
                         )}
                         {(r?.email && !r?.ownerEmail) && (
                           <div className="flex items-center gap-3">
-                            <Mail className="w-5 h-5 text-slate-400" />
+                            <Mail className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500">Restaurant Email</p>
-                              <p className="text-sm font-medium text-slate-900">{r.email}</p>
+                              <p className="text-xs text-neutral-500">Restaurant email</p>
+                              <p className="text-sm font-medium text-neutral-900">{r.email}</p>
                             </div>
                           </div>
                         )}
@@ -1900,14 +1900,14 @@ export default function RestaurantsList() {
                   <div className="grid grid-cols-1 gap-6">
 
                     <div>
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Timings & Status</h4>
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Timings & status</h4>
                       <div className="space-y-3">
                         {(openingTimeVal || closingTimeVal) && (
                           <div className="flex items-center gap-3">
-                            <Clock className="w-5 h-5 text-slate-400" />
+                            <Clock className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500">Opening / Closing</p>
-                              <p className="text-sm font-medium text-slate-900">
+                              <p className="text-xs text-neutral-500">Opening / closing</p>
+                              <p className="text-sm font-medium text-neutral-900">
                                 {formatTime12Hour(openingTimeVal)} – {formatTime12Hour(closingTimeVal)}
                               </p>
                             </div>
@@ -1915,28 +1915,28 @@ export default function RestaurantsList() {
                         )}
                         {estimatedDeliveryTimeVal && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Estimated Delivery Time</p>
-                            <p className="text-sm font-medium text-slate-900">{estimatedDeliveryTimeVal}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Estimated delivery time</p>
+                            <p className="text-sm font-medium text-neutral-900">{estimatedDeliveryTimeVal}</p>
                           </div>
                         )}
                         {openDaysVal && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Open Days</p>
+                            <p className="text-xs text-neutral-500 mb-1">Open days</p>
                             <div className="flex flex-wrap gap-2">
                               {openDaysVal.map((day, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-medium capitalize">{day}</span>
+                                <span key={idx} className="px-2 py-1 bg-neutral-100 text-neutral-700 rounded text-xs font-medium capitalize">{day}</span>
                               ))}
                             </div>
                           </div>
                         )}
                         <div>
-                          <p className="text-xs text-slate-500 mb-1">Status</p>
+                          <p className="text-xs text-neutral-500 mb-1">Status</p>
                           {detailsApprovalStatus === "banned" ? (
                             <>
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-rose-100 text-rose-700">
                                 Banned
                               </span>
-                              <p className="mt-2 text-xs text-slate-500">
+                              <p className="mt-2 text-xs text-neutral-500">
                                 Outlet: Offline
                               </p>
                             </>
@@ -1945,7 +1945,7 @@ export default function RestaurantsList() {
                               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${approvalStatusBadgeClass(detailsApprovalStatus)}`}>
                                 {approvalStatusLabel(detailsApprovalStatus)}
                               </span>
-                              <p className="mt-2 text-xs text-slate-500">
+                              <p className="mt-2 text-xs text-neutral-500">
                                 Outlet: {(r?.isActive !== false) ? "Active" : "Inactive"}
                               </p>
                             </>
@@ -1957,27 +1957,27 @@ export default function RestaurantsList() {
 
                   {/* Media */}
                   {(profileImgUrl || coverImages.length > 0 || menuImages.length > 0) && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Media</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Media</h4>
                       <div className="space-y-4">
                         {profileImgUrl && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-2">Profile Image</p>
+                            <p className="text-xs text-neutral-500 mb-2">Profile image</p>
                             <a
                               href={profileImgUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700"
+                              className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]"
                             >
                               <ImageIcon className="w-4 h-4" />
-                              <span>View Profile Image</span>
+                              <span>View profile image</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           </div>
                         )}
                         {coverImages.length > 0 && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-2">Restaurant Photos</p>
+                            <p className="text-xs text-neutral-500 mb-2">Restaurant photos</p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                               {coverImages.map((url, idx) => (
                                 <a
@@ -1985,7 +1985,7 @@ export default function RestaurantsList() {
                                   href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="relative aspect-4/5 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 hover:border-slate-300"
+                                  className="relative aspect-4/5 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50 hover:border-neutral-300"
                                   title="Open restaurant photo"
                                 >
                                   <img
@@ -2004,7 +2004,7 @@ export default function RestaurantsList() {
                         )}
                         {menuImages.length > 0 && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-2">Menu Images</p>
+                            <p className="text-xs text-neutral-500 mb-2">Menu images</p>
                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                               {menuImages.map((url, idx) => (
                                 <a
@@ -2012,7 +2012,7 @@ export default function RestaurantsList() {
                                   href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="relative aspect-4/5 rounded-lg overflow-hidden border border-slate-200 bg-slate-50 hover:border-slate-300"
+                                  className="relative aspect-4/5 rounded-lg overflow-hidden border border-neutral-200 bg-neutral-50 hover:border-neutral-300"
                                   title="Open menu image"
                                 >
                                   <img
@@ -2035,15 +2035,15 @@ export default function RestaurantsList() {
 
                   {/* Registration Information */}
                   {(r?.createdAt || r?.updatedAt) && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration Information</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration information</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {r.createdAt && (
                           <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-slate-400" />
+                            <Calendar className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500 mb-1">Registration Date & Time</p>
-                              <p className="font-medium text-slate-900">
+                              <p className="text-xs text-neutral-500 mb-1">Registration date & time</p>
+                              <p className="font-medium text-neutral-900">
                                 {new Date(r.createdAt).toLocaleString('en-IN', {
                                   year: 'numeric',
                                   month: 'long',
@@ -2057,10 +2057,10 @@ export default function RestaurantsList() {
                         )}
                         {r.updatedAt && (
                           <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-slate-400" />
+                            <Calendar className="w-5 h-5 text-neutral-400" />
                             <div>
-                              <p className="text-xs text-slate-500 mb-1">Last Updated</p>
-                              <p className="font-medium text-slate-900">
+                              <p className="text-xs text-neutral-500 mb-1">Last updated</p>
+                              <p className="font-medium text-neutral-900">
                                 {new Date(r.updatedAt).toLocaleString('en-IN', {
                                   year: 'numeric',
                                   month: 'long',
@@ -2074,26 +2074,26 @@ export default function RestaurantsList() {
                         )}
                         {r.restaurantId && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Restaurant ID</p>
-                            <p className="font-medium text-slate-900">{formatRestaurantId(r.restaurantId)}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Restaurant ID</p>
+                            <p className="font-medium text-neutral-900">{formatRestaurantId(r.restaurantId)}</p>
                           </div>
                         )}
                         {r.slug && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Slug</p>
-                            <p className="font-medium text-slate-900">{r.slug}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Slug</p>
+                            <p className="font-medium text-neutral-900">{r.slug}</p>
                           </div>
                         )}
                         {r.phoneVerified !== undefined && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Phone Verified</p>
-                            <p className="font-medium text-slate-900">{r.phoneVerified ? "Yes" : "No"}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Phone verified</p>
+                            <p className="font-medium text-neutral-900">{r.phoneVerified ? "Yes" : "No"}</p>
                           </div>
                         )}
                         {r.signupMethod && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Signup Method</p>
-                            <p className="font-medium text-slate-900 capitalize">{r.signupMethod}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Signup method</p>
+                            <p className="font-medium text-neutral-900 capitalize">{r.signupMethod}</p>
                           </div>
                         )}
                       </div>
@@ -2102,35 +2102,35 @@ export default function RestaurantsList() {
 
                   {/* Registration Documents - flat (PAN, GST, FSSAI, Bank) or onboarding.step3 */}
                   {hasRegistrationDocuments && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration Documents</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration documents</h4>
                       <div className="space-y-6">
                         {/* PAN – flat or onboarding.step3 */}
                         {hasPanSection && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
-                              PAN Details
+                              PAN details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.panNumber || r?.onboarding?.step3?.pan?.panNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">PAN Number</p>
-                                  <p className="font-medium text-slate-900">{r.panNumber || r.onboarding?.step3?.pan?.panNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">PAN number</p>
+                                  <p className="font-medium text-neutral-900">{r.panNumber || r.onboarding?.step3?.pan?.panNumber}</p>
                                 </div>
                               )}
                               {(r.nameOnPan || r?.onboarding?.step3?.pan?.nameOnPan) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Name on PAN</p>
-                                  <p className="font-medium text-slate-900">{r.nameOnPan || r.onboarding?.step3?.pan?.nameOnPan}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Name on PAN</p>
+                                  <p className="font-medium text-neutral-900">{r.nameOnPan || r.onboarding?.step3?.pan?.nameOnPan}</p>
                                 </div>
                               )}
                               {panDocumentUrl && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-2">PAN Document</p>
-                                  <a href={panDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700">
+                                  <p className="text-xs text-neutral-500 mb-2">PAN document</p>
+                                  <a href={panDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]">
                                     <ImageIcon className="w-4 h-4" />
-                                    <span>View PAN Document</span>
+                                    <span>View PAN document</span>
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
@@ -2141,44 +2141,44 @@ export default function RestaurantsList() {
 
                         {/* GST – flat or onboarding.step3 */}
                         {hasGstSection && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
-                              GST Details
+                              GST details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.gstRegistered != null || r?.onboarding?.step3?.gst?.isRegistered != null) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">GST Registered</p>
-                                  <p className="font-medium text-slate-900">
+                                  <p className="text-xs text-neutral-500 mb-1">GST registered</p>
+                                  <p className="font-medium text-neutral-900">
                                     {r.gstRegistered != null ? (r.gstRegistered ? "Yes" : "No") : (r?.onboarding?.step3?.gst?.isRegistered ? "Yes" : "No")}
                                   </p>
                                 </div>
                               )}
                               {(r.gstNumber || r?.onboarding?.step3?.gst?.gstNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">GST Number</p>
-                                  <p className="font-medium text-slate-900">{r.gstNumber || r.onboarding?.step3?.gst?.gstNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">GST number</p>
+                                  <p className="font-medium text-neutral-900">{r.gstNumber || r.onboarding?.step3?.gst?.gstNumber}</p>
                                 </div>
                               )}
                               {(r.gstLegalName || r?.onboarding?.step3?.gst?.legalName) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Legal Name</p>
-                                  <p className="font-medium text-slate-900">{r.gstLegalName || r.onboarding?.step3?.gst?.legalName}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Legal name</p>
+                                  <p className="font-medium text-neutral-900">{r.gstLegalName || r.onboarding?.step3?.gst?.legalName}</p>
                                 </div>
                               )}
                               {(r.gstAddress || r?.onboarding?.step3?.gst?.address) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">GST Address</p>
-                                  <p className="font-medium text-slate-900">{r.gstAddress || r.onboarding?.step3?.gst?.address}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">GST address</p>
+                                  <p className="font-medium text-neutral-900">{r.gstAddress || r.onboarding?.step3?.gst?.address}</p>
                                 </div>
                               )}
                               {gstDocumentUrl && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-2">GST Document</p>
-                                  <a href={gstDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700">
+                                  <p className="text-xs text-neutral-500 mb-2">GST document</p>
+                                  <a href={gstDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]">
                                     <ImageIcon className="w-4 h-4" />
-                                    <span>View GST Document</span>
+                                    <span>View GST document</span>
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
@@ -2189,32 +2189,32 @@ export default function RestaurantsList() {
 
                         {/* FSSAI – flat or onboarding.step3 */}
                         {hasFssaiSection && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <FileText className="w-4 h-4" />
-                              FSSAI Details
+                              FSSAI details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.fssaiNumber || r?.onboarding?.step3?.fssai?.registrationNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">FSSAI Registration Number</p>
-                                  <p className="font-medium text-slate-900">{r.fssaiNumber || r.onboarding?.step3?.fssai?.registrationNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">FSSAI registration number</p>
+                                  <p className="font-medium text-neutral-900">{r.fssaiNumber || r.onboarding?.step3?.fssai?.registrationNumber}</p>
                                 </div>
                               )}
                               {(r.fssaiExpiry || r?.onboarding?.step3?.fssai?.expiryDate) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">FSSAI Expiry Date</p>
-                                  <p className="font-medium text-slate-900">
+                                  <p className="text-xs text-neutral-500 mb-1">FSSAI expiry date</p>
+                                  <p className="font-medium text-neutral-900">
                                     {new Date(r.fssaiExpiry || r.onboarding?.step3?.fssai?.expiryDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
                                   </p>
                                 </div>
                               )}
                               {fssaiDocumentUrl && (
                                 <div className="md:col-span-2">
-                                  <p className="text-xs text-slate-500 mb-2">FSSAI Document</p>
-                                  <a href={fssaiDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700">
+                                  <p className="text-xs text-neutral-500 mb-2">FSSAI document</p>
+                                  <a href={fssaiDocumentUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[#0a4d2b] hover:text-[#0a4d2b]">
                                     <ImageIcon className="w-4 h-4" />
-                                    <span>View FSSAI Document</span>
+                                    <span>View FSSAI document</span>
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 </div>
@@ -2225,34 +2225,34 @@ export default function RestaurantsList() {
 
                         {/* Bank – flat or onboarding.step3 */}
                         {hasBankSection && (
-                          <div className="bg-slate-50 rounded-lg p-4">
-                            <h5 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                          <div className="bg-neutral-50 rounded-lg p-4">
+                            <h5 className="font-medium text-neutral-900 mb-3 flex items-center gap-2">
                               <CreditCard className="w-4 h-4" />
-                              Bank Details
+                              Bank details
                             </h5>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               {(r.accountNumber || r?.onboarding?.step3?.bank?.accountNumber) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Account Number</p>
-                                  <p className="font-medium text-slate-900">{r.accountNumber || r.onboarding?.step3?.bank?.accountNumber}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Account number</p>
+                                  <p className="font-medium text-neutral-900">{r.accountNumber || r.onboarding?.step3?.bank?.accountNumber}</p>
                                 </div>
                               )}
                               {(r.ifscCode || r?.onboarding?.step3?.bank?.ifscCode) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">IFSC Code</p>
-                                  <p className="font-medium text-slate-900">{r.ifscCode || r.onboarding?.step3?.bank?.ifscCode}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">IFSC code</p>
+                                  <p className="font-medium text-neutral-900">{r.ifscCode || r.onboarding?.step3?.bank?.ifscCode}</p>
                                 </div>
                               )}
                               {(r.accountHolderName || r?.onboarding?.step3?.bank?.accountHolderName) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Account Holder Name</p>
-                                  <p className="font-medium text-slate-900">{r.accountHolderName || r.onboarding?.step3?.bank?.accountHolderName}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Account holder name</p>
+                                  <p className="font-medium text-neutral-900">{r.accountHolderName || r.onboarding?.step3?.bank?.accountHolderName}</p>
                                 </div>
                               )}
                               {(r.accountType || r?.onboarding?.step3?.bank?.accountType) && (
                                 <div>
-                                  <p className="text-xs text-slate-500 mb-1">Account Type</p>
-                                  <p className="font-medium text-slate-900 capitalize">{r.accountType || r.onboarding?.step3?.bank?.accountType}</p>
+                                  <p className="text-xs text-neutral-500 mb-1">Account type</p>
+                                  <p className="font-medium text-neutral-900 capitalize">{r.accountType || r.onboarding?.step3?.bank?.accountType}</p>
                                 </div>
                               )}
                             </div>
@@ -2264,51 +2264,51 @@ export default function RestaurantsList() {
 
                   {/* Address at registration (flat) */}
                   {hasFlatAddress && !r?.onboarding?.step1?.location && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Address (at registration)</h4>
-                      <p className="text-sm font-medium text-slate-900">{displayAddress}</p>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Address (at registration)</h4>
+                      <p className="text-sm font-medium text-neutral-900">{displayAddress}</p>
                     </div>
                   )}
 
                   {/* Onboarding Step 1 Details */}
                   {r?.onboarding?.step1 && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration Step 1 Details</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration Step 1 Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {r.onboarding.step1.restaurantName && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Restaurant Name (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step1.restaurantName}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Restaurant Name (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step1.restaurantName}</p>
                           </div>
                         )}
                         {r.onboarding.step1.ownerName && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Owner Name (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step1.ownerName}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Owner Name (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step1.ownerName}</p>
                           </div>
                         )}
                         {r.onboarding.step1.ownerEmail && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Owner Email (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step1.ownerEmail}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Owner Email (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step1.ownerEmail}</p>
                           </div>
                         )}
                         {r.onboarding.step1.ownerPhone && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Owner Phone (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step1.ownerPhone}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Owner Phone (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step1.ownerPhone}</p>
                           </div>
                         )}
                         {r.onboarding.step1.primaryContactNumber && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Primary Contact (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step1.primaryContactNumber}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Primary Contact (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step1.primaryContactNumber}</p>
                           </div>
                         )}
                         {r.onboarding.step1.location && (
                           <div className="md:col-span-2">
-                            <p className="text-xs text-slate-500 mb-1">Location (at registration)</p>
-                            <p className="font-medium text-slate-900">
+                            <p className="text-xs text-neutral-500 mb-1">Location (at registration)</p>
+                            <p className="font-medium text-neutral-900">
                               {r.onboarding.step1.location.addressLine1 || ""}
                               {r.onboarding.step1.location.addressLine2 && `, ${r.onboarding.step1.location.addressLine2}`}
                               {r.onboarding.step1.location.area && `, ${r.onboarding.step1.location.area}`}
@@ -2323,15 +2323,15 @@ export default function RestaurantsList() {
 
                   {/* Onboarding Step 2 Details */}
                   {r?.onboarding?.step2 && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration Step 2 Details</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration Step 2 Details</h4>
                       <div className="space-y-4">
                         {r.onboarding.step2.cuisines && Array.isArray(r.onboarding.step2.cuisines) && r.onboarding.step2.cuisines.length > 0 && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-2">Cuisines (at registration)</p>
+                            <p className="text-xs text-neutral-500 mb-2">Cuisines (at registration)</p>
                             <div className="flex flex-wrap gap-2">
                               {r.onboarding.step2.cuisines.map((cuisine, idx) => (
-                                <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
+                                <span key={idx} className="px-3 py-1 bg-neutral-100 text-[#0a4d2b] rounded-full text-sm font-medium">
                                   {cuisine}
                                 </span>
                               ))}
@@ -2341,21 +2341,21 @@ export default function RestaurantsList() {
                         {r.onboarding.step2.deliveryTimings && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                             <div>
-                              <p className="text-xs text-slate-500 mb-1">Opening Time (at registration)</p>
-                              <p className="font-medium text-slate-900">{formatTime12Hour(r.onboarding.step2.deliveryTimings.openingTime)}</p>
+                              <p className="text-xs text-neutral-500 mb-1">Opening Time (at registration)</p>
+                              <p className="font-medium text-neutral-900">{formatTime12Hour(r.onboarding.step2.deliveryTimings.openingTime)}</p>
                             </div>
                             <div>
-                              <p className="text-xs text-slate-500 mb-1">Closing Time (at registration)</p>
-                              <p className="font-medium text-slate-900">{formatTime12Hour(r.onboarding.step2.deliveryTimings.closingTime)}</p>
+                              <p className="text-xs text-neutral-500 mb-1">Closing Time (at registration)</p>
+                              <p className="font-medium text-neutral-900">{formatTime12Hour(r.onboarding.step2.deliveryTimings.closingTime)}</p>
                             </div>
                           </div>
                         )}
                         {r.onboarding.step2.openDays && Array.isArray(r.onboarding.step2.openDays) && r.onboarding.step2.openDays.length > 0 && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-2">Open Days (at registration)</p>
+                            <p className="text-xs text-neutral-500 mb-2">Open Days (at registration)</p>
                             <div className="flex flex-wrap gap-2">
                               {r.onboarding.step2.openDays.map((day, idx) => (
-                                <span key={idx} className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium capitalize">
+                                <span key={idx} className="px-3 py-1 bg-neutral-100 text-[#0a4d2b] rounded-full text-sm font-medium capitalize">
                                   {day}
                                 </span>
                               ))}
@@ -2364,7 +2364,7 @@ export default function RestaurantsList() {
                         )}
                         {r.onboarding.step2.profileImageUrl?.url && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-2">Profile Image (at registration)</p>
+                            <p className="text-xs text-neutral-500 mb-2">Profile Image (at registration)</p>
                             <a
                               href={r.onboarding.step2.profileImageUrl.url}
                               target="_blank"
@@ -2374,7 +2374,7 @@ export default function RestaurantsList() {
                               <img
                                 src={r.onboarding.step2.profileImageUrl.url}
                                 alt="Profile"
-                                className="w-32 h-32 rounded-lg object-cover border border-slate-200 hover:border-blue-500 transition-colors"
+                                className="w-32 h-32 rounded-lg object-cover border border-neutral-200 hover:border-[#0a4d2b] transition-colors"
                                 onError={(e) => {
                                   e.target.src = PLACEHOLDER_128
                                 }}
@@ -2388,30 +2388,30 @@ export default function RestaurantsList() {
 
                   {/* Onboarding Step 4 Details */}
                   {r?.onboarding?.step4 && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Registration Step 4 Details</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Registration Step 4 Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {r.onboarding.step4.estimatedDeliveryTime && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Estimated Delivery Time (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step4.estimatedDeliveryTime}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Estimated Delivery Time (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step4.estimatedDeliveryTime}</p>
                           </div>
                         )}
                         {r.onboarding.step4.distance && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Distance (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step4.distance}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Distance (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step4.distance}</p>
                           </div>
                         )}
                         {r.onboarding.step4.featuredDish && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Featured Dish (at registration)</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.step4.featuredDish}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Featured Dish (at registration)</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.step4.featuredDish}</p>
                           </div>
                         )}
                         {r.onboarding.step4.offer && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Offer (at registration)</p>
+                            <p className="text-xs text-neutral-500 mb-1">Offer (at registration)</p>
                             <p className="font-medium text-green-600">{r.onboarding.step4.offer}</p>
                           </div>
                         )}
@@ -2421,37 +2421,37 @@ export default function RestaurantsList() {
 
                   {/* Additional Information */}
                   {(r?.slug || r?.restaurantId || r?.phoneVerified !== undefined || r?.signupMethod) && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Additional Information</h4>
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Additional information</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                         {r?.slug && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Slug</p>
-                            <p className="font-medium text-slate-900">{r.slug}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Slug</p>
+                            <p className="font-medium text-neutral-900">{r.slug}</p>
                           </div>
                         )}
                         {r?.restaurantId && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Restaurant ID</p>
-                            <p className="font-medium text-slate-900">{formatRestaurantId(r.restaurantId)}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Restaurant ID</p>
+                            <p className="font-medium text-neutral-900">{formatRestaurantId(r.restaurantId)}</p>
                           </div>
                         )}
                         {r?.phoneVerified !== undefined && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Phone Verified</p>
-                            <p className="font-medium text-slate-900">{r.phoneVerified ? "Yes" : "No"}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Phone verified</p>
+                            <p className="font-medium text-neutral-900">{r.phoneVerified ? "Yes" : "No"}</p>
                           </div>
                         )}
                         {r?.signupMethod && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Signup Method</p>
-                            <p className="font-medium text-slate-900 capitalize">{r.signupMethod}</p>
+                            <p className="text-xs text-neutral-500 mb-1">Signup method</p>
+                            <p className="font-medium text-neutral-900 capitalize">{r.signupMethod}</p>
                           </div>
                         )}
                         {r?.onboarding?.completedSteps !== undefined && (
                           <div>
-                            <p className="text-xs text-slate-500 mb-1">Onboarding Steps Completed</p>
-                            <p className="font-medium text-slate-900">{r.onboarding.completedSteps} / 4</p>
+                            <p className="text-xs text-neutral-500 mb-1">Onboarding steps completed</p>
+                            <p className="font-medium text-neutral-900">{r.onboarding.completedSteps} / 4</p>
                           </div>
                         )}
                       </div>
@@ -2459,19 +2459,19 @@ export default function RestaurantsList() {
                   )}
 
                   {isEditingLocation && (
-                    <div className="pt-6 border-t border-slate-200">
-                      <h4 className="text-lg font-semibold text-slate-900 mb-4">Location Editor</h4>
-                      <div className="space-y-3 border border-indigo-100 bg-indigo-50/40 rounded-xl p-4">
-                        <p className="text-xs text-indigo-700 font-semibold">
-                          Update restaurant location using dropdown (accurate) + select service zone.
+                    <div className="pt-6 border-t border-neutral-200">
+                      <h4 className="text-lg font-medium text-neutral-900 mb-4">Location editor</h4>
+                      <div className="space-y-3 border border-neutral-200 bg-neutral-50/40 rounded-xl p-4">
+                        <p className="text-xs text-[#0a4d2b] font-medium">
+                          Update restaurant location using dropdown (accurate) + select service zone
                         </p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           <div className="md:col-span-2">
-                            <label className="block text-xs text-slate-600 mb-1 font-semibold">Service Zone*</label>
+                            <label className="block text-xs text-neutral-600 mb-1 font-medium">Service Zone*</label>
                             <select
                               value={locationForm.zoneId || ""}
                               onChange={(e) => setLocationForm((prev) => ({ ...prev, zoneId: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-300 bg-white text-sm"
                             >
                               <option value="">{zonesLoading ? "Loading zones..." : "Select a zone"}</option>
                               {zones.map((z) => (
@@ -2483,70 +2483,70 @@ export default function RestaurantsList() {
                           </div>
 
                           <div className="md:col-span-2">
-                            <label className="block text-xs text-slate-600 mb-1 font-semibold">Search location*</label>
+                            <label className="block text-xs text-neutral-600 mb-1 font-medium">Search location*</label>
                             <input
                               ref={locationSearchInputRef}
                               type="text"
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
-                              placeholder="Start typing and choose from dropdown..."
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-300 bg-white text-sm"
+                              placeholder="Start typing and choose from dropdown"
                             />
-                            <p className="text-[11px] text-slate-500 mt-1">
-                              Select from dropdown to auto-fill address and coordinates.
+                            <p className="text-xs text-neutral-500 mt-1">
+                              Select from dropdown to auto-fill address and coordinates
                             </p>
                           </div>
 
                           <div className="md:col-span-2">
-                            <label className="block text-xs text-slate-500 mb-1">Formatted Address</label>
+                            <label className="block text-xs text-neutral-500 mb-1">Formatted address</label>
                             <input
                               type="text"
                               value={locationForm.formattedAddress}
                               readOnly
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-slate-500 mb-1">Area</label>
+                            <label className="block text-xs text-neutral-500 mb-1">Area</label>
                             <input
                               type="text"
                               value={locationForm.area}
                               readOnly
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-slate-500 mb-1">City</label>
+                            <label className="block text-xs text-neutral-500 mb-1">City</label>
                             <input
                               type="text"
                               value={locationForm.city}
                               readOnly
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-slate-500 mb-1">State</label>
+                            <label className="block text-xs text-neutral-500 mb-1">State</label>
                             <input
                               type="text"
                               value={locationForm.state}
                               readOnly
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-sm"
                             />
                           </div>
                           <div>
-                            <label className="block text-xs text-slate-500 mb-1">Pincode</label>
+                            <label className="block text-xs text-neutral-500 mb-1">Pincode</label>
                             <input
                               type="text"
                               value={locationForm.pincode}
                               readOnly
-                              className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-200 bg-neutral-50 text-sm"
                             />
                           </div>
                           <div className="md:col-span-2">
-                            <label className="block text-xs text-slate-500 mb-1">Landmark (optional)</label>
+                            <label className="block text-xs text-neutral-500 mb-1">Landmark (optional)</label>
                             <input
                               type="text"
                               value={locationForm.landmark}
                               onChange={(e) => setLocationForm((prev) => ({ ...prev, landmark: e.target.value }))}
-                              className="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm"
+                              className="w-full px-3 py-2 rounded-lg border border-neutral-300 bg-white text-sm"
                             />
                           </div>
                         </div>
@@ -2555,7 +2555,7 @@ export default function RestaurantsList() {
                         <button
                           onClick={handleSaveLocation}
                           disabled={savingLocation}
-                          className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-semibold text-white ${savingLocation ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700"}`}
+                          className={`inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium text-white ${savingLocation ? "bg-neutral-200 cursor-not-allowed" : "bg-neutral-900 hover:bg-neutral-900"}`}
                         >
                           {savingLocation ? "Saving..." : "Save Location"}
                         </button>
@@ -2567,8 +2567,8 @@ export default function RestaurantsList() {
               })()}
               {!loadingDetails && !restaurantDetails && !selectedRestaurant && (
                 <div className="flex flex-col items-center justify-center py-20">
-                  <p className="text-lg font-semibold text-slate-700 mb-2">No Details Available</p>
-                  <p className="text-sm text-slate-500">Unable to load restaurant details</p>
+                  <p className="text-lg font-medium text-neutral-700 mb-2">No details available</p>
+                  <p className="text-sm text-neutral-500">Unable to load restaurant details</p>
                 </div>
               )}
             </div>
@@ -2578,7 +2578,7 @@ export default function RestaurantsList() {
 
       {/* Ban/Unban Confirmation Dialog */}
       {banConfirmDialog && (
-        <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={cancelBanRestaurant}>
+        <div className="fixed inset-0 bg-neutral-900/10 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={cancelBanRestaurant}>
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
@@ -2591,16 +2591,16 @@ export default function RestaurantsList() {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">
+                  <h3 className="text-lg font-medium text-neutral-900">
                     {banConfirmDialog.action === 'ban' ? 'Ban Restaurant' : 'Unbanned Restaurant'}
                   </h3>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-neutral-600">
                     {banConfirmDialog.restaurant.name}
                   </p>
                 </div>
               </div>
 
-              <p className="text-sm text-slate-700 mb-6">
+              <p className="text-sm text-neutral-700 mb-6">
                 {banConfirmDialog.action === 'ban'
                   ? 'Are you sure you want to ban this restaurant? They will not be able to receive orders or access their account.'
                   : 'Are you sure you want to unbanned this Restautant?'
@@ -2611,7 +2611,7 @@ export default function RestaurantsList() {
                 <button
                   onClick={cancelBanRestaurant}
                   disabled={banning}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
@@ -2640,22 +2640,22 @@ export default function RestaurantsList() {
 
       {/* Delete Confirmation Dialog */}
       {deleteConfirmDialog && (
-        <div className="fixed inset-0 bg-slate-900/10 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={cancelDeleteRestaurant}>
+        <div className="fixed inset-0 bg-neutral-900/10 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={cancelDeleteRestaurant}>
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                  <Trash2 className="w-6 h-6 text-red-600" />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-neutral-100 text-neutral-500">
+                  <Trash2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Delete Restaurant</h3>
-                  <p className="text-sm text-slate-600">
+                  <h3 className="text-lg font-medium text-neutral-900">Delete restaurant</h3>
+                  <p className="text-sm text-neutral-600">
                     {deleteConfirmDialog.restaurant.name}
                   </p>
                 </div>
               </div>
 
-              <p className="text-sm text-slate-700 mb-6">
+              <p className="text-sm text-neutral-700 mb-6">
                 Are you sure you want to delete this restaurant? This action cannot be undone and will permanently remove all restaurant data, including orders, menu items, and settings.
               </p>
 
@@ -2663,7 +2663,7 @@ export default function RestaurantsList() {
                 <button
                   onClick={cancelDeleteRestaurant}
                   disabled={deleting}
-                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>

@@ -247,18 +247,18 @@ export default function NotificationBroadcast() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-neutral-900/[0.08] p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-neutral-100 text-neutral-500">
               <BellRing className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-slate-900">Broadcast Notification</h1>
+                <h1 className="text-2xl font-medium text-neutral-900">Broadcast notification</h1>
               </div>
-              <p className="text-sm text-slate-500 mt-1">
-                Send one notification to all, role-based, or selected recipients.
+              <p className="text-sm text-neutral-500 mt-1">
+                Send one notification to all, role-based, or selected recipients
               </p>
             </div>
           </div>
@@ -266,10 +266,10 @@ export default function NotificationBroadcast() {
           <button
             type="button"
             onClick={() => setShowHistoryModal(true)}
-            className="inline-flex items-center gap-2.5 px-5 py-3 text-sm font-bold rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all self-start sm:self-auto cursor-pointer"
+            className="inline-flex items-center gap-2.5 px-5 py-3 text-sm font-medium rounded-2xl text-white shadow-sm shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 transition-colors self-start sm:self-auto cursor-pointer bg-neutral-600"
           >
-            <History className="w-5 h-5 text-white" /> View History
-            <span className="bg-white/25 text-white text-xs px-2.5 py-0.5 rounded-full font-extrabold ml-0.5 inline-flex items-center justify-center min-w-[28px] min-h-[24px]">
+            <History className="w-5 h-5 text-white" /> View history
+            <span className="bg-white/25 text-white text-xs px-2.5 py-0.5 rounded-full font-medium ml-0.5 inline-flex items-center justify-center min-w-[28px] min-h-[24px]">
               {historyLoading ? (
                 <span className="block w-2.5 h-3 bg-white/40 rounded animate-pulse" />
               ) : (
@@ -282,21 +282,21 @@ export default function NotificationBroadcast() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <label className="block">
-              <span className="text-sm font-semibold text-slate-700">Title</span>
+              <span className="text-sm font-medium text-neutral-700">Title</span>
               <input
                 value={form.title}
                 onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
                 placeholder="Enter notification title"
-                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="mt-2 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400 focus:ring-2 focus:ring-[#0a4d2b]/30"
               />
             </label>
 
             <label className="block">
-              <span className="text-sm font-semibold text-slate-700">Target Type</span>
+              <span className="text-sm font-medium text-neutral-700">Target type</span>
               <select
                 value={form.targetType}
                 onChange={(event) => handleTargetTypeChange(event.target.value)}
-                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-semibold"
+                className="mt-2 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400 focus:ring-2 focus:ring-[#0a4d2b]/30 font-medium"
               >
                 {TARGET_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -308,13 +308,13 @@ export default function NotificationBroadcast() {
           </div>
 
           <label className="block">
-            <span className="text-sm font-semibold text-slate-700">Message</span>
+            <span className="text-sm font-medium text-neutral-700">Message</span>
             <textarea
               value={form.message}
               onChange={(event) => setForm((prev) => ({ ...prev, message: event.target.value }))}
               placeholder="Enter notification message"
               rows={4}
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 resize-y"
+              className="mt-2 w-full rounded-2xl border border-neutral-200 px-4 py-3 text-sm outline-none focus:border-neutral-400 focus:ring-2 focus:ring-[#0a4d2b]/30 resize-y"
             />
           </label>
 
@@ -322,7 +322,7 @@ export default function NotificationBroadcast() {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:opacity-60 shadow-md shadow-blue-500/20 hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-2xl bg-neutral-900 px-6 py-3 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60 shadow-sm shadow-blue-500/20 hover:shadow-lg transition-colors cursor-pointer"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               Send Broadcast
@@ -330,8 +330,8 @@ export default function NotificationBroadcast() {
           </div>
 
           {form.targetType === "CUSTOM" && (
-            <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-4 space-y-4">
-              <div className="flex flex-wrap gap-2 pb-1 border-b border-slate-200">
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50/80 p-4 space-y-4">
+              <div className="flex flex-wrap gap-2 pb-1 border-b border-neutral-200">
                 {CATEGORY_TABS.map((tab) => {
                   const active = categoryFilter === tab.id;
                   const countMap = {
@@ -348,20 +348,20 @@ export default function NotificationBroadcast() {
                       key={tab.id}
                       type="button"
                       onClick={() => setCategoryFilter(tab.id)}
-                      className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-semibold transition-all ${
+                      className={`inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-xs font-medium transition-colors ${
                         active
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
+                          ? "bg-neutral-900 text-white shadow-sm"
+                          : "bg-white text-neutral-600 hover:bg-neutral-100 border border-neutral-200"
                       }`}
                     >
                       {tab.label}
                       <span
-                        className={`inline-flex items-center justify-center min-w-[20px] rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          active ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+                        className={`inline-flex items-center justify-center min-w-[20px] rounded-full px-2 py-0.5 text-xs font-medium ${
+                          active ? "bg-white/20 text-white" : "bg-neutral-100 text-neutral-600"
                         }`}
                       >
                         {isLoadingCount ? (
-                          <span className="inline-block w-5 h-2.5 bg-slate-300/80 animate-pulse rounded-full" />
+                          <span className="inline-block w-5 h-2.5 bg-neutral-300/80 animate-pulse rounded-full" />
                         ) : (
                           count
                         )}
@@ -372,12 +372,12 @@ export default function NotificationBroadcast() {
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-3">
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 flex-1 w-full">
-                  <Search className="w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-4 py-2.5 flex-1 w-full">
+                  <Search className="w-4 h-4 text-neutral-400" />
                   <input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search by name, phone, or email across all DB records..."
+                    placeholder="Search by name, phone, or email across all DB records"
                     className="w-full text-sm bg-transparent outline-none"
                   />
                 </div>
@@ -385,50 +385,50 @@ export default function NotificationBroadcast() {
                   <button
                     type="button"
                     onClick={handleSelectAllFiltered}
-                    className="px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-xl border border-blue-200 bg-white"
+                    className="px-3 py-2 text-xs font-medium text-[#0a4d2b] hover:bg-neutral-50 rounded-xl border border-neutral-200 bg-white"
                   >
-                    Select All Shown
+                    Select all shown
                   </button>
                   <button
                     type="button"
                     onClick={handleDeselectAllFiltered}
-                    className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl border border-slate-200 bg-white"
+                    className="px-3 py-2 text-xs font-medium text-neutral-600 hover:bg-neutral-100 rounded-xl border border-neutral-200 bg-white"
                   >
-                    Deselect Shown
+                    Deselect shown
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
+              <div className="flex items-center justify-between text-xs font-medium text-neutral-500 px-1">
                 <span>
                   {recipientLoading ? (
-                    <span className="inline-flex items-center gap-1.5 text-blue-600 font-semibold">
+                    <span className="inline-flex items-center gap-1.5 text-[#0a4d2b] font-medium">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" /> {SEARCHING_LABEL_MAP[categoryFilter] || "Searching..."}
                     </span>
                   ) : (
                     `Showing ${filteredRecipients.length} of ${pagination.matchedTotal} matches (Page ${pagination.page} of ${pagination.totalPages})`
                   )}
                 </span>
-                <span className="font-semibold text-blue-600">
+                <span className="font-medium text-[#0a4d2b]">
                   Selected: {selectedRecipients.length}
                 </span>
               </div>
 
-              <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 bg-white divide-y divide-slate-100">
+              <div className="max-h-72 overflow-y-auto rounded-2xl border border-neutral-200 bg-white divide-y divide-neutral-100">
                 {recipientLoading && allRecipients.length === 0 ? (
                   <div className="p-4 space-y-3">
                     {[1, 2, 3, 4].map((n) => (
                       <div key={n} className="flex items-center gap-3 animate-pulse">
-                        <div className="w-4 h-4 rounded bg-slate-200" />
+                        <div className="w-4 h-4 rounded bg-neutral-200" />
                         <div className="space-y-1 flex-1">
-                          <div className="h-3.5 bg-slate-200 rounded w-1/3" />
-                          <div className="h-2.5 bg-slate-100 rounded w-1/2" />
+                          <div className="h-3.5 bg-neutral-200 rounded w-1/3" />
+                          <div className="h-2.5 bg-neutral-100 rounded w-1/2" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : filteredRecipients.length === 0 ? (
-                  <div className="p-6 text-sm text-slate-500">No recipients found matching your filter.</div>
+                  <div className="p-6 text-sm text-neutral-500">No recipients found matching your filter</div>
                 ) : (
                   filteredRecipients.map((recipient) => {
                     const key = `${recipient.ownerType}:${recipient.ownerId}`;
@@ -437,31 +437,31 @@ export default function NotificationBroadcast() {
                       <label
                         key={key}
                         className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors ${
-                          checked ? "bg-blue-50/70 hover:bg-blue-50" : "hover:bg-slate-50"
+                          checked ? "bg-neutral-50/70 hover:bg-neutral-50" : "hover:bg-neutral-50"
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggleRecipient(recipient)}
-                          className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          className="mt-1 h-4 w-4 rounded border-neutral-300 text-[#0a4d2b] focus:ring-[#0a4d2b]/30"
                         />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center justify-between">
-                            <div className="text-sm font-semibold text-slate-900">
+                            <div className="text-sm font-medium text-neutral-900">
                               {recipient.label}
                             </div>
                             {checked && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white">
+                              <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-neutral-900 text-white">
                                 Selected
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-slate-500 mt-0.5">
+                          <div className="text-xs text-neutral-500 mt-0.5">
                             <span
-                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold mr-1.5 ${
+                              className={`inline-block px-2 py-0.5 rounded text-xs font-medium mr-1.5 ${
                                 recipient.ownerType === "USER"
-                                  ? "bg-blue-100 text-blue-700"
+                                  ? "bg-neutral-100 text-[#0a4d2b]"
                                   : recipient.ownerType === "RESTAURANT"
                                   ? "bg-emerald-100 text-emerald-700"
                                   : "bg-amber-100 text-amber-700"
@@ -478,8 +478,8 @@ export default function NotificationBroadcast() {
                 )}
               </div>
 
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-200 px-1">
-                <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-3 border-t border-neutral-200 px-1">
+                <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-600">
                   <div className="flex items-center gap-2">
                     <span>Rows per page:</span>
                     <select
@@ -488,7 +488,7 @@ export default function NotificationBroadcast() {
                         setLimit(Number(e.target.value));
                         setPage(1);
                       }}
-                      className="rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-blue-500 shadow-sm"
+                      className="rounded-xl border border-neutral-900/[0.08] bg-white px-2.5 py-1 text-xs font-medium text-neutral-800 outline-none focus:border-neutral-400"
                     >
                       <option value={20}>20</option>
                       <option value={50}>50</option>
@@ -496,7 +496,7 @@ export default function NotificationBroadcast() {
                     </select>
                   </div>
                   <span>
-                    Showing <strong className="text-slate-900">{pagination.matchedTotal === 0 ? 0 : (page - 1) * limit + 1}</strong> to <strong className="text-slate-900">{Math.min(page * limit, pagination.matchedTotal)}</strong> of <strong className="text-slate-900">{pagination.matchedTotal}</strong> recipients
+                    Showing <strong className="text-neutral-900">{pagination.matchedTotal === 0 ? 0 : (page - 1) * limit + 1}</strong> to <strong className="text-neutral-900">{Math.min(page * limit, pagination.matchedTotal)}</strong> of <strong className="text-neutral-900">{pagination.matchedTotal}</strong> recipients
                   </span>
                 </div>
 
@@ -505,13 +505,13 @@ export default function NotificationBroadcast() {
                     type="button"
                     disabled={page <= 1 || recipientLoading}
                     onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-all"
+                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   {pageNumbers.map((p, idx) =>
                     p === "..." ? (
-                      <span key={`dots-${idx}`} className="px-2 text-xs text-slate-400 font-semibold">
+                      <span key={`dots-${idx}`} className="px-2 text-xs text-neutral-400 font-medium">
                         ...
                       </span>
                     ) : (
@@ -519,10 +519,10 @@ export default function NotificationBroadcast() {
                         key={p}
                         type="button"
                         onClick={() => setPage(p)}
-                        className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all ${
+                        className={`w-8 h-8 flex items-center justify-center rounded-xl text-xs font-medium transition-colors ${
                           page === p
-                            ? "bg-slate-900 text-white shadow-sm"
-                            : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                            ? "bg-neutral-900 text-white shadow-sm"
+                            : "border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
                         }`}
                       >
                         {p}
@@ -533,7 +533,7 @@ export default function NotificationBroadcast() {
                     type="button"
                     disabled={page >= pagination.totalPages || recipientLoading}
                     onClick={() => setPage((prev) => Math.min(pagination.totalPages, prev + 1))}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-all"
+                    className="w-8 h-8 flex items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 disabled:opacity-40 transition-colors"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -545,80 +545,80 @@ export default function NotificationBroadcast() {
       </div>
 
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-6xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-900 text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-md p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl border border-neutral-900/[0.08] shadow-2xl w-full max-w-6xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-200 bg-neutral-900 text-white">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-blue-400">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-neutral-100 text-neutral-500">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Broadcast History</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">View and manage sent broadcast notifications.</p>
+                  <h2 className="text-xl font-medium text-white">Broadcast history</h2>
+                  <p className="text-xs text-neutral-400 mt-0.5">View and manage sent broadcast notifications</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowHistoryModal(false)}
-                className="p-2 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                className="p-2 rounded-xl text-neutral-400 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1 bg-slate-50/50">
+            <div className="p-6 overflow-y-auto flex-1 bg-neutral-50/50">
               {historyLoading ? (
-                <div className="py-16 text-sm text-slate-500 flex flex-col items-center justify-center gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <div className="py-16 text-sm text-neutral-500 flex flex-col items-center justify-center gap-3">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#0a4d2b]" />
                   <span>Loading history...</span>
                 </div>
               ) : history.length === 0 ? (
-                <div className="py-16 text-center text-sm text-slate-500 flex flex-col items-center justify-center gap-2">
-                  <BellRing className="w-10 h-10 text-slate-300" />
-                  <span className="font-semibold text-slate-700">No broadcast notifications found</span>
-                  <span className="text-xs text-slate-400">Broadcasts you send will show up here.</span>
+                <div className="py-16 text-center text-sm text-neutral-500 flex flex-col items-center justify-center gap-2">
+                  <BellRing className="w-10 h-10 text-neutral-300" />
+                  <span className="font-medium text-neutral-700">No broadcast notifications found</span>
+                  <span className="text-xs text-neutral-400">Broadcasts you send will show up here</span>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="text-left text-xs uppercase font-bold tracking-wider text-slate-500 bg-slate-100/80 border-b border-slate-200">
+                        <tr className="text-left text-xs font-medium text-neutral-500 bg-neutral-100/80 border-b border-neutral-200">
                           <th className="py-3.5 px-4 w-44">Title</th>
                           <th className="py-3.5 px-4">Message</th>
-                          <th className="py-3.5 px-4 w-40">Target Type</th>
+                          <th className="py-3.5 px-4 w-40">Target type</th>
                           <th className="py-3.5 px-4 w-28 text-center">Recipients</th>
-                          <th className="py-3.5 px-4 w-44">Sent At</th>
+                          <th className="py-3.5 px-4 w-44">Sent at</th>
                           <th className="py-3.5 px-4 w-32 text-right pr-5">Action</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-neutral-100">
                         {history.map((item) => (
-                          <tr key={item?._id} className={`align-middle hover:bg-slate-50/80 transition-all ${deletingIds.has(item?._id) ? 'opacity-30' : 'opacity-100'}`}>
-                            <td className="py-4 px-4 font-bold text-slate-900 w-44 truncate" title={item?.title}>
+                          <tr key={item?._id} className={`align-middle hover:bg-neutral-50/80 transition-colors ${deletingIds.has(item?._id) ? 'opacity-30' : 'opacity-100'}`}>
+                            <td className="py-4 px-4 font-medium text-neutral-900 w-44 truncate" title={item?.title}>
                               {item?.title || "Notification"}
                             </td>
-                            <td className="py-4 px-4 text-slate-600 max-w-[280px]">
-                              <p className="truncate text-xs font-medium text-slate-700" title={item?.message}>
+                            <td className="py-4 px-4 text-neutral-600 max-w-[280px]">
+                              <p className="truncate text-xs font-medium text-neutral-700" title={item?.message}>
                                 {item?.message || "-"}
                               </p>
                             </td>
                             <td className="py-4 px-4 w-40">
-                              <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100/80 whitespace-nowrap">
+                              <span className="inline-block px-2.5 py-1 rounded-lg text-xs font-medium bg-neutral-50 text-[#0a4d2b] border border-neutral-200 whitespace-nowrap">
                                 {item?.targetLabel || item?.targetType}
                               </span>
                             </td>
-                            <td className="py-4 px-4 w-28 text-center font-bold text-slate-800">
+                            <td className="py-4 px-4 w-28 text-center font-medium text-neutral-800">
                               {item?.targetCount || item?.targets?.length || 0}
                             </td>
-                            <td className="py-4 px-4 w-44 text-slate-500 whitespace-nowrap text-xs">
+                            <td className="py-4 px-4 w-44 text-neutral-500 whitespace-nowrap text-xs">
                               {toDateLabel(item?.createdAt)}
                             </td>
                             <td className="py-4 px-4 w-32 text-right pr-5 whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={() => handleDelete(item?._id)}
-                                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-xs"
+                                className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-600 hover:text-white transition-colors cursor-pointer shadow-xs"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 Delete
