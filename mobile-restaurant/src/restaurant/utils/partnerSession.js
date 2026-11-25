@@ -1,5 +1,5 @@
 import { localStore } from '../../lib/storage';
-import { clearHotelSession, clearModuleAuth, isHotelAuthenticated, isModuleAuthenticated, setAuthData, setHotelSession } from './auth';
+import { clearHotelSession, clearModuleAuth, getCurrentUser, getHotelUser, isHotelAuthenticated, isModuleAuthenticated, setAuthData, setHotelSession } from './auth';
 
 /*
  * Port of Frontend/src/shared/partner/partnerSession.js.
@@ -41,7 +41,24 @@ export const getPartnerProfiles = () => {
  */
 export const hasRestaurantProfile = () => getPartnerProfiles().includes(WORKSPACE.RESTAURANT) && isModuleAuthenticated('restaurant');
 export const hasHotelProfile = () => getPartnerProfiles().includes(WORKSPACE.HOTEL) && isHotelAuthenticated();
-export const hasBothProfiles = () => hasRestaurantProfile() && hasHotelProfile();
+
+/*
+ * Having a business is not the same as being let into its panel. A restaurant
+ * opens only once approved (RestaurantShell sends anything else to
+ * pending-verification); a hotel is held on under-review once its KYC is in
+ * and until it is approved (HotelShell; partners from before the KYC step have
+ * onboardingComplete unset and stay open). These mirror those two guards, so
+ * sign-in, app start and the switcher never send a partner to a panel that
+ * would bounce them straight to a review screen. The user objects can be
+ * passed in so a component re-renders off AuthContext state.
+ */
+export const isRestaurantOpen = (restaurant = getCurrentUser('restaurant')) => String(restaurant?.status || '').toLowerCase() === 'approved';
+export const isHotelOpen = (hotel = getHotelUser()) => Boolean(hotel) && !(hotel.onboardingComplete && hotel.partnerApprovalStatus !== 'approved');
+const isWorkspaceOpen = (workspace) => (workspace === WORKSPACE.RESTAURANT ? isRestaurantOpen() : workspace === WORKSPACE.HOTEL ? isHotelOpen() : false);
+
+/** Both businesses exist AND both are approved: only then is there anything to switch between. */
+export const hasBothProfiles = ({ restaurant, hotel } = {}) =>
+  hasRestaurantProfile() && hasHotelProfile() && isRestaurantOpen(restaurant ?? getCurrentUser('restaurant')) && isHotelOpen(hotel ?? getHotelUser());
 
 export const setPartnerProfiles = (profiles = []) => localStore.setItem(PROFILES_KEY, JSON.stringify(profiles.filter(Boolean)));
 
@@ -73,15 +90,21 @@ export const storePartnerSession = async (result = {}) => {
   return profiles;
 };
 
-/** Where to land after signing in, given what the partner has. */
+/**
+ * The panel to land on after signing in (or at app start), given what the
+ * partner has: the last workspace if it is open, else whichever one is open.
+ * Null when no business is open yet: the caller shows the review screen. A
+ * partner whose hotel is approved and whose restaurant is still pending
+ * therefore lands on the hotel, even though applying for the restaurant made
+ * it the last workspace.
+ */
 export const resolvePartnerHome = (profiles = []) => {
-  if (profiles.length > 1) {
-    const last = getActiveWorkspace();
-    if (last && profiles.includes(last)) return WORKSPACE_HOME[last];
-  }
-  if (profiles.includes(WORKSPACE.RESTAURANT)) return WORKSPACE_HOME[WORKSPACE.RESTAURANT];
-  if (profiles.includes(WORKSPACE.HOTEL)) return WORKSPACE_HOME[WORKSPACE.HOTEL];
-  return '/food/restaurant/login';
+  const open = profiles.filter(isWorkspaceOpen);
+  const last = getActiveWorkspace();
+  if (last && open.includes(last)) return WORKSPACE_HOME[last];
+  if (open.includes(WORKSPACE.RESTAURANT)) return WORKSPACE_HOME[WORKSPACE.RESTAURANT];
+  if (open.includes(WORKSPACE.HOTEL)) return WORKSPACE_HOME[WORKSPACE.HOTEL];
+  return null;
 };
 
 /** Sign out of both businesses at once. */

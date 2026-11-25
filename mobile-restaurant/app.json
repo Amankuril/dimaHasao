@@ -3,13 +3,13 @@
     "name": "Dima Hasao - Food Partner",
     "slug": "dima-hasao-restaurant",
     "scheme": "dimahasaorestaurant",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "android": {
       "package": "com.dimahsao.restaurant",
-      "versionCode": 5,
+      "versionCode": 6,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundImage": "./assets/android-icon-background.png",

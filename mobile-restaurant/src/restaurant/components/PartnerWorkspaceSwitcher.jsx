@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, PanResponder, StyleSheet, useWindowDimensions } from 'react-native';
+import { Animated, AppState, PanResponder, StyleSheet, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname } from 'expo-router';
 import { ArrowLeftRight } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
+import { fetchPartnerProfiles } from '../../api/partner';
 import { localStore } from '../../lib/storage';
 import { useNavigate } from '../../lib/webRouter';
-import { WORKSPACE, WORKSPACE_HOME, hasBothProfiles, setActiveWorkspace } from '../utils/partnerSession';
+import { WORKSPACE, WORKSPACE_HOME, hasBothProfiles, hasHotelProfile, hasRestaurantProfile, setActiveWorkspace } from '../utils/partnerSession';
 import { color } from '../../theme';
 
 /*
@@ -41,10 +42,39 @@ export default function PartnerWorkspaceSwitcher() {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  // Subscribes to both halves of the session; the check itself is the web's hasBothProfiles() (live token, not just listed).
-  useAuth();
-  const both = hasBothProfiles();
+  // Both halves of the session, AND both approved: a business still under review has no panel to switch to.
+  const { user, hotelUser, updateUser, updateHotelUser, signedInRestaurant, signedInHotel } = useAuth();
+  const both = hasBothProfiles({ restaurant: user, hotel: hotelUser });
   const show = both && !isFlowScreen(pathname);
+
+  /*
+   * A partner holding both sessions with one business still under review gets no switcher. Re-read the
+   * approvals when the app comes back to the foreground (and once on mount), so the switcher appears once
+   * the admin approves, without signing in again.
+   */
+  const awaitingApproval = signedInRestaurant && signedInHotel && hasRestaurantProfile() && hasHotelProfile() && !both;
+  useEffect(() => {
+    if (!awaitingApproval) return undefined;
+    let alive = true;
+    const refresh = async () => {
+      try {
+        const data = await fetchPartnerProfiles();
+        if (!alive) return;
+        if (data?.restaurant?.status) updateUser({ status: data.restaurant.status });
+        if (data?.hotel) updateHotelUser({ partnerApprovalStatus: data.hotel.partnerApprovalStatus, onboardingComplete: data.hotel.onboardingComplete });
+      } catch {
+        // keep the last known approvals
+      }
+    };
+    refresh();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, [awaitingApproval, updateUser, updateHotelUser]);
 
   const clamp = (x, y) => ({
     x: Math.min(Math.max(x, EDGE_MARGIN), width - SIZE - EDGE_MARGIN),

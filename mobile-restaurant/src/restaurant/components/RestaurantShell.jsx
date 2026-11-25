@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePushNotifications } from '../../lib/push';
 import { localStore } from '../../lib/storage';
 import { setCurrentPath } from '../utils/alertPlatform';
-import { hasHotelProfile } from '../utils/partnerSession';
+import { HOTEL_HOME, hasHotelProfile, isHotelOpen } from '../utils/partnerSession';
 import { color } from '../../theme';
 
 /*
@@ -24,7 +24,7 @@ const GREEN_HEADER = new Set(['', 'inventory', 'zone-setup']);
 
 export default function RestaurantShell() {
   // `signedIn` is true for either half of a partner sign-in; this shell guards the restaurant half.
-  const { signedInRestaurant: signedIn, booting, user } = useAuth();
+  const { signedInRestaurant: signedIn, signedInHotel, hotelUser, booting, user } = useAuth();
   const pathname = usePathname();
   usePushNotifications(!booting && signedIn);
   // Ported code that reads window.location.pathname asks alertPlatform for it.
@@ -40,6 +40,11 @@ export default function RestaurantShell() {
   if (signedIn && !isPublic) {
     const status = String(user?.status || '').toLowerCase();
     const allowedBeforeApproval = ALLOWED_BEFORE_APPROVAL.some((route) => sub === route || sub.startsWith(`${route}/`));
+    /*
+     * The restaurant home is where every "open the app" path lands. While the restaurant is still under
+     * review, an approved hotel is the partner's working panel, so open that instead of the review screen.
+     */
+    if (sub === '' && status !== 'approved' && signedInHotel && isHotelOpen(hotelUser)) return <Redirect href={HOTEL_HOME} />;
     if ((status === 'pending' || status === 'rejected') && !allowedBeforeApproval) {
       localStore.setItem('restaurant_pendingStatus', status);
       localStore.setItem(

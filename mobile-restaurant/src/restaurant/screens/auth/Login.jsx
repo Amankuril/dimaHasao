@@ -15,7 +15,7 @@ import { color, radii, space, type } from '../../../theme';
 import AuthShell, { AUTH, AuthTitle, authStyles } from '../../components/AuthShell';
 import { checkOnboardingStatus, clearAllFilesFromDB, clearOnboardingFromLocalStorage, isRestaurantOnboardingComplete } from '../../utils/onboardingUtils';
 import OnboardingChoice from '../../components/OnboardingChoice';
-import { RESTAURANT_HOME, WORKSPACE, clearOnboardingIntent, resolvePartnerHome, setActiveWorkspace, storePartnerSession } from '../../utils/partnerSession';
+import { HOTEL_HOME, RESTAURANT_HOME, WORKSPACE, clearOnboardingIntent, getActiveWorkspace, isHotelOpen, resolvePartnerHome, setActiveWorkspace, storePartnerSession } from '../../utils/partnerSession';
 
 const DEFAULT_COUNTRY_CODE = '+91';
 const clean = (value) => String(value || '').replace(/\D/g, '');
@@ -29,7 +29,7 @@ const setPendingPhone = (phone) => phone && localStore.setItem('restaurant_pendi
 export default function RestaurantLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signedInRestaurant, user, booting } = useAuth();
+  const { signedInRestaurant, signedInHotel, hotelUser, user, booting } = useAuth();
   const isOtpStep = location.pathname.endsWith('/otp');
 
   const [phone, setPhone] = useState(() => sessionStore.getItem('restaurantLoginPhone') || '');
@@ -123,6 +123,8 @@ export default function RestaurantLogin() {
   if (!booting && signedInRestaurant && !leaving && !signupToken) {
     const status = String(user?.status || '').toLowerCase();
     const needsVerification = ['pending', 'rejected', 'banned', 'deleted'].includes(status);
+    // A restaurant still under review must not hide an approved hotel behind its review screen.
+    if (needsVerification && signedInHotel && isHotelOpen(hotelUser)) return <Redirect href={HOTEL_HOME} />;
     return <Redirect href={needsVerification ? `${RESTAURANT_HOME}/pending-verification` : RESTAURANT_HOME} />;
   }
 
@@ -232,14 +234,21 @@ export default function RestaurantLogin() {
        * hotel; the shell sends it to pending-verification, and the server
        * still refuses every restaurant route behind requireApprovedRestaurant.
        */
-      const restaurantStatus = String(data.restaurant?.status || '').toLowerCase();
-      if (profiles.length === 1 && profiles[0] === WORKSPACE.RESTAURANT && restaurantStatus && restaurantStatus !== 'approved') {
+      const home = resolvePartnerHome(profiles);
+
+      // Nothing approved yet: show the review screen of the business applied for last (restaurant by default).
+      if (!home) {
         setLoading(false);
+        const showHotel = profiles.includes(WORKSPACE.HOTEL) && (!profiles.includes(WORKSPACE.RESTAURANT) || getActiveWorkspace() === WORKSPACE.HOTEL);
+        if (showHotel) {
+          navigate('/hotel/partner/under-review', { replace: true });
+          return;
+        }
+        const restaurantStatus = String(data.restaurant?.status || '').toLowerCase();
         goPending(phoneVal, { isRejected: restaurantStatus === 'rejected', isDisabled: restaurantStatus === 'banned' || restaurantStatus === 'deleted' });
         return;
       }
 
-      const home = resolvePartnerHome(profiles);
       setActiveWorkspace(home.startsWith('/hotel') ? WORKSPACE.HOTEL : WORKSPACE.RESTAURANT);
 
       if (profiles.includes(WORKSPACE.RESTAURANT) && home.startsWith('/food')) {
