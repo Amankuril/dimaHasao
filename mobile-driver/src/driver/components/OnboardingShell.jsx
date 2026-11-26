@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Loader2 } from 'lucide-react-native';
 import { Press } from '../../components/ui';
-import { playfair, shadow } from '../../theme';
+import { outfit } from '../../theme';
 import { DT } from '../ui/dt';
 import { Alert, CtaButton, Spin } from './OnboardingFields';
 import { jk, obCard, up } from './onboardingTheme';
@@ -13,8 +13,8 @@ import { jk, obCard, up } from './onboardingTheme';
 export const DRIVER_BRAND_LOGO = require('../../../assets/images/driver-logo.webp');
 
 /*
- * The frame every driver onboarding step sits in: a deep-green hero (logo or back button, step pills,
- * gold serif title), the step's white cards, and a fixed footer with the yellow call-to-action.
+ * The frame every driver onboarding step sits in: a plain header on the page (logo or back button,
+ * step progress, ink title), the step's white cards, and a fixed footer with the graphite primary action.
  */
 
 /** The steps a driver walks, in order. The shell derives progress from this. */
@@ -28,14 +28,13 @@ export function StatusBarBackdrop() {
   const insets = useSafeAreaInsets();
   return (
     <>
-      {/* Light icons on the green strip; reverts to the app's dark style when the screen unmounts. */}
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       {insets.top ? <View pointerEvents="none" style={[styles.statusBackdrop, { height: insets.top }]} /> : null}
     </>
   );
 }
 
-/** The green hero block: rounded bottom corners, gold serif title, cream subtitle. */
+/** The header block of an onboarding page: sits on the page background, no slab. */
 export function BrandHero({ top = 0, children, style }) {
   return <View style={[styles.hero, { paddingTop: top + 18 }, style]}>{children}</View>;
 }
@@ -50,8 +49,8 @@ export function LogoBadge({ size = 64 }) {
 }
 
 /**
- * Sign-in layout (phone number, code): green hero with the logo and a gold serif title,
- * then a white form card pulled up over the hero's edge, then an optional footer (legal links).
+ * Sign-in layout (phone number, code): the logo and an ink title on the page,
+ * then a white form card, then an optional footer (legal links).
  */
 export function AuthScaffold({ title, subtitle, children, footer = null, icon = null }) {
   const insets = useSafeAreaInsets();
@@ -62,7 +61,7 @@ export function AuthScaffold({ title, subtitle, children, footer = null, icon = 
       keyboardShouldPersistTaps="handled"
       contentContainerStyle={{ flexGrow: 1, paddingBottom: 28 + insets.bottom }}
     >
-      <BrandHero top={insets.top + 14} style={styles.authHero}>
+      <BrandHero top={insets.top + 24} style={styles.authHero}>
         <View style={styles.maxW}>
           {icon || <LogoBadge size={64} />}
           <Text style={styles.authTitle}>{title}</Text>
@@ -117,7 +116,7 @@ export default function OnboardingShell({
             <View style={styles.headRow}>
               {onBack ? (
                 <Press scale={0.92} onPress={onBack} accessibilityLabel="Go back" style={styles.back} hitSlop={8}>
-                  <ArrowLeft size={20} strokeWidth={2.5} color={DT.onBrand} />
+                  <ArrowLeft size={20} strokeWidth={2} color={DT.ink} />
                 </Press>
               ) : (
                 <Image source={DRIVER_BRAND_LOGO} style={{ width: 44, height: 44, borderRadius: 22 }} />
@@ -163,7 +162,7 @@ export default function OnboardingShell({
       <StatusBarBackdrop />
 
       <View style={styles.fixed} pointerEvents="box-none">
-        <LinearGradient colors={['rgba(248,250,252,0)', DT.bg, DT.bg]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
+        <LinearGradient colors={['rgba(250,250,250,0)', DT.bg, DT.bg]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={[styles.maxW, { gap: 12, paddingTop: 36, paddingBottom: 20 + insets.bottom, paddingHorizontal: 20 }]}>
           <CtaButton onPress={onPrimary} disabled={primaryDisabled || primaryLoading}>
             {primaryLoading ? (
@@ -183,40 +182,31 @@ export default function OnboardingShell({
 
 const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
-  hero: {
-    backgroundColor: DT.brandDeep,
-    paddingHorizontal: 20,
-    paddingBottom: 24,
-    borderBottomLeftRadius: DT.radius.xl,
-    borderBottomRightRadius: DT.radius.xl,
-    ...shadow('md'),
-  },
-  authHero: { paddingBottom: 56 },
-  authBody: { paddingHorizontal: 20, marginTop: -32 },
+  hero: { paddingHorizontal: 20, paddingBottom: 8 },
+  authHero: { paddingBottom: 24 },
+  authBody: { paddingHorizontal: 20 },
   authCard: { padding: 20, gap: 16 },
-  authTitle: { ...playfair(700), fontSize: 30, lineHeight: 38, color: DT.gold, marginTop: 20 },
-  logoRing: { alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: DT.gold, backgroundColor: DT.brand },
+  authTitle: { ...outfit(600), fontSize: 28, lineHeight: 36, color: DT.ink, marginTop: 24 },
+  logoRing: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card },
   headRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   back: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.18)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginLeft: -8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepPill: { minWidth: 112, paddingHorizontal: 12, paddingVertical: 6, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.5)' },
-  stepText: { ...jk(800), fontSize: 11, lineHeight: 16, color: DT.gold, textAlign: 'center' },
-  segments: { flexDirection: 'row', gap: 6, marginTop: 20 },
-  segment: { flex: 1, height: 6, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.18)' },
-  segmentDone: { backgroundColor: DT.gold },
-  segmentActive: { backgroundColor: DT.accent },
-  eyebrow: { ...jk(800), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.onBrandMuted },
-  title: { ...playfair(700), fontSize: 28, lineHeight: 36, color: DT.gold },
-  subtitle: { ...jk(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted },
+  stepPill: { paddingVertical: 4 },
+  stepText: { ...jk(500), fontSize: 13, lineHeight: 18, color: DT.muted, textAlign: 'right' },
+  segments: { flexDirection: 'row', gap: 4, marginTop: 16 },
+  segment: { flex: 1, height: 4, borderRadius: 2, backgroundColor: DT.border },
+  segmentDone: { backgroundColor: DT.ink },
+  segmentActive: { backgroundColor: DT.ink },
+  eyebrow: { ...jk(500), fontSize: 13, lineHeight: 18, color: DT.muted },
+  title: { ...outfit(600), fontSize: 26, lineHeight: 34, color: DT.ink },
+  subtitle: { ...jk(400), fontSize: 15, lineHeight: 22, color: DT.inkSoft },
   fixed: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  statusBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: DT.brandDeep, zIndex: 50, elevation: 50 },
-  ctaText: { ...jk(800), fontSize: 15, lineHeight: 20 },
+  statusBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: DT.bg, zIndex: 50, elevation: 50 },
+  ctaText: { ...jk(600), fontSize: 15, lineHeight: 20 },
 });

@@ -118,12 +118,12 @@ export function montserrat(weight = 700) {
 export function cinzel() {
   return { fontFamily: 'Cinzel_700Bold' };
 }
-/** `font-playfair`, optionally italic */
-export function playfair(weight = 400, italic = false) {
-  // Loaded on the web: 400, 600, 700 upright; 400 and 600 italic.
-  if (italic) return { fontFamily: weight >= 600 ? 'PlayfairDisplay_600SemiBold_Italic' : 'PlayfairDisplay_400Regular_Italic' };
-  const w = weight >= 600 ? '600SemiBold' : '400Regular'; // capped at 600 (unslop)
-  return { fontFamily: `PlayfairDisplay_${w}` };
+/**
+ * `font-playfair`. The driver app no longer uses a serif: titles are set in
+ * Outfit (the app's one family) at 600, and "italic" is plain.
+ */
+export function playfair(weight = 400) {
+  return { fontFamily: weight >= 600 ? 'Outfit_600SemiBold' : 'Outfit_400Regular' };
 }
 /** `font-inter` */
 export function inter(weight = 400) {
@@ -136,10 +136,10 @@ export function outfit(weight = 400) {
   return { fontFamily: OUTFIT[weight] || OUTFIT[400] };
 }
 
-const JAKARTA = { 300: 'PlusJakartaSans_400Regular', 400: 'PlusJakartaSans_400Regular', 500: 'PlusJakartaSans_500Medium', 600: 'PlusJakartaSans_600SemiBold', 700: 'PlusJakartaSans_600SemiBold', 800: 'PlusJakartaSans_600SemiBold' }; // capped at 600 (unslop)
 /** Driver onboarding font (onboarding.css: 'Plus Jakarta Sans'). */
 export function jakarta(weight = 400) {
-  return { fontFamily: JAKARTA[weight] || JAKARTA[400] };
+  // One family across the app: onboarding is set in Outfit like every other screen.
+  return { fontFamily: OUTFIT[weight] || OUTFIT[400] };
 }
 
 /** Driver module tokens (Taxi/modules/driver/styles/driver.css). */
@@ -171,17 +171,18 @@ export function display(weight = 700) {
  * Shadows as CSS box-shadow strings: React Native's boxShadow takes the same
  * syntax, so these are Tailwind v4's values verbatim.
  */
+// Neutral and small: depth comes mostly from hairline borders (unslop).
 const SHADOWS = {
-  card: '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)',
-  xs: '0 1px 2px 0 rgba(0,0,0,0.05)',
-  sm: '0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1)',
-  md: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1)',
-  lg: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
-  xl: '0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)',
-  '2xl': '0 25px 50px -12px rgba(0,0,0,0.25)',
-  button: '0 10px 24px rgba(229,179,59,0.28)',
-  nav: '0 8px 30px rgba(0,0,0,0.5)',
-  navTop: '0 -5px 20px rgba(0,0,0,0.05)',
+  card: '0 1px 2px 0 rgba(0,0,0,0.04)',
+  xs: '0 1px 2px 0 rgba(0,0,0,0.04)',
+  sm: '0 1px 2px 0 rgba(0,0,0,0.05)',
+  md: '0 1px 3px 0 rgba(0,0,0,0.06)',
+  lg: '0 4px 12px -2px rgba(0,0,0,0.08)',
+  xl: '0 8px 20px -4px rgba(0,0,0,0.10)',
+  '2xl': '0 16px 32px -8px rgba(0,0,0,0.16)',
+  button: 'none',
+  nav: '0 -1px 0 rgba(0,0,0,0.04)',
+  navTop: '0 -1px 0 rgba(0,0,0,0.04)',
 };
 
 /** shadow('md') / shadow('0 4px 6px rgba(...)') */

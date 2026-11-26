@@ -157,7 +157,7 @@ const ErrorState = ({ message, onRetry }) => (
       <AlertCircle size={28} color={DT.danger} strokeWidth={2} />
     </View>
     <Text style={styles.errorTitle}>{message}</Text>
-    <CtaButton variant="brand" title="RETRY" onPress={onRetry} accessibilityLabel="Retry" icon={<RefreshCw size={14} color={DT.onBrand} strokeWidth={2.5} />} style={{ minWidth: 160 }} />
+    <CtaButton variant="brand" title="Retry" onPress={onRetry} accessibilityLabel="Retry" icon={<RefreshCw size={14} color={DT.onBrand} strokeWidth={2.5} />} style={{ minWidth: 160 }} />
   </View>
 );
 
@@ -319,7 +319,7 @@ export default function DriverNotifications() {
                 style={[styles.tab, isActive ? styles.tabOn : null]}
               >
                 {tab.id === 'schedule' ? <CalendarClock size={15} color={isActive ? DT.onBrand : DT.muted} strokeWidth={2.4} /> : <Radio size={15} color={isActive ? DT.onBrand : DT.muted} strokeWidth={2.4} />}
-                <Text style={[styles.tabText, { color: isActive ? DT.onBrand : DT.muted }]}>{tab.label.toUpperCase()}</Text>
+                <Text style={[styles.tabText, { color: isActive ? DT.onBrand : DT.muted }]}>{tab.label}</Text>
                 <Text style={[styles.tabCount, isActive ? { backgroundColor: 'rgba(255,255,255,0.18)', color: DT.accent } : { backgroundColor: DT.bgSoft, color: DT.muted }]}>{tab.count}</Text>
               </Press>
             );
@@ -403,7 +403,7 @@ export default function DriverNotifications() {
               {notification.image ? <NotificationImage uri={notification.image} /> : null}
 
               {notification.serviceLocationName ? (
-                <Text style={styles.serviceLocation}>{String(notification.serviceLocationName).toUpperCase()}</Text>
+                <Text style={styles.serviceLocation}>{String(notification.serviceLocationName)}</Text>
               ) : null}
             </View>
           </View>
@@ -427,7 +427,7 @@ export default function DriverNotifications() {
                     <Text style={styles.cardTitle}>
                       {ride.type === 'parcel' ? 'Scheduled delivery' : ride.type === 'intercity' ? 'Scheduled intercity ride' : 'Scheduled ride'}
                     </Text>
-                    <Text style={styles.scheduleAt}>{formatScheduledDateTime(ride.scheduledAt).toUpperCase()}</Text>
+                    <Text style={styles.scheduleAt}>{formatScheduledDateTime(ride.scheduledAt)}</Text>
                     <Text style={styles.countdown}>{getScheduledRideCountdown(ride.scheduledAt, scheduleNow)}</Text>
                   </View>
                   <ChevronRight size={18} color={DT.faint} strokeWidth={2.5} style={{ marginTop: 2 }} />
@@ -493,8 +493,8 @@ export default function DriverNotifications() {
 }
 
 const styles = StyleSheet.create({
-  countPill: { minWidth: 36, alignItems: 'center', backgroundColor: DT.gold, paddingHorizontal: 12, paddingVertical: 6, borderRadius: DT.radius.pill },
-  countPillText: { fontSize: 13, lineHeight: 18, color: DT.ctaInk, ...outfit(800) },
+  countPill: { minWidth: 32, alignItems: 'center', backgroundColor: DT.bgSoft, paddingHorizontal: 10, paddingVertical: 4, borderRadius: DT.radius.pill },
+  countPillText: { fontSize: 13, lineHeight: 18, color: DT.inkSoft, fontVariant: ['tabular-nums'], ...outfit(500) },
   pill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: DT.radius.pill, borderWidth: 1, paddingHorizontal: 12 },
   pillText: { fontSize: 11, lineHeight: 15, minWidth: 48, ...outfit(800) },
   tabs: { flexDirection: 'row', gap: 6, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, padding: 4, ...shadow('sm') },

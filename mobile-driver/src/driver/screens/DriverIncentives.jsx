@@ -118,7 +118,7 @@ export default function DriverIncentives() {
         <Card tone="dark" style={st.levelCard}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 24 }}>
             <View style={st.trophy}>
-              <Trophy size={24} color={DT.gold} />
+              <Trophy size={22} strokeWidth={1.75} color={DT.onBrandMuted} />
             </View>
             <View style={{ flexShrink: 1 }}>
               <Text style={st.levelName}>{levelData.name} Partner</Text>
@@ -128,13 +128,13 @@ export default function DriverIncentives() {
 
           <View style={{ gap: 8 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={[st.xs, { color: DT.onBrandMuted }]}>Next Level</Text>
+              <Text style={[st.xs, { color: DT.onBrandMuted }]}>Next level</Text>
               <Text style={[st.xs, { color: DT.onBrand }]}>
                 {levelData.currentXP} / {levelData.targetXP} trips
               </Text>
             </View>
             <View style={st.track}>
-              <View style={{ height: '100%', width: `${levelData.percent}%`, backgroundColor: DT.gold, borderRadius: 999 }} />
+              <View style={{ height: '100%', width: `${levelData.percent}%`, backgroundColor: DT.onBrand, borderRadius: 999 }} />
             </View>
           </View>
 
@@ -143,7 +143,7 @@ export default function DriverIncentives() {
               <Text style={st.statLabel}>Streak</Text>
               <View style={st.statRow}>
                 <Text style={st.statValue}>{summary.streakDays || 0}</Text>
-                <Flame size={14} color={tw.orange500} />
+                <Flame size={14} strokeWidth={1.75} color={DT.onBrandMuted} />
               </View>
             </View>
             <View style={{ flex: 1 }}>
@@ -154,7 +154,7 @@ export default function DriverIncentives() {
               <Text style={st.statLabel}>Rating</Text>
               <View style={st.statRow}>
                 <Text style={st.statValue}>{driverRating.toFixed(1)}</Text>
-                <Star size={14} color={DT.accent} fill={DT.accent} />
+                <Star size={14} color={DT.goldBright} fill={DT.goldBright} />
               </View>
             </View>
           </View>
@@ -207,7 +207,7 @@ export default function DriverIncentives() {
                     scale={1}
                     style={[st.claim, btn]}
                   >
-                    <Text style={[st.claimText, { color: btnText }]}>{claimingKey === claimKey ? 'Claiming...' : milestone.isClaimed ? 'Reward claimed' : 'ONGOING'}</Text>
+                    <Text style={[st.claimText, { color: btnText }]}>{claimingKey === claimKey ? 'Claiming...' : milestone.isClaimed ? 'Reward claimed' : 'Ongoing'}</Text>
                   </Press>
                 </Card>
               );
@@ -218,16 +218,16 @@ export default function DriverIncentives() {
         {/* Referral Card */}
         <View style={st.referral}>
           <View>
-            <Text style={st.refTitle}>Invite a Friend</Text>
+            <Text style={st.refTitle}>Invite a friend</Text>
             <Text style={st.refText}>
               {Number(data?.referralRewardAmount) > 0
                 ? `Earn ${formatCurrency(data.referralRewardAmount)} for every new driver you refer.`
                 : 'Invite other drivers to join. Rewards are set by the district team.'}
             </Text>
-            <CtaButton title="INVITE NOW" onPress={() => navigate('/taxi/driver/referral')} style={{ alignSelf: 'flex-start' }} />
+            <CtaButton title="Invite now" onPress={() => navigate('/taxi/driver/referral')} style={{ alignSelf: 'flex-start' }} />
           </View>
           <View style={st.giftWrap} pointerEvents="none">
-            <Gift size={120} color="rgba(255,255,255,0.1)" />
+            <Gift size={120} strokeWidth={1} color="rgba(24,24,27,0.05)" />
           </View>
         </View>
 
@@ -244,7 +244,7 @@ export default function DriverIncentives() {
                 return (
                   <Card key={feature.key} style={st.boost}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flexShrink: 1 }}>
-                      <View style={st.boostIcon}>{feature.key.includes('streak') ? <Flame size={18} color={DT.gold} /> : <Zap size={18} color={DT.gold} />}</View>
+                      <View style={st.boostIcon}>{feature.key.includes('streak') ? <Flame size={18} strokeWidth={1.75} color={DT.inkSoft} /> : <Zap size={18} strokeWidth={1.75} color={DT.inkSoft} />}</View>
                       <View style={{ flexShrink: 1 }}>
                         <Text style={st.boostLabel}>{feature.label}</Text>
                         <Text style={st.boostSub}>
@@ -260,7 +260,7 @@ export default function DriverIncentives() {
                         scale={1}
                         style={[st.boostBtn, canClaim && { backgroundColor: DT.cta }]}
                       >
-                        <Text style={[st.boostBtnText, { color: canClaim ? DT.ctaInk : DT.inkSoft }]}>{feature.isClaimed ? 'DONE' : 'CLAIM'}</Text>
+                        <Text style={[st.boostBtnText, { color: canClaim ? DT.ctaInk : DT.inkSoft }]}>{feature.isClaimed ? 'Done' : 'Claim'}</Text>
                       </Press>
                     </View>
                   </Card>
@@ -278,10 +278,10 @@ export default function DriverIncentives() {
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
   loadingText: { marginTop: 16, fontSize: 12, minWidth: 130, color: DT.muted, ...fo(600) },
-  bonusLabel: { fontSize: 11, minWidth: 90, textAlign: 'right', color: DT.onBrandMuted, ...fo(700) },
-  bonusValue: { fontSize: 18, color: DT.accent, fontVariant: ['tabular-nums'], ...fo(800) },
+  bonusLabel: { fontSize: 12, textAlign: 'right', color: DT.muted, ...fo(400) },
+  bonusValue: { fontSize: 18, textAlign: 'right', color: DT.ink, fontVariant: ['tabular-nums'], ...fo(600) },
   levelCard: { borderRadius: DT.radius.xl, padding: 24 },
-  trophy: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  trophy: { width: 52, height: 52, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' },
   levelName: { fontSize: 20, color: DT.onBrand, ...fo(800) },
   levelSub: { fontSize: 14, color: DT.gold, ...fo(600) },
   xs: { fontSize: 12, ...fo(700) },
@@ -299,9 +299,9 @@ const st = StyleSheet.create({
   progressText: { fontSize: 11, color: DT.muted, ...fo(700) },
   claim: { width: '100%', minHeight: 48, justifyContent: 'center', borderRadius: DT.radius.lg, alignItems: 'center' },
   claimText: { fontSize: 12, minWidth: 80, ...fo(800) },
-  referral: { backgroundColor: DT.brand, borderRadius: DT.radius.xl, padding: 24, overflow: 'hidden' },
-  refTitle: { fontSize: 18, color: DT.gold, marginBottom: 8, ...playfair(700) },
-  refText: { fontSize: 14, lineHeight: 20, color: DT.onBrandMuted, marginBottom: 20, ...fo(500) },
+  referral: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, borderRadius: DT.radius.lg, padding: 20, overflow: 'hidden' },
+  refTitle: { fontSize: 17, color: DT.ink, marginBottom: 4, ...fo(600) },
+  refText: { fontSize: 14, lineHeight: 20, color: DT.muted, marginBottom: 16, ...fo(400) },
   giftWrap: { position: 'absolute', right: -16, bottom: -16 },
   boost: { borderRadius: DT.radius.xl, padding: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   boostIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },

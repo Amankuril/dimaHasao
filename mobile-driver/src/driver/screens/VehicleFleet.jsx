@@ -202,7 +202,7 @@ function VehicleField({ label, value, onChangeText, placeholder, style, inputSty
   const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.field, focused ? { borderColor: DT.brand } : null, style]}>
-      <Text style={styles.fieldLabel}>{label.toUpperCase()}</Text>
+      <Text style={styles.fieldLabel}>{label}</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -393,7 +393,7 @@ export default function VehicleFleet() {
 
   return (
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
-      <ScreenHeader title="My Vehicle" subtitle="Vehicle type decides which requests you get" onBack={() => navigate('/taxi/driver/profile')} />
+      <ScreenHeader title="My vehicle" subtitle="Vehicle type decides which requests you get" onBack={() => navigate('/taxi/driver/profile')} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 20, paddingBottom: NAV_BAR_HEIGHT + 24 + insets.bottom }}>
         {isLoading ? (
           <View style={{ minHeight: 420, alignItems: 'center', justifyContent: 'center' }} accessibilityRole="progressbar" accessibilityLabel="Loading">
@@ -407,7 +407,7 @@ export default function VehicleFleet() {
                   <View style={{ gap: 6, minWidth: 0, flex: 1 }}>
                     <Text style={styles.heroKicker}>Primary vehicle</Text>
                     <Text style={styles.heroTitle} numberOfLines={1}>{vehicleModel}</Text>
-                    <Text style={styles.heroNumber} numberOfLines={1}>{String(driver?.vehicleNumber || 'Number not set').toUpperCase()}</Text>
+                    <Text style={styles.heroNumber} numberOfLines={1}>{driver?.vehicleNumber ? String(driver.vehicleNumber).toUpperCase() : 'Number not set'}</Text>
                     <Text style={styles.heroMeta} numberOfLines={1}>{activeVehicleName} • {driver?.vehicleColor || 'Color not set'}</Text>
                   </View>
                   {driver?.vehicleImage ? (
@@ -427,7 +427,7 @@ export default function VehicleFleet() {
               </View>
             </View>
 
-            {message ? <Text style={styles.message}>{message.toUpperCase()}</Text> : null}
+            {message ? <Text style={styles.message}>{message}</Text> : null}
 
             <View style={{ gap: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
@@ -443,7 +443,7 @@ export default function VehicleFleet() {
 
               <CtaButton
                 variant="cta"
-                title="Edit Details"
+                title="Edit details"
                 onPress={() => {
                   setFormData(buildForm(driver));
                   setIsEditing(true);
@@ -468,7 +468,7 @@ export default function VehicleFleet() {
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
               <Text style={styles.sheetKicker}>Settings</Text>
-              <Text style={styles.sheetTitle}>Vehicle Details</Text>
+              <Text style={styles.sheetTitle}>Vehicle details</Text>
             </View>
             <Press scale={1} onPress={() => setIsEditing(false)} accessibilityLabel="Close" style={styles.sheetClose}>
               <X size={22} color={DT.muted} />
@@ -497,7 +497,7 @@ export default function VehicleFleet() {
                       <View style={[styles.typeImageBox, { backgroundColor: selected ? 'rgba(255,255,255,0.14)' : DT.bg }]}>
                         <Img source={toSource(typeImage)} style={{ width: 32, height: 32 }} resizeMode="contain" accessibilityLabel={getTypeLabel(type)} />
                       </View>
-                      <Text style={[styles.typeLabel, { color: selected ? DT.onBrand : DT.inkSoft }]}>{getTypeLabel(type).toUpperCase()}</Text>
+                      <Text style={[styles.typeLabel, { color: selected ? DT.onBrand : DT.inkSoft }]}>{getTypeLabel(type)}</Text>
                     </Press>
                   );
                 })}
@@ -510,7 +510,7 @@ export default function VehicleFleet() {
             </View>
 
             <VehicleField
-              label="Plate Number"
+              label="Plate number"
               value={formData.vehicleNumber}
               onChangeText={(text) => handleChange('vehicleNumber', text.toUpperCase())}
               placeholder="e.g. MP 09 AB 1234"
@@ -547,7 +547,7 @@ export default function VehicleFleet() {
 
           <CtaButton
             variant="cta"
-            title="UPDATE VEHICLE"
+            title="Update vehicle"
             onPress={handleSave}
             disabled={isSaving || imageUploading}
             accessibilityLabel="Update Vehicle"

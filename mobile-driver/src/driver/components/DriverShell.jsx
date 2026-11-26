@@ -159,7 +159,7 @@ export default function DriverShell() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: D.bg }, animation: 'fade', animationDuration: 120 }} />
       {checking ? (
         <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
-          <ActivityIndicator size="large" color="#0F172A" />
+          <ActivityIndicator size="large" color="#18181B" />
         </View>
       ) : isAllowed && signedIn && getStoredDriverRole() === 'driver' ? (
         <DriverRideRequestListener />

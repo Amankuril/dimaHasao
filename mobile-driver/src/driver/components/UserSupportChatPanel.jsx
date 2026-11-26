@@ -336,7 +336,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
         <View style={st.row}>
           <View style={[st.iconBox, { marginRight: 12 }]}><ShieldCheck size={20} color={DT.accent} /></View>
           <View>
-            <Text style={[st.eyebrow, fo(600)]}>Support Chat</Text>
+            <Text style={[st.eyebrow, fo(600)]}>Support chat</Text>
             <Text style={[{ fontSize: 20, color: DT.ink }, fo(800)]}>{title}</Text>
           </View>
         </View>
@@ -359,7 +359,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
           <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Text numberOfLines={1} style={[{ fontSize: 18, color: DT.ink }, fo(800)]}>{title}</Text>
             <View style={[st.row, { flexWrap: 'wrap' }]}>
-              <Text style={[st.tiny, { color: DT.muted }, fo(800)]}>Desk Terminal</Text>
+              <Text style={[st.tiny, { color: DT.muted }, fo(800)]}>Desk terminal</Text>
               <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: DT.faint, marginHorizontal: 8 }} />
               <Text style={[st.tiny, { color: DT.brand }, fo(800)]}>{subtitle}</Text>
             </View>

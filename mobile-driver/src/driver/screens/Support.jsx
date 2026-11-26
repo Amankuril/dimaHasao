@@ -19,7 +19,7 @@ const faqs = [
 ];
 
 const LEGAL = [
-  { label: 'Privacy Policy', Icon: FileText },
+  { label: 'Privacy policy', Icon: FileText },
   { label: 'Terms of Service', Icon: Globe },
 ];
 
@@ -41,13 +41,13 @@ export default function DriverSupport() {
 
   return (
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
-      <ScreenHeader title="Support Hub" subtitle="Get help, fast" onBack={() => navigate(`${routePrefix}/profile`)} />
+      <ScreenHeader title="Support" subtitle="FAQs, tickets and chat" onBack={() => navigate(`${routePrefix}/profile`)} />
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 20, paddingBottom: 32 + insets.bottom }}>
         <View style={{ gap: 24 }}>
           <View style={[styles.search, searchFocused ? { borderColor: DT.brand } : null]}>
             <Search size={18} color={DT.muted} />
             <TextInput
-              value={searchQuery.toUpperCase()}
+              value={searchQuery}
               onChangeText={setSearchQuery}
               placeholder="SEARCH ISSUES..."
               placeholderTextColor={DT.faint}
@@ -80,7 +80,7 @@ export default function DriverSupport() {
                     <View style={styles.faqIcon}>
                       <HelpCircle size={20} color={DT.brand} />
                     </View>
-                    <Text style={styles.faqText}>{faq.q.toUpperCase()}</Text>
+                    <Text style={styles.faqText}>{faq.q}</Text>
                   </View>
                   <ArrowUpRight size={18} color={DT.faint} />
                 </Press>
@@ -93,7 +93,7 @@ export default function DriverSupport() {
               <View key={label} style={styles.legal}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Icon size={18} color={DT.brand} />
-                  <Text style={styles.legalText}>{label.toUpperCase()}</Text>
+                  <Text style={styles.legalText}>{label}</Text>
                 </View>
                 <ChevronRight size={18} color={DT.faint} />
               </View>
@@ -113,7 +113,7 @@ export default function DriverSupport() {
             </View>
             <Text style={styles.dialogTitle}>{faqs[activeFaq].q}</Text>
             <Text style={styles.dialogBody}>{faqs[activeFaq].a}</Text>
-            <CtaButton variant="brand" title="CLOSE TOPIC" onPress={() => setActiveFaq(null)} accessibilityLabel="Close Topic" style={{ marginTop: 8 }} />
+            <CtaButton variant="brand" title="Close topic" onPress={() => setActiveFaq(null)} accessibilityLabel="Close Topic" style={{ marginTop: 8 }} />
           </View>
         ) : null}
       </Dialog>

@@ -626,8 +626,14 @@ export const formatDistanceLabel = (meters) => {
         return 'Nearby';
     }
 
+    // Under 50 m used to read "50 m away" while the arrival card beside it
+    // showed the real distance (e.g. 0 m); say what is true instead.
+    if (distance < 50) {
+        return 'Under 50 m away';
+    }
+
     if (distance < 1000) {
-        return `${Math.max(50, Math.round(distance / 10) * 10)} m away`;
+        return `${Math.round(distance / 10) * 10} m away`;
     }
 
     return `${(distance / 1000).toFixed(distance >= 10000 ? 0 : 1)} km away`;

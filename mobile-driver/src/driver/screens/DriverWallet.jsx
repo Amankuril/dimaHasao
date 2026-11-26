@@ -144,7 +144,7 @@ const StatPill = ({ label, value, tone = 'dark', style }) => {
 
   return (
     <View style={[st.stat, { backgroundColor: t.bg }, style]}>
-      <Text style={[st.statLabel, { color: t.fg }]}>{String(label).toUpperCase()}</Text>
+      <Text style={[st.statLabel, { color: t.fg }]}>{String(label)}</Text>
       <Text style={[st.statValue, { color: t.fg }]}>{value}</Text>
     </View>
   );
@@ -547,7 +547,7 @@ export default function DriverWallet() {
         right={
           <Press onPress={() => loadWallet()} disabled={refreshing} accessibilityLabel="Refresh wallet" style={[st.roundBtn, refreshing && { opacity: 0.6 }]}>
             <SpinView active={refreshing}>
-              <RefreshCw size={18} color={DT.onBrand} />
+              <RefreshCw size={18} strokeWidth={1.75} color={DT.ink} />
             </SpinView>
           </Press>
         }
@@ -574,12 +574,12 @@ export default function DriverWallet() {
                   <Text style={st.balance} numberOfLines={1} adjustsFontSizeToFit>
                     {money(wallet.balance)}
                   </Text>
-                  <View style={[st.statusPill, { backgroundColor: rules.canReceiveOrders ? 'rgba(0,212,146,0.15)' : 'rgba(255,185,0,0.15)' }]}>
-                    <Text style={[st.statusText, { color: rules.canReceiveOrders ? tw.emerald200 : tw.amber200 }]}>{statusCopy}</Text>
+                  <View style={[st.statusPill, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
+                    <Text style={[st.statusText, { color: rules.canReceiveOrders ? DT.onBrand : tw.amber200 }]}>{statusCopy}</Text>
                   </View>
                 </View>
                 <View style={st.walletIcon}>
-                  <Wallet size={26} color={DT.gold} />
+                  <Wallet size={22} strokeWidth={1.75} color={DT.onBrandMuted} />
                 </View>
               </View>
 
@@ -592,7 +592,7 @@ export default function DriverWallet() {
                       <Text style={st.salaryNote}>Set by fleet owner for this driver profile</Text>
                     </View>
                     <View style={st.salaryIcon}>
-                      <IndianRupee size={22} color={tw.emerald200} />
+                      <IndianRupee size={20} strokeWidth={1.75} color={DT.onBrandMuted} />
                     </View>
                   </View>
                 </View>
@@ -605,7 +605,7 @@ export default function DriverWallet() {
                 </View>
                 <View style={[st.miniCard, !owner && { flex: 1 }]}>
                   <Text style={st.heroSmall}>Available cash limit</Text>
-                  <Text style={[st.miniValue, { color: rules.availableForOrders >= 0 ? tw.emerald200 : tw.amber200 }]}>{money(rules.availableForOrders)}</Text>
+                  <Text style={[st.miniValue, { color: rules.availableForOrders >= 0 ? DT.onBrand : tw.amber200 }]}>{money(rules.availableForOrders)}</Text>
                 </View>
               </View>
             </Card>
@@ -623,9 +623,9 @@ export default function DriverWallet() {
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <CtaButton title="TOP UP" onPress={() => setShowTopUp(true)} disabled={topUpDisabled} icon={<ArrowUpRight size={17} color={DT.ctaInk} />} style={{ flex: 1 }} />
+              <CtaButton title="Top up" onPress={() => setShowTopUp(true)} disabled={topUpDisabled} icon={<ArrowUpRight size={17} color={DT.ctaInk} />} style={{ flex: 1 }} />
               <CtaButton
-                title="WITHDRAW"
+                title="Withdraw"
                 variant="outline"
                 onPress={() => setShowWithdraw(true)}
                 disabled={withdrawDisabled}
@@ -713,7 +713,7 @@ export default function DriverWallet() {
                       accessibilityLabel={`Filter ${filter.label}`}
                       style={[st.filter, on ? { backgroundColor: DT.brand, borderColor: DT.brand } : { backgroundColor: DT.card, borderColor: DT.border }]}
                     >
-                      <Text style={[st.filterText, { color: on ? DT.onBrand : DT.inkSoft }]}>{filter.label.toUpperCase()}</Text>
+                      <Text style={[st.filterText, { color: on ? DT.onBrand : DT.inkSoft }]}>{filter.label}</Text>
                     </Press>
                   );
                 })}
@@ -742,7 +742,7 @@ export default function DriverWallet() {
                       </View>
                       <View style={{ alignItems: 'flex-end', flexShrink: 0 }}>
                         <Text style={[st.txAmount, { color: isDebit ? DT.dangerInk : DT.successInk }]}>{money(tx.amount)}</Text>
-                        <Text style={st.txBal}>BAL {money(tx.balanceAfter).toUpperCase()}</Text>
+                        <Text style={st.txBal}>Balance {money(tx.balanceAfter)}</Text>
                       </View>
                     </View>
                   );
@@ -791,7 +791,7 @@ export default function DriverWallet() {
                     </Press>
                   ))}
                 </View>
-                <CtaButton title="ADD MONEY" onPress={handleTopUp} loading={processingTopUp} disabled={!rules.walletEnabled} style={{ height: 56 }} />
+                <CtaButton title="Add money" onPress={handleTopUp} loading={processingTopUp} disabled={!rules.walletEnabled} style={{ height: 56 }} />
               </View>
             )}
           </View>
@@ -828,7 +828,7 @@ export default function DriverWallet() {
                   <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={DT.faint} style={st.amountInput} />
                   <Text style={[st.cardMeta, { marginTop: 8, textAlign: 'center' }]}>Available balance: {money(wallet.balance)}</Text>
                 </View>
-                <CtaButton title="SEND REQUEST" variant="brand" onPress={handleWithdrawRequest} loading={processingWithdraw} disabled={!rules.transferEnabled} style={{ height: 56 }} />
+                <CtaButton title="Send request" variant="brand" onPress={handleWithdrawRequest} loading={processingWithdraw} disabled={!rules.transferEnabled} style={{ height: 56 }} />
               </View>
             )}
           </View>
@@ -843,7 +843,7 @@ export default function DriverWallet() {
 
 const st = StyleSheet.create({
   flex: { flex: 1, backgroundColor: DT.bg },
-  roundBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.12)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
+  roundBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, alignItems: 'center', justifyContent: 'center' },
   loading: { minHeight: 480, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, color: DT.muted, ...fo(700) },
   hero: { borderRadius: DT.radius.xl, padding: 20, overflow: 'hidden', ...shadow('lg') },
@@ -851,12 +851,12 @@ const st = StyleSheet.create({
   balance: { marginTop: 8, fontSize: 38, lineHeight: 46, letterSpacing: -0.5, color: DT.onBrand, fontVariant: ['tabular-nums'], ...fo(800) },
   statusPill: { marginTop: 12, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
   statusText: { fontSize: 12, ...fo(800) },
-  walletIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  walletIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' },
   salary: { marginTop: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.07)', padding: 16, overflow: 'hidden' },
   heroSmall: { fontSize: 11, minWidth: 90, color: DT.onBrandMuted, ...fo(800) },
-  salaryValue: { marginTop: 4, fontSize: 24, color: tw.emerald200, ...fo(800) },
+  salaryValue: { marginTop: 4, fontSize: 24, color: DT.onBrand, fontVariant: ['tabular-nums'], ...fo(600) },
   salaryNote: { marginTop: 4, fontSize: 11, color: DT.onBrandMuted, ...fo(600) },
-  salaryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(0,212,146,0.15)', alignItems: 'center', justifyContent: 'center' },
+  salaryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
   miniCard: { borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.08)', padding: 12 },
   miniValue: { marginTop: 4, fontSize: 18, color: DT.onBrand, fontVariant: ['tabular-nums'], ...fo(800) },
   errorBox: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.danger, backgroundColor: DT.dangerSoft, padding: 16 },

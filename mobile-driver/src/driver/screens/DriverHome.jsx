@@ -155,6 +155,14 @@ const DriverHome = () => {
   const [isTodaySummaryExpanded, setIsTodaySummaryExpanded] = useState(true);
   const [driverCoords, setDriverCoords] = useState(() => readStoredDriverCoords());
   const [statusMessage, setStatusMessage] = useState('');
+  // A status line is a toast: it used to stay on the map forever ("New booking
+  // received." long after the request closed). Clear it a few seconds after
+  // each new message.
+  useEffect(() => {
+    if (!statusMessage) return undefined;
+    const id = setTimeout(() => setStatusMessage(''), 4000);
+    return () => clearTimeout(id);
+  }, [statusMessage]);
   const [, setSocketStatus] = useState('offline');
   const [notificationCount, setNotificationCount] = useState(0);
   const [scheduledRideCount, setScheduledRideCount] = useState(0);
@@ -1457,10 +1465,10 @@ const DriverHome = () => {
   const noticeTop = 104 + (topPad - 48);
 
   const summaryItems = [
-    { Icon: IndianRupee, bg: alpha(DT.success, 0.18), color: tw.emerald400, value: formatSummaryMoney(todaySummary.earnings), label: 'EARNINGS' },
-    { Icon: Clock, bg: alpha(DT.gold, 0.2), color: DT.accent, value: `${dutyHours}h ${dutyMins}m`, label: 'ACTIVE' },
-    { Icon: Navigation, bg: alpha(tw.blue400, 0.18), color: tw.blue400, value: formatSummaryDistance(todaySummary.distanceMeters), label: 'DISTANCE' },
-    { Icon: BarChart2, bg: alpha(DT.success, 0.18), color: tw.emerald400, value: String(todaySummary.rides), label: 'RIDES' },
+    { Icon: IndianRupee, bg: 'rgba(255,255,255,0.08)', color: DT.onBrandMuted, value: formatSummaryMoney(todaySummary.earnings), label: 'Earnings' },
+    { Icon: Clock, bg: 'rgba(255,255,255,0.08)', color: DT.onBrandMuted, value: `${dutyHours}h ${dutyMins}m`, label: 'On duty' },
+    { Icon: Navigation, bg: 'rgba(255,255,255,0.08)', color: DT.onBrandMuted, value: formatSummaryDistance(todaySummary.distanceMeters), label: 'Distance' },
+    { Icon: BarChart2, bg: 'rgba(255,255,255,0.08)', color: DT.onBrandMuted, value: String(todaySummary.rides), label: 'Rides' },
   ];
 
   return (
@@ -1590,8 +1598,8 @@ const DriverHome = () => {
               [0, 1, 2].map((index) => (
                 <Pulse key={index} style={st.skeleton}>
                   <View style={{ height: 12, width: '50%', borderRadius: 999, backgroundColor: DT.border }} />
-                  <View style={{ marginTop: 12, height: 10, width: '100%', borderRadius: 999, backgroundColor: tw.slate100 }} />
-                  <View style={{ marginTop: 8, height: 10, width: '80%', borderRadius: 999, backgroundColor: tw.slate100 }} />
+                  <View style={{ marginTop: 12, height: 10, width: '100%', borderRadius: 999, backgroundColor: tw.zinc100 }} />
+                  <View style={{ marginTop: 8, height: 10, width: '80%', borderRadius: 999, backgroundColor: tw.zinc100 }} />
                 </Pulse>
               ))
             ) : scheduledRides.length === 0 ? (
@@ -1615,11 +1623,11 @@ const DriverHome = () => {
                           <Text numberOfLines={1} style={[outfit(900), st.rideTitle]}>
                             {ride.type === 'parcel' ? 'Scheduled delivery' : ride.type === 'intercity' ? 'Scheduled intercity ride' : 'Scheduled ride'}
                           </Text>
-                          <Text style={[outfit(900), st.rideWhen]}>{formatScheduledDateTime(ride.scheduledAt).toUpperCase()}</Text>
+                          <Text style={[outfit(900), st.rideWhen]}>{formatScheduledDateTime(ride.scheduledAt)}</Text>
                           <Text style={[outfit(900), st.rideCountdown]}>{getScheduledRideCountdown(ride.scheduledAt, scheduleNow)}</Text>
                         </View>
                         <View style={st.rideFare}>
-                          <Text style={[outfit(900), st.rideFareText]}>{formatFareLabel(ride.fare || ride.baseFare).toUpperCase()}</Text>
+                          <Text style={[outfit(900), st.rideFareText]}>{formatFareLabel(ride.fare || ride.baseFare)}</Text>
                         </View>
                       </View>
                       <Text numberOfLines={1} style={[outfit(700), st.rideLine, { marginTop: 12, color: DT.muted }]}>
@@ -1683,7 +1691,7 @@ const DriverHome = () => {
             </Animated.View>
             <View style={st.dutyLabelWrap}>
               <Text style={[outfit(900), st.dutyLabel, isOnline ? { color: DT.onBrand, marginRight: 24 } : { color: DT.inkSoft, marginLeft: 24 }]}>
-                {isOnline ? 'ONLINE' : 'OFFLINE'}
+                {isOnline ? 'Online' : 'Offline'}
               </Text>
             </View>
           </Press>
@@ -1739,7 +1747,7 @@ const DriverHome = () => {
             style={st.summaryHead}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Text style={[outfit(900), st.summaryTitle]}>TODAY&apos;S SUMMARY</Text>
+              <Text style={[outfit(900), st.summaryTitle]}>Today&apos;s summary</Text>
               <Pulse style={st.summaryDot} />
             </View>
             <Animated.View style={[st.chevron, { transform: [{ rotate: chevron.interpolate({ inputRange: [0, 1], outputRange: ['-90deg', '90deg'] }) }] }]}>
@@ -1785,7 +1793,7 @@ const st = StyleSheet.create({
   knob: { position: 'absolute', left: 5, top: 5, width: 32, height: 32, borderRadius: 16, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
   dutyLabelWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingLeft: 8 },
   dutyLabel: { fontSize: 11, minWidth: 56 },
-  walletPill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: DT.brand, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: DT.gold, ...shadow('md') },
+  walletPill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: DT.brand, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: DT.brand, ...shadow('md') },
   walletText: { fontSize: 14, letterSpacing: -0.2, color: DT.onBrand },
 
   noticeWrap: { position: 'absolute', left: 16, right: 16, zIndex: 40 },
@@ -1802,11 +1810,11 @@ const st = StyleSheet.create({
   recenter: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
 
   bottom: { position: 'absolute', left: 0, right: 0, paddingHorizontal: 16, paddingBottom: 8, zIndex: 60 },
-  statusToast: { marginBottom: 12, alignSelf: 'center', maxWidth: 300, borderRadius: DT.radius.md, backgroundColor: DT.brandDeep, borderWidth: 1, borderColor: DT.gold, paddingHorizontal: 16, paddingVertical: 12, ...shadow('lg') },
+  statusToast: { marginBottom: 12, alignSelf: 'center', maxWidth: 300, borderRadius: DT.radius.md, backgroundColor: DT.brandDeep, borderWidth: 1, borderColor: DT.darkSoft, paddingHorizontal: 16, paddingVertical: 12, ...shadow('lg') },
   statusText: { fontSize: 12, lineHeight: 18, color: DT.onBrand, textAlign: 'center' },
   summary: { width: '100%', overflow: 'hidden', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.darkSoft, backgroundColor: DT.dark, ...shadow('lg') },
   summaryHead: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
-  summaryTitle: { fontSize: 12, minWidth: 130, color: DT.gold },
+  summaryTitle: { fontSize: 13, color: DT.onBrandMuted },
   summaryDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DT.success },
   chevron: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.darkSoft, alignItems: 'center', justifyContent: 'center' },
   summaryGrid: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 20 },
@@ -1815,7 +1823,7 @@ const st = StyleSheet.create({
   summaryLabel: { fontSize: 11, lineHeight: 15, minWidth: 52, textAlign: 'center', color: DT.onBrandMuted },
 
   dialogRoot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  dialogBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
+  dialogBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.zinc900, 0.45) },
   dialogCard: { width: Math.min(384, Dimensions.get('window').width - 40), borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 24, ...shadow('lg') },
   dlgTitle: { fontSize: 20, lineHeight: 28, color: DT.ink },
   dlgBody: { marginTop: 8, fontSize: 13, lineHeight: 21, color: DT.muted },
@@ -1829,11 +1837,11 @@ const st = StyleSheet.create({
   selfieErrorText: { fontSize: 12, color: DT.dangerInk },
 
   sheetRoot: { flex: 1, justifyContent: 'flex-end' },
-  sheetBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
+  sheetBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.zinc900, 0.45) },
   sheet: { maxHeight: SCREEN_H * 0.78, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, paddingHorizontal: 20, paddingBottom: 24, paddingTop: 12, ...shadow('lg') },
   sheetHandle: { alignSelf: 'center', width: 48, height: 5, borderRadius: 999, backgroundColor: DT.border },
   sheetHead: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  sheetKicker: { fontSize: 11, minWidth: 80, color: DT.gold },
+  sheetKicker: { fontSize: 12, color: DT.muted },
   sheetTitle: { marginTop: 4, fontSize: 22, lineHeight: 28, color: DT.ink },
   sheetSub: { marginTop: 4, fontSize: 12, color: DT.muted },
   sheetClose: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },

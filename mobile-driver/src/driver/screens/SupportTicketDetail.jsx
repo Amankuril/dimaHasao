@@ -6,7 +6,7 @@ import { Press } from '../../components/ui';
 import { useLocation, useNavigate, useParams } from '../../lib/webRouter';
 import { outfit as fo, shadow } from '../../theme';
 import { supportTicketService } from '../services/supportTicketService';
-import { DT } from '../ui/dt';
+import { DT, sentence } from '../ui/dt';
 import ScreenHeader from '../ui/ScreenHeader';
 
 import { STATUS_STYLES } from './SupportTickets';
@@ -72,10 +72,10 @@ export default function SupportTicketDetail() {
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding">
         <ScreenHeader
-          title={ticket?.title || 'Support Ticket'}
-          subtitle={String(ticket?.supportType || 'support').toUpperCase()}
+          title={ticket?.title || 'Support ticket'}
+          subtitle={sentence(ticket?.supportType || 'support')}
           onBack={() => navigate(-1)}
-          right={<Text style={[styles.status, { backgroundColor: tone.bg, color: tone.fg }]}>{String(ticket?.status || 'pending').toUpperCase()}</Text>}
+          right={<Text style={[styles.status, { backgroundColor: tone.bg, color: tone.fg }]}>{sentence(ticket?.status || 'pending')}</Text>}
         />
 
         <ScrollView ref={scroller} onContentSizeChange={() => scroller.current?.scrollToEnd({ animated: false })} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 16, gap: 12 }}>
@@ -114,7 +114,7 @@ export default function SupportTicketDetail() {
 }
 
 const styles = StyleSheet.create({
-  status: { fontSize: 11, lineHeight: 15, minWidth: 54, textAlign: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(800) },
+  status: { fontSize: 12, lineHeight: 16, textAlign: 'center', paddingHorizontal: 8, paddingVertical: 2, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(500) },
   error: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
   errorText: { fontSize: 13, lineHeight: 18, color: DT.dangerInk, ...fo(700) },
   bubble: { maxWidth: '80%', borderRadius: DT.radius.lg, paddingHorizontal: 16, paddingVertical: 12 },

@@ -75,10 +75,15 @@ const call = async (method, path, body, config = {}) => {
   } catch (error) {
     if (error?.response) {
       const data = error.response.data;
-      const message = String(data?.message || '');
+      // The API's global error handler answers `{ success: false, error: '...' }`
+      // while the taxi handler answers `{ message }`. Screens read `.message`, so
+      // carry the server's text across either way; without this every rejection
+      // (a wrong ride PIN, a closed request) fell back to a generic "check your
+      // connection" line.
+      const message = String(data?.message || data?.error || '');
       const stale = error.response.status === 401 || STALE.has(message.trim().toLowerCase());
       if (stale && hadToken) events.emit('app:auth-stale', { role: 'driver', message, token: getTaxiToken() });
-      throw { ...(data && typeof data === 'object' ? data : {}), status: error.response.status };
+      throw { ...(data && typeof data === 'object' ? data : {}), ...(message ? { message } : {}), status: error.response.status };
     }
     if (error?.code === 'ABORTED') throw error;
     throw { message: 'Network error or server down.' };

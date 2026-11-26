@@ -15,14 +15,14 @@ export default function SupportChat() {
   return (
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
       <ScreenHeader
-        title="Support Chat"
+        title="Support chat"
         subtitle="Talk to the support team"
         onBack={() => navigate(backPath, backState ? { state: backState } : undefined)}
       />
       <UserSupportChatPanel
         preferredRole="driver"
-        title="Driver Support Chat"
-        subtitle="Live Messages"
+        title="Driver support chat"
+        subtitle="Live messages"
         surface="plain"
         style={{ flex: 1 }}
       />

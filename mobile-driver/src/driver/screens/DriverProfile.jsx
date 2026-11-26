@@ -97,7 +97,7 @@ const normalizeBankDetails = (bankDetails = {}) => ({
 
 const LEGAL_CONTENT = {
   driver_app: {
-    title: 'Driver Application',
+    title: 'Driver application',
     Icon: UserPlus,
     description: 'Join the Dima Hasao fleet as a certified driver.',
     content: `Dima Hasao is always looking for professional, dedicated drivers to join our growing ecosystem.
@@ -123,7 +123,7 @@ Key Highlights:
 • Account Security: You are responsible for keeping your credentials and biometric data secure.`,
   },
   privacy: {
-    title: 'Privacy Policy',
+    title: 'Privacy policy',
     Icon: Shield,
     description: 'How we handle your data and biometrics.',
     content: `Dima Hasao takes data security seriously. We collect specific information to ensure safety and service quality.
@@ -137,7 +137,7 @@ Data Collected:
 We do not share your biometric data with third-party advertising networks.`,
   },
   refund: {
-    title: 'Refund Policy',
+    title: 'Refund policy',
     Icon: HandCoins,
     description: 'Cancellation and refund guidelines.',
     content: `Transparent refund rules for customers and partners.
@@ -321,14 +321,14 @@ export default function DriverProfile() {
 
   const sections = [
     {
-      title: 'Your Account',
+      title: 'Your account',
       items: [
-        { id: 'personal', label: 'Personal Information', sub: driverPhone, Icon: User, path: `${routePrefix}/edit-profile` },
+        { id: 'personal', label: 'Personal information', sub: driverPhone, Icon: User, path: `${routePrefix}/edit-profile` },
         { id: 'wallet', label: 'Wallet', Icon: Wallet, path: `${routePrefix}/wallet` },
-        { id: 'bankDetails', label: 'Bank Details', sub: bankDetailsSubtitle, Icon: Landmark, action: openBankDetails },
-        { id: 'vehicle', label: 'My Vehicle', Icon: Car, path: `${routePrefix}/vehicle-fleet` },
+        { id: 'bankDetails', label: 'Bank details', sub: bankDetailsSubtitle, Icon: Landmark, action: openBankDetails },
+        { id: 'vehicle', label: 'My vehicle', Icon: Car, path: `${routePrefix}/vehicle-fleet` },
         { id: 'docs', label: 'Documents', Icon: FileText, path: `${routePrefix}/documents` },
-        { id: 'history', label: 'Ride History', Icon: History, path: `${routePrefix}/history` },
+        { id: 'history', label: 'Ride history', Icon: History, path: `${routePrefix}/history` },
         { id: 'notifications', label: 'Notifications', Icon: Bell, path: `${routePrefix}/notifications` },
       ],
     },
@@ -342,20 +342,20 @@ export default function DriverProfile() {
     },
     {
       title: 'Preferences',
-      items: [{ id: 'routeBooking', label: 'My Route Booking', sub: routeBookingSubtitle, Icon: Route, type: 'toggle' }],
+      items: [{ id: 'routeBooking', label: 'My route booking', sub: routeBookingSubtitle, Icon: Route, type: 'toggle' }],
     },
     {
       title: 'Legal & Support',
       items: [
-        { id: 'driver_app', label: 'Driver Application', Icon: UserPlus, action: () => openLegal('driver_app') },
+        { id: 'driver_app', label: 'Driver application', Icon: UserPlus, action: () => openLegal('driver_app') },
         { id: 'terms', label: 'Terms & Conditions', Icon: FileText, action: () => openLegal('terms') },
-        { id: 'privacy', label: 'Privacy Policy', Icon: Shield, action: () => openLegal('privacy') },
-        { id: 'refund', label: 'Refund Policy', Icon: HandCoins, action: () => openLegal('refund') },
+        { id: 'privacy', label: 'Privacy policy', Icon: Shield, action: () => openLegal('privacy') },
+        { id: 'refund', label: 'Refund policy', Icon: HandCoins, action: () => openLegal('refund') },
       ],
     },
     {
-      title: 'Danger Zone',
-      items: [{ id: 'deleteAccount', label: 'Delete Account', Icon: LogOut, path: `${routePrefix}/delete-account` }],
+      title: 'Danger zone',
+      items: [{ id: 'deleteAccount', label: 'Delete account', Icon: LogOut, path: `${routePrefix}/delete-account` }],
     },
   ];
 
@@ -367,7 +367,7 @@ export default function DriverProfile() {
             Profile
           </Text>
           <Press onPress={() => navigate(`${routePrefix}/help-support`)} scale={1} accessibilityLabel="Help and support" style={st.helpBtn}>
-            <Info size={16} color={DT.accent} />
+            <Info size={16} strokeWidth={1.75} color={DT.inkSoft} />
             <Text style={st.help}>Help & Support</Text>
           </Press>
         </View>
@@ -388,8 +388,8 @@ export default function DriverProfile() {
               {isLoading ? 'Loading...' : driverName}
             </Text>
             <View style={st.ratingChip}>
-              <Star size={13} color={DT.accent} fill={DT.accent} />
-              <Text style={st.rating}>{driverRating.toFixed(1)} Rating</Text>
+              <Star size={13} color={DT.goldBright} fill={DT.goldBright} />
+              <Text style={st.rating}>{driverRating.toFixed(1)} rating</Text>
             </View>
           </View>
         </View>
@@ -405,7 +405,7 @@ export default function DriverProfile() {
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, rowGap: 14, justifyContent: 'space-between' }}>
                 <InfoCell label="Phone" value={driverPhone} />
                 <InfoCell label="Email" value={driverEmail} />
-                <InfoCell label="Vehicle Type" value={driverVehicle} />
+                <InfoCell label="Vehicle type" value={driverVehicle} />
                 <InfoCell label="City" value={driverLocation} />
                 <InfoCell label="Zone" value={driverZone} />
                 <InfoCell label="Vehicle No." value={driverNumber} />
@@ -435,7 +435,7 @@ export default function DriverProfile() {
                     >
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
                         <View style={[st.iconTile, danger && { backgroundColor: DT.dangerSoft }]}>
-                          <item.Icon size={20} color={danger ? DT.danger : DT.brand} />
+                          <item.Icon size={18} strokeWidth={1.75} color={danger ? DT.danger : DT.inkSoft} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={[st.rowLabel, danger && { color: DT.dangerInk }]}>{item.label}</Text>
@@ -569,28 +569,28 @@ export default function DriverProfile() {
 
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
-  header: { paddingHorizontal: 20, paddingBottom: 24, backgroundColor: DT.brandDeep, borderBottomLeftRadius: DT.radius.xl, borderBottomRightRadius: DT.radius.xl, zIndex: 60, ...shadow('md') },
-  headerTitle: { fontSize: 22, lineHeight: 28, color: DT.gold, ...playfair(700) },
-  helpBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.12)' },
-  help: { fontSize: 13, color: DT.onBrand, ...fo(700) },
-  name: { fontSize: 22, lineHeight: 28, color: DT.onBrand, ...fo(700) },
-  ratingChip: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.14)' },
-  rating: { fontSize: 13, color: DT.accent, ...fo(700) },
-  avatar: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 2, borderColor: DT.gold },
-  badge: { position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, backgroundColor: DT.success, borderRadius: 11, borderWidth: 2, borderColor: DT.brandDeep, alignItems: 'center', justifyContent: 'center' },
+  header: { paddingHorizontal: 16, paddingBottom: 20, backgroundColor: DT.card, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: DT.border, zIndex: 60 },
+  headerTitle: { fontSize: 20, lineHeight: 28, color: DT.ink, ...fo(600) },
+  helpBtn: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card },
+  help: { fontSize: 13, color: DT.inkSoft, ...fo(500) },
+  name: { fontSize: 20, lineHeight: 28, color: DT.ink, ...fo(600) },
+  ratingChip: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4 },
+  rating: { fontSize: 13, color: DT.inkSoft, fontVariant: ['tabular-nums'], ...fo(500) },
+  avatar: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: DT.border },
+  badge: { position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, backgroundColor: DT.success, borderRadius: 11, borderWidth: 2, borderColor: DT.card, alignItems: 'center', justifyContent: 'center' },
   errorLine: { fontSize: 12, color: DT.danger, ...fo(500) },
   infoLabel: { fontSize: 11, color: DT.muted, ...fo(500) },
   infoValue: { fontSize: 13, color: DT.ink, ...fo(700) },
   sectionTitle: { paddingHorizontal: 8, marginBottom: 12 },
-  listCard: { padding: 0, overflow: 'hidden', borderRadius: DT.radius.xl },
+  listCard: { padding: 0, overflow: 'hidden', borderRadius: DT.radius.lg },
   row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   rowDivider: { borderTopWidth: 1, borderTopColor: DT.borderSoft },
-  iconTile: { width: 40, height: 40, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  iconTile: { width: 36, height: 36, borderRadius: DT.radius.sm, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   rowLabel: { fontSize: 15, color: DT.ink, ...fo(600) },
   rowSub: { marginTop: 1, fontSize: 12, color: DT.muted, ...fo(500) },
   toggle: { width: 44, height: 24, borderRadius: 12, justifyContent: 'center' },
   knob: { position: 'absolute', top: 2, width: 20, height: 20, borderRadius: 10, backgroundColor: DT.onBrand, ...shadow('sm') },
-  support: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 20, ...shadow('sm') },
+  support: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 20, ...shadow('sm') },
   supportTitle: { fontSize: 13, minWidth: 120, color: DT.ink, ...fo(700) },
   supportIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   supportLabel: { fontSize: 11, minWidth: 90, color: DT.muted, ...fo(700) },
@@ -605,10 +605,10 @@ const st = StyleSheet.create({
   confirmBtn: { flex: 1, height: 48, borderRadius: DT.radius.md, backgroundColor: DT.danger, alignItems: 'center', justifyContent: 'center' },
   confirmText: { fontSize: 13, color: DT.onBrand, ...fo(700) },
   legalWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 16, paddingBottom: 32 },
-  legal: { overflow: 'hidden', borderRadius: 32, backgroundColor: DT.card, ...shadow('2xl') },
+  legal: { overflow: 'hidden', borderRadius: DT.radius.xl, backgroundColor: DT.card, ...shadow('2xl') },
   legalIcon: { width: 56, height: 56, borderRadius: 20, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   legalClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
-  legalTitle: { fontSize: 24, color: DT.brand, ...playfair(700) },
+  legalTitle: { fontSize: 22, color: DT.ink, ...fo(600) },
   legalDesc: { marginTop: 4, fontSize: 14, color: DT.muted, ...fo(500) },
   legalBody: { fontSize: 14, lineHeight: 26, color: DT.inkSoft, ...fo(500) },
   understood: { marginTop: 32, width: '100%', minHeight: 52, borderRadius: DT.radius.lg, backgroundColor: DT.brand, paddingVertical: 16, alignItems: 'center' },

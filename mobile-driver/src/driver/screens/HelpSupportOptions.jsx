@@ -15,8 +15,8 @@ export default function HelpSupportOptions() {
   const routePrefix = '/taxi/driver';
 
   const options = [
-    { title: 'Live Chat', sub: 'Talk instantly with support team', Icon: MessageCircle, color: DT.brand, bg: DT.brandSoft, to: `${routePrefix}/support/chat` },
-    { title: 'Support Ticket', sub: 'Raise and track issue tickets', Icon: Headset, color: DT.brand, bg: DT.brandSoft, to: `${routePrefix}/support/tickets` },
+    { title: 'Live chat', sub: 'Talk instantly with support team', Icon: MessageCircle, color: DT.brand, bg: DT.brandSoft, to: `${routePrefix}/support/chat` },
+    { title: 'Support ticket', sub: 'Raise and track issue tickets', Icon: Headset, color: DT.brand, bg: DT.brandSoft, to: `${routePrefix}/support/tickets` },
   ];
 
   return (

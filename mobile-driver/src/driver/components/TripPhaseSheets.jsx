@@ -127,9 +127,9 @@ function ToPickup({ t }) {
         name={isParcel ? tripData.sender.name : tripData.user.name}
         meta={(
           <Row style={{ gap: 6 }}>
-            <Star size={12} fill={DT.goldBright} color={DT.goldBright} />
+            {(isParcel ? tripData.sender.rating : tripData.user.rating) ? <Star size={12} fill={DT.goldBright} color={DT.goldBright} /> : null}
             <Text numberOfLines={1} style={[{ fontSize: 12, color: DT.muted }, fo(600)]}>
-              {isParcel ? tripData.sender.rating : tripData.user.rating} • {riderDistanceLabel}
+              {[isParcel ? tripData.sender.rating : tripData.user.rating, riderDistanceLabel].filter(Boolean).join(' · ')}
             </Text>
           </Row>
         )}
@@ -138,10 +138,10 @@ function ToPickup({ t }) {
         <RoundBtn onPress={() => callContact(pickupContact?.phone)} label="Call contact"><Phone size={18} strokeWidth={2.5} color={DT.brand} /></RoundBtn>
       </RiderRow>
       <RouteCard pickup={tripData.pickup} drop={tripData.drop} highlight="pickup" />
-      <RadiusCard label="Arrival Radius" value={`${Math.round(pickupDistanceMeters)} m away from pickup`} unlocked={canMarkArrived} />
+      <RadiusCard label="Arrival radius" value={`${Math.round(pickupDistanceMeters)} m away from pickup`} unlocked={canMarkArrived} />
       {arrivalGuardError ? <GuardError>{arrivalGuardError}</GuardError> : null}
       <CtaButton
-        title={isParcel ? 'Arrived at Sender' : 'I Have Arrived'}
+        title={isParcel ? 'Arrived at sender' : 'I have arrived'}
         icon={<CheckCircle2 size={18} strokeWidth={3} color={DT.ctaInk} />}
         style={[st.primary, { opacity: canMarkArrived ? 1 : 0.7 }]}
         onPress={() => {
@@ -170,7 +170,7 @@ function OtpVerification({ t }) {
     <Sheet phaseKey="otp_verification">
       <PhaseHeader label="Verify PIN" />
       <View style={{ alignItems: 'center', marginBottom: 20 }}>
-        <Text style={[{ fontSize: 22, lineHeight: 28, color: DT.ink }, fo(800)]}>Security Pin</Text>
+        <Text style={[{ fontSize: 22, lineHeight: 28, color: DT.ink }, fo(800)]}>Security pin</Text>
         <Text style={[{ fontSize: 13, color: DT.muted, marginTop: 4, textAlign: 'center' }, fo(600)]}>
           Ask <Text style={{ color: DT.ink, ...fo(800) }}>{isParcel ? 'Sender' : 'Passenger'}</Text> for the Start PIN
         </Text>
@@ -181,25 +181,25 @@ function OtpVerification({ t }) {
             <Row style={{ gap: 12 }}>
               <View style={st.waitIcon}><Clock3 size={18} strokeWidth={2.5} color={DT.warn} /></View>
               <View>
-                <Label style={{ color: DT.warnInk }}>Waiting Clock</Label>
+                <Label style={{ color: DT.warnInk }}>Waiting clock</Label>
                 <Text style={[{ marginTop: 2, fontSize: 22, color: DT.ink }, fo(900)]}>{formatTimerClock(waitingElapsedSeconds)}</Text>
               </View>
             </Row>
             <View style={{ alignItems: 'flex-end' }}>
-              <Label>Free Left</Label>
+              <Label>Free left</Label>
               <Text style={[{ marginTop: 4, fontSize: 14, color: DT.ink }, fo(800)]}>{formatTimerClock(freeWaitingRemainingSeconds)}</Text>
             </View>
           </Row>
           <Row style={{ marginTop: 16, gap: 12, alignItems: 'stretch' }}>
             <View style={st.waitCell}>
-              <Label>Free Before Ride</Label>
+              <Label>Free before ride</Label>
               <Text style={[{ marginTop: 4, fontSize: 13, color: DT.ink }, fo(800)]}>{formatWholeMinutes(freeWaitingBeforeMinutes)}</Text>
             </View>
             <View style={st.waitCell}>
-              <Label>Waiting Charge</Label>
+              <Label>Waiting charge</Label>
               <Text style={[{ marginTop: 4, fontSize: 13, color: DT.ink }, fo(800)]}>
                 Rs {waitingChargePerMinute}/min
-                {waitingChargeableMinutes > 0 ? ` • ${waitingChargeableMinutes} billable` : ''}
+                {waitingChargeableMinutes > 0 ? ` · ${waitingChargeableMinutes} min so far` : ''}
               </Text>
             </View>
           </Row>
@@ -210,8 +210,10 @@ function OtpVerification({ t }) {
           <TextInput
             key={index}
             ref={(node) => { otpInputRefs.current[index] = node; }}
-            keyboardType="phone-pad"
-            maxLength={1}
+            keyboardType="number-pad"
+            maxLength={4}
+            selectTextOnFocus
+            textContentType="oneTimeCode"
             value={digit}
             onChangeText={(value) => handleOTPChange(index, value)}
             onKeyPress={(e) => handleOTPKeyDown(index, e)}
@@ -226,7 +228,7 @@ function OtpVerification({ t }) {
       <Row style={{ gap: 12 }}>
         <CtaButton
           variant="outline"
-          title="Go Back"
+          title="Go back"
           style={st.secondary}
           onPress={() => {
             setLocalArrivedAt('');
@@ -244,7 +246,7 @@ function OtpVerification({ t }) {
 function InTrip({ t }) {
   const {
     isParcel, tripData, triggerEmergencySos, callContact, destinationContact, dropDistanceMeters, canDeliverParcel, arrivalGuardError, setArrivalGuardError,
-    publishRideStatus, setSelectedPaymentMode, setPaymentQr, setPaymentQrError, setDriverPaymentStatus, setPhase,
+    publishRideStatus, setSelectedPaymentMode, setPaymentQr, setPaymentQrError, setDriverPaymentStatus, setPhase, setLocalArrivedAt,
   } = t;
   return (
     <Sheet phaseKey="in_trip">
@@ -266,10 +268,10 @@ function InTrip({ t }) {
       >
         <RoundBtn onPress={() => callContact(destinationContact?.phone)} label="Call destination contact"><Phone size={18} strokeWidth={2.5} color={DT.brand} /></RoundBtn>
       </RiderRow>
-      {isParcel ? <RadiusCard label="Delivery Radius" value={`${Math.round(dropDistanceMeters)} m away from receiver`} unlocked={canDeliverParcel} /> : null}
+      {isParcel ? <RadiusCard label="Delivery radius" value={`${Math.round(dropDistanceMeters)} m away from receiver`} unlocked={canDeliverParcel} /> : null}
       {isParcel && arrivalGuardError ? <GuardError>{arrivalGuardError}</GuardError> : null}
       <CtaButton
-        title={isParcel ? 'Deliver Parcel' : 'Arrived at Destination'}
+        title={isParcel ? 'Deliver parcel' : 'Arrived at destination'}
         icon={<ChevronRight size={18} strokeWidth={3} color={DT.ctaInk} />}
         style={[st.primary, { opacity: isParcel && !canDeliverParcel ? 0.7 : 1 }]}
         onPress={() => {
@@ -279,6 +281,9 @@ function InTrip({ t }) {
           }
 
           setArrivalGuardError('');
+          // The summary's "Reached at" and trip duration read this; it was blank
+          // because the pickup arrival time is cleared when the trip starts.
+          setLocalArrivedAt(new Date().toISOString());
           publishRideStatus('arrived');
           setSelectedPaymentMode('');
           setPaymentQr(null);
@@ -358,7 +363,7 @@ function QrPanel({ t }) {
         {!isInlineQrImage ? (
           <View style={st.qrBadge}>
             <Scan size={10} strokeWidth={2.5} color={DT.accent} />
-            <Text style={[{ fontSize: 11, color: DT.onBrand, minWidth: 36 }, fo(700)]}>{qrZoomed ? 'ZOOMED' : 'FIT'}</Text>
+            <Text style={[{ fontSize: 11, color: DT.onBrand, minWidth: 36 }, fo(700)]}>{qrZoomed ? 'Zoomed' : 'Fit'}</Text>
           </View>
         ) : null}
         <ScanLine height={256} />
@@ -388,7 +393,7 @@ function QrPanel({ t }) {
           </Text>
         </Press>
       ) : null}
-      <CtaButton title="Confirm Received" style={{ width: '100%' }} onPress={() => setDriverPaymentStatus('success')} />
+      <CtaButton title="Confirm received" style={{ width: '100%' }} onPress={() => setDriverPaymentStatus('success')} />
     </View>
   );
 }
@@ -398,6 +403,7 @@ function PaymentConfirm({ t }) {
     isParcel, driverPaymentStatus, tripSummaryTitle, tripSummarySubtitle, displayFare, paymentModeLabel, tripStartedAt, tripArrivedAt, tripDurationLabel,
     commissionSummary, fareAmount, tripData, destinationRoleLabel, destinationContact, callContact, allowedPaymentModes, handlePaymentModeSelect, isGeneratingPaymentQr,
     selectedPaymentMode, paymentQrError, paymentCollectionLabel, completeRideForUserSync, setPhase, effectiveState, liveRequest,
+    waitingChargeAmount, waitingChargeMinutes,
   } = t;
   const success = driverPaymentStatus === 'success';
   const finalizeReady = success && selectedPaymentMode !== 'cash';
@@ -437,10 +443,13 @@ function PaymentConfirm({ t }) {
           </Row>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, padding: 16 }}>
-          <SummaryCell Icon={Clock3} label="Trip Started" value={formatDateTimeLabel(tripStartedAt)} />
-          <SummaryCell Icon={CheckCircle2} label="Reached At" value={formatDateTimeLabel(tripArrivedAt)} />
-          <SummaryCell Icon={ArrowUpRight} label="Trip Duration" value={tripDurationLabel} />
-          <SummaryCell Icon={Banknote} label="Your Earnings" value={formatCurrencyAmount(commissionSummary.driverEarnings)} />
+          <SummaryCell Icon={Clock3} label="Trip started" value={formatDateTimeLabel(tripStartedAt)} />
+          <SummaryCell Icon={CheckCircle2} label="Reached at" value={formatDateTimeLabel(tripArrivedAt)} />
+          <SummaryCell Icon={ArrowUpRight} label="Trip duration" value={tripDurationLabel} />
+          <SummaryCell Icon={Banknote} label="Your earnings" value={formatCurrencyAmount(commissionSummary.driverEarnings)} />
+          {waitingChargeAmount > 0 ? (
+            <SummaryCell Icon={Clock3} label="Waiting charge" value={`${formatCurrencyAmount(waitingChargeAmount)} · ${waitingChargeMinutes} min`} />
+          ) : null}
         </View>
         <View style={{ borderTopWidth: 1, borderTopColor: DT.borderSoft, padding: 16, gap: 12 }}>
           <View style={st.inner}>
@@ -479,9 +488,9 @@ function PaymentConfirm({ t }) {
           </View>
         </View>
         <Row style={{ borderTopWidth: 1, borderTopColor: DT.borderSoft, padding: 16, gap: 12, alignItems: 'stretch' }}>
-          <MoneyCell label="Trip Fare" value={formatCurrencyAmount(fareAmount)} />
-          <MoneyCell label="Admin Cut" value={formatCurrencyAmount(commissionSummary.commissionAmount)} sub={commissionSummary.commissionLabel} />
-          <MoneyCell label="Driver Gets" value={formatCurrencyAmount(commissionSummary.driverEarnings)} style={{ backgroundColor: DT.brand, borderColor: DT.brand }} labelColor={DT.onBrandMuted} valueColor={DT.accent} />
+          <MoneyCell label="Trip fare" value={formatCurrencyAmount(fareAmount)} />
+          <MoneyCell label="Admin cut" value={formatCurrencyAmount(commissionSummary.commissionAmount)} sub={commissionSummary.commissionLabel} />
+          <MoneyCell label="Driver gets" value={formatCurrencyAmount(commissionSummary.driverEarnings)} style={{ backgroundColor: DT.brand, borderColor: DT.brand }} labelColor={DT.onBrandMuted} valueColor={DT.accent} />
         </Row>
       </Card>
 
@@ -523,13 +532,13 @@ function PaymentConfirm({ t }) {
           <View style={[st.bigIcon, { width: 56, height: 56, backgroundColor: DT.success }]}>
             <Banknote size={24} strokeWidth={2.5} color={DT.onBrand} />
           </View>
-          <Label style={{ color: DT.successInk }}>Cash Selected</Label>
+          <Label style={{ color: DT.successInk }}>Cash selected</Label>
           <Text style={[{ marginTop: 6, fontSize: 17, color: DT.ink, textAlign: 'center' }, fo(800)]}>Collect {displayFare} from the {paymentCollectionLabel}</Text>
           <Text style={[{ marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.muted, textAlign: 'center' }, fo(600)]}>
             Once you have the cash in hand, tap below to close this {isParcel ? 'delivery' : 'ride'}.
           </Text>
           <CtaButton
-            title="Cash Received"
+            title="Cash received"
             style={{ marginTop: 16, width: '100%' }}
             onPress={async () => {
               await completeRideForUserSync('cash');
@@ -548,10 +557,10 @@ function PaymentConfirm({ t }) {
         style={st.primary}
         textStyle={finalizeReady ? null : { color: DT.faint }}
         title={selectedPaymentMode === 'cash'
-          ? 'Use Cash Received Button'
+          ? 'Tap Cash received above'
           : success
-            ? 'Finalize Earnings'
-            : 'Waiting...'}
+            ? 'Finalize earnings'
+            : 'Waiting for payment…'}
         onPress={async () => {
           const paymentMode = selectedPaymentMode || effectiveState?.paymentMethod || liveRequest?.payment || '';
           await completeRideForUserSync(paymentMode);
@@ -569,7 +578,7 @@ function Review({ t }) {
       <PhaseHeader label="Trip complete" tone="success" />
       <View style={{ alignItems: 'center', marginBottom: 24, gap: 12 }}>
         <View style={st.bigIcon}><User size={28} color={DT.accent} /></View>
-        <Text style={[{ fontSize: 22, lineHeight: 28, color: DT.ink }, fo(800)]}>Rate Experience</Text>
+        <Text style={[{ fontSize: 22, lineHeight: 28, color: DT.ink }, fo(800)]}>Rate experience</Text>
         <Row style={{ justifyContent: 'center', gap: 6 }}>
           {[1, 2, 3, 4, 5].map((score) => (
             <Press key={score} scale={1} onPress={() => setSelectedRating(score)} accessibilityLabel={`Rate ${score} star${score > 1 ? 's' : ''}`} style={{ width: 48, height: 48, alignItems: 'center', justifyContent: 'center' }}>

@@ -1,6 +1,6 @@
 import { telHref, useContactSettings } from '../../lib/contacts';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Linking } from 'react-native';
+import { Alert, Keyboard, Linking } from 'react-native';
 import * as Location from 'expo-location';
 import { useLocation, useNavigate } from '../../lib/webRouter';
 import { socketService } from '../api/socket';
@@ -631,7 +631,7 @@ export function useActiveTrip() {
   const tripData = isParcel ? {
       sender: {
           name: liveRaw.parcel?.senderName || 'Sender',
-          rating: '5.0',
+          rating: liveRaw.parcel?.senderRating || '',
           phone: liveRaw.parcel?.senderMobile || '',
       },
       receiver: {
@@ -640,21 +640,26 @@ export function useActiveTrip() {
       },
       pickup: getAreaName(liveRaw.pickupAddress || liveRequest?.pickup, formatAddressFromPoint(liveRaw.pickupLocation, 'Pickup area')),
       drop: getAreaName(liveRaw.dropAddress || liveRequest?.drop, formatAddressFromPoint(liveRaw.dropLocation, 'Drop area')),
-      fare: `Rs ${liveRaw.fare || effectiveState?.fare || 120}`,
+      fare: `Rs ${liveRaw.fare || effectiveState?.fare || liveRequest?.raw?.fare || 0}`,
       payment: effectiveState?.paymentMethod || 'Online'
   } : {
       user: {
           name: liveRaw.user?.name || liveRequest?.user?.name || 'Passenger',
-          rating: liveRaw.user?.rating || liveRequest?.user?.rating || '4.8',
+          // Only a real rating; the old '4.8' fallback showed every rider as rated.
+          rating: liveRaw.user?.rating || liveRequest?.user?.rating || '',
           phone: liveRaw.user?.phone || liveRequest?.user?.phone || '',
       },
       pickup: getAreaName(liveRaw.pickupAddress || liveRequest?.pickup, formatAddressFromPoint(liveRaw.pickupLocation, 'Pickup area')),
       drop: getAreaName(liveRaw.dropAddress || liveRequest?.drop, formatAddressFromPoint(liveRaw.dropLocation, 'Drop area')),
-      fare: `Rs ${liveRaw.fare || effectiveState?.fare || 120}`,
+      fare: `Rs ${liveRaw.fare || effectiveState?.fare || liveRequest?.raw?.fare || 0}`,
       payment: liveRequest?.payment || effectiveState?.paymentMethod || 'Online'
   };
 
-  const displayFare = liveRequest?.fare || tripData.fare;
+  // The server's fare first: it includes the waiting charge billed at start,
+  // which the request's original offer does not.
+  const displayFare = liveRaw?.fare !== undefined && liveRaw?.fare !== null ? `Rs ${liveRaw.fare}` : (liveRequest?.fare || tripData.fare);
+  const waitingChargeAmount = Math.max(0, Number(liveRaw?.waitingCharge?.amount || 0));
+  const waitingChargeMinutes = Math.max(0, Number(liveRaw?.waitingCharge?.billableMinutes || 0));
   const fareAmount = parseFareAmount(displayFare);
   const waitingPricing = liveRaw?.pricingSnapshot || liveRequest?.raw?.pricingSnapshot || effectiveState?.pricingSnapshot || {};
   const allowedPaymentModes = (() => {
@@ -684,7 +689,7 @@ export function useActiveTrip() {
   const tripArrivedAt = localArrivedAt || liveRaw?.arrivedAt || liveRequest?.raw?.arrivedAt || effectiveState?.arrivedAt || '';
   // eslint-disable-next-line react-hooks/purity
   const tripDurationLabel = formatDurationLabel(tripStartedAt, tripArrivedAt || Date.now());
-  const tripSummaryTitle = isParcel ? 'Delivery Summary' : 'Ride Summary';
+  const tripSummaryTitle = isParcel ? 'Delivery summary' : 'Ride summary';
   const tripSummarySubtitle = isParcel ? 'Review the delivery details before you close the order.' : 'Review the trip details before you close the ride.';
   const destinationRoleLabel = isParcel ? 'Receiver' : 'Rider';
   const paymentModeLabel = selectedPaymentMode
@@ -815,6 +820,21 @@ export function useActiveTrip() {
       }
 
       publishRideStatus('completed', paymentMode);
+
+      // The driver's rating of the rider. Best effort: a missed rating must not
+      // keep the driver on this screen.
+      if (rideId && selectedRating >= 1) {
+          try {
+              await api.patch(
+                  `/rides/${rideId}/driver-feedback`,
+                  { rating: selectedRating },
+                  withDriverAuthorization(getLocalDriverToken()),
+              );
+          } catch {
+              // ignore: already rated, or offline
+          }
+      }
+
       clearStoredTripPhase(rideId);
       clearStoredTripUiState(rideId);
       navigate('/taxi/driver/home');
@@ -1044,19 +1064,23 @@ export function useActiveTrip() {
           return;
       }
 
+      let startedRide = null;
       try {
           const driverToken = getLocalDriverToken();
-          await api.patch(
+          const response = await api.patch(
               `/rides/${rideId}/status`,
               { status: 'started', otp: String(enteredOtp) },
               withDriverAuthorization(driverToken),
           );
+          startedRide = unwrapApiPayload(response);
       } catch (error) {
           setOtpError(error?.message && error?.status ? error.message : 'Could not verify the PIN. Check your connection and try again.');
           return;
       }
 
       setOtpError('');
+      // The PIN boxes unmount, but the keyboard stayed up over the trip sheet.
+      Keyboard.dismiss();
       setLocalArrivedAt('');
       setPhase('in_trip');
       const startedAtIso = new Date().toISOString();
@@ -1065,7 +1089,18 @@ export function useActiveTrip() {
           : liveRequest?.rideId || liveRequest?._id || liveRequest?.id
               ? liveRequest?.raw || liveRequest
               : effectiveState?.request?.raw || effectiveState;
-      const optimisticSnapshot = buildPersistedTripState(rawJobForSnapshot, {
+      // The server bills the wait at pickup into the fare when the trip starts;
+      // carry its fare and waiting charge forward, or the payment screen would
+      // still ask the driver to collect the original offer.
+      const startedJob = startedRide && typeof startedRide === 'object' && startedRide.fare !== undefined
+          ? {
+              ...rawJobForSnapshot,
+              fare: startedRide.fare,
+              waitingCharge: startedRide.waitingCharge || null,
+              pricingSnapshot: startedRide.pricingSnapshot || rawJobForSnapshot?.pricingSnapshot,
+          }
+          : rawJobForSnapshot;
+      const optimisticSnapshot = buildPersistedTripState(startedJob, {
           phase: 'in_trip',
           liveStatus: 'started',
           status: 'ongoing',
@@ -1412,14 +1447,27 @@ export function useActiveTrip() {
       map.fitBounds(bounds, 80);
   }, [activeDestination, driverPosition, isSimulationRunning, map, routePath]);
 
-  const handleOTPChange = (index, value) => {
-      if (!/^\d*$/.test(value)) return;
+  const handleOTPChange = (index, rawValue) => {
+      // A box may receive its old digit plus the new one (the cursor sat before
+      // or after it), or a whole pasted / autofilled PIN. Keep digits only: the
+      // newest one for a single box, or spread a longer run across the boxes.
+      const digits = String(rawValue || '').replace(/\D/g, '');
       const nextOtp = [...otp];
-      nextOtp[index] = value;
+      let focusIndex = index;
+      if (digits.length > 2) {
+          digits.slice(0, 4 - index).split('').forEach((digit, offset) => {
+              nextOtp[index + offset] = digit;
+          });
+          focusIndex = Math.min(3, index + digits.length - 1);
+      } else {
+          const previous = otp[index] || '';
+          // "57" typed over "5" keeps the 7; "75" (cursor before the 5) keeps the 7 too.
+          nextOtp[index] = digits.length === 2 ? (digits[0] === previous ? digits[1] : digits[0]) : digits;
+      }
       setOtp(nextOtp);
 
-      if (value && index < 3) {
-          const nextInput = otpInputRefs.current[index + 1];
+      if (nextOtp[focusIndex] && focusIndex < 3) {
+          const nextInput = otpInputRefs.current[focusIndex + 1];
           if (nextInput) {
               nextInput.focus();
           }
@@ -1523,6 +1571,8 @@ export function useActiveTrip() {
       freeWaitingBeforeMinutes,
       waitingChargePerMinute,
       waitingChargeableMinutes,
+      waitingChargeAmount,
+      waitingChargeMinutes,
       openSupportChat,
       triggerEmergencySos,
       dropDistanceMeters,

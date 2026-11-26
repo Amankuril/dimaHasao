@@ -209,21 +209,21 @@ export default function DriverReferral() {
 
           <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
             <CtaButton
-              variant="cta"
+              variant="light"
               title="Copy"
               onPress={handleCopy}
               disabled={!referralCode}
               accessibilityLabel="Copy referral code"
-              icon={copied ? <CheckCircle2 size={18} color={DT.ctaInk} /> : <Copy size={18} color={DT.ctaInk} />}
+              icon={copied ? <CheckCircle2 size={18} strokeWidth={1.75} color={DT.ink} /> : <Copy size={18} strokeWidth={1.75} color={DT.ink} />}
               style={{ flex: 1 }}
             />
             <CtaButton
-              variant="outline"
+              variant="onDark"
               title="Share"
               onPress={handleShare}
               disabled={!referralCode}
               accessibilityLabel="Share referral"
-              icon={<Share2 size={18} color={DT.ink} />}
+              icon={<Share2 size={18} strokeWidth={1.75} color={DT.onBrand} />}
               style={{ flex: 1 }}
             />
           </View>
@@ -255,7 +255,7 @@ export default function DriverReferral() {
               </View>
             ) : activeTab === 'refer' ? (
               <View style={{ gap: 16 }}>
-                <Text style={styles.how}>How it works?</Text>
+                <Text style={styles.how}>How it works</Text>
                 {infoBlocks.length === 0 ? (
                   <Text style={styles.empty}>Referral content will appear here after admin updates this language.</Text>
                 ) : (
@@ -288,10 +288,10 @@ export default function DriverReferral() {
 const styles = StyleSheet.create({
   hero: { width: '100%', maxWidth: 448, alignSelf: 'center', borderRadius: DT.radius.xl, backgroundColor: DT.brand, padding: 20, borderWidth: 1, borderColor: DT.brandMid, ...shadow('lg') },
   banner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
-  bannerText: { fontSize: 24, lineHeight: 31, color: DT.gold, ...playfair(700) },
+  bannerText: { fontSize: 22, lineHeight: 30, color: DT.onBrand, ...outfit(600) },
   lang: { fontSize: 11, lineHeight: 16, color: DT.onBrandMuted, marginTop: 4, ...outfit(500) },
   gift: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
-  codeBox: { borderRadius: DT.radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: DT.gold, backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 16, paddingVertical: 16, alignItems: 'center' },
+  codeBox: { borderRadius: DT.radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(255,255,255,0.28)', backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 16, paddingVertical: 16, alignItems: 'center' },
   code: { fontSize: 26, lineHeight: 34, color: DT.onBrand, textAlign: 'center', marginTop: 4, ...outfit(800) },
   codeLabel: { fontSize: 11, lineHeight: 15, minWidth: 140, textAlign: 'center', color: DT.onBrandMuted, ...outfit(700) },
   linkBox: { marginTop: 16, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 16, paddingVertical: 12 },

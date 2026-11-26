@@ -596,11 +596,11 @@ export default function DriverDocuments() {
                 <CheckCircle2 size={24} color={DT.success} strokeWidth={2.5} />
               </View>
               <View style={{ gap: 2, flexShrink: 1 }}>
-                <Text style={styles.summaryTitle}>{isLoading ? 'Loading documents' : `${uploadedCount} UPLOADED`}</Text>
-                <Text style={styles.summarySub}>{actionRequiredCount} Action Required</Text>
+                <Text style={styles.summaryTitle}>{isLoading ? 'Loading documents' : `${uploadedCount} uploaded`}</Text>
+                <Text style={styles.summarySub}>{actionRequiredCount} need action</Text>
               </View>
             </View>
-            <Press scale={isSyncing ? 1 : 0.95} onPress={loadDriver} disabled={isSyncing} accessibilityLabel="Refresh" style={[styles.refresh, isSyncing ? { backgroundColor: DT.darkSoft } : { backgroundColor: DT.cta }]}>
+            <Press scale={isSyncing ? 1 : 0.95} onPress={loadDriver} disabled={isSyncing} accessibilityLabel="Refresh" style={[styles.refresh, isSyncing ? { backgroundColor: DT.darkSoft } : { backgroundColor: DT.card }]}>
               {isSyncing ? <ActivityIndicator size="small" color={DT.onBrandMuted} /> : <Text style={styles.refreshText}>Refresh</Text>}
             </Press>
           </Card>
@@ -633,8 +633,8 @@ export default function DriverDocuments() {
                           <FileText size={20} color={DT.brand} strokeWidth={2.2} />
                         </View>
                         <View style={{ minWidth: 0, flex: 1 }}>
-                          <Text style={styles.docName} numberOfLines={2}>{String(doc.name).toUpperCase()}</Text>
-                          <Text style={styles.docDate} numberOfLines={1}>{String(doc.date).toUpperCase()}</Text>
+                          <Text style={styles.docName} numberOfLines={2}>{String(doc.name)}</Text>
+                          <Text style={styles.docDate} numberOfLines={1}>{String(doc.date)}</Text>
                         </View>
                         <Chip label={doc.status === 'Pending Reverification' ? 'Pending' : doc.status} tone={tone} style={{ alignSelf: 'center' }} />
                       </View>
@@ -713,8 +713,8 @@ export default function DriverDocuments() {
               </Press>
             </View>
             <View style={{ gap: 2 }}>
-              <Text style={styles.viewerName}>{String(selectedDoc.name).toUpperCase()}</Text>
-              <Text style={styles.viewerTemplate}>{String(selectedDoc.templateName || '').toUpperCase()}</Text>
+              <Text style={styles.viewerName}>{String(selectedDoc.name)}</Text>
+              <Text style={styles.viewerTemplate}>{String(selectedDoc.templateName || '')}</Text>
             </View>
             <View style={styles.viewerImage}>
               {selectedDoc.previewUrl ? (
@@ -729,7 +729,7 @@ export default function DriverDocuments() {
                 <Text style={styles.feedbackBody}>{selectedDoc.reason}</Text>
               </View>
             ) : null}
-            <CtaButton variant="brand" title="CLOSE VIEWER" onPress={() => setSelectedDoc(null)} accessibilityLabel="Close Viewer" style={styles.viewerBtn} />
+            <CtaButton variant="brand" title="Close viewer" onPress={() => setSelectedDoc(null)} accessibilityLabel="Close Viewer" style={styles.viewerBtn} />
           </View>
         ) : null}
       </Dialog>
@@ -739,7 +739,7 @@ export default function DriverDocuments() {
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
             <View style={{ flex: 1 }}>
               <Text style={styles.modalTitle}>Update expiry date</Text>
-              <Text style={styles.modalSub}>{String(expiryModal.name).toUpperCase()}</Text>
+              <Text style={styles.modalSub}>{String(expiryModal.name)}</Text>
             </View>
             <Press scale={1} onPress={closeExpiryModal} accessibilityLabel="Close" style={styles.close}>
               <X size={18} color={DT.muted} strokeWidth={2.5} />
@@ -755,7 +755,7 @@ export default function DriverDocuments() {
           </View>
 
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <CtaButton variant="outline" title="CANCEL" onPress={closeExpiryModal} style={styles.modalBtn} />
+            <CtaButton variant="outline" title="Cancel" onPress={closeExpiryModal} style={styles.modalBtn} />
             <CtaButton
               variant="brand"
               title={expiryModal.isSubmitting ? 'Saving...' : 'Save date'}
@@ -774,7 +774,7 @@ export default function DriverDocuments() {
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
               <View style={{ flex: 1 }}>
                 <Text style={styles.modalTitle}>Document details</Text>
-                <Text style={styles.modalSub}>{String(metaModal.name).toUpperCase()}</Text>
+                <Text style={styles.modalSub}>{String(metaModal.name)}</Text>
               </View>
               <Press scale={1} onPress={closeMetaModal} accessibilityLabel="Close" style={styles.close}>
                 <X size={18} color={DT.muted} strokeWidth={2.5} />
@@ -784,7 +784,7 @@ export default function DriverDocuments() {
             <View>
               <View style={styles.fieldLabel}>
                 <BadgeCheck size={13} color={DT.muted} />
-                <Text style={styles.fieldLabelText}>{metaLabel.toUpperCase()}</Text>
+                <Text style={styles.fieldLabelText}>{metaLabel}</Text>
               </View>
               <FocusInput
                 value={metaModal.identifyNumber}
@@ -866,7 +866,7 @@ export default function DriverDocuments() {
             <View style={{ flexDirection: 'row' }}>
               <CtaButton
                 variant="brand"
-                title={metaModal.isSubmitting ? 'Saving...' : 'SAVE'}
+                title={metaModal.isSubmitting ? 'Saving…' : 'Save'}
                 onPress={() => handleMetaSave()}
                 disabled={metaSaveDisabled}
                 accessibilityLabel="Save"
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   summaryTitle: { fontSize: 15, lineHeight: 20, color: DT.onBrand, ...outfit(800) },
   summarySub: { fontSize: 12, lineHeight: 16, color: DT.onBrandMuted, ...outfit(600) },
   refresh: { paddingHorizontal: 16, minHeight: 44, borderRadius: DT.radius.md, minWidth: 90, alignItems: 'center', justifyContent: 'center' },
-  refreshText: { fontSize: 12, lineHeight: 16, minWidth: 60, textAlign: 'center', color: DT.ctaInk, ...outfit(800) },
+  refreshText: { fontSize: 13, lineHeight: 18, textAlign: 'center', color: DT.ink, ...outfit(500) },
   error: { backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12, borderRadius: DT.radius.md },
   errorText: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, ...outfit(700) },
   empty: { backgroundColor: DT.card, padding: 24, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('sm') },

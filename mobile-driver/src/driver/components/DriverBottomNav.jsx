@@ -5,13 +5,13 @@ import { Briefcase, Bus, Car, History, Home, IndianRupee, Trophy, User, Users } 
 import { Press } from '../../components/ui';
 import { localStore } from '../../lib/storage';
 import { navigateTo } from '../../lib/webRouter';
-import { outfit, shadow } from '../../theme';
+import { outfit } from '../../theme';
 import { DT } from '../ui/dt';
 import { useDriverAppSettings } from '../hooks/useDriverAppSettings';
 
 /*
- * Port of Taxi/modules/shared/components/DriverBottomNav.jsx. Drawn in the user app's taxi style: a floating deep-green pill
- * with a gold active icon and label. NAV_BAR_HEIGHT is how much a screen must leave clear at the bottom.
+ * Port of Taxi/modules/shared/components/DriverBottomNav.jsx. A white bar docked to the bottom edge with a hairline
+ * top; the active tab is ink with a short bar above it, the rest muted. NAV_BAR_HEIGHT is how much a screen must leave clear.
  */
 
 const isEnabledFlag = (value) => {
@@ -57,7 +57,7 @@ export default function DriverBottomNav() {
             pathname === item.path ||
             pathname.startsWith(`${item.path}/`) ||
             (item.path === `${routePrefix}/home` && pathname === `${routePrefix}/dashboard`);
-          const tint = isActive ? DT.accent : 'rgba(255,255,255,0.78)';
+          const tint = isActive ? DT.ink : DT.muted;
           return (
             <Press
               key={item.path}
@@ -65,12 +65,12 @@ export default function DriverBottomNav() {
               scale={0.9}
               accessibilityLabel={item.label}
               accessibilityState={{ selected: isActive }}
-              style={[st.item, isActive && st.itemActive]}
+              style={st.item}
             >
-              <item.Icon size={20} strokeWidth={isActive ? 2.6 : 2} color={tint} />
-              {/* literal upper case with a minWidth: Android clips the last letter of letter-spaced, text-transformed labels */}
-              <Text numberOfLines={1} style={[st.label, { color: tint, ...outfit(isActive ? 800 : 600) }]}>
-                {item.label.toUpperCase()}
+              {isActive ? <View style={st.activeBar} /> : null}
+              <item.Icon size={20} strokeWidth={isActive ? 2 : 1.75} color={tint} />
+              <Text numberOfLines={1} style={[st.label, { color: tint, ...outfit(isActive ? 600 : 500) }]}>
+                {item.label}
               </Text>
             </Press>
           );
@@ -81,19 +81,18 @@ export default function DriverBottomNav() {
 }
 
 const st = StyleSheet.create({
-  wrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 12, zIndex: 50 },
-  nav: {
-    height: 64,
-    borderRadius: DT.radius.pill,
-    backgroundColor: DT.brand,
-    borderWidth: 1,
-    borderColor: 'rgba(202,168,62,0.35)',
-    paddingHorizontal: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    ...shadow('xl'),
+  wrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 50,
+    backgroundColor: DT.card,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: DT.border,
   },
-  item: { flex: 1, minWidth: 0, height: 52, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: DT.radius.pill, paddingHorizontal: 2 },
-  itemActive: { backgroundColor: 'rgba(255,255,255,0.1)' },
-  label: { maxWidth: '100%', minWidth: 30, fontSize: 11.5, lineHeight: 11, textAlign: 'center' },
+  nav: { height: 60, paddingHorizontal: 4, flexDirection: 'row', alignItems: 'stretch' },
+  item: { flex: 1, minWidth: 0, alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 2 },
+  activeBar: { position: 'absolute', top: 0, width: 24, height: 2, borderRadius: 1, backgroundColor: DT.ink },
+  label: { maxWidth: '100%', fontSize: 11, lineHeight: 14, textAlign: 'center' },
 });

@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2, ChevronRight, Clock, Search } from 'lucide
 import { useLocation, useNavigate } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
-import { playfair, shadow, tw } from '../../theme';
+import { outfit, shadow } from '../../theme';
 import {
   clearDriverAuthState,
   clearDriverRegistrationSession,
@@ -259,18 +259,18 @@ export default function RegistrationStatus() {
       scrollEventThrottle={16}
       contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}
     >
-      <BrandHero top={insets.top + 14} style={{ paddingBottom: 64 }}>
+      <BrandHero top={insets.top + 24} style={{ paddingBottom: 24 }}>
         <View style={[styles.maxW, { alignItems: 'center', gap: 12 }]}>
           <Image source={DRIVER_BRAND_LOGO} style={{ width: 44, height: 44, borderRadius: 22 }} resizeMode="contain" />
           <Text style={styles.eyebrow}>
-            {up(pendingReverificationDocs.length > 0 ? 'Submission received' : isVehicleReapproval ? 'Update in review' : 'Live Audit Status')}
+            {up(pendingReverificationDocs.length > 0 ? 'Submission received' : isVehicleReapproval ? 'Update in review' : 'Review status')}
           </Text>
           <Text style={styles.h1} accessibilityRole="header">
             {rejectedDocs.length > 0
-              ? 'Action Required'
+              ? 'Action required'
               : pendingReverificationDocs.length > 0
-              ? 'Verification Pending'
-              : 'Review Started'}
+              ? 'Verification pending'
+              : 'Review started'}
           </Text>
           <Text style={styles.lead}>
             {rejectedDocs.length > 0
@@ -282,12 +282,12 @@ export default function RegistrationStatus() {
         </View>
       </BrandHero>
 
-      <View style={[styles.maxW, { paddingHorizontal: 20, marginTop: -40, gap: 24 }]}>
+      <View style={[styles.maxW, { paddingHorizontal: 20, gap: 24 }]}>
         <View style={styles.heroCard}>
           <View>
             <View style={[styles.hero, { backgroundColor: toneSet.bg }]}>
               <Animated.View style={{ opacity: tone === 'warn' ? pulse : 1 }}>
-                <HeroIcon size={38} strokeWidth={2.5} color={toneSet.ink} />
+                <HeroIcon size={32} strokeWidth={1.75} color={toneSet.ink} />
               </Animated.View>
             </View>
             {tone === 'warn' ? (
@@ -308,7 +308,7 @@ export default function RegistrationStatus() {
         </View>
 
         <View style={{ gap: 12 }}>
-          <Text style={styles.sectionLabel}>{up('Checklist Summary')}</Text>
+          <Text style={styles.sectionLabel}>{up('Checklist')}</Text>
           <View style={{ gap: 12 }}>
             {docDetails.length > 0 ? (
               docDetails.map((doc, idx) => (
@@ -319,7 +319,7 @@ export default function RegistrationStatus() {
                   </View>
                   {doc.reason ? (
                     <View style={styles.reasonBox}>
-                      <Text style={styles.reasonLabel}>{up('Reason for rejection:')}</Text>
+                      <Text style={styles.reasonLabel}>{up('Reason for rejection')}</Text>
                       <Text style={styles.reasonText}>{doc.reason}</Text>
                     </View>
                   ) : null}
@@ -331,11 +331,11 @@ export default function RegistrationStatus() {
                   {doc.status === 'rejected' || doc.status === 'declined' ? (
                     <Press
                       onPress={() => navigate(`${routePrefix}/documents`, { state: { focusDocumentKey: doc.key, fromRegistrationStatus: true } })}
-                      accessibilityLabel="Fix Document"
+                      accessibilityLabel="Fix document"
                       style={styles.fixBtn}
                     >
-                      <Text style={styles.fixText}>{up('Fix Document')}</Text>
-                      <ChevronRight size={16} strokeWidth={3} color={DT.onBrand} />
+                      <Text style={styles.fixText}>{up('Fix document')}</Text>
+                      <ChevronRight size={16} strokeWidth={2} color={DT.onBrand} />
                     </Press>
                   ) : null}
                 </View>
@@ -375,7 +375,7 @@ export default function RegistrationStatus() {
             accessibilityLabel="Contact Support"
             style={styles.supportBtn}
           >
-            <Text style={styles.supportText}>Contact Support</Text>
+            <Text style={styles.supportText}>Contact support</Text>
           </Press>
         </View>
       </View>
@@ -388,30 +388,30 @@ export default function RegistrationStatus() {
 const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
   heroCard: { ...obCard, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  hero: { width: 84, height: 84, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  hero: { width: 72, height: 72, borderRadius: DT.radius.lg, alignItems: 'center', justifyContent: 'center' },
   heroBadge: { position: 'absolute', bottom: -6, right: -6, width: 30, height: 30, borderRadius: 15, borderWidth: 3, borderColor: DT.card, backgroundColor: DT.brandMid, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: { ...jk(800), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.onBrandMuted, textAlign: 'center' },
-  h1: { ...playfair(700), fontSize: 30, lineHeight: 38, color: DT.gold, textAlign: 'center' },
-  lead: { ...jk(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted, textAlign: 'center', maxWidth: 300 },
-  driverName: { ...jk(800), fontSize: 16, lineHeight: 22, color: DT.ink },
-  driverPhone: { ...jk(700), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted },
-  sectionLabel: { ...jk(800), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted, paddingHorizontal: 8 },
+  eyebrow: { ...jk(500), fontSize: 13, lineHeight: 18, color: DT.muted, textAlign: 'center' },
+  h1: { ...outfit(600), fontSize: 26, lineHeight: 34, color: DT.ink, textAlign: 'center' },
+  lead: { ...jk(400), fontSize: 15, lineHeight: 22, color: DT.inkSoft, textAlign: 'center', maxWidth: 320 },
+  driverName: { ...jk(600), fontSize: 16, lineHeight: 22, color: DT.ink },
+  driverPhone: { ...jk(400), fontSize: 13, lineHeight: 18, color: DT.muted },
+  sectionLabel: { ...jk(500), fontSize: 13, lineHeight: 18, color: DT.muted, paddingHorizontal: 4 },
   docCard: { ...obCard, borderRadius: DT.radius.lg, padding: 16, gap: 12 },
   docHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  docLabel: { ...jk(800), flex: 1, fontSize: 15, lineHeight: 21, color: DT.ink },
-  reasonBox: { padding: 16, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: tw.rose100, borderRadius: DT.radius.md },
-  reasonLabel: { ...jk(700), fontSize: 11, lineHeight: 15, minWidth: 40, color: DT.dangerInk, marginBottom: 4 },
-  reasonText: { ...jk(700), fontSize: 13, lineHeight: 20, color: DT.dangerInk },
+  docLabel: { ...jk(500), flex: 1, fontSize: 15, lineHeight: 21, color: DT.ink },
+  reasonBox: { padding: 16, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: 'rgba(217,45,32,0.15)', borderRadius: DT.radius.md },
+  reasonLabel: { ...jk(500), fontSize: 12, lineHeight: 16, color: DT.dangerInk, marginBottom: 4 },
+  reasonText: { ...jk(400), fontSize: 13, lineHeight: 20, color: DT.dangerInk },
   reverifyBox: { padding: 16, backgroundColor: DT.brandSoft, borderWidth: 1, borderColor: DT.brandBorder, borderRadius: DT.radius.md },
-  reverifyText: { ...jk(700), fontSize: 13, lineHeight: 20, color: DT.inkSoft },
+  reverifyText: { ...jk(400), fontSize: 13, lineHeight: 20, color: DT.inkSoft },
   fixBtn: { minHeight: 48, backgroundColor: DT.brand, borderRadius: DT.radius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  fixText: { ...jk(800), fontSize: 13, lineHeight: 18, minWidth: 90, textAlign: 'center', color: DT.onBrand },
+  fixText: { ...jk(600), fontSize: 14, lineHeight: 20, textAlign: 'center', color: DT.onBrand },
   emptyCard: { ...obCard, borderRadius: DT.radius.lg, padding: 36, alignItems: 'center' },
-  emptyText: { ...jk(800), fontSize: 12, lineHeight: 18, color: DT.muted, textAlign: 'center' },
+  emptyText: { ...jk(400), fontSize: 12, lineHeight: 18, color: DT.muted, textAlign: 'center' },
   ring: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: DT.border, borderTopColor: DT.brandMid },
-  bar: { marginTop: 4, borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.border, backgroundColor: 'rgba(255,255,255,0.97)', padding: 16, gap: 12, ...shadow('md'), zIndex: 10 },
-  rejectNote: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: tw.rose100, paddingHorizontal: 16, paddingVertical: 16 },
-  rejectNoteText: { ...jk(700), fontSize: 12, lineHeight: 19, color: DT.dangerInk },
+  bar: { marginTop: 4, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.border, backgroundColor: 'rgba(255,255,255,0.97)', padding: 16, gap: 12, ...shadow('md'), zIndex: 10 },
+  rejectNote: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: 'rgba(217,45,32,0.15)', paddingHorizontal: 16, paddingVertical: 16 },
+  rejectNoteText: { ...jk(400), fontSize: 12, lineHeight: 19, color: DT.dangerInk },
   supportBtn: { minHeight: 52, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, borderRadius: DT.radius.md, alignItems: 'center', justifyContent: 'center' },
-  supportText: { ...jk(700), fontSize: 15, lineHeight: 20, color: DT.inkSoft },
+  supportText: { ...jk(500), fontSize: 15, lineHeight: 20, color: DT.inkSoft },
 });

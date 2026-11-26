@@ -5,7 +5,6 @@ import { Check } from 'lucide-react-native';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Press } from '../../components/ui';
 import { SelectField as KitSelect } from '../../components/kit';
-import { shadow } from '../../theme';
 import { DT } from '../ui/dt';
 import { OB, jk, obLabel, up } from './onboardingTheme';
 
@@ -70,8 +69,8 @@ export function FieldBox({ focused, invalid, children, style }) {
     <View
       style={[
         styles.box,
-        focused && { borderColor: DT.brandMid, backgroundColor: DT.card, boxShadow: '0 0 0 4px rgba(10,77,43,0.10)' },
-        invalid && { borderColor: DT.danger, boxShadow: '0 0 0 4px rgba(244,63,94,0.10)' },
+        focused && { borderColor: DT.brandMid, backgroundColor: DT.card, boxShadow: '0 0 0 3px rgba(24,24,27,0.08)' },
+        invalid && { borderColor: DT.danger, boxShadow: '0 0 0 4px rgba(217,45,32,0.10)' },
         style,
       ]}
     >
@@ -212,7 +211,7 @@ export function ReadOnlyRow({ label, icon: Icon, value }) {
     <View style={styles.readOnly}>
       {Icon ? <Icon size={18} strokeWidth={2.2} color={OB.primary} /> : null}
       <View style={{ minWidth: 0, flex: 1 }}>
-        <Text style={[obLabel, { color: DT.brandMid }]}>{up(label)}</Text>
+        <Text style={obLabel}>{up(label)}</Text>
         <Text style={{ ...jk(700), fontSize: 15, color: OB.text, lineHeight: 22.5 }}>{value}</Text>
       </View>
     </View>
@@ -220,15 +219,15 @@ export function ReadOnlyRow({ label, icon: Icon, value }) {
 }
 
 const styles = StyleSheet.create({
-  cta: { minHeight: 56, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, alignSelf: 'stretch' },
-  ctaOn: { backgroundColor: DT.cta, ...shadow('md') },
+  cta: { minHeight: 52, borderRadius: DT.radius.sm, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, alignSelf: 'stretch' },
+  ctaOn: { backgroundColor: DT.cta },
   ctaOff: { backgroundColor: DT.bgSoft },
-  ctaText: { ...jk(800), fontSize: 15, lineHeight: 20 },
-  alert: { backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: 'rgba(244,63,94,0.25)', borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
+  ctaText: { ...jk(600), fontSize: 15, lineHeight: 20 },
+  alert: { backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: 'rgba(217,45,32,0.2)', borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
   alertText: { ...jk(600), fontSize: 13, color: DT.dangerInk, lineHeight: 19.5 },
   box: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, borderWidth: 1.5, borderColor: DT.border, backgroundColor: DT.bg, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12 },
-  hint: { ...jk(500), fontSize: 11, color: DT.muted, marginTop: 4, paddingHorizontal: 4, lineHeight: 16.5 },
+  hint: { ...jk(400), fontSize: 12, color: DT.muted, marginTop: 4, paddingHorizontal: 4, lineHeight: 16.5 },
   chip: { minHeight: 44, paddingHorizontal: 8, borderWidth: 1.5, borderColor: DT.border, backgroundColor: DT.bg, borderRadius: DT.radius.pill, alignItems: 'center', justifyContent: 'center' },
-  chipText: { ...jk(700), fontSize: 13, lineHeight: 18 },
-  readOnly: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 16, paddingVertical: 12 },
+  chipText: { ...jk(500), fontSize: 13, lineHeight: 18 },
+  readOnly: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bgSoft, paddingHorizontal: 16, paddingVertical: 12 },
 });

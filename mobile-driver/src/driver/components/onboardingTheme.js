@@ -1,15 +1,15 @@
-import { outfit, shadow } from '../../theme';
+import { outfit } from '../../theme';
 import { DT } from '../ui/dt';
 
 /*
  * Onboarding tokens. The keys keep their old names (OB.*) so every onboarding file keeps working,
- * but the values now come from the shared driver tokens (DT): deep-green brand, slate surfaces.
+ * but the values now come from the shared driver tokens (DT): graphite actions, neutral surfaces.
  */
 export const OB = {
   primary: DT.brandMid,
   primaryStrong: DT.brand,
   primarySoft: DT.brandSoft,
-  accent: DT.gold,
+  accent: DT.ink,
   surface: DT.card,
   bg: DT.bg,
   border: DT.border,
@@ -30,8 +30,7 @@ export const obCard = {
   backgroundColor: DT.card,
   borderWidth: 1,
   borderColor: DT.borderSoft,
-  borderRadius: DT.radius.xl,
-  ...shadow('sm'),
+  borderRadius: DT.radius.lg,
 };
 
 /*
@@ -44,11 +43,10 @@ export const up = (value) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
-/** Small caps field label: pass the text through up(). */
+/** Field label above an input. */
 export const obLabel = {
-  ...jk(800),
-  fontSize: 11,
-  lineHeight: 16,
-  minWidth: 40,
+  ...jk(500),
+  fontSize: 13,
+  lineHeight: 18,
   color: DT.inkSoft,
 };

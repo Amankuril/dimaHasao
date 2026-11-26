@@ -143,7 +143,7 @@ export default function DriverDeleteAccount() {
 
   return (
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
-      <ScreenHeader title="Delete Driver Account" subtitle="Danger zone" onBack={() => navigate(`${routePrefix}/profile`)} />
+      <ScreenHeader title="Delete account" subtitle="Danger zone" onBack={() => navigate(`${routePrefix}/profile`)} />
 
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 20, paddingBottom: 48 + insets.bottom, gap: 16 }}>
         {success ? (
@@ -219,7 +219,7 @@ export default function DriverDeleteAccount() {
             style={styles.delete}
             textStyle={styles.deleteText}
           />
-          <CtaButton variant="outline" title="CANCEL" onPress={() => navigate(`${routePrefix}/profile`)} accessibilityLabel="Cancel" />
+          <CtaButton variant="outline" title="Cancel" onPress={() => navigate(`${routePrefix}/profile`)} accessibilityLabel="Cancel" />
         </View>
       </ScrollView>
 

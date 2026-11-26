@@ -202,13 +202,13 @@ export default function OTPVerification() {
     <AuthScaffold
       icon={
         <View style={styles.iconBox}>
-          <MessageSquare size={28} strokeWidth={2.2} color={DT.accent} />
+          <MessageSquare size={24} strokeWidth={1.75} color={DT.ink} />
         </View>
       }
       title="Enter the code"
       subtitle={
         <Text style={styles.sub}>
-          Sent to <Text style={{ ...jk(700), color: DT.onBrand }}>+91 {phone}</Text>{' '}
+          Sent to <Text style={{ ...jk(500), color: DT.ink }}>+91 {phone}</Text>{' '}
           <Text onPress={() => navigate(entryPath)} accessibilityRole="link" style={styles.change}>
             Change
           </Text>
@@ -267,9 +267,9 @@ export default function OTPVerification() {
 }
 
 const styles = StyleSheet.create({
-  iconBox: { width: 64, height: 64, borderRadius: 20, backgroundColor: DT.brand, borderWidth: 2, borderColor: DT.gold, alignItems: 'center', justifyContent: 'center' },
-  sub: { ...jk(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted },
-  change: { ...jk(700), color: DT.accent },
+  iconBox: { width: 56, height: 56, borderRadius: DT.radius.md, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, alignItems: 'center', justifyContent: 'center' },
+  sub: { ...jk(400), fontSize: 15, lineHeight: 22, color: DT.inkSoft },
+  change: { ...jk(500), color: DT.ink, textDecorationLine: 'underline' },
   ghost: { ...jk(700), color: OB.primary },
   digitBox: { flex: 1, minWidth: 0, height: 64, paddingHorizontal: 0, paddingVertical: 0, justifyContent: 'center', borderRadius: DT.radius.md },
   digit: { ...jk(800), fontSize: 24, color: OB.text, textAlign: 'center', padding: 0, width: '100%', flex: 0 },

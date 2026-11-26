@@ -10,7 +10,7 @@ import TripPhaseSheets from '../components/TripPhaseSheets';
 export default function ActiveTrip() {
   const t = useActiveTrip();
   return (
-    <View style={{ flex: 1, backgroundColor: tw.slate200, overflow: 'hidden' }}>
+    <View style={{ flex: 1, backgroundColor: tw.zinc200, overflow: 'hidden' }}>
       <TripMap t={t} />
       <TripPhaseSheets t={t} />
       {t.isHydratingTrip ? (

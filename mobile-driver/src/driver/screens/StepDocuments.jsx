@@ -258,7 +258,7 @@ export default function StepDocuments() {
                   <Text numberOfLines={1} style={styles.docName}>
                     {field.label || field.templateName || field.key}
                   </Text>
-                  <Text style={styles.docReq}>{field.isRequired ? 'REQUIRED' : 'OPTIONAL'}</Text>
+                  <Text style={styles.docReq}>{field.isRequired ? 'Required' : 'Optional'}</Text>
                 </View>
 
                 {uploaded ? <Chip label="Uploaded" tone="success" /> : null}

@@ -206,7 +206,7 @@ export default function SecuritySOS() {
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                 <View style={{ gap: 4, flex: 1, minWidth: 0 }}>
                   <Text style={styles.heroKicker}> SOS</Text>
-                  <Text style={styles.heroTitle}>Emergency Contacts</Text>
+                  <Text style={styles.heroTitle}>Emergency contacts</Text>
                 </View>
                 <View style={styles.heroIcon}>
                   <Zap size={26} color={DT.onBrand} fill={DT.onBrand} strokeWidth={3} />
@@ -215,7 +215,7 @@ export default function SecuritySOS() {
               <Text style={styles.heroBody}>
                 Add trusted contacts manually or pick from your phone contacts. These contacts can be used for emergency driver safety actions.
               </Text>
-              <CtaButton variant="danger" title="TRIGGER SOS" onPress={triggerSOS} accessibilityLabel="Trigger SOS" icon={<Zap size={20} color={DT.onBrand} fill={DT.onBrand} strokeWidth={3} />} style={styles.heroBtn} textStyle={styles.heroBtnText} />
+              <CtaButton variant="danger" title="Trigger SOS" onPress={triggerSOS} accessibilityLabel="Trigger SOS" icon={<Zap size={20} color={DT.onBrand} fill={DT.onBrand} strokeWidth={3} />} style={styles.heroBtn} textStyle={styles.heroBtnText} />
             </View>
           </View>
 
@@ -234,7 +234,7 @@ export default function SecuritySOS() {
                   accessibilityLabel="Add new contact"
                   style={[styles.addLink, remainingSlots === 0 ? { opacity: 0.5 } : null]}
                 >
-                  <Text style={styles.addLinkText}>+ ADD NEW</Text>
+                  <Text style={styles.addLinkText}>Add contact</Text>
                 </Press>
               </View>
             </View>
@@ -296,7 +296,7 @@ export default function SecuritySOS() {
       <BottomSheet visible={showAddSheet} onClose={() => setShowAddSheet(false)} backdrop="rgba(0,0,0,0.5)" blur={8} spring={{ stiffness: 320, damping: 26 }} panelStyle={[styles.sheet, { paddingBottom: 40 + Math.max(keyboard, insets.bottom) }]}>
         <View style={styles.handle} />
         <View style={styles.sheetHead}>
-          <Text style={styles.sheetTitle}>Add Emergency Contact</Text>
+          <Text style={styles.sheetTitle}>Add emergency contact</Text>
           <Press scale={0.9} onPress={() => setShowAddSheet(false)} accessibilityLabel="Close" style={styles.sheetClose}>
             <X size={18} color={DT.muted} strokeWidth={2.5} />
           </Press>
@@ -361,7 +361,7 @@ export default function SecuritySOS() {
 
           <CtaButton
             variant="brand"
-            title="SAVE CONTACT"
+            title="Save contact"
             onPress={() => handleAddContact({ contactName: name, contactPhone: phone, source: 'manual' })}
             disabled={isSaving || remainingSlots === 0}
             loading={isSaving}
@@ -380,7 +380,7 @@ export default function SecuritySOS() {
         <Text style={styles.dialogBody}>{deleteTarget?.name} will be removed from your emergency list.</Text>
         <CtaButton
           variant="danger"
-          title={isDeletingId === deleteTarget?.id ? 'Removing...' : 'REMOVE'}
+          title={isDeletingId === deleteTarget?.id ? 'Removing…' : 'Remove'}
           onPress={handleDeleteContact}
           disabled={isDeletingId === deleteTarget?.id}
           accessibilityLabel="Remove"
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   heroBtnText: { fontSize: 17, lineHeight: 24, minWidth: 140 },
   count: { fontSize: 11, lineHeight: 16, minWidth: 30, color: DT.muted, ...outfit(800) },
   addLink: { minHeight: 44, paddingHorizontal: 16, borderRadius: DT.radius.pill, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
-  addLinkText: { fontSize: 11, lineHeight: 16, minWidth: 70, textAlign: 'center', color: DT.brand, ...outfit(800) },
+  addLinkText: { fontSize: 13, lineHeight: 18, textAlign: 'center', color: DT.ink, ...outfit(500) },
   error: { backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12, borderRadius: DT.radius.md },
   errorText: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, ...outfit(700) },
   note: { backgroundColor: DT.card, padding: 20, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('sm') },

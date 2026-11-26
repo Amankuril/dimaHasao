@@ -5,8 +5,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Banknote, Bike, Clock, CreditCard, Navigation, Package, Phone, Route, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { alpha, outfit, playfair, shadow } from '../../theme';
-import { DT } from '../ui/dt';
+import { alpha, outfit, shadow } from '../../theme';
+import { DT, sentence } from '../ui/dt';
 import { CtaButton } from '../ui/Surface';
 import { getScheduledRideCountdown } from '../utils/scheduledRideTime';
 import { formatScheduledDateTime } from '../utils/driverRideJobs';
@@ -73,6 +73,9 @@ function Entrance({ children }) {
     </Animated.View>
   );
 }
+
+/** The countdown turns amber for its last ten seconds. */
+const URGENT = '#F5B544';
 
 function TimerRing({ progress, color, timer }) {
   const r = 28.5;
@@ -213,18 +216,18 @@ const IncomingRideRequest = ({
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={() => {}}>
       <Entrance>
-        {/* Deep-green request header: kind, big earnings, countdown ring */}
+        {/* Graphite request header: kind, big earnings, countdown ring */}
         <View style={styles.header}>
           <View style={styles.headerRow}>
             <View style={styles.headerLeft}>
               <View style={styles.headerIcon}>
-                <HeaderIcon size={24} color={DT.ctaInk} />
+                <HeaderIcon size={22} strokeWidth={1.75} color={DT.onBrand} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={styles.pill}>
                   <Text style={[outfit(800), styles.pillText]}>{isPreviewMode ? 'Scheduled trip' : 'Ride offer'}</Text>
                 </View>
-                <Text style={[playfair(700), styles.title]} numberOfLines={2}>{title}</Text>
+                <Text style={[outfit(600), styles.title]} numberOfLines={2}>{title}</Text>
                 <Text numberOfLines={1} style={[outfit(600), styles.category]}>{category}</Text>
               </View>
             </View>
@@ -234,7 +237,7 @@ const IncomingRideRequest = ({
                 <X size={20} color={DT.onBrand} />
               </Press>
             ) : (
-              <TimerRing progress={timerProgress} color={DT.cta} timer={timer} />
+              <TimerRing progress={timerProgress} color={timer <= 10 ? URGENT : DT.onBrand} timer={timer} />
             )}
           </View>
 
@@ -251,14 +254,14 @@ const IncomingRideRequest = ({
           </View>
 
           {isPreviewMode || isScheduledRequest ? (
-            <Text numberOfLines={1} style={[outfit(700), styles.subLine]}>{`SCHEDULED FOR ${formatScheduledDateTime(scheduledAt).toUpperCase()}`}</Text>
+            <Text numberOfLines={1} style={[outfit(700), styles.subLine]}>{`Scheduled for ${formatScheduledDateTime(scheduledAt)}`}</Text>
           ) : (
-            <Text numberOfLines={1} style={[outfit(700), styles.subLine]}>{`WAVE ${attemptCount} OF ${maxAttempts} • RADIUS ${searchRadiusLabel.toUpperCase()}`}</Text>
+            <Text numberOfLines={1} style={[outfit(700), styles.subLine]}>{`Wave ${attemptCount} of ${maxAttempts} · ${searchRadiusLabel} radius`}</Text>
           )}
 
           {!isPreviewMode ? (
             <View style={styles.topBar}>
-              <View style={{ height: '100%', width: `${timerProgress}%`, backgroundColor: DT.cta }} />
+              <View style={{ height: '100%', width: `${timerProgress}%`, backgroundColor: timer <= 10 ? URGENT : DT.onBrand }} />
             </View>
           ) : null}
         </View>
@@ -278,7 +281,7 @@ const IncomingRideRequest = ({
                 <Text style={[outfit(800), styles.statLabel]}>Payment</Text>
               </View>
               <View style={[styles.payPill, { backgroundColor: isCash ? DT.warnSoft : DT.infoSoft }]}>
-                <Text style={[outfit(900), styles.payText, { color: isCash ? DT.warnInk : DT.info }]}>{payment}</Text>
+                <Text style={[outfit(900), styles.payText, { color: isCash ? DT.warnInk : DT.info }]}>{sentence(payment)}</Text>
               </View>
             </View>
           </View>
@@ -288,9 +291,9 @@ const IncomingRideRequest = ({
           {isIntercity ? (
             <View style={styles.intercity}>
               {[
-                ['TRIP', data.raw?.intercity?.tripType || 'Intercity'],
-                ['DATE', data.raw?.intercity?.travelDate || 'Today'],
-                ['PAX', data.raw?.intercity?.passengers || 1],
+                ['Trip', data.raw?.intercity?.tripType || 'Intercity'],
+                ['Date', data.raw?.intercity?.travelDate || 'Today'],
+                ['Passengers', data.raw?.intercity?.passengers || 1],
               ].map(([label, value]) => (
                 <View key={label} style={{ flex: 1, minWidth: 0 }}>
                   <Text style={[outfit(700), styles.intercityLabel]}>{label}</Text>
@@ -310,7 +313,7 @@ const IncomingRideRequest = ({
             </View>
             {customerPhone ? (
               <Press onPress={() => Linking.openURL(`tel:${customerPhone}`).catch(() => {})} accessibilityLabel="Call rider" style={styles.callBtn}>
-                <Phone size={18} strokeWidth={2.5} color={DT.brand} />
+                <Phone size={18} strokeWidth={1.75} color={DT.ink} />
               </Press>
             ) : null}
           </View>
@@ -359,10 +362,10 @@ const IncomingRideRequest = ({
           {isPreviewMode ? (
             onPreviewCancel ? (
               <View style={{ flexDirection: 'row', gap: 12 }}>
-                <CtaButton variant="outline" title="CLOSE" onPress={close} disabled={isPreviewCancelling} style={styles.previewBtn} />
+                <CtaButton variant="outline" title="Close" onPress={close} disabled={isPreviewCancelling} style={styles.previewBtn} />
                 <CtaButton
                   variant="danger"
-                  title={(isPreviewCancelling ? 'Cancelling...' : canPreviewCancel ? 'Cancel ride' : previewCancelDisabledLabel).toUpperCase()}
+                  title={isPreviewCancelling ? 'Cancelling…' : canPreviewCancel ? 'Cancel ride' : previewCancelDisabledLabel}
                   onPress={() => {
                     if (canPreviewCancel) onPreviewCancel(data);
                   }}
@@ -371,7 +374,7 @@ const IncomingRideRequest = ({
                 />
               </View>
             ) : (
-              <CtaButton variant="brand" title="CLOSE DETAILS" onPress={close} style={styles.accept} />
+              <CtaButton variant="brand" title="Close details" onPress={close} style={styles.accept} />
             )
           ) : (
             <>
@@ -407,29 +410,29 @@ const styles = StyleSheet.create({
   header: { backgroundColor: DT.brandDeep, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20 },
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   headerLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  headerIcon: { width: 52, height: 52, borderRadius: DT.radius.md, backgroundColor: DT.cta, alignItems: 'center', justifyContent: 'center' },
+  headerIcon: { width: 48, height: 48, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' },
   pill: { alignSelf: 'flex-start', minWidth: 56, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'rgba(255,255,255,0.12)' },
-  pillText: { fontSize: 11, lineHeight: 15, textAlign: 'center', color: DT.accent },
-  title: { marginTop: 4, fontSize: 20, lineHeight: 26, color: DT.gold },
+  pillText: { fontSize: 12, lineHeight: 16, textAlign: 'center', color: DT.onBrandMuted },
+  title: { marginTop: 4, fontSize: 20, lineHeight: 26, color: DT.onBrand },
   category: { marginTop: 2, fontSize: 12, color: DT.onBrandMuted },
   subLine: { marginTop: 12, fontSize: 11, lineHeight: 15, color: DT.onBrandMuted },
   fareRow: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
   fareLabel: { fontSize: 11, lineHeight: 15, minWidth: 64, color: DT.onBrandMuted },
-  fareValue: { fontSize: 38, lineHeight: 46, color: DT.onBrand },
+  fareValue: { fontSize: 40, lineHeight: 48, color: DT.onBrand, fontVariant: ['tabular-nums'] },
   fareUp: { borderRadius: 999, backgroundColor: DT.successSoft, paddingHorizontal: 12, paddingVertical: 4 },
   fareUpText: { fontSize: 11, lineHeight: 15, minWidth: 80, textAlign: 'center', color: DT.successInk },
   previewX: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   ringWrap: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
   ringInner: { width: 50, height: 50, borderRadius: 25, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
   ringNumber: { fontSize: 20, lineHeight: 22, color: DT.onBrand },
-  ringSec: { marginTop: -2, fontSize: 11, lineHeight: 15, minWidth: 20, textAlign: 'center', color: DT.accent },
+  ringSec: { marginTop: -2, fontSize: 11, lineHeight: 15, minWidth: 20, textAlign: 'center', color: DT.onBrandMuted },
   scroll: { flexGrow: 0, flexShrink: 1 },
   body: { paddingHorizontal: 20, paddingBottom: 4, paddingTop: 16 },
   footer: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, backgroundColor: DT.card },
   stats: { flexDirection: 'row', marginBottom: 16, overflow: 'hidden', borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg },
   statCell: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 12 },
   statLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  statLabel: { fontSize: 11, lineHeight: 15, minWidth: 56, color: DT.muted },
+  statLabel: { fontSize: 12, lineHeight: 16, color: DT.muted },
   statValue: { fontSize: 16, color: DT.ink, textAlign: 'center' },
   payPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
   payText: { fontSize: 11, lineHeight: 15, minWidth: 40, textAlign: 'center' },
@@ -441,12 +444,12 @@ const styles = StyleSheet.create({
   scheduleCountdown: { marginTop: 4, fontSize: 12 },
   scheduleHelp: { marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.muted },
   intercity: { flexDirection: 'row', gap: 8, marginBottom: 16, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 12, paddingVertical: 12 },
-  intercityLabel: { fontSize: 11, lineHeight: 15, minWidth: 30, color: DT.muted },
+  intercityLabel: { fontSize: 12, lineHeight: 16, color: DT.muted },
   intercityValue: { marginTop: 4, fontSize: 13, color: DT.ink },
   rider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, padding: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 16, color: DT.accent },
-  riderLabel: { fontSize: 11, lineHeight: 15, minWidth: 40, color: DT.muted },
+  riderLabel: { fontSize: 12, lineHeight: 16, color: DT.muted },
   callBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   riderName: { fontSize: 15, color: DT.ink },
   route: { marginBottom: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },

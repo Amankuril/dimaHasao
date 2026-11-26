@@ -17,14 +17,14 @@ import Text from './UpperText';
 // (GoogleMap + RotatingVehicleMarker + top bar + stage / ETA / route cards + simulation panel).
 
 const mapStyles = [
-  { elementType: 'geometry', stylers: [{ color: '#f8fafc' }] },
+  { elementType: 'geometry', stylers: [{ color: '#f7f7f8' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#475569' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#52525b' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
-  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#eef2f7' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#eeeeef' }] },
   { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
-  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#e2e8f0' }] },
-  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dbeafe' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#e4e4e7' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#dde3e8' }] },
 ];
 
 const fo = outfit;
@@ -97,12 +97,12 @@ export default function TripMap({ t }) {
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: tw.slate200, overflow: 'hidden' }]}>
+      <View style={[StyleSheet.absoluteFill, { backgroundColor: tw.zinc200, overflow: 'hidden' }]}>
         {!HAS_VALID_GOOGLE_MAPS_KEY ? (
           <View style={st.mapMsgWrap}>
             <View style={[st.mapMsg, { borderRadius: 16, paddingVertical: 16 }]}>
-              <Text style={[{ fontSize: 12, color: tw.slate900 }, fo(600)]}>Google Maps key missing</Text>
-              <Text style={[{ fontSize: 11, color: tw.slate500, marginTop: 4, textAlign: 'center' }, fo(700)]}>Set `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env`.</Text>
+              <Text style={[{ fontSize: 12, color: tw.zinc900 }, fo(600)]}>Google Maps key missing</Text>
+              <Text style={[{ fontSize: 11, color: tw.zinc500, marginTop: 4, textAlign: 'center' }, fo(700)]}>Set `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env`.</Text>
             </View>
           </View>
         ) : isLoaded ? (
@@ -125,7 +125,7 @@ export default function TripMap({ t }) {
         ) : (
           <View style={st.mapMsgWrap}>
             <View style={[st.mapMsg, { borderRadius: 16, paddingVertical: 12 }]}>
-              <Text style={[{ fontSize: 12, color: tw.slate700 }, fo(600)]}>Loading map</Text>
+              <Text style={[{ fontSize: 12, color: tw.zinc700 }, fo(600)]}>Loading map</Text>
             </View>
           </View>
         )}
@@ -142,7 +142,7 @@ export default function TripMap({ t }) {
           </View>
           <View style={{ flex: 1, gap: 2, overflow: 'hidden' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={[{ fontSize: 11, lineHeight: 15, minWidth: 64, color: DT.successInk }, fo(800)]}>Driver Live</Text>
+              <Text style={[{ fontSize: 11, lineHeight: 15, minWidth: 64, color: DT.successInk }, fo(800)]}>Driver live</Text>
               <ArrowUpRight size={12} strokeWidth={3} color={DT.successInk} />
             </View>
             <Text numberOfLines={1} style={[{ fontSize: 14, lineHeight: 18, color: DT.ink }, fo(700)]}>
@@ -154,21 +154,21 @@ export default function TripMap({ t }) {
         {/* One stacked column: each card sits below the previous one whatever its height (font scale, wrapping). */}
         <View pointerEvents="box-none" style={[st.stack, { top: 104 + insets.top }]}>
         <View style={st.statRow}>
-          <StageCard label="Trip Stage" style={{ flex: 1.25 }}>
+          <StageCard label="Trip stage" style={{ flex: 1.25 }}>
             <Text numberOfLines={1} style={[st.cardValue, fo(900)]}>
-              {phase === 'to_pickup' ? 'Heading To Pickup' : phase === 'otp_verification' ? 'Verify OTP' : phase === 'in_trip' ? 'On Trip' : phase === 'payment_confirm' ? 'Collect Payment' : 'Complete'}
+              {phase === 'to_pickup' ? 'To pickup' : phase === 'otp_verification' ? 'PIN check' : phase === 'in_trip' ? 'On trip' : phase === 'payment_confirm' ? 'Payment' : 'Done'}
             </Text>
           </StageCard>
           <StageCard label="ETA" style={{ flex: 0.75, minWidth: 72 }}>
             <View style={st.cardRow}>
               <Clock3 size={13} color={DT.brand} />
-              <Text numberOfLines={1} style={[st.cardValue, fo(900), { marginTop: 0, flexShrink: 1 }]}>{etaText}</Text>
+              <Text numberOfLines={1} style={[st.cardValue, fo(900), { marginTop: 0, flexShrink: 1 }]}>{phase === 'payment_confirm' || phase === 'review' ? '—' : etaText}</Text>
             </View>
           </StageCard>
           <StageCard label="Route" style={{ flex: 1, minWidth: 104 }}>
             <View style={st.cardRow}>
               <MapPinned size={13} color={DT.muted} />
-              <Text numberOfLines={1} style={[st.cardValue, fo(900), { marginTop: 0, flexShrink: 1 }]}>{phase === 'to_pickup' ? 'Pickup First' : 'To Destination'}</Text>
+              <Text numberOfLines={1} style={[st.cardValue, fo(900), { marginTop: 0, flexShrink: 1 }]}>{phase === 'to_pickup' ? 'Pickup first' : 'To drop'}</Text>
             </View>
           </StageCard>
         </View>
@@ -214,7 +214,7 @@ export default function TripMap({ t }) {
 }
 
 const st = StyleSheet.create({
-  mapMsgWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.slate200, paddingHorizontal: 24 },
+  mapMsgWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: tw.zinc200, paddingHorizontal: 24 },
   mapMsg: { backgroundColor: 'rgba(255,255,255,0.92)', paddingHorizontal: 16, alignItems: 'center', ...shadow('sm') },
   back: { position: 'absolute', left: 16, zIndex: 50, width: 48, height: 48, borderRadius: 24, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
   topBar: { position: 'absolute', left: 72, right: 16, zIndex: 50, flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: DT.card, paddingVertical: 8, paddingLeft: 8, paddingRight: 16, minHeight: 48, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('md') },

@@ -30,7 +30,7 @@ function ProfileField({ field, onChange, error }) {
     <View style={[st.field, field.disabled ? { opacity: 0.7, backgroundColor: DT.bgSoft } : focused && { borderColor: DT.brand }, error ? { borderColor: DT.danger } : null]}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Icon size={16} color={DT.brand} />
-        <Text style={st.fieldLabel}>{field.label.toUpperCase()}</Text>
+        <Text style={st.fieldLabel}>{field.label}</Text>
       </View>
       <TextInput
         value={field.value}
@@ -127,15 +127,15 @@ export default function EditProfile() {
   }
 
   const fields = [
-    { key: 'name', label: 'Full Name', value: formData.name, Icon: User },
-    { key: 'phone', label: 'Mobile Number', value: formData.phone, Icon: Phone, keyboardType: 'phone-pad', disabled: true },
-    { key: 'email', label: 'Email Address', value: formData.email, Icon: Mail, keyboardType: 'email-address' },
+    { key: 'name', label: 'Full name', value: formData.name, Icon: User },
+    { key: 'phone', label: 'Mobile number', value: formData.phone, Icon: Phone, keyboardType: 'phone-pad', disabled: true },
+    { key: 'email', label: 'Email address', value: formData.email, Icon: Mail, keyboardType: 'email-address' },
   ];
   const shownImage = imagePreview || driver?.profileImage;
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={st.root}>
-      <ScreenHeader title="Edit Profile" subtitle="Update your personal details" onBack={() => navigate(`${routePrefix}/profile`)} />
+      <ScreenHeader title="Edit profile" subtitle="Update your personal details" onBack={() => navigate(`${routePrefix}/profile`)} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 24, paddingBottom: 24 + insets.bottom }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={{ gap: 24 }}>
           {/* Profile Image with Cloudinary Upload */}
@@ -174,7 +174,7 @@ export default function EditProfile() {
           <View style={{ paddingTop: 24 }}>
             <CtaButton
               variant="cta"
-              title="Save Changes"
+              title="Save changes"
               onPress={handleSave}
               disabled={submitting || imageUploading}
               loading={submitting}
@@ -197,7 +197,7 @@ export default function EditProfile() {
       {showSuccess ? (
         <View style={[st.toast, { top: insets.top + 16 }]} pointerEvents="none">
           <CheckCircle2 size={20} strokeWidth={3} color={DT.onBrand} />
-          <Text style={st.toastText}>Profile Updated Successfully</Text>
+          <Text style={st.toastText}>Profile updated</Text>
         </View>
       ) : null}
     </KeyboardAvoidingView>
@@ -208,8 +208,8 @@ const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
   toast: { position: 'absolute', left: 16, right: 16, zIndex: 100, backgroundColor: DT.success, padding: 16, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', gap: 12, ...shadow('lg') },
   toastText: { fontSize: 13, color: DT.onBrand, ...fo(700) },
-  avatar: { width: 104, height: 104, borderRadius: 34, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 3, borderColor: DT.gold, ...shadow('md') },
-  avatarSpin: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(6,56,30,0.35)' },
+  avatar: { width: 96, height: 96, borderRadius: 48, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 1, borderColor: DT.border, ...shadow('md') },
+  avatarSpin: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(24,24,27,0.35)' },
   camera: { position: 'absolute', bottom: -2, right: -2, width: 44, height: 44, borderRadius: 22, backgroundColor: DT.cta, borderWidth: 3, borderColor: DT.bg, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
   photoLabel: { fontSize: 11, minWidth: 100, textAlign: 'center', color: DT.muted, ...fo(700) },
   field: { backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 16, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, gap: 8 },

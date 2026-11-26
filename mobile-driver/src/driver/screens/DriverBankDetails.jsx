@@ -32,7 +32,7 @@ function Field({ label, value, onChange, placeholder, keyboardType, maxLength, a
   const [focused, setFocused] = useState(false);
   return (
     <View style={{ gap: 8 }}>
-      <Text style={st.fieldLabel}>{String(label).toUpperCase()}</Text>
+      <Text style={st.fieldLabel}>{String(label)}</Text>
       <TextInput
         value={value}
         onChangeText={onChange}
@@ -175,7 +175,7 @@ export default function DriverBankDetails() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={st.root}>
-      <ScreenHeader title="Bank Details" subtitle="Driver profile" onBack={() => navigate(`${routePrefix}/profile`)} />
+      <ScreenHeader title="Bank details" subtitle="Driver profile" onBack={() => navigate(`${routePrefix}/profile`)} />
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 + insets.bottom, gap: 20 }}
         keyboardShouldPersistTaps="handled"
@@ -184,7 +184,7 @@ export default function DriverBankDetails() {
         <Card tone="dark" style={st.dark}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 16 }}>
             <View style={st.darkIcon}>
-              <Landmark size={24} color={DT.gold} />
+              <Landmark size={22} strokeWidth={1.75} color={DT.onBrandMuted} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={st.darkEyebrow}>Payout setup</Text>
@@ -199,7 +199,7 @@ export default function DriverBankDetails() {
             <Text style={st.loading}>Loading bank details...</Text>
           ) : (
             <View style={{ gap: 20 }}>
-              <Field label="Account Holder Name" value={bankForm.accountHolderName} placeholder="Enter account holder name" autoCapitalize="sentences" onChange={(value) => handleFieldChange('accountHolderName', value)} />
+              <Field label="Account holder name" value={bankForm.accountHolderName} placeholder="Enter account holder name" autoCapitalize="sentences" onChange={(value) => handleFieldChange('accountHolderName', value)} />
               <Field label="UPI ID" value={bankForm.upiId} placeholder="name@upi" keyboardType="email-address" onChange={(value) => handleFieldChange('upiId', value)} />
 
               <View style={st.qrBox}>
@@ -224,9 +224,9 @@ export default function DriverBankDetails() {
                 </View>
               </View>
 
-              <Field label="Account Number" value={bankForm.accountNumber} placeholder="Enter account number" keyboardType="numeric" onChange={(value) => handleFieldChange('accountNumber', value.replace(/\D/g, ''))} />
+              <Field label="Account number" value={bankForm.accountNumber} placeholder="Enter account number" keyboardType="numeric" onChange={(value) => handleFieldChange('accountNumber', value.replace(/\D/g, ''))} />
               <Field label="IFSC" value={bankForm.ifsc} placeholder="ABCD0123456" maxLength={11} autoCapitalize="characters" onChange={(value) => handleFieldChange('ifsc', value)} />
-              <Field label="Branch Name" value={bankForm.branchName} placeholder="Enter branch name" autoCapitalize="sentences" onChange={(value) => handleFieldChange('branchName', value)} />
+              <Field label="Branch name" value={bankForm.branchName} placeholder="Enter branch name" autoCapitalize="sentences" onChange={(value) => handleFieldChange('branchName', value)} />
 
               {driver?.bankDetails?.updatedAt ? <Text style={st.updated}>Last updated: {new Date(driver.bankDetails.updatedAt).toLocaleString('en-IN')}</Text> : null}
 
@@ -248,7 +248,7 @@ export default function DriverBankDetails() {
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
   dark: { borderRadius: DT.radius.xl, padding: 24, ...shadow('lg') },
-  darkIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  darkIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)', alignItems: 'center', justifyContent: 'center' },
   darkEyebrow: { fontSize: 11, minWidth: 100, color: DT.gold, ...fo(800) },
   darkSummary: { marginTop: 8, fontSize: 18, color: DT.onBrand, ...fo(800) },
   darkNote: { marginTop: 8, fontSize: 13, lineHeight: 19, color: DT.onBrandMuted, ...fo(500) },

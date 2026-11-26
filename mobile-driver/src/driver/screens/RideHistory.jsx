@@ -8,7 +8,7 @@ import { useNavigate } from '../../lib/webRouter';
 import { outfit as fo, shadow } from '../../theme';
 import DriverBottomNav, { NAV_BAR_HEIGHT } from '../components/DriverBottomNav';
 import { getDriverRideHistory } from '../services/registrationService';
-import { DT } from '../ui/dt';
+import { DT, sentence } from '../ui/dt';
 import ScreenHeader from '../ui/ScreenHeader';
 import { Card, Chip, CtaButton, SectionLabel } from '../ui/Surface';
 
@@ -110,21 +110,21 @@ const normalizePaymentLabel = (ride = {}) => {
     const providerMode = String(ride?.driverPaymentCollection?.providerMode || '').trim().toLowerCase();
 
     if (['paid', 'captured', 'completed'].includes(collectionStatus) && (providerMode.includes('upi') || providerMode.includes('card') || providerMode.includes('qr') || providerMode.includes('online'))) {
-      return 'ONLINE';
+      return 'Online';
     }
 
-    return 'CASH';
+    return 'Cash';
   }
 
   if (normalized.includes('online') || normalized.includes('upi') || normalized.includes('card') || normalized.includes('qr')) {
-    return 'ONLINE';
+    return 'Online';
   }
 
   if (normalized === 'cash') {
-    return 'CASH';
+    return 'Cash';
   }
 
-  return normalized.toUpperCase();
+  return sentence(normalized);
 };
 
 const normalizeRide = (ride) => {
@@ -243,16 +243,16 @@ export default function RideHistory() {
   return (
     <View style={st.root}>
       <ScreenHeader
-        title="HISTORY"
+        title="History"
         subtitle="Driver log"
         onBack={() => navigate(-1)}
         right={
           <Press
             onPress={() => setIsFilterOpen((value) => !value)}
             accessibilityLabel="Filter history"
-            style={[st.sq, filterOn && { backgroundColor: DT.accent, borderColor: DT.accent }]}
+            style={[st.sq, filterOn && { backgroundColor: DT.ink, borderColor: DT.ink }]}
           >
-            <Filter size={18} color={filterOn ? DT.ctaInk : DT.onBrand} />
+            <Filter size={18} strokeWidth={1.75} color={filterOn ? DT.onBrand : DT.ink} />
           </Press>
         }
       />
@@ -273,7 +273,7 @@ export default function RideHistory() {
                     }}
                     style={[st.filterBtn, on ? { backgroundColor: DT.brand, borderColor: DT.brand } : { backgroundColor: DT.card, borderColor: DT.border }]}
                   >
-                    <Text style={[st.filterBtnText, { color: on ? DT.onBrand : DT.inkSoft }]}>{filter.label.toUpperCase()}</Text>
+                    <Text style={[st.filterBtnText, { color: on ? DT.onBrand : DT.inkSoft }]}>{filter.label}</Text>
                   </Press>
                 );
               })}
@@ -291,7 +291,7 @@ export default function RideHistory() {
                 onPress={() => setActiveTab(tab.id)}
                 style={[st.tab, on ? { backgroundColor: DT.brand, borderColor: DT.brand } : { backgroundColor: DT.card, borderColor: DT.border }]}
               >
-                <Text style={[st.tabText, { color: on ? DT.onBrand : DT.inkSoft }]}>{tab.label.toUpperCase()}</Text>
+                <Text style={[st.tabText, { color: on ? DT.onBrand : DT.inkSoft }]}>{tab.label}</Text>
               </Press>
             );
           })}
@@ -310,7 +310,7 @@ export default function RideHistory() {
           <Card tone="dark" style={[st.stat, { flex: 1 }]}>
             <Text style={[st.statLabel, { color: DT.gold }]}>Total earned</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={[st.statIcon, { backgroundColor: 'rgba(202,168,62,0.16)' }]}>
+              <View style={[st.statIcon, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
                 <IndianRupee size={12} color={DT.gold} />
               </View>
               <Text style={[st.statValue, { color: DT.onBrand, flexShrink: 1 }]} numberOfLines={1} adjustsFontSizeToFit>
@@ -337,7 +337,7 @@ export default function RideHistory() {
             <View style={st.msg}>
               <AlertCircle size={22} color={DT.danger} />
               <Text style={[st.msgText, { color: DT.ink }]}>{error}</Text>
-              <CtaButton title="RETRY" variant="brand" onPress={() => setReloadKey((k) => k + 1)} style={{ minHeight: 44 }} />
+              <CtaButton title="Retry" variant="brand" onPress={() => setReloadKey((k) => k + 1)} style={{ minHeight: 44 }} />
             </View>
           ) : filteredHistory.length === 0 ? (
             <View style={st.msg}>
@@ -355,9 +355,9 @@ export default function RideHistory() {
                         {item.type === 'parcel' ? <Package size={18} strokeWidth={2.5} color={DT.warnInk} /> : <Bike size={18} strokeWidth={2.5} color={DT.brand} />}
                       </View>
                       <View style={{ gap: 2, flexShrink: 1 }}>
-                        <Text style={st.itemTitle}>{item.title.toUpperCase()}</Text>
+                        <Text style={st.itemTitle}>{item.title}</Text>
                         <Text style={st.itemSub}>{item.subtitle}</Text>
-                        <Text style={st.itemDate}>{item.dateLabel.toUpperCase()}</Text>
+                        <Text style={st.itemDate}>{item.dateLabel}</Text>
                       </View>
                     </View>
                     <View style={{ alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
@@ -408,16 +408,16 @@ export default function RideHistory() {
                   <View style={st.foot}>
                     <View style={[st.footGroup, { flexShrink: 1 }]}>
                       <User size={12} color={DT.muted} />
-                      <Text style={[st.footText, { flexShrink: 1 }]}>{item.subtitle.toUpperCase()}</Text>
+                      <Text style={[st.footText, { flexShrink: 1 }]}>{item.subtitle}</Text>
                     </View>
                     <View style={[st.footGroup, { gap: 12 }]}>
                       <View style={[st.footGroup, { gap: 4 }]}>
                         <MapPin size={12} color={DT.muted} />
-                        <Text style={st.footText}>{item.distanceKm.toFixed(1)} KM</Text>
+                        <Text style={st.footText}>{item.distanceKm.toFixed(1)} km</Text>
                       </View>
                       <View style={[st.footGroup, { gap: 4 }]}>
                         <CheckCircle2 size={12} color={DT.muted} />
-                        <Text style={st.footText}>{item.fareLabel.toUpperCase()}</Text>
+                        <Text style={st.footText}>{item.fareLabel}</Text>
                       </View>
                     </View>
                   </View>
@@ -435,7 +435,7 @@ export default function RideHistory() {
 
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
-  sq: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
+  sq: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
   filterBox: { marginBottom: 16, padding: 16 },
   filterBtn: { minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12 },
   filterBtnText: { fontSize: 11, minWidth: 40, ...fo(800) },

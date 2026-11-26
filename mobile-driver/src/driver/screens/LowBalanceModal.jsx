@@ -103,7 +103,7 @@ const LowBalanceModal = ({ isOpen, onClose, balance, cashLimit, isBlocked, below
 };
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: alpha(tw.slate950, 0.6) },
+  backdrop: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: alpha(tw.zinc900, 0.6) },
   card: { width: '100%', maxWidth: 384, backgroundColor: DT.card, borderRadius: DT.radius.xl, overflow: 'hidden', borderWidth: 1, borderColor: DT.borderSoft, ...shadow('lg') },
   head: { paddingTop: 32, paddingBottom: 24, paddingHorizontal: 24, alignItems: 'center' },
   headIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },

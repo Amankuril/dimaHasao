@@ -200,7 +200,7 @@ export default function Chat() {
           onBack={() => navigate(-1)}
           right={(
             <Press onPress={call} accessibilityLabel="Call" scale={0.92} style={st.callBtn}>
-              <Phone size={18} color={DT.brand} strokeWidth={2.5} />
+              <Phone size={18} color={DT.ink} strokeWidth={1.75} />
             </Press>
           )}
         />
@@ -268,7 +268,7 @@ export default function Chat() {
 }
 
 const st = StyleSheet.create({
-  callBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.cta, alignItems: 'center', justifyContent: 'center' },
+  callBtn: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
   pill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 20, paddingVertical: 12, ...shadow('sm') },
   errBox: { borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
   bubble: { maxWidth: '80%', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20 },

@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle2, Clock, FileText, HelpCircle, ShieldCheck, TrendingUp } from 'lucide-react-native';
 import { useNavigate } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
-import { outfit, playfair } from '../../theme';
+import { outfit } from '../../theme';
 import { BrandHero, LogoBadge, StatusBarBackdrop } from '../components/OnboardingShell';
 import { obCard, up } from '../components/onboardingTheme';
 import { Chip, CtaButton } from '../ui/Surface';
@@ -42,20 +42,20 @@ export default function ApplicationStatus() {
   return (
     <View style={{ flex: 1, backgroundColor: DT.bg }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 120 + insets.bottom }}>
-        <BrandHero top={insets.top + 14} style={{ paddingBottom: 64 }}>
+        <BrandHero top={insets.top + 24} style={{ paddingBottom: 24 }}>
           <View style={styles.maxW}>
             <LogoBadge size={48} />
-            <Text style={styles.h1} accessibilityRole="header">Application Successfully Submitted</Text>
+            <Text style={styles.h1} accessibilityRole="header">Application submitted</Text>
             <Text style={styles.lead}>
-              Our team is currently reviewing your documents. This usually takes <Text style={{ color: DT.accent, ...outfit(800) }}>12-24 hours.</Text>
+              Our team is currently reviewing your documents. This usually takes <Text style={{ color: DT.ink, ...outfit(500) }}>12–24 hours.</Text>
             </Text>
           </View>
         </BrandHero>
 
-        <View style={[styles.maxW, { paddingHorizontal: 20, marginTop: -36, gap: 16 }]}>
+        <View style={[styles.maxW, { paddingHorizontal: 20, gap: 16 }]}>
           <View style={styles.statusCard}>
             <Animated.View style={[styles.hero, { opacity: enter, transform: [{ rotate }, { scale }] }]}>
-              <Clock size={40} strokeWidth={2.5} color={DT.warn} />
+              <Clock size={32} strokeWidth={1.75} color={DT.warnInk} />
               <View style={styles.badge}>
                 <CheckCircle2 size={18} strokeWidth={3} color={DT.onBrand} />
               </View>
@@ -87,7 +87,7 @@ export default function ApplicationStatus() {
                 <ShieldCheck size={20} color={DT.faint} />
               </View>
               <View style={{ gap: 2, opacity: 0.6, flex: 1, minWidth: 0 }}>
-                <Text style={styles.rowTitle}>Background Check</Text>
+                <Text style={styles.rowTitle}>Background check</Text>
                 <Text style={styles.rowSub}>{up('Waiting')}</Text>
               </View>
             </View>
@@ -113,15 +113,15 @@ export default function ApplicationStatus() {
 const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
   statusCard: { ...obCard, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  hero: { width: 80, height: 80, backgroundColor: DT.warnSoft, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  hero: { width: 72, height: 72, backgroundColor: DT.warnSoft, borderRadius: DT.radius.lg, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', bottom: -6, right: -6, width: 32, height: 32, backgroundColor: DT.success, borderRadius: 16, borderWidth: 3, borderColor: DT.card, alignItems: 'center', justifyContent: 'center' },
-  h1: { ...playfair(700), fontSize: 26, lineHeight: 34, color: DT.gold, marginTop: 16 },
-  lead: { ...outfit(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted, marginTop: 8 },
+  h1: { ...outfit(600), fontSize: 26, lineHeight: 34, color: DT.ink, marginTop: 24 },
+  lead: { ...outfit(400), fontSize: 15, lineHeight: 22, color: DT.inkSoft, marginTop: 8 },
   statusText: { ...outfit(500), fontSize: 13, lineHeight: 19, color: DT.inkSoft, marginTop: 8 },
   row: { ...obCard, padding: 16, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   rowLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 16 },
   rowIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  rowTitle: { ...outfit(800), fontSize: 14, lineHeight: 20, color: DT.ink },
-  rowSub: { ...outfit(700), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted },
-  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12, backgroundColor: 'rgba(248,250,252,0.96)' },
+  rowTitle: { ...outfit(500), fontSize: 14, lineHeight: 20, color: DT.ink },
+  rowSub: { ...outfit(400), fontSize: 12, lineHeight: 16, color: DT.muted },
+  bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12, backgroundColor: 'rgba(250,250,250,0.96)' },
 });
