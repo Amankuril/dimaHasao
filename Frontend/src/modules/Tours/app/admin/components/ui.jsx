@@ -2,6 +2,31 @@
 import React from 'react';
 import { Check, Loader2 } from 'lucide-react';
 
+/*
+ * Round tinted icon button, the same look as the food admin tables
+ * (p-1.5 rounded-full, tinted background, tooltip from `title`).
+ */
+const ICON_TONES = {
+  view: 'bg-neutral-50 text-[#0a4d2b] hover:bg-neutral-100',
+  edit: 'bg-blue-50 text-blue-600 hover:bg-blue-100',
+  approve: 'bg-green-50 text-green-600 hover:bg-green-100',
+  danger: 'bg-red-50 text-red-600 hover:bg-red-100',
+  dangerSolid: 'bg-red-600 text-white hover:bg-red-700',
+  neutral: 'bg-neutral-50 text-neutral-600 hover:bg-neutral-100',
+};
+export const IconAction = ({ icon: Icon, title, onClick, tone = 'neutral', disabled = false, busy = false }) => (
+  <button
+    type="button"
+    title={title}
+    aria-label={title}
+    onClick={onClick}
+    disabled={disabled || busy}
+    className={`p-1.5 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${ICON_TONES[tone] || ICON_TONES.neutral}`}
+  >
+    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Icon className="w-4 h-4" />}
+  </button>
+);
+
 export const currency = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
 
 export const shortDate = (value) =>

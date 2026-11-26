@@ -91,6 +91,29 @@ export const validatePackagePayload = (payload = {}) => {
 };
 
 /** Normalise a payload into the fields the schema actually stores. */
+/**
+ * Pickup / drop are optional. Places picked from Google carry coordinates;
+ * the plain name list (pickupPoints / dropPoints) is always derived from them
+ * so the traveller app, which reads names, keeps working. Plain names sent
+ * without places (older clients) are kept as they are.
+ */
+const placesAndNames = (locations, names, kind) => {
+  const places = asArray(locations)
+    .filter((p) => p && String(p.name || '').trim())
+    .slice(0, 10)
+    .map((p) => ({
+      name: String(p.name).trim().slice(0, 120),
+      address: String(p.address || '').trim().slice(0, 300),
+      placeId: String(p.placeId || '').trim().slice(0, 300),
+      lat: Number.isFinite(Number(p.lat)) ? Number(p.lat) : undefined,
+      lng: Number.isFinite(Number(p.lng)) ? Number(p.lng) : undefined,
+    }));
+  const plain = places.length ? places.map((p) => p.name) : asArray(names).map((n) => String(n).trim()).filter(Boolean);
+  return kind === 'pickup'
+    ? { pickupLocations: places, pickupPoints: plain }
+    : { dropLocations: places, dropPoints: plain };
+};
+
 export const buildPackageDocument = (payload = {}) => ({
   title: String(payload.title).trim(),
   subtitle: String(payload.subtitle || '').trim(),
@@ -129,7 +152,8 @@ export const buildPackageDocument = (payload = {}) => ({
     activities: asArray(day.activities).map((a) => String(a).trim()).filter(Boolean),
     mealPlan: String(day.mealPlan || '').trim(),
   })),
-  pickupPoints: asArray(payload.pickupPoints).map((p) => String(p).trim()).filter(Boolean),
+  ...placesAndNames(payload.pickupLocations, payload.pickupPoints, 'pickup'),
+  ...placesAndNames(payload.dropLocations, payload.dropPoints, 'drop'),
   cancellationPolicy: String(payload.cancellationPolicy || '').trim(),
 
   departureMode: 'on_request',

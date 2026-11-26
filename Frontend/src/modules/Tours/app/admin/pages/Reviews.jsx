@@ -4,9 +4,10 @@
  * Hiding a review moves the package's rating with it — the server recomputes
  * the average from approved reviews only, so a rejected one stops counting.
  */
+import { Check, EyeOff, MessageSquareReply } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, shortDate } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, shortDate, IconAction } from '../components/ui';
 import toast from 'react-hot-toast';
 
 const FILTERS = ['all', 'approved', 'pending', 'rejected'];
@@ -151,33 +152,12 @@ const Reviews = () => {
               )}
 
               <div className="flex flex-wrap gap-2 pt-2 border-t border-neutral-100">
-                <button
-                  type="button"
-                  disabled={busyId === review._id}
-                  onClick={() => reply(review)}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-neutral-200 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-                >
-                  {review.reply ? 'Edit reply' : 'Reply'}
-                </button>
+                <IconAction icon={MessageSquareReply} title={review.reply ? 'Edit reply' : 'Reply'} tone="edit" busy={busyId === review._id} onClick={() => reply(review)} />
                 {review.status !== 'approved' && (
-                  <button
-                    type="button"
-                    disabled={busyId === review._id}
-                    onClick={() => moderate(review, 'approved')}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-[#0a4d2b] text-white hover:bg-[#06381e] disabled:opacity-50"
-                  >
-                    Approve
-                  </button>
+                  <IconAction icon={Check} title="Approve" tone="approve" disabled={busyId === review._id} onClick={() => moderate(review, 'approved')} />
                 )}
                 {review.status !== 'rejected' && (
-                  <button
-                    type="button"
-                    disabled={busyId === review._id}
-                    onClick={() => moderate(review, 'rejected')}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium border border-neutral-200 text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-                  >
-                    Hide
-                  </button>
+                  <IconAction icon={EyeOff} title="Hide" tone="danger" disabled={busyId === review._id} onClick={() => moderate(review, 'rejected')} />
                 )}
               </div>
             </div>

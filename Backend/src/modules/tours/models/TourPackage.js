@@ -37,6 +37,14 @@ const departureSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true },
 }, { _id: false });
 
+const placeSchema = new mongoose.Schema({
+  name: { type: String, trim: true, required: true },
+  address: { type: String, trim: true, default: '' },
+  placeId: { type: String, trim: true, default: '' },
+  lat: { type: Number },
+  lng: { type: Number },
+}, { _id: false });
+
 const tourPackageSchema = new mongoose.Schema({
   createdBy: { type: String, enum: ['operator', 'admin'], default: 'operator' },
 
@@ -82,6 +90,13 @@ const tourPackageSchema = new mongoose.Schema({
   exclusions: { type: [String], default: [] },
   itinerary: { type: [itineraryDaySchema], default: [] },
   pickupPoints: { type: [String], default: [] },
+  /**
+   * Optional real places (from Google suggestions) for pickup and drop.
+   * pickupPoints / dropPoints keep the plain names the traveller app reads.
+   */
+  pickupLocations: { type: [placeSchema], default: [] },
+  dropLocations: { type: [placeSchema], default: [] },
+  dropPoints: { type: [String], default: [] },
   cancellationPolicy: { type: String, trim: true },
 
   // AVAILABILITY

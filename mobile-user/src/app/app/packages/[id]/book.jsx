@@ -275,6 +275,8 @@ export default function TourBookingScreen() {
   const clearPromo = () => {
     setPromoInput('');
     setCouponCode('');
+    // Drop the old verdict at once rather than waiting for the re-quote.
+    setQuote((q) => (q ? { ...q, coupon: { code: null, discount: 0, reason: null } } : q));
   };
 
   // Same as typing the code and pressing Apply: the server re-quotes with it.
@@ -405,14 +407,22 @@ export default function TourBookingScreen() {
             <Field
               style={{ flex: 1 }}
               value={promoInput}
-              onChangeText={(v) => setPromoInput(v.toUpperCase())}
+              onChangeText={(v) => {
+                const next = v.toUpperCase();
+                setPromoInput(next);
+                // Emptying the box removes whatever code was applied or tried.
+                if (!next.trim() && couponCode) clearPromo();
+              }}
               onSubmitEditing={applyPromo}
               returnKeyType="done"
               placeholder="Enter code"
               autoCapitalize="characters"
               inputStyle={type.bodyStrong}
             />
-            {appliedCoupon ? (
+            {/* Remove is offered for any code that was applied or tried, accepted
+                or not — a rejected code used to leave only "Apply", so it could
+                not be taken off. */}
+            {couponCode ? (
               <GreenButton title="Remove" variant="outline" fullWidth={false} onPress={clearPromo} />
             ) : (
               <GreenButton title="Apply" variant="secondary" fullWidth={false} onPress={applyPromo} disabled={!promoInput.trim() || quoting} />

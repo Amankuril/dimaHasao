@@ -8,6 +8,7 @@ const AdminLayout = L(() => import('./app/admin/layouts/AdminLayout'));
 const Dashboard = L(() => import('./app/admin/pages/Dashboard'));
 const Packages = L(() => import('./app/admin/pages/Packages'));
 const PackageCreate = L(() => import('./app/admin/pages/PackageCreate'));
+const PackageEdit = L(() => import('./app/admin/pages/PackageEdit'));
 const Bookings = L(() => import('./app/admin/pages/Bookings'));
 const Reviews = L(() => import('./app/admin/pages/Reviews'));
 const Destinations = L(() => import('./app/admin/pages/Destinations'));
@@ -35,6 +36,7 @@ export default function ToursRoutes() {
             <Route path="dashboard" element={<Dashboard />} />
             {/* Before 'packages' so "new" is never read as a package id. */}
             <Route path="packages/new" element={<PackageCreate />} />
+            <Route path="packages/:id/edit" element={<PackageEdit />} />
             <Route path="packages" element={<Packages />} />
             <Route path="bookings" element={<Bookings />} />
             <Route path="reviews" element={<Reviews />} />

@@ -3,6 +3,7 @@ import { protect, authorizedRoles } from '../middlewares/authMiddleware.js';
 import {
   getAdminPackages,
   createAdminPackage,
+  getAdminPackage,
   updateAdminPackage,
   toggleAdminPackage,
   deleteAdminPackage,
@@ -40,6 +41,7 @@ router.use(authorizedRoles('admin', 'superadmin'));
 router.get('/dashboard', getDashboardStats);
 
 router.get('/packages', getAdminPackages);
+router.get('/packages/:id', getAdminPackage);
 router.post('/packages', createAdminPackage);
 router.put('/packages/:id', updateAdminPackage);
 router.patch('/packages/:id/active', toggleAdminPackage);

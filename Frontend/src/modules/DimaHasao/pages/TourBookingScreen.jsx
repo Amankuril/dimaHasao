@@ -305,6 +305,7 @@ export const TourBookingScreen = () => {
   const clearPromo = () => {
     setPromoInput('');
     setCouponCode('');
+    setQuote((q) => (q ? { ...q, coupon: { code: null, discount: 0, reason: null } } : q));
   };
 
   const payableNow = quote ? quote.advanceAmount : 0;
@@ -514,7 +515,11 @@ export const TourBookingScreen = () => {
             <input
               type="text"
               value={promoInput}
-              onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              onChange={(e) => {
+                const next = e.target.value.toUpperCase();
+                setPromoInput(next);
+                if (!next.trim() && couponCode) clearPromo();
+              }}
               onKeyDown={(e) => {
                 // The screen is one <form>; Enter here must apply the code,
                 // not submit the booking.
@@ -526,7 +531,7 @@ export const TourBookingScreen = () => {
               placeholder="Enter code"
               className="flex-1 border border-[#E5DDC3] rounded-xl px-3 py-2.5 text-xs font-semibold tracking-wide uppercase focus:outline-hidden focus:ring-2 focus:ring-emerald-800/30"
             />
-            {appliedCoupon ? (
+            {couponCode ? (
               <button
                 type="button"
                 onClick={clearPromo}

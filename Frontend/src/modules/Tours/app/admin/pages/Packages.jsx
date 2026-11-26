@@ -1,13 +1,100 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Check, Eye, Pencil, PlusCircle, Power, PowerOff, RefreshCw, Trash2, X } from 'lucide-react';
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, currency, shortDate } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StatusPill, currency, shortDate, IconAction } from '../components/ui';
 import toast from 'react-hot-toast';
 
 const FILTERS = ['all', 'pending', 'approved', 'rejected', 'draft'];
 
+/** Everything about one package, read-only, with its booking numbers. */
+const PackageDetails = ({ id, onClose, onEdit }) => {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    adminService.getPackage(id).then((res) => alive && setData(res)).catch((e) => {
+      toast.error(e.message || 'Could not load this package');
+      onClose();
+    });
+    return () => { alive = false; };
+  }, [id, onClose]);
+  const pkg = data?.package;
+  const row = (label, value) => (value || value === 0 ? (
+    <div className="flex justify-between gap-4 py-1.5 text-sm border-b border-neutral-100 last:border-0">
+      <span className="text-neutral-500 shrink-0">{label}</span>
+      <span className="text-neutral-900 text-right">{value}</span>
+    </div>
+  ) : null);
+  const places = (list) => (list?.length ? list.map((p) => (typeof p === 'string' ? p : p.name)).join(' · ') : '—');
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+        {!pkg ? <Spinner /> : (
+          <>
+            {pkg.heroImage && <img src={pkg.heroImage} alt="" className="w-full h-48 object-cover rounded-t-2xl" />}
+            <div className="p-6 space-y-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-medium text-neutral-900">{pkg.title}</h3>
+                  {pkg.subtitle && <p className="text-sm text-neutral-500 mt-0.5">{pkg.subtitle}</p>}
+                  <div className="mt-2 flex items-center gap-3"><StatusPill status={pkg.status} />{!pkg.isActive && <span className="text-xs text-neutral-500">switched off</span>}</div>
+                </div>
+                <div className="flex gap-1.5 shrink-0">
+                  <IconAction icon={Pencil} title="Edit" tone="edit" onClick={() => onEdit(pkg)} />
+                  <IconAction icon={X} title="Close" onClick={onClose} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <StatCard label="Bookings" value={data.stats?.bookings || 0} />
+                <StatCard label="Revenue" value={currency(data.stats?.revenue)} />
+                <StatCard label="Rating" value={pkg.totalReviews ? `${Number(pkg.avgRating || 0).toFixed(1)} (${pkg.totalReviews})` : '—'} />
+              </div>
+              {pkg.description && <p className="text-sm text-neutral-700 whitespace-pre-line">{pkg.description}</p>}
+              <div>
+                {row('Duration', `${pkg.durationDays} days / ${pkg.durationNights} nights`)}
+                {row('Category', pkg.category)}
+                {row('Difficulty', pkg.difficulty)}
+                {row('Price per person', currency(pkg.pricePerPerson))}
+                {pkg.originalPrice ? row('Was', currency(pkg.originalPrice)) : null}
+                {row('Child price', `${pkg.childPricePercent}% of adult`)}
+                {row('Paid online at booking', `${pkg.advancePercent}%`)}
+                {row('Group size', `${pkg.groupSizeMin} – ${pkg.groupSizeMax}`)}
+                {row('Book ahead', `${pkg.leadTimeDays} day(s)`)}
+                {row('Destinations', (pkg.destinations || []).join(' · ') || '—')}
+                {row('Pickup', places(pkg.pickupLocations?.length ? pkg.pickupLocations : pkg.pickupPoints))}
+                {row('Drop', places(pkg.dropLocations?.length ? pkg.dropLocations : pkg.dropPoints))}
+                {row('Created', shortDate(pkg.createdAt))}
+              </div>
+              {pkg.highlights?.length > 0 && (
+                <div><p className="text-xs text-neutral-500 mb-1">Highlights</p><ul className="list-disc pl-5 text-sm text-neutral-800">{pkg.highlights.map((h) => <li key={h}>{h}</li>)}</ul></div>
+              )}
+              {pkg.itinerary?.length > 0 && (
+                <div className="space-y-2"><p className="text-xs text-neutral-500">Itinerary</p>
+                  {pkg.itinerary.map((d) => (
+                    <div key={d.day} className="p-3 bg-neutral-50 rounded-xl text-sm">
+                      <p className="font-medium text-neutral-900">Day {d.day}: {d.title}</p>
+                      {d.activities?.length > 0 && <p className="text-neutral-600 mt-1">{d.activities.join(' · ')}</p>}
+                      {d.mealPlan && <p className="text-xs text-neutral-500 mt-1">Meals: {d.mealPlan}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {pkg.gallery?.length > 0 && (
+                <div className="grid grid-cols-4 gap-2">{pkg.gallery.map((g) => <img key={g} src={g} alt="" className="h-20 w-full object-cover rounded-lg" />)}</div>
+              )}
+              {pkg.rejectionReason && pkg.status === 'rejected' && <p className="text-sm text-red-700">Rejected: {pkg.rejectionReason}</p>}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Packages = () => {
+  const navigate = useNavigate();
+  const [viewingId, setViewingId] = useState(null);
+  const closeView = useCallback(() => setViewingId(null), []);
   const [params, setParams] = useSearchParams();
   const [packages, setPackages] = useState([]);
   const [summary, setSummary] = useState({});
@@ -93,6 +180,9 @@ const Packages = () => {
 
   return (
     <div className="space-y-4">
+      {viewingId && (
+        <PackageDetails id={viewingId} onClose={closeView} onEdit={(p) => navigate(`/tours/admin/packages/${p._id}/edit`)} />
+      )}
       <PageHeader
         title="Packages"
         subtitle={`${summary.pending || 0} awaiting review`}
@@ -143,7 +233,7 @@ const Packages = () => {
                 <th className="p-4 font-medium">Package</th>
                 <th className="p-4 font-medium text-right">Price</th>
                 <th className="p-4 font-medium">Status</th>
-                <th className="p-4 font-medium">Review</th>
+                <th className="p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -155,7 +245,7 @@ const Packages = () => {
                 packages.map((pkg) => (
                   <tr key={pkg._id} className="hover:bg-neutral-50">
                     <td className="p-4">
-                      <p className="font-medium text-neutral-900">{pkg.title}</p>
+                      <button type="button" onClick={() => setViewingId(pkg._id)} className="font-medium text-neutral-900 hover:underline text-left">{pkg.title}</button>
                       <p className="text-xs text-neutral-500">
                         {pkg.durationDays}D/{pkg.durationNights}N · {pkg.category}
                         {pkg.createdBy === 'admin' && ' · created by admin'}
@@ -170,27 +260,29 @@ const Packages = () => {
                       <p className="text-xs text-neutral-500 mt-1">{shortDate(pkg.createdAt)}</p>
                     </td>
                     <td className="p-4">
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <IconAction icon={Eye} title="View details" tone="view" onClick={() => setViewingId(pkg._id)} />
+                        <IconAction icon={Pencil} title="Edit package" tone="edit" onClick={() => navigate(`/tours/admin/packages/${pkg._id}/edit`)} />
                         {pkg.status !== 'approved' && (
-                          <button type="button" disabled={busyId === pkg._id} onClick={() => decide(pkg, 'approved')}
-                            className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#0a4d2b] text-white hover:bg-[#06381e] disabled:opacity-50">
-                            approve
-                          </button>
+                          <IconAction icon={Check} title="Approve" tone="approve" disabled={busyId === pkg._id} onClick={() => decide(pkg, 'approved')} />
                         )}
                         {pkg.status !== 'rejected' && (
-                          <button type="button" disabled={busyId === pkg._id} onClick={() => decide(pkg, 'rejected')}
-                            className="px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-50">
-                            reject
-                          </button>
+                          <IconAction icon={X} title="Reject" tone="danger" disabled={busyId === pkg._id} onClick={() => decide(pkg, 'rejected')} />
                         )}
-                        <button type="button" disabled={busyId === pkg._id} onClick={() => toggle(pkg)}
-                          className="px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50 disabled:opacity-50">
-                          {pkg.isActive ? 'switch off' : 'switch on'}
-                        </button>
-                        <button type="button" disabled={busyId === pkg._id} onClick={() => remove(pkg)}
-                          className="px-2.5 py-1 rounded-md text-xs font-medium bg-white border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50">
-                          delete
-                        </button>
+                        <IconAction
+                          icon={pkg.isActive ? PowerOff : Power}
+                          title={pkg.isActive ? 'Switch off (hide from travellers)' : 'Switch on'}
+                          tone={pkg.isActive ? 'neutral' : 'approve'}
+                          disabled={busyId === pkg._id}
+                          onClick={() => toggle(pkg)}
+                        />
+                        <IconAction
+                          icon={Trash2}
+                          title={confirmingId === pkg._id ? 'Click again to delete for good' : 'Delete'}
+                          tone={confirmingId === pkg._id ? 'dangerSolid' : 'danger'}
+                          busy={busyId === pkg._id}
+                          onClick={() => remove(pkg)}
+                        />
                       </div>
                     </td>
                   </tr>

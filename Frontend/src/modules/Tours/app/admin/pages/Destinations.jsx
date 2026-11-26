@@ -11,17 +11,14 @@
  * order as reading the result.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Loader2, Plus, Save, Trash2, ChevronLeft, ChevronRight,
-  MapPin, MapPinOff, Route, Image as ImageIcon, Sparkles,
-  Mountain, Building2, Footprints, Landmark, Waves, PawPrint,
-} from 'lucide-react';
+import { Loader2, Plus, Save, Trash2, ChevronLeft, ChevronRight, MapPin, MapPinOff, Route, Image as ImageIcon, Sparkles, Mountain, Building2, Footprints, Landmark, Waves, PawPrint, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import adminService from '../../../services/adminService';
 import ImageField, { ImageListField } from '../components/ImageField';
 import LocationPicker from '../components/LocationPicker';
-import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../components/ui';
+import { PlaceSearch } from '../components/PlaceListField';
+import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator, IconAction } from '../components/ui';
 
 const CATEGORIES = ['viewpoint', 'town', 'trek', 'temple', 'lake', 'wildlife'];
 const CATEGORY_ICON = { viewpoint: Mountain, town: Building2, trek: Footprints, temple: Landmark, lake: Waves, wildlife: PawPrint };
@@ -107,6 +104,15 @@ const Destinations = () => {
 
   const goNext = () => {
     if (step === 0 && !form.name.trim()) return toast.error('Give the place a name first');
+    if (step === 1) {
+      const lat = form.lat === '' ? null : Number(form.lat);
+      const lng = form.lng === '' ? null : Number(form.lng);
+      if ((lat !== null && !(lat >= -90 && lat <= 90)) || (lng !== null && !(lng >= -180 && lng <= 180))) {
+        return toast.error('Latitude must be -90 to 90 and longitude -180 to 180');
+      }
+      if ((lat === null) !== (lng === null)) return toast.error('Set both latitude and longitude, or neither');
+    }
+    if (step === 2 && !form.mainImage) return toast.error('Upload a main image first');
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };
   const goBack = () => setStep((s) => Math.max(0, s - 1));
@@ -183,7 +189,14 @@ const Destinations = () => {
     const isLastStep = step === STEPS.length - 1;
 
     return (
-      <form onSubmit={submit} className="space-y-6 max-w-4xl">
+      <form onSubmit={submit} className="space-y-6 max-w-4xl"
+        onKeyDown={(e) => {
+          // Enter in a text box used to submit the whole wizard from its first step.
+          if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit' && !isLastStep) {
+            e.preventDefault();
+            goNext();
+          }
+        }}>
         <PageHeader
           title={editing._id ? `Edit ${editing.name}` : 'Add a destination'}
           subtitle="This is what travellers see under tourist places in the app"
@@ -246,7 +259,18 @@ const Destinations = () => {
 
             <div>
               <label className={label}>Pin it on the map</label>
-              <p className="text-xs text-neutral-500 mb-2">Click anywhere on the map, or drag the pin once it's placed. This is exactly what visitors see on the place's page.</p>
+              <p className="text-xs text-neutral-500 mb-2">Search the place, or click anywhere on the map and drag the pin. This is exactly what visitors see on the place's page.</p>
+              <div className="mb-2">
+                <PlaceSearch
+                  onPick={(place) => setForm((c) => ({
+                    ...c,
+                    lat: place.lat.toFixed(6),
+                    lng: place.lng.toFixed(6),
+                    fullAddress: c.fullAddress || place.address,
+                    location: c.location || place.address.split(',').slice(-3, -1).join(',').trim(),
+                  }))}
+                />
+              </div>
               <LocationPicker lat={latNum} lng={lngNum} onChange={setCoords} className="h-64" />
               <div className="grid grid-cols-2 gap-3 mt-3">
                 <div><label className={label}>Latitude</label>
@@ -446,18 +470,8 @@ const Destinations = () => {
                   Visible
                 </label>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => openEdit(d)}
-                    className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                    Edit
-                  </button>
-                  <button type="button" disabled={busyId === d._id} onClick={() => remove(d)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 ${
-                      confirmingId === d._id
-                        ? 'bg-red-600 text-white hover:bg-red-700'
-                        : 'text-red-600 hover:bg-red-50'
-                    }`}>
-                    {confirmingId === d._id ? 'Delete for good?' : 'Delete'}
-                  </button>
+                  <IconAction icon={Pencil} title="Edit" tone="edit" onClick={() => openEdit(d)} />
+                    <IconAction icon={Trash2} title={confirmingId === d._id ? 'Click again to delete for good' : 'Delete'} tone={confirmingId === d._id ? 'dangerSolid' : 'danger'} busy={busyId === d._id} onClick={() => remove(d)} />
                 </div>
               </div>
             </div>

@@ -16,6 +16,8 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, IndianRupee, ListChecks, Loader2, Package, Plus, Route, Save, Trash2 } from 'lucide-react';
 import { StepIndicator } from '../app/admin/components/ui';
+import ImageField, { ImageListField } from '../app/admin/components/ImageField';
+import PlaceListField from '../app/admin/components/PlaceListField';
 
 export const CATEGORIES = ['sightseeing', 'trekking', 'adventure', 'cultural', 'nature', 'family', 'couple', 'group'];
 export const DIFFICULTIES = ['Easy', 'Moderate', 'Challenging'];
@@ -61,7 +63,7 @@ const BLANK = {
 
 /** A saved package → the textarea-shaped state this form edits. */
 export const fromPackage = (pkg) => {
-  if (!pkg) return { form: BLANK, includes: [{ id: 'guide', label: 'Local guide', included: true }], itinerary: [{ day: 1, title: '', activities: '', mealPlan: '' }] };
+  if (!pkg) return { form: BLANK, gallery: [], pickupLocations: [], dropLocations: [], includes: [{ id: 'guide', label: 'Local guide', included: true }], itinerary: [{ day: 1, title: '', activities: '', mealPlan: '' }] };
 
   const lines = (arr) => (Array.isArray(arr) ? arr.join('\n') : '');
   return {
@@ -77,6 +79,10 @@ export const fromPackage = (pkg) => {
       exclusions: lines(pkg.exclusions),
       pickupPoints: lines(pkg.pickupPoints),
     },
+    gallery: Array.isArray(pkg.gallery) ? pkg.gallery.filter(Boolean) : [],
+    // Older packages only have names; show them as places without a pin.
+    pickupLocations: pkg.pickupLocations?.length ? pkg.pickupLocations : (pkg.pickupPoints || []).map((name) => ({ name })),
+    dropLocations: pkg.dropLocations?.length ? pkg.dropLocations : (pkg.dropPoints || []).map((name) => ({ name })),
     includes: pkg.includes?.length ? pkg.includes.map((i) => ({ ...i })) : [{ id: 'guide', label: 'Local guide', included: true }],
     itinerary: pkg.itinerary?.length
       ? pkg.itinerary.map((d, index) => ({
@@ -94,7 +100,33 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
   const [form, setForm] = useState(seed.form);
   const [includes, setIncludes] = useState(seed.includes);
   const [itinerary, setItinerary] = useState(seed.itinerary);
+  const [gallery, setGallery] = useState(seed.gallery);
+  const [pickupLocations, setPickupLocations] = useState(seed.pickupLocations);
+  const [dropLocations, setDropLocations] = useState(seed.dropLocations);
   const [step, setStep] = useState(0);
+  const [stepError, setStepError] = useState('');
+
+  /** What is wrong with a step, or '' — checked on Next and again on save. */
+  const problemsIn = (index) => {
+    const n = (v) => Number(v);
+    if (index === 0) {
+      if (!String(form.title).trim()) return 'Give the package a title.';
+      if (String(form.title).trim().length < 5) return 'The title is too short.';
+      if (!(n(form.durationDays) >= 1 && n(form.durationDays) <= 60)) return 'Days must be between 1 and 60.';
+      if (!(n(form.durationNights) >= 0 && n(form.durationNights) <= n(form.durationDays))) return 'Nights must be between 0 and the number of days.';
+      if (!String(form.heroImage).trim()) return 'Upload a cover image.';
+    }
+    if (index === 2) {
+      if (!(n(form.pricePerPerson) > 0)) return 'Set a price per person.';
+      if (form.originalPrice && !(n(form.originalPrice) > n(form.pricePerPerson))) return 'The "was" price must be higher than the price per person.';
+      if (!(n(form.childPricePercent) >= 0 && n(form.childPricePercent) <= 100)) return 'Child price % must be 0 to 100.';
+      if (!(n(form.advancePercent) >= 1 && n(form.advancePercent) <= 100)) return 'Advance % must be 1 to 100.';
+      if (!(n(form.groupSizeMin) >= 1)) return 'Minimum group size must be at least 1.';
+      if (!(n(form.groupSizeMax) >= n(form.groupSizeMin))) return 'Maximum group size cannot be below the minimum.';
+      if (!(n(form.leadTimeDays) >= 0 && n(form.leadTimeDays) <= 90)) return 'Book-ahead days must be 0 to 90.';
+    }
+    return '';
+  };
 
   const set = (key) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
@@ -110,13 +142,27 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
   }, [form.pricePerPerson, form.advancePercent]);
 
   const goNext = () => {
-    if (step === 0 && !form.title.trim()) return;
+    const problem = problemsIn(step);
+    setStepError(problem);
+    if (problem) return;
     setStep((s) => Math.min(STEPS.length - 1, s + 1));
   };
-  const goBack = () => setStep((s) => Math.max(0, s - 1));
+  const goBack = () => {
+    setStepError('');
+    setStep((s) => Math.max(0, s - 1));
+  };
 
   const submit = (event) => {
     event.preventDefault();
+    for (let i = 0; i < STEPS.length; i += 1) {
+      const problem = problemsIn(i);
+      if (problem) {
+        setStep(i);
+        setStepError(problem);
+        return;
+      }
+    }
+    setStepError('');
 
     onSubmit({
       title: String(form.title).trim(),
@@ -134,10 +180,12 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
       advancePercent: Number(form.advancePercent),
       leadTimeDays: Number(form.leadTimeDays),
       heroImage: String(form.heroImage).trim(),
+      gallery,
       destinations: toLines(form.destinations),
       highlights: toLines(form.highlights),
       exclusions: toLines(form.exclusions),
-      pickupPoints: toLines(form.pickupPoints),
+      pickupLocations: pickupLocations.filter((p) => String(p.name || '').trim()),
+      dropLocations: dropLocations.filter((p) => String(p.name || '').trim()),
       cancellationPolicy: String(form.cancellationPolicy).trim(),
       includes: includes.filter((i) => String(i.label || '').trim()),
       itinerary: itinerary
@@ -154,7 +202,14 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
   const isLastStep = step === STEPS.length - 1;
 
   return (
-    <form onSubmit={submit} className="space-y-6 max-w-4xl">
+    <form onSubmit={submit} className="space-y-6 max-w-4xl"
+        onKeyDown={(e) => {
+          // Enter in a text box used to submit the whole wizard from its first step.
+          if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit' && !isLastStep) {
+            e.preventDefault();
+            goNext();
+          }
+        }}>
       {children}
 
       <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -186,13 +241,19 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
                 {DIFFICULTIES.map((d) => <option key={d} value={d}>{d}</option>)}
               </select></div>
             <div><label className={label}>Days</label>
-              <input type="number" min="1" value={form.durationDays} onChange={set('durationDays')} className={field} /></div>
+              <input type="number" min="1" max="60" value={form.durationDays} onChange={set('durationDays')} className={field} /></div>
             <div><label className={label}>Nights</label>
               <input type="number" min="0" value={form.durationNights} onChange={set('durationNights')} className={field} /></div>
           </div>
 
-          <div><label className={label}>Cover image URL <span className="text-red-500">*</span></label>
-            <input value={form.heroImage} onChange={set('heroImage')} placeholder="https://…" className={field} /></div>
+          <ImageField
+            label={<>Cover image <span className="text-red-500">*</span></>}
+            value={form.heroImage}
+            onChange={(url) => setForm((current) => ({ ...current, heroImage: url }))}
+            folder="tours/packages"
+            hint="Upload from your device. Shown on the package card and at the top of its page."
+          />
+          <ImageListField label="Gallery (optional)" value={gallery} onChange={setGallery} folder="tours/packages" max={8} />
         </section>
       )}
 
@@ -211,8 +272,22 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
               <textarea value={form.exclusions} onChange={set('exclusions')} rows={4} placeholder="One per line" className={field} /></div>
           </div>
 
-          <div><label className={label}>Pickup points</label>
-            <textarea value={form.pickupPoints} onChange={set('pickupPoints')} rows={2} placeholder="One per line" className={field} /></div>
+          <div className="grid md:grid-cols-2 gap-4">
+            <PlaceListField
+              label="Pickup points"
+              value={pickupLocations}
+              onChange={setPickupLocations}
+              placeholder="Search e.g. Haflong bus stand"
+              hint="Where travellers can be picked up. Leave empty if they reach the start on their own."
+            />
+            <PlaceListField
+              label="Drop points"
+              value={dropLocations}
+              onChange={setDropLocations}
+              placeholder="Search e.g. Lumding railway station"
+              hint="Where the trip ends. Leave empty if it ends at the start."
+            />
+          </div>
         </section>
       )}
 
@@ -329,8 +404,8 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
         </>
       )}
 
-      {error && (
-        <p className="px-4 py-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm">{error}</p>
+      {(stepError || error) && (
+        <p className="px-4 py-3 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm">{stepError || error}</p>
       )}
 
       <div className="flex items-center gap-3 pb-8">

@@ -20,7 +20,7 @@ const PackageCreate = () => {
 
   const submit = async (payload) => {
     if (!payload.title) return toast.error('The package needs a title');
-    if (!payload.heroImage) return toast.error('A cover image URL is required');
+    if (!payload.heroImage) return toast.error('Upload a cover image');
     if (!payload.pricePerPerson) return toast.error('Set a price per person');
 
     try {

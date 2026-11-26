@@ -6,6 +6,7 @@ const adminService = {
 
   // Packages
   getPackages: (params = {}) => toursApi.get('/admin/packages', { params }),
+  getPackage: (id) => toursApi.get(`/admin/packages/${id}`),
   createPackage: (payload) => toursApi.post('/admin/packages', payload),
   updatePackage: (id, payload) => toursApi.put(`/admin/packages/${id}`, payload),
   togglePackage: (id, isActive) => toursApi.patch(`/admin/packages/${id}/active`, { isActive }),

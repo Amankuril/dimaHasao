@@ -6,15 +6,13 @@
  * `soldTickets` is never editable here, only ever moved by a paid booking.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  CalendarDays, ChevronLeft, ChevronRight, Clock, Loader2,
-  Plus, QrCode, Save, Sparkles, Ticket, Trash2, X,
-} from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Clock, Loader2, Plus, QrCode, Save, Sparkles, Ticket, Trash2, X, Pencil, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import festivalService from '../../../services/festivalService';
 import FestivalDetail from './FestivalDetail';
-import { StatCard, StepIndicator } from '../components/ui';
+import { StatCard, StepIndicator, IconAction } from '../components/ui';
+import ImageField from '../components/ImageField';
 
 const STEPS = [
   { key: 'festival', label: 'The festival', icon: CalendarDays },
@@ -129,7 +127,7 @@ const Festivals = () => {
   const submit = async (event) => {
     event.preventDefault();
     if (!form.name.trim()) return toast.error('Give the festival a name');
-    if (!form.heroImage.trim()) return toast.error('A hero image URL is required');
+    if (!form.heroImage.trim()) return toast.error('Upload a hero image');
     if (!categories.some((c) => c.name.trim())) return toast.error('Add at least one pass');
 
     const payload = {
@@ -233,7 +231,14 @@ const Festivals = () => {
     const isLastStep = step === STEPS.length - 1;
 
     return (
-      <form onSubmit={submit} className="space-y-6 max-w-4xl">
+      <form onSubmit={submit} className="space-y-6 max-w-4xl"
+        onKeyDown={(e) => {
+          // Enter in a text box used to submit the whole wizard from its first step.
+          if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit' && !isLastStep) {
+            e.preventDefault();
+            goNext();
+          }
+        }}>
         <div>
           <h2 className="text-2xl font-medium text-neutral-900">
             {editing._id ? `Edit ${editing.name}` : 'Add a festival'}
@@ -270,8 +275,13 @@ const Festivals = () => {
                 <input className={field} value={form.location} onChange={set('location')} /></div>
             </div>
 
-            <div><label className={label}>Hero image URL <span className="text-red-500">*</span></label>
-              <input className={field} value={form.heroImage} onChange={set('heroImage')} placeholder="https://" /></div>
+            <ImageField
+              label={<>Hero image <span className="text-red-500">*</span></>}
+              value={form.heroImage}
+              onChange={(url) => setForm((c) => ({ ...c, heroImage: url }))}
+              folder="tours/festivals"
+              hint="Upload from your device."
+            />
 
             <div><label className={label}>Description</label>
               <textarea className={field} rows={3} value={form.description} onChange={set('description')} /></div>
@@ -532,16 +542,9 @@ const Festivals = () => {
                     Visible
                   </label>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => openEdit(f)}
-                      className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                      Edit
-                    </button>
-                    <button type="button" disabled={busyId === f._id} onClick={() => remove(f)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 ${
-                        confirmingId === f._id ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'
-                      }`}>
-                      {confirmingId === f._id ? 'Delete for good?' : 'Delete'}
-                    </button>
+                    <IconAction icon={Eye} title="View seats & bookings" tone="view" onClick={() => setViewingId(f._id)} />
+                    <IconAction icon={Pencil} title="Edit" tone="edit" onClick={() => openEdit(f)} />
+                    <IconAction icon={Trash2} title={confirmingId === f._id ? 'Click again to delete for good' : 'Delete'} tone={confirmingId === f._id ? 'dangerSolid' : 'danger'} busy={busyId === f._id} onClick={() => remove(f)} />
                   </div>
                 </div>
               </div>

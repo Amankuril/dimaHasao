@@ -6,14 +6,11 @@
  * the figure shown at checkout and the figure charged in one place.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ChevronLeft, ChevronRight, Clock, IndianRupee,
-  Loader2, Package, Plus, Save, Tag,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, IndianRupee, Loader2, Package, Plus, Save, Tag, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import adminService from '../../../services/adminService';
-import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator } from '../components/ui';
+import { PageHeader, Spinner, EmptyState, StatCard, StepIndicator, IconAction } from '../components/ui';
 
 const field = 'w-full px-3 py-2.5 bg-white border border-neutral-200 rounded-lg text-sm outline-none focus:border-[#0a4d2b] focus:ring-2 focus:ring-[#0a4d2b]/20 transition-colors';
 const label = 'block text-[13px] font-medium text-neutral-700 mb-1.5';
@@ -183,7 +180,14 @@ const Offers = () => {
     const isLastStep = step === STEPS.length - 1;
 
     return (
-      <form onSubmit={submit} className="space-y-6 max-w-4xl">
+      <form onSubmit={submit} className="space-y-6 max-w-4xl"
+        onKeyDown={(e) => {
+          // Enter in a text box used to submit the whole wizard from its first step.
+          if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit' && !isLastStep) {
+            e.preventDefault();
+            goNext();
+          }
+        }}>
         <PageHeader
           title={editing._id ? `Edit ${editing.code}` : 'Create an offer'}
           subtitle="Travellers enter this code on the tour booking screen"
@@ -404,18 +408,8 @@ const Offers = () => {
                     Live
                   </label>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => openEdit(o)}
-                      className="px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
-                      Edit
-                    </button>
-                    <button type="button" disabled={busyId === o._id} onClick={() => remove(o)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-50 ${
-                        confirmingId === o._id
-                          ? 'bg-red-600 text-white hover:bg-red-700'
-                          : 'text-red-600 hover:bg-red-50'
-                      }`}>
-                      {confirmingId === o._id ? 'Delete for good?' : 'Delete'}
-                    </button>
+                    <IconAction icon={Pencil} title="Edit" tone="edit" onClick={() => openEdit(o)} />
+                    <IconAction icon={Trash2} title={confirmingId === o._id ? 'Click again to delete for good' : 'Delete'} tone={confirmingId === o._id ? 'dangerSolid' : 'danger'} busy={busyId === o._id} onClick={() => remove(o)} />
                   </div>
                 </div>
               </div>

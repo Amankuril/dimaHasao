@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 /**
  * Tours admin: the whole module.
  *
@@ -68,6 +69,28 @@ export const getAdminPackages = async (req, res) => {
  * approval, and a queue where admins approve their own work is theatre. Pass
  * `publishImmediately: false` to park it as a draft.
  */
+/** @route GET /v1/tours/admin/packages/:id — one package, for view and edit. */
+export const getAdminPackage = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ success: false, message: 'Package not found' });
+    }
+    const pkg = await TourPackage.findById(req.params.id).lean();
+    if (!pkg) return res.status(404).json({ success: false, message: 'Package not found' });
+    const [bookings, revenue] = await Promise.all([
+      TourBooking.countDocuments({ packageId: pkg._id }),
+      TourBooking.aggregate([
+        { $match: { packageId: pkg._id, bookingStatus: { $nin: ['cancelled'] } } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      ]),
+    ]);
+    res.json({ success: true, package: pkg, stats: { bookings, revenue: revenue?.[0]?.total || 0 } });
+  } catch (error) {
+    console.error('Admin get package error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load package' });
+  }
+};
+
 export const createAdminPackage = async (req, res) => {
   try {
     const { publishImmediately = true, ...payload } = req.body;
