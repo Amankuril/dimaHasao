@@ -1723,6 +1723,26 @@ export const invalidateAdminReads = (...fragments) => {
   }
 };
 const adminReadInFlight = new Map();
+// Bumped on every admin write; a read that started before the write must not
+// put its (now stale) answer back into the cache.
+let adminReadGeneration = 0;
+
+/*
+ * Any successful admin write (approve, reject, edit, delete…) clears every
+ * cached admin read. Lists were served from a 10 s cache plus a 5 min
+ * stale-while-revalidate window, so an approved food item (or hotel, booking…)
+ * stayed in the list after the action until a manual page refresh.
+ */
+apiClient.interceptors.response.use((res) => {
+  const method = String(res?.config?.method || "get").toLowerCase();
+  const url = String(res?.config?.url || "");
+  if (method !== "get" && (res?.config?.contextModule === "admin" || url.includes("/admin/"))) {
+    adminReadCache.clear();
+    adminReadInFlight.clear();
+    adminReadGeneration += 1;
+  }
+  return res;
+});
 
 const buildAdminReadKey = (url, params = {}) => {
   const safeParams = params && typeof params === "object" ? { ...params } : params;
@@ -1762,10 +1782,13 @@ const adminCachedGet = (url, config = {}, options = {}) => {
    *
    * The refresh must not reject: nobody is waiting on it.
    */
+  const generation = adminReadGeneration;
   if (cached && now - cached.at < ADMIN_READ_SWR_MS) {
     void apiClient
       .get(url, { params, ...axiosConfig })
-      .then((res) => adminReadCache.set(key, { at: Date.now(), res }))
+      .then((res) => {
+        if (generation === adminReadGeneration) adminReadCache.set(key, { at: Date.now(), res });
+      })
       .catch(() => {});
     return Promise.resolve(cached.res);
   }
@@ -1773,7 +1796,7 @@ const adminCachedGet = (url, config = {}, options = {}) => {
   const request = apiClient
     .get(url, { params, ...axiosConfig })
     .then((res) => {
-      adminReadCache.set(key, { at: Date.now(), res });
+      if (generation === adminReadGeneration) adminReadCache.set(key, { at: Date.now(), res });
       return res;
     })
     .catch((err) => {
