@@ -78,13 +78,13 @@ function RiderRow({ name, meta, isParcel, children }) {
 function RouteCard({ pickup, drop, highlight }) {
   return (
     <Card style={st.routeCard}>
-      <Row style={{ alignItems: 'flex-start', gap: 14 }}>
-        <View style={{ alignItems: 'center', paddingTop: 3 }}>
+      <Row style={{ alignItems: 'flex-start', gap: 16 }}>
+        <View style={{ alignItems: 'center', paddingTop: 4 }}>
           <View style={[st.dot, { backgroundColor: DT.success }]} />
           <View style={st.dash} />
           <View style={[st.dot, { backgroundColor: DT.warn }]} />
         </View>
-        <View style={{ flex: 1, minWidth: 0, gap: 14 }}>
+        <View style={{ flex: 1, minWidth: 0, gap: 16 }}>
           <View>
             <Label style={{ color: DT.successInk }}>Pickup</Label>
             <Text numberOfLines={2} style={[st.addr, fo(highlight === 'pickup' ? 800 : 600)]}>{pickup}</Text>
@@ -190,7 +190,7 @@ function OtpVerification({ t }) {
               <Text style={[{ marginTop: 4, fontSize: 14, color: DT.ink }, fo(800)]}>{formatTimerClock(freeWaitingRemainingSeconds)}</Text>
             </View>
           </Row>
-          <Row style={{ marginTop: 14, gap: 12, alignItems: 'stretch' }}>
+          <Row style={{ marginTop: 16, gap: 12, alignItems: 'stretch' }}>
             <View style={st.waitCell}>
               <Label>Free Before Ride</Label>
               <Text style={[{ marginTop: 4, fontSize: 13, color: DT.ink }, fo(800)]}>{formatWholeMinutes(freeWaitingBeforeMinutes)}</Text>
@@ -220,7 +220,7 @@ function OtpVerification({ t }) {
         ))}
       </Row>
       {otpError ? (
-        <Text style={[{ marginTop: -8, marginBottom: 14, textAlign: 'center', fontSize: 12, color: DT.dangerInk }, fo(700)]}>{otpError}</Text>
+        <Text style={[{ marginTop: -8, marginBottom: 16, textAlign: 'center', fontSize: 12, color: DT.dangerInk }, fo(700)]}>{otpError}</Text>
       ) : null}
       <CtaButton title="Submit PIN" style={[st.primary, { marginBottom: 12 }]} onPress={() => startTripAfterOtp(otp.join(''))} />
       <Row style={{ gap: 12 }}>
@@ -305,7 +305,7 @@ const MoneyCell = ({ label, value, sub, style, labelColor, valueColor }) => (
   <View style={[st.moneyCell, style]}>
     <Label style={{ color: labelColor || DT.muted }}>{label}</Label>
     <Text style={[{ marginTop: 6, fontSize: 14, color: valueColor || DT.ink }, fo(900)]}>{value}</Text>
-    {sub ? <Text style={[{ marginTop: 2, fontSize: 10, color: labelColor || DT.muted }, fo(700)]}>{sub}</Text> : null}
+    {sub ? <Text style={[{ marginTop: 2, fontSize: 11, color: labelColor || DT.muted }, fo(700)]}>{sub}</Text> : null}
   </View>
 );
 
@@ -358,7 +358,7 @@ function QrPanel({ t }) {
         {!isInlineQrImage ? (
           <View style={st.qrBadge}>
             <Scan size={10} strokeWidth={2.5} color={DT.accent} />
-            <Text style={[{ fontSize: 10, color: DT.onBrand, minWidth: 36 }, fo(700)]}>{qrZoomed ? 'ZOOMED' : 'FIT'}</Text>
+            <Text style={[{ fontSize: 11, color: DT.onBrand, minWidth: 36 }, fo(700)]}>{qrZoomed ? 'ZOOMED' : 'FIT'}</Text>
           </View>
         ) : null}
         <ScanLine height={256} />
@@ -413,7 +413,7 @@ function PaymentConfirm({ t }) {
         <View style={[st.bigIcon, { backgroundColor: success ? DT.success : DT.dark }]}>
           {success ? <Check size={30} strokeWidth={4} color={DT.onBrand} /> : <QrCode size={30} strokeWidth={2} color={DT.onBrand} />}
         </View>
-        <Text style={[{ fontSize: 22, lineHeight: 30, color: DT.ink, textAlign: 'center' }, fo(800)]}>{success ? 'Payment Success!' : tripSummaryTitle}</Text>
+        <Text style={[{ fontSize: 22, lineHeight: 30, color: DT.ink, textAlign: 'center' }, fo(800)]}>{success ? 'Payment received' : tripSummaryTitle}</Text>
         <Text style={[{ fontSize: 13, color: DT.muted, marginTop: 2, textAlign: 'center' }, fo(600)]}>
           {success ? 'Ready to close this trip' : tripSummarySubtitle}
         </Text>
@@ -436,7 +436,7 @@ function PaymentConfirm({ t }) {
             </View>
           </Row>
         </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 16 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, padding: 16 }}>
           <SummaryCell Icon={Clock3} label="Trip Started" value={formatDateTimeLabel(tripStartedAt)} />
           <SummaryCell Icon={CheckCircle2} label="Reached At" value={formatDateTimeLabel(tripArrivedAt)} />
           <SummaryCell Icon={ArrowUpRight} label="Trip Duration" value={tripDurationLabel} />
@@ -450,7 +450,7 @@ function PaymentConfirm({ t }) {
                 <View style={st.dash} />
                 <View style={[st.dot, { backgroundColor: DT.warn }]} />
               </View>
-              <View style={{ minWidth: 0, flex: 1, gap: 14 }}>
+              <View style={{ minWidth: 0, flex: 1, gap: 16 }}>
                 <View>
                   <Label style={{ color: DT.successInk }}>Pickup</Label>
                   <Text style={[st.addr, fo(600)]}>{tripData.pickup}</Text>
@@ -478,7 +478,7 @@ function PaymentConfirm({ t }) {
             </Row>
           </View>
         </View>
-        <Row style={{ borderTopWidth: 1, borderTopColor: DT.borderSoft, padding: 16, gap: 10, alignItems: 'stretch' }}>
+        <Row style={{ borderTopWidth: 1, borderTopColor: DT.borderSoft, padding: 16, gap: 12, alignItems: 'stretch' }}>
           <MoneyCell label="Trip Fare" value={formatCurrencyAmount(fareAmount)} />
           <MoneyCell label="Admin Cut" value={formatCurrencyAmount(commissionSummary.commissionAmount)} sub={commissionSummary.commissionLabel} />
           <MoneyCell label="Driver Gets" value={formatCurrencyAmount(commissionSummary.driverEarnings)} style={{ backgroundColor: DT.brand, borderColor: DT.brand }} labelColor={DT.onBrandMuted} valueColor={DT.accent} />
@@ -599,8 +599,8 @@ export default function TripPhaseSheets({ t }) {
 
 const st = StyleSheet.create({
   sheet: { backgroundColor: DT.card, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, borderTopWidth: 1, borderTopColor: DT.borderSoft, overflow: 'hidden', ...shadow('2xl') },
-  handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: DT.border, marginTop: 10 },
-  label: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 40, textTransform: 'uppercase', color: DT.muted, ...fo(800) },
+  handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: DT.border, marginTop: 12 },
+  label: { fontSize: 11, lineHeight: 15, minWidth: 40, color: DT.muted, ...fo(800) },
   addr: { marginTop: 2, fontSize: 14, lineHeight: 19, color: DT.ink },
   avatar: { width: 48, height: 48, backgroundColor: DT.brand, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   riderCard: { marginBottom: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, padding: 12 },
@@ -616,13 +616,13 @@ const st = StyleSheet.create({
   waitIcon: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
   waitCell: { flex: 1, borderRadius: DT.radius.md, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 12 },
   otpBox: { width: 56, height: 64, backgroundColor: DT.bg, borderWidth: 2, borderColor: DT.border, borderRadius: DT.radius.md, textAlign: 'center', fontSize: 28, color: DT.ink, padding: 0 },
-  bigIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginBottom: 10, backgroundColor: DT.brand },
-  fareHead: { backgroundColor: DT.dark, paddingHorizontal: 20, paddingVertical: 18 },
+  bigIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginBottom: 12, backgroundColor: DT.brand },
+  fareHead: { backgroundColor: DT.dark, paddingHorizontal: 20, paddingVertical: 20 },
   payTag: { borderRadius: DT.radius.md, paddingHorizontal: 12, paddingVertical: 8, alignItems: 'flex-end', backgroundColor: 'rgba(255,255,255,0.1)' },
-  sumCell: { width: '47.5%', flexGrow: 1, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 14, paddingVertical: 12 },
-  inner: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, padding: 14 },
+  sumCell: { width: '47.5%', flexGrow: 1, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 12 },
+  inner: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, padding: 16 },
   moneyCell: { flex: 1, minWidth: 0, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, paddingHorizontal: 8, paddingVertical: 12, alignItems: 'center' },
-  modeBtn: { flex: 1, minHeight: 84, alignItems: 'center', justifyContent: 'center', paddingVertical: 14, borderRadius: DT.radius.lg, borderWidth: 2, borderColor: DT.border, backgroundColor: DT.bg },
+  modeBtn: { flex: 1, minHeight: 84, alignItems: 'center', justifyContent: 'center', paddingVertical: 16, borderRadius: DT.radius.lg, borderWidth: 2, borderColor: DT.border, backgroundColor: DT.bg },
   cashCard: { marginBottom: 20, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.successSoft, backgroundColor: DT.successSoft, padding: 20, alignItems: 'center' },
   qrCard: { borderRadius: DT.radius.lg, padding: 20, marginBottom: 20, alignItems: 'center', backgroundColor: DT.brand, ...shadow('md') },
   qrBox: { width: '100%', maxWidth: 256, height: 256, alignSelf: 'center', marginBottom: 12, alignItems: 'center', justifyContent: 'center', borderRadius: DT.radius.md, backgroundColor: DT.card, padding: 12, overflow: 'hidden' },

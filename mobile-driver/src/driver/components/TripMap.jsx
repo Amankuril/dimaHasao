@@ -100,7 +100,7 @@ export default function TripMap({ t }) {
       <View style={[StyleSheet.absoluteFill, { backgroundColor: tw.slate200, overflow: 'hidden' }]}>
         {!HAS_VALID_GOOGLE_MAPS_KEY ? (
           <View style={st.mapMsgWrap}>
-            <View style={[st.mapMsg, { borderRadius: 18, paddingVertical: 16 }]}>
+            <View style={[st.mapMsg, { borderRadius: 16, paddingVertical: 16 }]}>
               <Text style={[{ fontSize: 12, color: tw.slate900 }, fo(600)]}>Google Maps key missing</Text>
               <Text style={[{ fontSize: 11, color: tw.slate500, marginTop: 4, textAlign: 'center' }, fo(700)]}>Set `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env`.</Text>
             </View>
@@ -142,7 +142,7 @@ export default function TripMap({ t }) {
           </View>
           <View style={{ flex: 1, gap: 2, overflow: 'hidden' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={[{ fontSize: 10, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 64, color: DT.successInk }, fo(800)]}>Driver Live</Text>
+              <Text style={[{ fontSize: 11, lineHeight: 15, minWidth: 64, color: DT.successInk }, fo(800)]}>Driver Live</Text>
               <ArrowUpRight size={12} strokeWidth={3} color={DT.successInk} />
             </View>
             <Text numberOfLines={1} style={[{ fontSize: 14, lineHeight: 18, color: DT.ink }, fo(700)]}>
@@ -204,7 +204,7 @@ export default function TripMap({ t }) {
               <Text style={[st.simBtnText, { color: DT.inkSoft }, fo(900)]}>Reset</Text>
             </Press>
           </View>
-          <Text style={[{ marginTop: 8, fontSize: 10, lineHeight: 14, color: DT.muted }, fo(600)]}>Test mode emits live location events along this polyline.</Text>
+          <Text style={[{ marginTop: 8, fontSize: 11, lineHeight: 15, color: DT.muted }, fo(600)]}>Test mode emits live location events along this polyline.</Text>
         </View>
         ) : null}
         </View>
@@ -222,11 +222,11 @@ const st = StyleSheet.create({
   stack: { position: 'absolute', left: 16, right: 16, zIndex: 40, gap: 8, alignItems: 'stretch' },
   statRow: { flexDirection: 'row', gap: 8 },
   card: { minWidth: 0, borderRadius: DT.radius.lg, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 12, paddingVertical: 8, ...shadow('md') },
-  cardLabel: { fontSize: 10, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 28, color: DT.muted },
+  cardLabel: { fontSize: 11, lineHeight: 15, minWidth: 28, color: DT.muted },
   cardValue: { fontSize: 12, color: DT.ink, marginTop: 2 },
   cardRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
   routeErr: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.warnSoft, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 8, ...shadow('md') },
   sim: { alignSelf: 'flex-start', width: 190, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 12, paddingVertical: 12, ...shadow('md') },
   simBtn: { minHeight: 44, borderRadius: DT.radius.md, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' },
-  simBtnText: { fontSize: 11, lineHeight: 15, textTransform: 'uppercase', letterSpacing: 0.3, minWidth: 40, textAlign: 'center' },
+  simBtnText: { fontSize: 11, lineHeight: 15, minWidth: 40, textAlign: 'center' },
 });

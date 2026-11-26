@@ -94,7 +94,7 @@ function TimerRing({ progress, color, timer }) {
       </Svg>
       <View style={styles.ringInner}>
         <Text style={[outfit(900), styles.ringNumber]}>{timer}</Text>
-        <Text style={[outfit(900), styles.ringSec]}>SEC</Text>
+        <Text style={[outfit(900), styles.ringSec]}>Sec</Text>
       </View>
     </View>
   );
@@ -197,7 +197,7 @@ const IncomingRideRequest = ({
           <Clock size={18} strokeWidth={2.3} color={tone === 'blue' ? DT.info : DT.successInk} />
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={[outfit(900), styles.scheduleLabel, { color: tone === 'blue' ? DT.info : DT.successInk }]}>SCHEDULED TIME</Text>
+          <Text style={[outfit(900), styles.scheduleLabel, { color: tone === 'blue' ? DT.info : DT.successInk }]}>Scheduled time</Text>
           <Text style={[outfit(900), styles.scheduleTime]}>{formatScheduledDateTime(scheduledAt)}</Text>
           <Text style={[outfit(900), styles.scheduleCountdown, { color: tone === 'blue' ? DT.info : DT.successInk }]}>{scheduledCountdown}</Text>
           <Text style={[outfit(700), styles.scheduleHelp]}>
@@ -222,7 +222,7 @@ const IncomingRideRequest = ({
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <View style={styles.pill}>
-                  <Text style={[outfit(800), styles.pillText]}>{isPreviewMode ? 'SCHEDULED TRIP' : 'RIDE OFFER'}</Text>
+                  <Text style={[outfit(800), styles.pillText]}>{isPreviewMode ? 'Scheduled trip' : 'Ride offer'}</Text>
                 </View>
                 <Text style={[playfair(700), styles.title]} numberOfLines={2}>{title}</Text>
                 <Text numberOfLines={1} style={[outfit(600), styles.category]}>{category}</Text>
@@ -240,12 +240,12 @@ const IncomingRideRequest = ({
 
           <View style={styles.fareRow}>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[outfit(800), styles.fareLabel]}>EARNINGS</Text>
+              <Text style={[outfit(800), styles.fareLabel]}>Earnings</Text>
               <Text numberOfLines={1} style={[outfit(900), styles.fareValue]}>{data.fare || 'Rs 0'}</Text>
             </View>
             {fareWasIncreased ? (
               <View style={styles.fareUp}>
-                <Text style={[outfit(900), styles.fareUpText]}>FARE INCREASED</Text>
+                <Text style={[outfit(900), styles.fareUpText]}>Fare increased</Text>
               </View>
             ) : null}
           </View>
@@ -268,14 +268,14 @@ const IncomingRideRequest = ({
             <View style={styles.statCell}>
               <View style={styles.statLabelRow}>
                 <Route size={14} color={DT.muted} />
-                <Text style={[outfit(800), styles.statLabel]}>DISTANCE</Text>
+                <Text style={[outfit(800), styles.statLabel]}>Distance</Text>
               </View>
               <Text style={[outfit(900), styles.statValue]}>{data.distance || 'Nearby'}</Text>
             </View>
             <View style={[styles.statCell, { borderLeftWidth: 1, borderColor: DT.borderSoft }]}>
               <View style={styles.statLabelRow}>
                 {isCash ? <Banknote size={14} color={DT.muted} /> : <CreditCard size={14} color={DT.muted} />}
-                <Text style={[outfit(800), styles.statLabel]}>PAYMENT</Text>
+                <Text style={[outfit(800), styles.statLabel]}>Payment</Text>
               </View>
               <View style={[styles.payPill, { backgroundColor: isCash ? DT.warnSoft : DT.infoSoft }]}>
                 <Text style={[outfit(900), styles.payText, { color: isCash ? DT.warnInk : DT.info }]}>{payment}</Text>
@@ -305,7 +305,7 @@ const IncomingRideRequest = ({
               <Text style={[outfit(800), styles.avatarText]}>{customerName.substring(0, 1).toUpperCase()}</Text>
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
-              <Text style={[outfit(800), styles.riderLabel]}>RIDER</Text>
+              <Text style={[outfit(800), styles.riderLabel]}>Rider</Text>
               <Text numberOfLines={1} style={[outfit(800), styles.riderName]}>{customerName}</Text>
             </View>
             {customerPhone ? (
@@ -322,16 +322,16 @@ const IncomingRideRequest = ({
                 <PulseDot style={[styles.pinDot, { backgroundColor: DT.success, borderRadius: 5 }]} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[outfit(800), styles.tagText, { color: DT.successInk }]}>PICKUP</Text>
+                <Text style={[outfit(800), styles.tagText, { color: DT.successInk }]}>Pickup</Text>
                 <Text style={[outfit(700), styles.address]}>{pickupAddress}</Text>
               </View>
             </View>
-            <View style={[styles.routeItem, { marginTop: 18 }]}>
+            <View style={[styles.routeItem, { marginTop: 20 }]}>
               <View style={[styles.pin, { backgroundColor: DT.warnSoft }]}>
                 <View style={[styles.pinDot, { backgroundColor: DT.warn, borderRadius: 5 }]} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={[outfit(800), styles.tagText, { color: DT.warnInk }]}>DROP</Text>
+                <Text style={[outfit(800), styles.tagText, { color: DT.warnInk }]}>Drop</Text>
                 <Text style={[outfit(700), styles.address]}>{dropAddress}</Text>
               </View>
             </View>
@@ -376,9 +376,9 @@ const IncomingRideRequest = ({
           ) : (
             <>
               {isBidding ? (
-                <CtaButton title={isAccepting ? 'SUBMITTING...' : 'SEND BID'} onPress={() => onSubmitBid?.(bidBaseFare)} disabled={isAccepting} style={styles.accept} />
+                <CtaButton title={isAccepting ? 'Submitting...' : 'Send bid'} onPress={() => onSubmitBid?.(bidBaseFare)} disabled={isAccepting} style={styles.accept} />
               ) : (
-                <CtaButton title={isAccepting ? 'ACCEPTING...' : 'ACCEPT RIDE'} onPress={() => onAccept(data)} disabled={isAccepting} style={styles.accept} />
+                <CtaButton title={isAccepting ? 'Accepting...' : 'Accept ride'} onPress={() => onAccept(data)} disabled={isAccepting} style={styles.accept} />
               )}
 
               <Press onPress={onDecline} disabled={isAccepting} accessibilityLabel="Decline request" style={[styles.decline, isAccepting && styles.dim60]}>
@@ -408,60 +408,60 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   headerLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 12 },
   headerIcon: { width: 52, height: 52, borderRadius: DT.radius.md, backgroundColor: DT.cta, alignItems: 'center', justifyContent: 'center' },
-  pill: { alignSelf: 'flex-start', minWidth: 56, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 3, backgroundColor: 'rgba(255,255,255,0.12)' },
-  pillText: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, textAlign: 'center', color: DT.accent },
+  pill: { alignSelf: 'flex-start', minWidth: 56, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4, backgroundColor: 'rgba(255,255,255,0.12)' },
+  pillText: { fontSize: 11, lineHeight: 15, textAlign: 'center', color: DT.accent },
   title: { marginTop: 4, fontSize: 20, lineHeight: 26, color: DT.gold },
   category: { marginTop: 2, fontSize: 12, color: DT.onBrandMuted },
-  subLine: { marginTop: 10, fontSize: 10, lineHeight: 14, letterSpacing: 0.4, color: DT.onBrandMuted },
+  subLine: { marginTop: 12, fontSize: 11, lineHeight: 15, color: DT.onBrandMuted },
   fareRow: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 },
-  fareLabel: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 64, color: DT.onBrandMuted },
+  fareLabel: { fontSize: 11, lineHeight: 15, minWidth: 64, color: DT.onBrandMuted },
   fareValue: { fontSize: 38, lineHeight: 46, color: DT.onBrand },
-  fareUp: { borderRadius: 999, backgroundColor: DT.successSoft, paddingHorizontal: 10, paddingVertical: 4 },
-  fareUpText: { fontSize: 10, lineHeight: 14, minWidth: 80, textAlign: 'center', color: DT.successInk },
+  fareUp: { borderRadius: 999, backgroundColor: DT.successSoft, paddingHorizontal: 12, paddingVertical: 4 },
+  fareUpText: { fontSize: 11, lineHeight: 15, minWidth: 80, textAlign: 'center', color: DT.successInk },
   previewX: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
   ringWrap: { width: 62, height: 62, alignItems: 'center', justifyContent: 'center' },
   ringInner: { width: 50, height: 50, borderRadius: 25, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
   ringNumber: { fontSize: 20, lineHeight: 22, color: DT.onBrand },
-  ringSec: { marginTop: -2, fontSize: 8, lineHeight: 10, minWidth: 20, textAlign: 'center', color: DT.accent },
+  ringSec: { marginTop: -2, fontSize: 11, lineHeight: 15, minWidth: 20, textAlign: 'center', color: DT.accent },
   scroll: { flexGrow: 0, flexShrink: 1 },
   body: { paddingHorizontal: 20, paddingBottom: 4, paddingTop: 16 },
   footer: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16, backgroundColor: DT.card },
-  stats: { flexDirection: 'row', marginBottom: 14, overflow: 'hidden', borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg },
+  stats: { flexDirection: 'row', marginBottom: 16, overflow: 'hidden', borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg },
   statCell: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 12 },
   statLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
-  statLabel: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 56, color: DT.muted },
+  statLabel: { fontSize: 11, lineHeight: 15, minWidth: 56, color: DT.muted },
   statValue: { fontSize: 16, color: DT.ink, textAlign: 'center' },
-  payPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 3 },
+  payPill: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
   payText: { fontSize: 11, lineHeight: 15, minWidth: 40, textAlign: 'center' },
-  scheduleBox: { marginBottom: 14, borderRadius: DT.radius.lg, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12 },
+  scheduleBox: { marginBottom: 16, borderRadius: DT.radius.lg, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12 },
   scheduleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   scheduleIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
-  scheduleLabel: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 80 },
+  scheduleLabel: { fontSize: 11, lineHeight: 15, minWidth: 80 },
   scheduleTime: { marginTop: 4, fontSize: 14, color: DT.ink },
   scheduleCountdown: { marginTop: 4, fontSize: 12 },
   scheduleHelp: { marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.muted },
-  intercity: { flexDirection: 'row', gap: 8, marginBottom: 14, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 12, paddingVertical: 12 },
-  intercityLabel: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 30, color: DT.muted },
+  intercity: { flexDirection: 'row', gap: 8, marginBottom: 16, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 12, paddingVertical: 12 },
+  intercityLabel: { fontSize: 11, lineHeight: 15, minWidth: 30, color: DT.muted },
   intercityValue: { marginTop: 4, fontSize: 13, color: DT.ink },
-  rider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, padding: 12 },
+  rider: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, padding: 12 },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontSize: 16, color: DT.accent },
-  riderLabel: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 40, color: DT.muted },
+  riderLabel: { fontSize: 11, lineHeight: 15, minWidth: 40, color: DT.muted },
   callBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   riderName: { fontSize: 15, color: DT.ink },
-  route: { marginBottom: 14, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
+  route: { marginBottom: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
   routeLine: { position: 'absolute', left: 25, top: 34, bottom: 34, width: 2, backgroundColor: DT.border },
-  routeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 14 },
+  routeItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   pin: { width: 20, height: 20, marginTop: 2, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   pinDot: { width: 10, height: 10 },
-  tagText: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, minWidth: 44 },
+  tagText: { fontSize: 11, lineHeight: 15, minWidth: 44 },
   address: { marginTop: 2, fontSize: 14, lineHeight: 19, color: DT.ink },
   previewBtn: { flex: 1, minHeight: 56 },
   decline: { marginTop: 8, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: DT.radius.lg },
   declineText: { fontSize: 14, color: DT.muted },
   accept: { minHeight: 60 },
   bidGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 6 },
-  bidOpt: { width: '31.5%', flexGrow: 1, minHeight: 44, borderRadius: DT.radius.md, borderWidth: 1, paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
+  bidOpt: { width: '31.5%', flexGrow: 1, minHeight: 44, borderRadius: DT.radius.md, borderWidth: 1, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   bidText: { fontSize: 12, lineHeight: 16, minWidth: 40, textAlign: 'center' },
   footNote: { marginTop: 2, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   footNoteText: { fontSize: 11, color: DT.muted },

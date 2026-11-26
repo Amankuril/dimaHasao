@@ -402,10 +402,10 @@ export default function VehicleFleet() {
         ) : (
           <View style={{ gap: 20 }}>
             <View style={styles.hero}>
-              <View style={{ gap: 18 }}>
+              <View style={{ gap: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                   <View style={{ gap: 6, minWidth: 0, flex: 1 }}>
-                    <Text style={styles.heroKicker}>PRIMARY VEHICLE</Text>
+                    <Text style={styles.heroKicker}>Primary vehicle</Text>
                     <Text style={styles.heroTitle} numberOfLines={1}>{vehicleModel}</Text>
                     <Text style={styles.heroNumber} numberOfLines={1}>{String(driver?.vehicleNumber || 'Number not set').toUpperCase()}</Text>
                     <Text style={styles.heroMeta} numberOfLines={1}>{activeVehicleName} • {driver?.vehicleColor || 'Color not set'}</Text>
@@ -422,20 +422,20 @@ export default function VehicleFleet() {
                 </View>
                 <View style={styles.heroBadge}>
                   <CheckCircle2 size={15} color={DT.accent} />
-                  <Text style={styles.heroBadgeText}>MAP ICON LINKED TO SELECTED TYPE</Text>
+                  <Text style={styles.heroBadgeText}>Map icon linked to selected type</Text>
                 </View>
               </View>
             </View>
 
             {message ? <Text style={styles.message}>{message.toUpperCase()}</Text> : null}
 
-            <View style={{ gap: 14 }}>
+            <View style={{ gap: 16 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
                 <SectionLabel>Configuration</SectionLabel>
               </View>
 
               <Card style={styles.dispatch}>
-                <Text style={styles.dispatchTitle}>DISPATCH MATCHING</Text>
+                <Text style={styles.dispatchTitle}>Dispatch matching</Text>
                 <Text style={styles.dispatchBody}>
                   Update the primary vehicle here if requests are not reaching this driver. The system uses the selected vehicle type exactly for job distribution.
                 </Text>
@@ -467,7 +467,7 @@ export default function VehicleFleet() {
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 24, paddingBottom: 40 + Math.max(keyboard, insets.bottom), gap: 24 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View>
-              <Text style={styles.sheetKicker}>SETTINGS</Text>
+              <Text style={styles.sheetKicker}>Settings</Text>
               <Text style={styles.sheetTitle}>Vehicle Details</Text>
             </View>
             <Press scale={1} onPress={() => setIsEditing(false)} accessibilityLabel="Close" style={styles.sheetClose}>
@@ -477,7 +477,7 @@ export default function VehicleFleet() {
 
           <View style={{ gap: 16 }}>
             <View style={{ gap: 8 }}>
-              <Text style={[styles.fieldLabel, { paddingLeft: 4, color: DT.muted, marginBottom: 0, minWidth: 80 }]}>SELECTION</Text>
+              <Text style={[styles.fieldLabel, { paddingLeft: 4, color: DT.muted, marginBottom: 0, minWidth: 80 }]}>Selection</Text>
               <View onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)} style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
                 {vehicleTypes.map((type) => {
                   const id = String(type._id || type.id);
@@ -520,7 +520,7 @@ export default function VehicleFleet() {
             <VehicleField label="Color" value={formData.vehicleColor} onChangeText={(text) => handleChange('vehicleColor', text)} placeholder="e.g. White, Black" />
 
             <View style={styles.field}>
-              <Text style={[styles.fieldLabel, { marginBottom: 12 }]}>VEHICLE IMAGE</Text>
+              <Text style={[styles.fieldLabel, { marginBottom: 12 }]}>Vehicle image</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <View style={styles.imageBox}>
                   {previewSrc ? (
@@ -564,29 +564,29 @@ export default function VehicleFleet() {
 
 const styles = StyleSheet.create({
   hero: { backgroundColor: DT.brand, padding: 24, borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.brandMid, overflow: 'hidden', ...shadow('lg') },
-  heroKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, minWidth: 120, color: DT.gold, ...outfit(700) },
+  heroKicker: { fontSize: 11, lineHeight: 16, minWidth: 120, color: DT.gold, ...outfit(700) },
   heroTitle: { fontSize: 22, lineHeight: 28, color: DT.onBrand, ...playfair(700) },
-  heroNumber: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, color: DT.accent, marginTop: 4, ...outfit(700) },
+  heroNumber: { fontSize: 14, lineHeight: 20, color: DT.accent, marginTop: 4, ...outfit(700) },
   heroMeta: { fontSize: 12, lineHeight: 17, color: DT.onBrandMuted, ...outfit(500) },
   heroImage: { height: 64, width: 80, overflow: 'hidden', borderRadius: DT.radius.md, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.08)' },
   heroIcon: { width: 56, height: 56, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
-  heroBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 10, borderRadius: DT.radius.pill },
-  heroBadgeText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.4, minWidth: 100, flexShrink: 1, color: DT.onBrand, ...outfit(700) },
-  message: { fontSize: 11, lineHeight: 16, letterSpacing: 0.6, color: DT.info, backgroundColor: DT.infoSoft, borderRadius: DT.radius.md, paddingHorizontal: 14, paddingVertical: 10, overflow: 'hidden', ...outfit(700) },
+  heroBadge: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 16, paddingVertical: 12, borderRadius: DT.radius.pill },
+  heroBadgeText: { fontSize: 11, lineHeight: 15, minWidth: 100, flexShrink: 1, color: DT.onBrand, ...outfit(700) },
+  message: { fontSize: 11, lineHeight: 16, color: DT.info, backgroundColor: DT.infoSoft, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12, overflow: 'hidden', ...outfit(700) },
   dispatch: { backgroundColor: DT.warnSoft, borderColor: DT.warnSoft, borderRadius: DT.radius.lg },
-  dispatchTitle: { fontSize: 11, lineHeight: 16, letterSpacing: 0.55, minWidth: 140, color: DT.warnInk, marginBottom: 4, ...outfit(800) },
+  dispatchTitle: { fontSize: 11, lineHeight: 16, minWidth: 140, color: DT.warnInk, marginBottom: 4, ...outfit(800) },
   dispatchBody: { fontSize: 13, lineHeight: 20, color: DT.inkSoft, ...outfit(500) },
   sheet: { backgroundColor: DT.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, width: '100%', maxWidth: 512, alignSelf: 'center', overflow: 'hidden', ...shadow('2xl') },
-  sheetKicker: { fontSize: 11, lineHeight: 16, letterSpacing: 1.1, minWidth: 80, color: DT.muted, ...outfit(700) },
+  sheetKicker: { fontSize: 11, lineHeight: 16, minWidth: 80, color: DT.muted, ...outfit(700) },
   sheetTitle: { fontSize: 24, lineHeight: 32, color: DT.brand, ...playfair(700) },
   sheetClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
   typeCard: { minHeight: 90, padding: 12, borderRadius: DT.radius.md, borderWidth: 2, alignItems: 'center', justifyContent: 'center', gap: 8 },
   typeCardOn: { backgroundColor: DT.brand, borderColor: DT.brand },
   typeCardOff: { backgroundColor: DT.card, borderColor: DT.border },
   typeImageBox: { width: 40, height: 40, borderRadius: DT.radius.md, alignItems: 'center', justifyContent: 'center' },
-  typeLabel: { fontSize: 10, lineHeight: 12, letterSpacing: 0.5, textAlign: 'center', ...outfit(700) },
+  typeLabel: { fontSize: 11, lineHeight: 15, textAlign: 'center', ...outfit(700) },
   field: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, padding: 16, borderRadius: DT.radius.md },
-  fieldLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1, minWidth: 60, color: DT.muted, marginBottom: 4, ...outfit(800) },
+  fieldLabel: { fontSize: 11, lineHeight: 15, minWidth: 60, color: DT.muted, marginBottom: 4, ...outfit(800) },
   fieldInput: { padding: 0, minHeight: 24, fontSize: 15, color: DT.ink, ...outfit(700) },
   imageBox: { height: 64, width: 80, overflow: 'hidden', borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg },
   pickBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingHorizontal: 12 },

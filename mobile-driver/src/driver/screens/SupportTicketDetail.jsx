@@ -114,14 +114,14 @@ export default function SupportTicketDetail() {
 }
 
 const styles = StyleSheet.create({
-  status: { fontSize: 10, lineHeight: 14, minWidth: 54, textAlign: 'center', paddingHorizontal: 10, paddingVertical: 4, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(800) },
+  status: { fontSize: 11, lineHeight: 15, minWidth: 54, textAlign: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(800) },
   error: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
   errorText: { fontSize: 13, lineHeight: 18, color: DT.dangerInk, ...fo(700) },
   bubble: { maxWidth: '80%', borderRadius: DT.radius.lg, paddingHorizontal: 16, paddingVertical: 12 },
   mine: { backgroundColor: DT.brand, borderBottomRightRadius: 6 },
   theirs: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, borderBottomLeftRadius: 6, ...shadow('sm') },
   message: { fontSize: 14, lineHeight: 21, color: DT.ink, ...fo(500) },
-  time: { fontSize: 10, lineHeight: 14, color: DT.muted, marginTop: 4, ...fo(600) },
+  time: { fontSize: 11, lineHeight: 15, color: DT.muted, marginTop: 4, ...fo(600) },
   replyBar: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, backgroundColor: DT.card, borderTopWidth: 1, borderTopColor: DT.borderSoft, paddingHorizontal: 16, paddingTop: 12 },
   input: { flex: 1, minHeight: 48, maxHeight: 120, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: DT.ink, ...fo(600) },
   send: { width: 48, height: 48, borderRadius: DT.radius.md, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },

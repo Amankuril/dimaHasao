@@ -153,7 +153,7 @@ export default function EditProfile() {
                 <Camera size={18} color={DT.ctaInk} />
               </Press>
             </View>
-            <Text style={st.photoLabel}>{imageUploading ? 'OPTIMIZING FOR WEBP...' : 'PROFILE PHOTO'}</Text>
+            <Text style={st.photoLabel}>{imageUploading ? 'Optimizing for WebP...' : 'Profile photo'}</Text>
           </View>
 
           <View style={{ gap: 16 }}>
@@ -207,13 +207,13 @@ export default function EditProfile() {
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
   toast: { position: 'absolute', left: 16, right: 16, zIndex: 100, backgroundColor: DT.success, padding: 16, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', gap: 12, ...shadow('lg') },
-  toastText: { fontSize: 13, letterSpacing: 0.26, color: DT.onBrand, ...fo(700) },
+  toastText: { fontSize: 13, color: DT.onBrand, ...fo(700) },
   avatar: { width: 104, height: 104, borderRadius: 34, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 3, borderColor: DT.gold, ...shadow('md') },
   avatarSpin: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(6,56,30,0.35)' },
-  camera: { position: 'absolute', bottom: -2, right: -2, width: 44, height: 44, borderRadius: 16, backgroundColor: DT.cta, borderWidth: 3, borderColor: DT.bg, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
-  photoLabel: { fontSize: 11, letterSpacing: 1.1, minWidth: 100, textAlign: 'center', color: DT.muted, ...fo(700) },
-  field: { backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 14, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, gap: 8 },
-  fieldLabel: { fontSize: 10, letterSpacing: 1, minWidth: 90, color: DT.muted, lineHeight: 14, ...fo(800) },
+  camera: { position: 'absolute', bottom: -2, right: -2, width: 44, height: 44, borderRadius: 22, backgroundColor: DT.cta, borderWidth: 3, borderColor: DT.bg, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
+  photoLabel: { fontSize: 11, minWidth: 100, textAlign: 'center', color: DT.muted, ...fo(700) },
+  field: { backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 16, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, gap: 8 },
+  fieldLabel: { fontSize: 11, minWidth: 90, color: DT.muted, lineHeight: 14, ...fo(800) },
   input: { padding: 0, minHeight: 24, fontSize: 15, color: DT.ink, ...fo(600) },
   error: { fontSize: 12, color: DT.dangerInk, ...fo(700) },
 });

@@ -219,10 +219,10 @@ export default function SecuritySOS() {
             </View>
           </View>
 
-          <View style={{ gap: 14 }}>
+          <View style={{ gap: 16 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, gap: 12 }}>
               <SectionLabel>Emergency list</SectionLabel>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <Text style={styles.count}>{contacts.length}/{MAX_CONTACTS}</Text>
                 <Press
                   scale={1}
@@ -260,14 +260,14 @@ export default function SecuritySOS() {
             {!isLoading &&
               contacts.map((contact) => (
                 <Card key={contact.id} style={styles.contact}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
                     <View style={styles.contactIcon}>
                       <Phone size={18} color={DT.brand} />
                     </View>
                     <View style={{ gap: 2, flex: 1, minWidth: 0 }}>
                       <Text style={styles.contactName}>{contact.name}</Text>
                       <Text style={styles.contactPhone}>+91 {contact.phone}</Text>
-                      <Text style={styles.contactSource}>{contact.source === 'device' ? 'FROM PHONE CONTACTS' : 'ADDED MANUALLY'}</Text>
+                      <Text style={styles.contactSource}>{contact.source === 'device' ? 'From phone contacts' : 'Added manually'}</Text>
                     </View>
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -289,7 +289,7 @@ export default function SecuritySOS() {
           <PulseIcon>
             <Zap size={20} color={DT.onBrand} fill={DT.onBrand} strokeWidth={3} />
           </PulseIcon>
-          <Text style={styles.toastText}>SOS TRIGGERED FOR SAVED CONTACTS</Text>
+          <Text style={styles.toastText}>SOS triggered for saved contacts</Text>
         </View>
       ) : null}
 
@@ -311,11 +311,11 @@ export default function SecuritySOS() {
             style={[styles.pick, { opacity: 0.5 }]}
           >
             <Smartphone size={16} color={DT.inkSoft} strokeWidth={2.5} />
-            <Text style={styles.pickText}>{canUseContactPicker ? 'PICK FROM PHONE CONTACTS' : 'PHONE CONTACT PICKER UNAVAILABLE'}</Text>
+            <Text style={styles.pickText}>{canUseContactPicker ? 'Pick from phone contacts' : 'Phone contact picker unavailable'}</Text>
           </Press>
 
           <View>
-            <Text style={styles.label}>NAME</Text>
+            <Text style={styles.label}>Name</Text>
             <View style={[styles.field, focusedField === 'name' ? styles.fieldFocus : null, errors.name ? styles.fieldError : null]}>
               <User size={16} color={DT.muted} strokeWidth={2} />
               <TextInput
@@ -336,7 +336,7 @@ export default function SecuritySOS() {
           </View>
 
           <View>
-            <Text style={styles.label}>MOBILE NUMBER</Text>
+            <Text style={styles.label}>Mobile number</Text>
             <View style={[styles.field, focusedField === 'phone' ? styles.fieldFocus : null, errors.phone ? styles.fieldError : null]}>
               <Phone size={16} color={DT.muted} strokeWidth={2} />
               <TextInput
@@ -380,14 +380,14 @@ export default function SecuritySOS() {
         <Text style={styles.dialogBody}>{deleteTarget?.name} will be removed from your emergency list.</Text>
         <CtaButton
           variant="danger"
-          title={isDeletingId === deleteTarget?.id ? 'REMOVING...' : 'REMOVE'}
+          title={isDeletingId === deleteTarget?.id ? 'Removing...' : 'REMOVE'}
           onPress={handleDeleteContact}
           disabled={isDeletingId === deleteTarget?.id}
           accessibilityLabel="Remove"
           style={{ alignSelf: 'stretch', marginBottom: 8 }}
         />
         <Press scale={1} onPress={() => setDeleteTarget(null)} accessibilityLabel="Cancel" style={{ minHeight: 48, justifyContent: 'center', alignSelf: 'stretch' }}>
-          <Text style={styles.dialogNo}>CANCEL</Text>
+          <Text style={styles.dialogNo}>Cancel</Text>
         </Press>
       </Dialog>
     </View>
@@ -395,16 +395,16 @@ export default function SecuritySOS() {
 }
 
 const styles = StyleSheet.create({
-  hero: { backgroundColor: DT.dangerSoft, padding: 22, borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.danger, overflow: 'hidden', ...shadow('md') },
-  heroKicker: { fontSize: 14, lineHeight: 20, letterSpacing: 1.4, minWidth: 60, color: DT.danger, ...outfit(900) },
+  hero: { backgroundColor: DT.dangerSoft, padding: 24, borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.danger, overflow: 'hidden', ...shadow('md') },
+  heroKicker: { fontSize: 14, lineHeight: 20, minWidth: 60, color: DT.danger, ...outfit(900) },
   heroTitle: { fontSize: 22, lineHeight: 30, color: DT.dangerInk, ...playfair(700) },
-  heroIcon: { width: 52, height: 52, borderRadius: 18, backgroundColor: DT.danger, alignItems: 'center', justifyContent: 'center' },
+  heroIcon: { width: 52, height: 52, borderRadius: 16, backgroundColor: DT.danger, alignItems: 'center', justifyContent: 'center' },
   heroBody: { fontSize: 13, lineHeight: 19, color: DT.inkSoft, ...outfit(500) },
   heroBtn: { minHeight: 64, borderRadius: DT.radius.lg },
-  heroBtnText: { fontSize: 17, lineHeight: 24, letterSpacing: 1.2, minWidth: 140 },
-  count: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 30, color: DT.muted, ...outfit(800) },
-  addLink: { minHeight: 44, paddingHorizontal: 14, borderRadius: DT.radius.pill, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
-  addLinkText: { fontSize: 11, lineHeight: 16, letterSpacing: 0.8, minWidth: 70, textAlign: 'center', color: DT.brand, ...outfit(800) },
+  heroBtnText: { fontSize: 17, lineHeight: 24, minWidth: 140 },
+  count: { fontSize: 11, lineHeight: 16, minWidth: 30, color: DT.muted, ...outfit(800) },
+  addLink: { minHeight: 44, paddingHorizontal: 16, borderRadius: DT.radius.pill, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
+  addLinkText: { fontSize: 11, lineHeight: 16, minWidth: 70, textAlign: 'center', color: DT.brand, ...outfit(800) },
   error: { backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12, borderRadius: DT.radius.md },
   errorText: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, ...outfit(700) },
   note: { backgroundColor: DT.card, padding: 20, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('sm') },
@@ -412,19 +412,19 @@ const styles = StyleSheet.create({
   contact: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: 16 },
   contactIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   contactName: { fontSize: 15, lineHeight: 20, color: DT.ink, ...outfit(700) },
-  contactPhone: { fontSize: 12, lineHeight: 16, letterSpacing: 0.5, color: DT.inkSoft, ...outfit(600) },
-  contactSource: { fontSize: 9, lineHeight: 13, letterSpacing: 0.8, minWidth: 100, color: DT.muted, ...outfit(700) },
+  contactPhone: { fontSize: 12, lineHeight: 16, color: DT.inkSoft, ...outfit(600) },
+  contactSource: { fontSize: 11, lineHeight: 15, minWidth: 100, color: DT.muted, ...outfit(700) },
   round: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   toast: { position: 'absolute', left: 16, right: 16, backgroundColor: DT.danger, padding: 16, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', gap: 12, ...shadow('lg') },
-  toastText: { flex: 1, fontSize: 12, lineHeight: 16, letterSpacing: 1, color: DT.onBrand, ...outfit(800) },
+  toastText: { flex: 1, fontSize: 12, lineHeight: 16, color: DT.onBrand, ...outfit(800) },
   sheet: { backgroundColor: DT.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingHorizontal: 20, paddingTop: 16 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: DT.border, alignSelf: 'center', marginBottom: 20 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   sheetTitle: { fontSize: 20, lineHeight: 28, color: DT.brand, ...playfair(700) },
   sheetClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
   pick: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg, paddingHorizontal: 16, paddingVertical: 12 },
-  pickText: { fontSize: 12, lineHeight: 16, letterSpacing: 0.8, color: DT.inkSoft, ...outfit(800) },
-  label: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 60, color: DT.muted, marginLeft: 4, marginBottom: 6, ...outfit(800) },
+  pickText: { fontSize: 12, lineHeight: 16, color: DT.inkSoft, ...outfit(800) },
+  label: { fontSize: 11, lineHeight: 16, minWidth: 60, color: DT.muted, marginLeft: 4, marginBottom: 6, ...outfit(800) },
   field: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.md, paddingHorizontal: 16, minHeight: 52, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card },
   fieldFocus: { borderColor: DT.brand },
   fieldError: { borderColor: DT.danger, backgroundColor: DT.dangerSoft },
@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
   errorLine: { fontSize: 11, lineHeight: 16, color: DT.dangerInk, marginLeft: 4, marginTop: 4, ...outfit(800) },
   save: { marginTop: 8 },
   dialog: { width: '86%', maxWidth: 384, backgroundColor: DT.card, borderRadius: DT.radius.xl, padding: 24, alignItems: 'center', ...shadow('2xl') },
-  dialogIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: DT.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  dialogIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: DT.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   dialogTitle: { fontSize: 18, lineHeight: 26, color: DT.ink, marginBottom: 4, ...outfit(800) },
   dialogBody: { fontSize: 13, lineHeight: 19, color: DT.muted, marginBottom: 20, textAlign: 'center', ...outfit(500) },
-  dialogNo: { fontSize: 13, lineHeight: 18, letterSpacing: 1.3, minWidth: 70, color: DT.muted, textAlign: 'center', ...outfit(800) },
+  dialogNo: { fontSize: 13, lineHeight: 18, minWidth: 70, color: DT.muted, textAlign: 'center', ...outfit(800) },
 });

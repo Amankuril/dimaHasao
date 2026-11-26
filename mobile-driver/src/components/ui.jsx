@@ -126,7 +126,7 @@ export { default as Loader, Spinner } from './Loader';
 
 const styles = StyleSheet.create({
   gradWrap: { borderRadius: radius.pill, width: '100%' },
-  grad: { borderRadius: radius.pill, paddingVertical: 14, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, minHeight: 52 },
+  grad: { borderRadius: radius.pill, paddingVertical: 16, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, minHeight: 52 },
   gradText: { color: '#fff', fontSize: 16, lineHeight: 24 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   // outline: the browser's own focus ring, only present in the Expo web preview.

@@ -208,12 +208,12 @@ export default function DriverDeleteAccount() {
           </View>
         </View>
 
-        <View style={{ gap: 10, paddingTop: 8 }}>
+        <View style={{ gap: 12, paddingTop: 8 }}>
           <CtaButton
             variant="danger"
             disabled={!canDelete}
             onPress={() => setShowConfirm(true)}
-            title={hasPendingRequest ? 'REQUEST ALREADY SENT' : 'DELETE MY ACCOUNT'}
+            title={hasPendingRequest ? 'Request already sent' : 'Delete my account'}
             accessibilityLabel={hasPendingRequest ? 'Request Already Sent' : 'Delete my account'}
             icon={<AlertTriangle size={16} color={DT.onBrand} strokeWidth={2.5} />}
             style={styles.delete}
@@ -255,12 +255,12 @@ export default function DriverDeleteAccount() {
           variant="danger"
           loading={loading}
           onPress={otpSent ? handleDelete : handleSendOtp}
-          title={otpSent ? 'VERIFY OTP & DELETE' : 'SEND OTP'}
+          title={otpSent ? 'Verify OTP & delete' : 'Send OTP'}
           accessibilityLabel={otpSent ? 'Verify OTP & Delete' : 'Send OTP'}
           style={{ alignSelf: 'stretch', marginBottom: 8 }}
         />
         <Press scale={1} onPress={() => setShowConfirm(false)} accessibilityLabel="No, keep my account" style={{ minHeight: 48, justifyContent: 'center', alignSelf: 'stretch' }}>
-          <Text style={styles.dialogNo}>NO, KEEP MY ACCOUNT</Text>
+          <Text style={styles.dialogNo}>No, keep my account</Text>
         </Press>
       </Dialog>
     </View>
@@ -276,25 +276,25 @@ const styles = StyleSheet.create({
   warningIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
   warningTitle: { fontSize: 16, lineHeight: 22, color: DT.dangerInk, ...fo(800) },
   warningSub: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, ...fo(600) },
-  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: DT.danger, marginTop: 7 },
+  bullet: { width: 6, height: 6, borderRadius: 3, backgroundColor: DT.danger, marginTop: 8 },
   consequence: { flex: 1, fontSize: 13, lineHeight: 20, color: DT.dangerInk, ...fo(600) },
-  section: { marginBottom: 10, paddingHorizontal: 4 },
+  section: { marginBottom: 12, paddingHorizontal: 4 },
   reasons: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, overflow: 'hidden', ...shadow('sm') },
-  reason: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
+  reason: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 16 },
   reasonBorder: { borderBottomWidth: 1, borderBottomColor: DT.borderSoft },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: DT.border, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DT.onBrand },
   reasonText: { fontSize: 14, lineHeight: 20, color: DT.ink, ...fo(700) },
   delete: { minHeight: 56 },
-  deleteText: { minWidth: 180, letterSpacing: 1 },
+  deleteText: { minWidth: 180 },
   dialog: { width: '86%', maxWidth: 384, backgroundColor: DT.card, borderRadius: DT.radius.xl, padding: 24, alignItems: 'center', ...shadow('2xl') },
   dialogIcon: { width: 64, height: 64, borderRadius: 20, backgroundColor: DT.dangerSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
   dialogTitle: { fontSize: 18, lineHeight: 28, color: DT.ink, marginBottom: 8, ...fo(800) },
   dialogBody: { fontSize: 13, lineHeight: 20, color: DT.inkSoft, marginBottom: 4, textAlign: 'center', ...fo(600) },
   dialogNote: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, marginBottom: 20, textAlign: 'center', ...fo(700) },
-  otpLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.2, minWidth: 100, color: DT.muted, marginLeft: 4, ...fo(800) },
+  otpLabel: { fontSize: 11, lineHeight: 15, minWidth: 100, color: DT.muted, marginLeft: 4, ...fo(800) },
   otpBox: { marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingHorizontal: 16, minHeight: 56 },
   otpInput: { flex: 1, padding: 0, minHeight: 28, textAlign: 'center', fontSize: 20, letterSpacing: 7, color: DT.ink, ...fo(800) },
-  debugOtp: { marginTop: 4, textAlign: 'center', fontSize: 10, lineHeight: 15, color: DT.muted, ...fo(800) },
-  dialogNo: { fontSize: 13, lineHeight: 18, letterSpacing: 1, minWidth: 140, color: DT.inkSoft, textAlign: 'center', ...fo(800) },
+  debugOtp: { marginTop: 4, textAlign: 'center', fontSize: 11, lineHeight: 15, color: DT.muted, ...fo(800) },
+  dialogNo: { fontSize: 13, lineHeight: 18, minWidth: 140, color: DT.inkSoft, textAlign: 'center', ...fo(800) },
 });

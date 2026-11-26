@@ -141,7 +141,7 @@ export default function PhoneRegistration() {
     >
       <View>
         <Text style={[obLabel, { marginBottom: 6, paddingHorizontal: 4 }]}>{up('Mobile number')}</Text>
-        <FieldBox focused={focused} style={{ paddingVertical: 14 }}>
+        <FieldBox focused={focused} style={{ paddingVertical: 16 }}>
           <Phone size={18} strokeWidth={2.2} color={OB.muted} />
           <Text style={{ ...jk(700), fontSize: 15, color: OB.muted }}>+91</Text>
           <TextInput
@@ -155,7 +155,7 @@ export default function PhoneRegistration() {
             placeholderTextColor={DT.faint}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
-            style={{ ...jk(600), fontSize: 16, color: OB.text, padding: 0, flex: 1, minWidth: 0, letterSpacing: 1.2 }}
+            style={{ ...jk(600), fontSize: 16, color: OB.text, padding: 0, flex: 1, minWidth: 0 }}
           />
         </FieldBox>
       </View>

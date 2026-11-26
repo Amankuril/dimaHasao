@@ -25,14 +25,14 @@ export default function ApplicationStatus() {
   const enter = useAnimatedValue(0);
   const pulse = useAnimatedValue(1);
   useEffect(() => {
-    Animated.spring(enter, { toValue: 1, useNativeDriver: true }).start();
+    Animated.timing(enter, { toValue: 1, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 0.5, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         Animated.timing(pulse, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ]),
     );
-    loop.start();
+    // No idle pulse (unslop): the badge says "in review"; it is not live.
     return () => loop.stop();
   }, [enter, pulse]);
 
@@ -112,16 +112,16 @@ export default function ApplicationStatus() {
 
 const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
-  statusCard: { ...obCard, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  hero: { width: 80, height: 80, backgroundColor: DT.warnSoft, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  statusCard: { ...obCard, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  hero: { width: 80, height: 80, backgroundColor: DT.warnSoft, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   badge: { position: 'absolute', bottom: -6, right: -6, width: 32, height: 32, backgroundColor: DT.success, borderRadius: 16, borderWidth: 3, borderColor: DT.card, alignItems: 'center', justifyContent: 'center' },
   h1: { ...playfair(700), fontSize: 26, lineHeight: 34, color: DT.gold, marginTop: 16 },
   lead: { ...outfit(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted, marginTop: 8 },
   statusText: { ...outfit(500), fontSize: 13, lineHeight: 19, color: DT.inkSoft, marginTop: 8 },
   row: { ...obCard, padding: 16, borderRadius: DT.radius.lg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  rowLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  rowIcon: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  rowLeft: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  rowIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   rowTitle: { ...outfit(800), fontSize: 14, lineHeight: 20, color: DT.ink },
-  rowSub: { ...outfit(700), fontSize: 11, lineHeight: 16, letterSpacing: 0.5, minWidth: 40, color: DT.muted },
+  rowSub: { ...outfit(700), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted },
   bottom: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingTop: 12, backgroundColor: 'rgba(248,250,252,0.96)' },
 });

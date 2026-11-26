@@ -16,8 +16,11 @@ const upper = (node) => Children.map(node, (child) => {
 
 export default function Text({ style, children, ...rest }) {
   const flat = StyleSheet.flatten(style) || {};
-  if (flat.textTransform !== 'uppercase') {
+  // Labels are sentence case now (unslop pass): the uppercase + tracking
+  // look is dropped, so this renders text as written.
+  void upper;
+  if (flat.textTransform !== 'uppercase' && !flat.letterSpacing) {
     return <RNText {...rest} style={style}>{children}</RNText>;
   }
-  return <RNText {...rest} style={[style, { textTransform: 'none' }]}>{upper(children)}</RNText>;
+  return <RNText {...rest} style={[style, { textTransform: 'none', letterSpacing: 0 }]}>{children}</RNText>;
 }

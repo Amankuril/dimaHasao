@@ -103,7 +103,7 @@ export default function RegistrationStatus() {
         Animated.timing(pulse, { toValue: 1, duration: 1000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       ]),
     );
-    loop.start();
+    // No idle pulse (unslop): the badge says "in review"; it is not live.
     return () => loop.stop();
   }, [pulse]);
 
@@ -260,7 +260,7 @@ export default function RegistrationStatus() {
       contentContainerStyle={{ paddingBottom: 40 + insets.bottom }}
     >
       <BrandHero top={insets.top + 14} style={{ paddingBottom: 64 }}>
-        <View style={[styles.maxW, { alignItems: 'center', gap: 10 }]}>
+        <View style={[styles.maxW, { alignItems: 'center', gap: 12 }]}>
           <Image source={DRIVER_BRAND_LOGO} style={{ width: 44, height: 44, borderRadius: 22 }} resizeMode="contain" />
           <Text style={styles.eyebrow}>
             {up(pendingReverificationDocs.length > 0 ? 'Submission received' : isVehicleReapproval ? 'Update in review' : 'Live Audit Status')}
@@ -387,30 +387,30 @@ export default function RegistrationStatus() {
 
 const styles = StyleSheet.create({
   maxW: { width: '100%', maxWidth: 448, alignSelf: 'center' },
-  heroCard: { ...obCard, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 16 },
-  hero: { width: 84, height: 84, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  heroCard: { ...obCard, padding: 20, flexDirection: 'row', alignItems: 'center', gap: 16 },
+  hero: { width: 84, height: 84, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   heroBadge: { position: 'absolute', bottom: -6, right: -6, width: 30, height: 30, borderRadius: 15, borderWidth: 3, borderColor: DT.card, backgroundColor: DT.brandMid, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: { ...jk(800), fontSize: 11, lineHeight: 16, letterSpacing: 1.8, minWidth: 40, color: DT.onBrandMuted, textAlign: 'center' },
+  eyebrow: { ...jk(800), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.onBrandMuted, textAlign: 'center' },
   h1: { ...playfair(700), fontSize: 30, lineHeight: 38, color: DT.gold, textAlign: 'center' },
   lead: { ...jk(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted, textAlign: 'center', maxWidth: 300 },
   driverName: { ...jk(800), fontSize: 16, lineHeight: 22, color: DT.ink },
-  driverPhone: { ...jk(700), fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 40, color: DT.muted },
-  sectionLabel: { ...jk(800), fontSize: 11, lineHeight: 16, letterSpacing: 1.6, minWidth: 40, color: DT.muted, paddingHorizontal: 8 },
+  driverPhone: { ...jk(700), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted },
+  sectionLabel: { ...jk(800), fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted, paddingHorizontal: 8 },
   docCard: { ...obCard, borderRadius: DT.radius.lg, padding: 16, gap: 12 },
   docHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   docLabel: { ...jk(800), flex: 1, fontSize: 15, lineHeight: 21, color: DT.ink },
-  reasonBox: { padding: 14, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: tw.rose100, borderRadius: DT.radius.md },
-  reasonLabel: { ...jk(700), fontSize: 10, lineHeight: 14, letterSpacing: 0.8, minWidth: 40, color: DT.dangerInk, marginBottom: 4 },
+  reasonBox: { padding: 16, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: tw.rose100, borderRadius: DT.radius.md },
+  reasonLabel: { ...jk(700), fontSize: 11, lineHeight: 15, minWidth: 40, color: DT.dangerInk, marginBottom: 4 },
   reasonText: { ...jk(700), fontSize: 13, lineHeight: 20, color: DT.dangerInk },
-  reverifyBox: { padding: 14, backgroundColor: DT.brandSoft, borderWidth: 1, borderColor: DT.brandBorder, borderRadius: DT.radius.md },
+  reverifyBox: { padding: 16, backgroundColor: DT.brandSoft, borderWidth: 1, borderColor: DT.brandBorder, borderRadius: DT.radius.md },
   reverifyText: { ...jk(700), fontSize: 13, lineHeight: 20, color: DT.inkSoft },
   fixBtn: { minHeight: 48, backgroundColor: DT.brand, borderRadius: DT.radius.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  fixText: { ...jk(800), fontSize: 13, lineHeight: 18, letterSpacing: 1, minWidth: 90, textAlign: 'center', color: DT.onBrand },
+  fixText: { ...jk(800), fontSize: 13, lineHeight: 18, minWidth: 90, textAlign: 'center', color: DT.onBrand },
   emptyCard: { ...obCard, borderRadius: DT.radius.lg, padding: 36, alignItems: 'center' },
-  emptyText: { ...jk(800), fontSize: 12, lineHeight: 18, letterSpacing: 1, color: DT.muted, textAlign: 'center' },
+  emptyText: { ...jk(800), fontSize: 12, lineHeight: 18, color: DT.muted, textAlign: 'center' },
   ring: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: DT.border, borderTopColor: DT.brandMid },
   bar: { marginTop: 4, borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.border, backgroundColor: 'rgba(255,255,255,0.97)', padding: 16, gap: 12, ...shadow('md'), zIndex: 10 },
-  rejectNote: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: tw.rose100, paddingHorizontal: 16, paddingVertical: 14 },
+  rejectNote: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: tw.rose100, paddingHorizontal: 16, paddingVertical: 16 },
   rejectNoteText: { ...jk(700), fontSize: 12, lineHeight: 19, color: DT.dangerInk },
   supportBtn: { minHeight: 52, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, borderRadius: DT.radius.md, alignItems: 'center', justifyContent: 'center' },
   supportText: { ...jk(700), fontSize: 15, lineHeight: 20, color: DT.inkSoft },

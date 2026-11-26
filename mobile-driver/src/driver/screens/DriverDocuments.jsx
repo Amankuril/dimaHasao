@@ -591,17 +591,17 @@ export default function DriverDocuments() {
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 16, paddingTop: 20, paddingBottom: 32 + insets.bottom }}>
         <View style={{ gap: 20 }}>
           <Card tone="dark" style={styles.summary}>
-            <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center', flexShrink: 1 }}>
+            <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center', flexShrink: 1 }}>
               <View style={styles.summaryIcon}>
                 <CheckCircle2 size={24} color={DT.success} strokeWidth={2.5} />
               </View>
               <View style={{ gap: 2, flexShrink: 1 }}>
-                <Text style={styles.summaryTitle}>{isLoading ? 'LOADING DOCUMENTS' : `${uploadedCount} UPLOADED`}</Text>
+                <Text style={styles.summaryTitle}>{isLoading ? 'Loading documents' : `${uploadedCount} UPLOADED`}</Text>
                 <Text style={styles.summarySub}>{actionRequiredCount} Action Required</Text>
               </View>
             </View>
             <Press scale={isSyncing ? 1 : 0.95} onPress={loadDriver} disabled={isSyncing} accessibilityLabel="Refresh" style={[styles.refresh, isSyncing ? { backgroundColor: DT.darkSoft } : { backgroundColor: DT.cta }]}>
-              {isSyncing ? <ActivityIndicator size="small" color={DT.onBrandMuted} /> : <Text style={styles.refreshText}>REFRESH</Text>}
+              {isSyncing ? <ActivityIndicator size="small" color={DT.onBrandMuted} /> : <Text style={styles.refreshText}>Refresh</Text>}
             </Press>
           </Card>
 
@@ -720,12 +720,12 @@ export default function DriverDocuments() {
               {selectedDoc.previewUrl ? (
                 <Img source={{ uri: selectedDoc.previewUrl }} style={{ width: '100%', height: '100%' }} resizeMode="cover" accessibilityLabel={selectedDoc.name} />
               ) : (
-                <Text style={styles.noPreview}>NO PREVIEW AVAILABLE</Text>
+                <Text style={styles.noPreview}>No preview available</Text>
               )}
             </View>
             {selectedDoc.reason ? (
               <View style={styles.feedback}>
-                <Text style={styles.feedbackTitle}>ADMIN FEEDBACK</Text>
+                <Text style={styles.feedbackTitle}>Admin feedback</Text>
                 <Text style={styles.feedbackBody}>{selectedDoc.reason}</Text>
               </View>
             ) : null}
@@ -738,7 +738,7 @@ export default function DriverDocuments() {
         <View style={{ gap: 20 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.modalTitle}>UPDATE EXPIRY DATE</Text>
+              <Text style={styles.modalTitle}>Update expiry date</Text>
               <Text style={styles.modalSub}>{String(expiryModal.name).toUpperCase()}</Text>
             </View>
             <Press scale={1} onPress={closeExpiryModal} accessibilityLabel="Close" style={styles.close}>
@@ -749,7 +749,7 @@ export default function DriverDocuments() {
           <View>
             <View style={styles.fieldLabel}>
               <CalendarDays size={13} color={DT.muted} />
-              <Text style={styles.fieldLabelText}>EXPIRY DATE</Text>
+              <Text style={styles.fieldLabelText}>Expiry date</Text>
             </View>
             <DriverDateField value={expiryModal.value} onChange={(value) => setExpiryModal((prev) => ({ ...prev, value }))} accessibilityLabel="Expiry date" />
           </View>
@@ -758,7 +758,7 @@ export default function DriverDocuments() {
             <CtaButton variant="outline" title="CANCEL" onPress={closeExpiryModal} style={styles.modalBtn} />
             <CtaButton
               variant="brand"
-              title={expiryModal.isSubmitting ? 'SAVING...' : 'SAVE DATE'}
+              title={expiryModal.isSubmitting ? 'Saving...' : 'Save date'}
               onPress={handleExpirySave}
               disabled={expirySaveDisabled}
               accessibilityLabel="Save Date"
@@ -773,7 +773,7 @@ export default function DriverDocuments() {
           <View style={{ gap: 20 }}>
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.modalTitle}>DOCUMENT DETAILS</Text>
+                <Text style={styles.modalTitle}>Document details</Text>
                 <Text style={styles.modalSub}>{String(metaModal.name).toUpperCase()}</Text>
               </View>
               <Press scale={1} onPress={closeMetaModal} accessibilityLabel="Close" style={styles.close}>
@@ -803,7 +803,7 @@ export default function DriverDocuments() {
               <View>
                 <View style={styles.fieldLabel}>
                   <BadgeCheck size={13} color={DT.muted} />
-                  <Text style={styles.fieldLabelText}>IFSC CODE</Text>
+                  <Text style={styles.fieldLabelText}>IFSC code</Text>
                 </View>
                 <FocusInput
                   value={metaModal.ifsc}
@@ -822,7 +822,7 @@ export default function DriverDocuments() {
               <View>
                 <View style={styles.fieldLabel}>
                   <BadgeCheck size={13} color={DT.muted} />
-                  <Text style={styles.fieldLabelText}>ACCOUNT HOLDER NAME</Text>
+                  <Text style={styles.fieldLabelText}>Account holder name</Text>
                 </View>
                 <FocusInput
                   value={metaModal.accountHolderName}
@@ -840,7 +840,7 @@ export default function DriverDocuments() {
               <View>
                 <View style={styles.fieldLabel}>
                   <CalendarDays size={13} color={DT.muted} />
-                  <Text style={styles.fieldLabelText}>BIRTH DATE</Text>
+                  <Text style={styles.fieldLabelText}>Birth date</Text>
                 </View>
                 <DriverDateField value={metaModal.birthDate} onChange={(value) => setMetaModal((prev) => ({ ...prev, birthDate: value }))} accessibilityLabel="Birth date" />
               </View>
@@ -850,7 +850,7 @@ export default function DriverDocuments() {
               <View>
                 <View style={styles.fieldLabel}>
                   <BadgeCheck size={13} color={DT.muted} />
-                  <Text style={styles.fieldLabelText}>REQUEST NO</Text>
+                  <Text style={styles.fieldLabelText}>Request no</Text>
                 </View>
                 <FocusInput
                   value={metaModal.requestNumber}
@@ -866,7 +866,7 @@ export default function DriverDocuments() {
             <View style={{ flexDirection: 'row' }}>
               <CtaButton
                 variant="brand"
-                title={metaModal.isSubmitting ? 'SAVING...' : 'SAVE'}
+                title={metaModal.isSubmitting ? 'Saving...' : 'SAVE'}
                 onPress={() => handleMetaSave()}
                 disabled={metaSaveDisabled}
                 accessibilityLabel="Save"
@@ -888,7 +888,7 @@ const styles = StyleSheet.create({
   summaryTitle: { fontSize: 15, lineHeight: 20, color: DT.onBrand, ...outfit(800) },
   summarySub: { fontSize: 12, lineHeight: 16, color: DT.onBrandMuted, ...outfit(600) },
   refresh: { paddingHorizontal: 16, minHeight: 44, borderRadius: DT.radius.md, minWidth: 90, alignItems: 'center', justifyContent: 'center' },
-  refreshText: { fontSize: 12, lineHeight: 16, letterSpacing: 0.6, minWidth: 60, textAlign: 'center', color: DT.ctaInk, ...outfit(800) },
+  refreshText: { fontSize: 12, lineHeight: 16, minWidth: 60, textAlign: 'center', color: DT.ctaInk, ...outfit(800) },
   error: { backgroundColor: DT.dangerSoft, borderWidth: 1, borderColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12, borderRadius: DT.radius.md },
   errorText: { fontSize: 12, lineHeight: 17, color: DT.dangerInk, ...outfit(700) },
   empty: { backgroundColor: DT.card, padding: 24, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('sm') },
@@ -897,9 +897,9 @@ const styles = StyleSheet.create({
   bar: { position: 'absolute', top: 0, bottom: 0, left: 0, width: 5 },
   docIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   docName: { fontSize: 13, lineHeight: 18, color: DT.ink, ...outfit(800) },
-  docDate: { marginTop: 2, fontSize: 10, lineHeight: 15, letterSpacing: 0.5, color: DT.muted, ...outfit(600) },
+  docDate: { marginTop: 2, fontSize: 11, lineHeight: 15, color: DT.muted, ...outfit(600) },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { fontSize: 11, lineHeight: 16, paddingHorizontal: 10, paddingVertical: 3, borderRadius: DT.radius.pill, color: DT.inkSoft, backgroundColor: DT.bgSoft, overflow: 'hidden', ...outfit(600) },
+  chip: { fontSize: 11, lineHeight: 16, paddingHorizontal: 12, paddingVertical: 4, borderRadius: DT.radius.pill, color: DT.inkSoft, backgroundColor: DT.bgSoft, overflow: 'hidden', ...outfit(600) },
   note: { fontSize: 11, lineHeight: 16, ...outfit(600) },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   action: { minHeight: 44, flexGrow: 1, paddingHorizontal: 12, borderRadius: DT.radius.md },
@@ -908,17 +908,17 @@ const styles = StyleSheet.create({
   viewerIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   close: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
   viewerName: { fontSize: 16, lineHeight: 22, color: DT.brand, ...playfair(700) },
-  viewerTemplate: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: DT.muted, ...outfit(700) },
+  viewerTemplate: { fontSize: 11, lineHeight: 15, color: DT.muted, ...outfit(700) },
   viewerImage: { aspectRatio: 4 / 3, backgroundColor: DT.bg, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.borderSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
-  noPreview: { fontSize: 10, lineHeight: 15, letterSpacing: 1, color: DT.faint, ...outfit(800) },
+  noPreview: { fontSize: 11, lineHeight: 15, color: DT.faint, ...outfit(800) },
   feedback: { borderRadius: DT.radius.sm, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
-  feedbackTitle: { fontSize: 10, lineHeight: 14, letterSpacing: 0.9, color: DT.danger, ...outfit(800) },
+  feedbackTitle: { fontSize: 11, lineHeight: 15, color: DT.danger, ...outfit(800) },
   feedbackBody: { marginTop: 4, fontSize: 12, lineHeight: 18, color: DT.dangerInk, ...outfit(600) },
   viewerBtn: { width: '100%' },
   modalTitle: { fontSize: 18, lineHeight: 26, color: DT.brand, ...playfair(700) },
-  modalSub: { marginTop: 4, fontSize: 10, lineHeight: 15, letterSpacing: 1, color: DT.muted, ...outfit(700) },
+  modalSub: { marginTop: 4, fontSize: 11, lineHeight: 15, color: DT.muted, ...outfit(700) },
   fieldLabel: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  fieldLabelText: { fontSize: 10, lineHeight: 15, letterSpacing: 1, minWidth: 60, color: DT.muted, ...outfit(800) },
+  fieldLabelText: { fontSize: 11, lineHeight: 15, minWidth: 60, color: DT.muted, ...outfit(800) },
   input: { minHeight: 48, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 12, fontSize: 14, color: DT.ink, ...outfit(700) },
   modalBtn: { flex: 1 },
 });

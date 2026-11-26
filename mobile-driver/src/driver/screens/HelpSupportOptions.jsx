@@ -45,7 +45,7 @@ export default function HelpSupportOptions() {
 }
 
 const styles = StyleSheet.create({
-  card: { minHeight: 84, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 18, paddingVertical: 18, ...shadow('sm') },
+  card: { minHeight: 84, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 20, paddingVertical: 20, ...shadow('sm') },
   icon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   cardTitle: { fontSize: 15, lineHeight: 21, color: DT.ink, ...outfit(700) },
   cardSub: { fontSize: 12, lineHeight: 17, color: DT.muted, ...outfit(500) },

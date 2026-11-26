@@ -1533,7 +1533,7 @@ const DriverHome = () => {
 
       {showOnlineSelfiePrompt ? (
         <CenterDialog onBackdrop={() => !selfieUploading && setShowOnlineSelfiePrompt(false)}>
-          <Text style={[outfit(900), st.selfieKicker]}>DAILY CHECK-IN</Text>
+          <Text style={[outfit(900), st.selfieKicker]}>Daily check-in</Text>
           <Text style={[outfit(900), st.selfieTitle]}>{"Upload today's selfie"}</Text>
           <Text style={[outfit(600), st.dlgBody]}>
             Before going online, submit a fresh selfie for today. This helps verify the driver account like Rapido-style daily check-in.
@@ -1574,7 +1574,7 @@ const DriverHome = () => {
           <View style={st.sheetHandle} />
           <View style={st.sheetHead}>
             <View style={{ flex: 1 }}>
-              <Text style={[outfit(900), st.sheetKicker]}>SCHEDULE</Text>
+              <Text style={[outfit(900), st.sheetKicker]}>Schedule</Text>
               <Text style={[outfit(900), st.sheetTitle]}>Scheduled rides</Text>
               <Text style={[outfit(600), st.sheetSub]}>Upcoming scheduled requests available for this driver.</Text>
             </View>
@@ -1780,20 +1780,20 @@ const st = StyleSheet.create({
   topRight: { flex: 1, alignItems: 'flex-end' },
   roundBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('md') },
   badge: { position: 'absolute', top: -4, right: -4, height: 18, minWidth: 18, paddingHorizontal: 4, borderRadius: 9, borderWidth: 2, borderColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
-  badgeText: { fontSize: 9, lineHeight: 12, color: DT.onBrand },
-  duty: { width: 112, height: 44, borderRadius: 22, borderWidth: 1, padding: 5, justifyContent: 'center' },
+  badgeText: { fontSize: 11, lineHeight: 15, color: DT.onBrand },
+  duty: { width: 112, height: 44, borderRadius: 16, borderWidth: 1, padding: 4, justifyContent: 'center' },
   knob: { position: 'absolute', left: 5, top: 5, width: 32, height: 32, borderRadius: 16, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
   dutyLabelWrap: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingLeft: 8 },
-  dutyLabel: { fontSize: 10, letterSpacing: 0.9, minWidth: 56 },
+  dutyLabel: { fontSize: 11, minWidth: 56 },
   walletPill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: 999, backgroundColor: DT.brand, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: DT.gold, ...shadow('md') },
   walletText: { fontSize: 14, letterSpacing: -0.2, color: DT.onBrand },
 
   noticeWrap: { position: 'absolute', left: 16, right: 16, zIndex: 40 },
-  notice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, backgroundColor: DT.card, paddingHorizontal: 14, paddingVertical: 12, ...shadow('md') },
+  notice: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 12, ...shadow('md') },
   noticeIcon: { width: 44, height: 44, borderRadius: DT.radius.md, alignItems: 'center', justifyContent: 'center' },
   noticeTitle: { flexShrink: 1, fontSize: 14, lineHeight: 20, color: DT.ink },
   noticeBadge: { borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2 },
-  noticeBadgeText: { fontSize: 10, lineHeight: 14 },
+  noticeBadgeText: { fontSize: 11, lineHeight: 15 },
   noticeMsg: { marginTop: 2, fontSize: 12, lineHeight: 16.5, color: DT.muted },
   topUp: { minHeight: 44, paddingHorizontal: 16, borderRadius: DT.radius.pill },
   topUpText: { fontSize: 13 },
@@ -1805,14 +1805,14 @@ const st = StyleSheet.create({
   statusToast: { marginBottom: 12, alignSelf: 'center', maxWidth: 300, borderRadius: DT.radius.md, backgroundColor: DT.brandDeep, borderWidth: 1, borderColor: DT.gold, paddingHorizontal: 16, paddingVertical: 12, ...shadow('lg') },
   statusText: { fontSize: 12, lineHeight: 18, color: DT.onBrand, textAlign: 'center' },
   summary: { width: '100%', overflow: 'hidden', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.darkSoft, backgroundColor: DT.dark, ...shadow('lg') },
-  summaryHead: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  summaryTitle: { fontSize: 12, letterSpacing: 1.3, minWidth: 130, color: DT.gold },
+  summaryHead: { minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 },
+  summaryTitle: { fontSize: 12, minWidth: 130, color: DT.gold },
   summaryDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: DT.success },
   chevron: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.darkSoft, alignItems: 'center', justifyContent: 'center' },
   summaryGrid: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, paddingBottom: 20 },
   summaryIcon: { width: 44, height: 44, borderRadius: DT.radius.md, marginBottom: 8, alignItems: 'center', justifyContent: 'center' },
   summaryValue: { fontSize: 15, lineHeight: 20, color: DT.onBrand },
-  summaryLabel: { fontSize: 9, lineHeight: 12, letterSpacing: 0.5, minWidth: 52, textAlign: 'center', color: DT.onBrandMuted },
+  summaryLabel: { fontSize: 11, lineHeight: 15, minWidth: 52, textAlign: 'center', color: DT.onBrandMuted },
 
   dialogRoot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   dialogBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: alpha(tw.slate950, 0.45) },
@@ -1823,7 +1823,7 @@ const st = StyleSheet.create({
   dlgBtn: { flex: 1, minHeight: 52, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   dlgBtnGhost: { borderColor: DT.border, backgroundColor: DT.card },
   dlgBtnText: { fontSize: 14, lineHeight: 20 },
-  selfieKicker: { fontSize: 10, letterSpacing: 1.8, minWidth: 100, color: DT.successInk },
+  selfieKicker: { fontSize: 11, minWidth: 100, color: DT.successInk },
   selfieTitle: { marginTop: 8, fontSize: 20, lineHeight: 28, color: DT.ink },
   selfieError: { marginTop: 12, borderRadius: DT.radius.sm, borderWidth: 1, borderColor: DT.danger, backgroundColor: DT.dangerSoft, paddingHorizontal: 12, paddingVertical: 8 },
   selfieErrorText: { fontSize: 12, color: DT.dangerInk },
@@ -1833,7 +1833,7 @@ const st = StyleSheet.create({
   sheet: { maxHeight: SCREEN_H * 0.78, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg, paddingHorizontal: 20, paddingBottom: 24, paddingTop: 12, ...shadow('lg') },
   sheetHandle: { alignSelf: 'center', width: 48, height: 5, borderRadius: 999, backgroundColor: DT.border },
   sheetHead: { marginTop: 16, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 },
-  sheetKicker: { fontSize: 10, letterSpacing: 2, minWidth: 80, color: DT.gold },
+  sheetKicker: { fontSize: 11, minWidth: 80, color: DT.gold },
   sheetTitle: { marginTop: 4, fontSize: 22, lineHeight: 28, color: DT.ink },
   sheetSub: { marginTop: 4, fontSize: 12, color: DT.muted },
   sheetClose: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, alignItems: 'center', justifyContent: 'center' },
@@ -1845,10 +1845,10 @@ const st = StyleSheet.create({
   rideCard: { width: '100%', borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 16, ...shadow('sm') },
   rideIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   rideTitle: { fontSize: 14, color: DT.ink },
-  rideWhen: { marginTop: 4, fontSize: 10, letterSpacing: 1.6, minWidth: 80, color: DT.info },
+  rideWhen: { marginTop: 4, fontSize: 11, minWidth: 80, color: DT.info },
   rideCountdown: { marginTop: 4, fontSize: 11, color: DT.successInk },
-  rideFare: { borderRadius: 999, backgroundColor: DT.successSoft, paddingHorizontal: 10, paddingVertical: 4 },
-  rideFareText: { fontSize: 9, letterSpacing: 0.45, minWidth: 40, color: DT.successInk },
+  rideFare: { borderRadius: 999, backgroundColor: DT.successSoft, paddingHorizontal: 12, paddingVertical: 4 },
+  rideFareText: { fontSize: 11, minWidth: 40, color: DT.successInk },
   rideLine: { fontSize: 11 },
 });
 

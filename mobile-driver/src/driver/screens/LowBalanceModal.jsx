@@ -61,11 +61,11 @@ const LowBalanceModal = ({ isOpen, onClose, balance, cashLimit, isBlocked, below
             <View style={styles.stats}>
               <View style={styles.statsTop}>
                 <View>
-                  <Text style={[outfit(900), styles.statLabel]}>CURRENT BALANCE</Text>
+                  <Text style={[outfit(900), styles.statLabel]}>Current balance</Text>
                   <Text style={[outfit(900), styles.balance, { color: balanceNumber < 0 ? DT.danger : DT.onBrand }]}>Rs {Math.abs(balanceNumber).toFixed(2)}</Text>
                 </View>
                 <View style={{ alignItems: 'flex-end' }}>
-                  <Text style={[outfit(900), styles.statLabel]}>{belowMinimumBalance ? 'MINIMUM BALANCE' : 'CASH LIMIT'}</Text>
+                  <Text style={[outfit(900), styles.statLabel]}>{belowMinimumBalance ? 'Minimum balance' : 'Cash limit'}</Text>
                   <Text style={[outfit(700), styles.limit]}>Rs {belowMinimumBalance ? Number(minimumBalance || 0) : Number(cashLimit || 0)}</Text>
                 </View>
               </View>
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
   sub: { marginTop: 8, fontSize: 14, lineHeight: 20, paddingHorizontal: 8, textAlign: 'center' },
   stats: { backgroundColor: DT.dark, borderRadius: DT.radius.lg, padding: 20, marginBottom: 24 },
   statsTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: 16 },
-  statLabel: { fontSize: 10, letterSpacing: 1, minWidth: 90, color: DT.gold },
+  statLabel: { fontSize: 11, minWidth: 90, color: DT.gold },
   balance: { fontSize: 24, lineHeight: 30 },
   limit: { fontSize: 14, color: DT.onBrandMuted },
   track: { height: 10, width: '100%', backgroundColor: DT.darkSoft, borderRadius: 999, overflow: 'hidden', marginBottom: 8 },

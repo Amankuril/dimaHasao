@@ -62,16 +62,16 @@ export default function DriverSupport() {
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <Press onPress={() => openHelp('wa')} accessibilityLabel="Chat on WhatsApp" style={[styles.quick, { backgroundColor: DT.successSoft }]}>
                 <MessageCircle size={24} color={DT.successInk} strokeWidth={2.5} />
-                <Text style={[styles.quickText, { color: DT.successInk }]}>CHAT ON WHATSAPP</Text>
+                <Text style={[styles.quickText, { color: DT.successInk }]}>Chat on whatsapp</Text>
               </Press>
               <Press onPress={() => openHelp('call')} accessibilityLabel="Speak to Agent" style={[styles.quick, { backgroundColor: DT.infoSoft }]}>
                 <Phone size={24} color={DT.info} strokeWidth={2.5} />
-                <Text style={[styles.quickText, { color: DT.info }]}>SPEAK TO AGENT</Text>
+                <Text style={[styles.quickText, { color: DT.info }]}>Speak to agent</Text>
               </Press>
             </View>
           ) : null}
 
-          <View style={{ gap: 14 }}>
+          <View style={{ gap: 16 }}>
             <SectionLabel style={{ paddingHorizontal: 4 }}>Troubleshooting</SectionLabel>
             <View style={{ gap: 12 }}>
               {faqs.map((faq, idx) => (
@@ -123,14 +123,14 @@ export default function DriverSupport() {
 
 const styles = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: DT.card, paddingHorizontal: 16, minHeight: 52, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, overflow: 'hidden' },
-  searchInput: { flex: 1, padding: 0, minHeight: 24, fontSize: 13, letterSpacing: 0.6, color: DT.ink, ...outfit(700) },
+  searchInput: { flex: 1, padding: 0, minHeight: 24, fontSize: 13, color: DT.ink, ...outfit(700) },
   quick: { flex: 1, minHeight: 96, padding: 16, borderRadius: DT.radius.lg, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  quickText: { fontSize: 11, lineHeight: 15, letterSpacing: 0.6, textAlign: 'center', minWidth: 90, ...outfit(800) },
-  faq: { minHeight: 68, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 14, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('sm') },
+  quickText: { fontSize: 11, lineHeight: 15, textAlign: 'center', minWidth: 90, ...outfit(800) },
+  faq: { minHeight: 68, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: DT.card, paddingHorizontal: 16, paddingVertical: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('sm') },
   faqIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   faqText: { flex: 1, fontSize: 13, lineHeight: 18, color: DT.ink, ...outfit(700) },
   legal: { minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 8, paddingVertical: 4 },
-  legalText: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 110, color: DT.muted, ...outfit(800) },
+  legalText: { fontSize: 11, lineHeight: 16, minWidth: 110, color: DT.muted, ...outfit(800) },
   dialog: { width: '100%', maxWidth: 384, marginHorizontal: 8, backgroundColor: DT.card, padding: 24, borderRadius: DT.radius.xl, ...shadow('2xl') },
   dialogX: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
   dialogTitle: { fontSize: 20, lineHeight: 28, color: DT.brand, ...playfair(700) },

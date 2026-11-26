@@ -38,14 +38,17 @@ export const obCard = {
  * Android clips the last letter of a Text that combines textTransform:'uppercase' with letterSpacing, so every
  * uppercase label is written out literally (up()) instead.
  */
-export const up = (value) => String(value ?? '').toUpperCase();
+/** Was an upper-caser for tracked labels; labels are sentence case now. */
+export const up = (value) => {
+  const text = String(value ?? '');
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
 
 /** Small caps field label: pass the text through up(). */
 export const obLabel = {
   ...jk(800),
   fontSize: 11,
   lineHeight: 16,
-  letterSpacing: 0.88,
   minWidth: 40,
   color: DT.inkSoft,
 };

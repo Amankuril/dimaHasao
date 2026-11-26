@@ -570,7 +570,7 @@ export default function DriverWallet() {
             <Card tone="dark" style={st.hero}>
               <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
                 <View style={{ flexShrink: 1 }}>
-                  <Text style={st.heroLabel}>CURRENT BALANCE</Text>
+                  <Text style={st.heroLabel}>Current balance</Text>
                   <Text style={st.balance} numberOfLines={1} adjustsFontSizeToFit>
                     {money(wallet.balance)}
                   </Text>
@@ -587,7 +587,7 @@ export default function DriverWallet() {
                 <View style={st.salary}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <View style={{ flexShrink: 1 }}>
-                      <Text style={st.heroSmall}>MONTHLY SALARY</Text>
+                      <Text style={st.heroSmall}>Monthly salary</Text>
                       <Text style={st.salaryValue}>{money(driverProfile.salary)}</Text>
                       <Text style={st.salaryNote}>Set by fleet owner for this driver profile</Text>
                     </View>
@@ -600,11 +600,11 @@ export default function DriverWallet() {
 
               <View style={[owner ? { gap: 12 } : { flexDirection: 'row', gap: 12 }, { marginTop: 20 }]}>
                 <View style={[st.miniCard, !owner && { flex: 1 }]}>
-                  <Text style={st.heroSmall}>MINIMUM NEEDED</Text>
+                  <Text style={st.heroSmall}>Minimum needed</Text>
                   <Text style={st.miniValue}>{money(rules.minimumBalance)}</Text>
                 </View>
                 <View style={[st.miniCard, !owner && { flex: 1 }]}>
-                  <Text style={st.heroSmall}>AVAILABLE CASH LIMIT</Text>
+                  <Text style={st.heroSmall}>Available cash limit</Text>
                   <Text style={[st.miniValue, { color: rules.availableForOrders >= 0 ? tw.emerald200 : tw.amber200 }]}>{money(rules.availableForOrders)}</Text>
                 </View>
               </View>
@@ -781,7 +781,7 @@ export default function DriverWallet() {
             ) : (
               <View style={{ gap: 16 }}>
                 <View style={st.amountBox}>
-                  <Text style={st.amountLabel}>AMOUNT</Text>
+                  <Text style={st.amountLabel}>Amount</Text>
                   <TextInput value={topUpAmount} onChangeText={setTopUpAmount} keyboardType="decimal-pad" style={st.amountInput} />
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -824,7 +824,7 @@ export default function DriverWallet() {
             ) : (
               <View style={{ gap: 16 }}>
                 <View style={st.amountBox}>
-                  <Text style={st.amountLabel}>WITHDRAWAL AMOUNT</Text>
+                  <Text style={st.amountLabel}>Withdrawal amount</Text>
                   <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={DT.faint} style={st.amountInput} />
                   <Text style={[st.cardMeta, { marginTop: 8, textAlign: 'center' }]}>Available balance: {money(wallet.balance)}</Text>
                 </View>
@@ -847,13 +847,13 @@ const st = StyleSheet.create({
   loading: { minHeight: 480, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { fontSize: 14, color: DT.muted, ...fo(700) },
   hero: { borderRadius: DT.radius.xl, padding: 20, overflow: 'hidden', ...shadow('lg') },
-  heroLabel: { fontSize: 12, letterSpacing: 1.6, minWidth: 130, color: DT.gold, ...fo(800) },
+  heroLabel: { fontSize: 12, minWidth: 130, color: DT.gold, ...fo(800) },
   balance: { marginTop: 8, fontSize: 38, lineHeight: 46, letterSpacing: -0.5, color: DT.onBrand, fontVariant: ['tabular-nums'], ...fo(800) },
-  statusPill: { marginTop: 12, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+  statusPill: { marginTop: 12, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
   statusText: { fontSize: 12, ...fo(800) },
-  walletIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  walletIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
   salary: { marginTop: 20, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', backgroundColor: 'rgba(255,255,255,0.07)', padding: 16, overflow: 'hidden' },
-  heroSmall: { fontSize: 10, letterSpacing: 1.2, minWidth: 90, color: DT.onBrandMuted, ...fo(800) },
+  heroSmall: { fontSize: 11, minWidth: 90, color: DT.onBrandMuted, ...fo(800) },
   salaryValue: { marginTop: 4, fontSize: 24, color: tw.emerald200, ...fo(800) },
   salaryNote: { marginTop: 4, fontSize: 11, color: DT.onBrandMuted, ...fo(600) },
   salaryIcon: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(0,212,146,0.15)', alignItems: 'center', justifyContent: 'center' },
@@ -868,28 +868,28 @@ const st = StyleSheet.create({
   wdRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, padding: 12 },
   wdAmount: { fontSize: 15, color: DT.ink, fontVariant: ['tabular-nums'], ...fo(800) },
   wdDate: { marginTop: 2, fontSize: 11, color: DT.muted, ...fo(600) },
-  guide: { borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, padding: 14 },
+  guide: { borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, padding: 16 },
   guideTitle: { fontSize: 14, color: DT.ink, ...fo(800) },
   guideText: { marginTop: 4, fontSize: 12, lineHeight: 19, color: DT.inkSoft, ...fo(500) },
-  stat: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 16, paddingVertical: 14 },
-  statLabel: { fontSize: 10, letterSpacing: 1.2, minWidth: 80, ...fo(800) },
+  stat: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 16, paddingVertical: 16 },
+  statLabel: { fontSize: 11, minWidth: 80, ...fo(800) },
   statValue: { marginTop: 4, fontSize: 18, fontVariant: ['tabular-nums'], ...fo(800) },
   txSub: { marginTop: 4, fontSize: 11, color: DT.muted, ...fo(600) },
   filter: { minHeight: 40, justifyContent: 'center', borderRadius: 999, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 8 },
-  filterText: { fontSize: 11, letterSpacing: 0.8, minWidth: 28, ...fo(800) },
+  filterText: { fontSize: 11, minWidth: 28, ...fo(800) },
   empty: { borderRadius: DT.radius.lg, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, padding: 32, alignItems: 'center', ...shadow('sm') },
   emptyTitle: { marginTop: 12, fontSize: 14, color: DT.inkSoft, ...fo(800) },
   emptySub: { marginTop: 4, fontSize: 12, color: DT.muted, textAlign: 'center', ...fo(600) },
-  txCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 14, ...shadow('sm') },
-  txIcon: { width: 44, height: 44, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  txCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
+  txIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   txTitle: { fontSize: 14, color: DT.ink, ...fo(800) },
   txHint: { marginTop: 2, fontSize: 12, lineHeight: 18, color: DT.inkSoft, ...fo(500) },
   txDate: { marginTop: 4, fontSize: 11, color: DT.muted, ...fo(600) },
   txAmount: { fontSize: 16, fontVariant: ['tabular-nums'], ...fo(800) },
-  txBal: { marginTop: 4, fontSize: 10, color: DT.muted, fontVariant: ['tabular-nums'], ...fo(700) },
+  txBal: { marginTop: 4, fontSize: 11, color: DT.muted, fontVariant: ['tabular-nums'], ...fo(700) },
   modalWrap: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(6,44,22,0.55)' },
-  sheet: { borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, backgroundColor: DT.card, paddingHorizontal: 20, paddingTop: 10, ...shadow('2xl') },
-  grab: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: DT.border, marginBottom: 14 },
+  sheet: { borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, backgroundColor: DT.card, paddingHorizontal: 20, paddingTop: 12, ...shadow('2xl') },
+  grab: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: DT.border, marginBottom: 16 },
   sheetHead: { marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   sheetTitle: { fontSize: 20, color: DT.ink, ...fo(800) },
   sheetSub: { fontSize: 13, color: DT.muted, ...fo(600) },
@@ -897,8 +897,8 @@ const st = StyleSheet.create({
   okIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: DT.successSoft, alignItems: 'center', justifyContent: 'center' },
   okTitle: { marginTop: 16, fontSize: 18, color: DT.ink, ...fo(800) },
   amountBox: { borderRadius: DT.radius.xl, backgroundColor: DT.bgSoft, padding: 20, alignItems: 'center' },
-  amountLabel: { fontSize: 12, letterSpacing: 1.4, minWidth: 90, color: DT.muted, ...fo(800) },
+  amountLabel: { fontSize: 12, minWidth: 90, color: DT.muted, ...fo(800) },
   amountInput: { marginTop: 8, width: '100%', padding: 0, textAlign: 'center', fontSize: 36, color: DT.ink, fontVariant: ['tabular-nums'], ...fo(800) },
-  quick: { flex: 1, minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingVertical: 10, alignItems: 'center' },
+  quick: { flex: 1, minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, paddingVertical: 12, alignItems: 'center' },
   quickText: { fontSize: 14, color: DT.ink, ...fo(700) },
 });

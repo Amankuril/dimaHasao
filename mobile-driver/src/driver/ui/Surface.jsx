@@ -97,7 +97,7 @@ const st = StyleSheet.create({
     gap: 8,
   },
   btnText: { fontSize: 15, lineHeight: 20, ...outfit(700) },
-  chip: { alignSelf: 'flex-start', minWidth: 44, borderRadius: DT.radius.pill, paddingHorizontal: 10, paddingVertical: 4 },
-  chipText: { fontSize: 10, lineHeight: 14, letterSpacing: 0.4, textAlign: 'center', ...outfit(800) },
-  section: { fontSize: 11, lineHeight: 16, letterSpacing: 0.8, minWidth: 40, color: DT.muted, ...outfit(800) },
+  chip: { alignSelf: 'flex-start', minWidth: 44, borderRadius: DT.radius.pill, paddingHorizontal: 12, paddingVertical: 4 },
+  chipText: { fontSize: 11, lineHeight: 15, textAlign: 'center', ...outfit(800) },
+  section: { fontSize: 11, lineHeight: 16, minWidth: 40, color: DT.muted, ...outfit(800) },
 });

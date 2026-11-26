@@ -93,7 +93,7 @@ const st = StyleSheet.create({
     alignItems: 'center',
     ...shadow('xl'),
   },
-  item: { flex: 1, minWidth: 0, height: 52, alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: DT.radius.pill, paddingHorizontal: 2 },
+  item: { flex: 1, minWidth: 0, height: 52, alignItems: 'center', justifyContent: 'center', gap: 4, borderRadius: DT.radius.pill, paddingHorizontal: 2 },
   itemActive: { backgroundColor: 'rgba(255,255,255,0.1)' },
-  label: { maxWidth: '100%', minWidth: 30, fontSize: 8.5, lineHeight: 11, letterSpacing: 0.3, textAlign: 'center' },
+  label: { maxWidth: '100%', minWidth: 30, fontSize: 11.5, lineHeight: 11, textAlign: 'center' },
 });

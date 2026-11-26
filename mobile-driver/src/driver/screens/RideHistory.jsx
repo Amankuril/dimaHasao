@@ -259,7 +259,7 @@ export default function RideHistory() {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: NAV_BAR_HEIGHT + insets.bottom + 16 }} showsVerticalScrollIndicator={false}>
         {isFilterOpen ? (
           <Card style={st.filterBox}>
-            <SectionLabel style={{ paddingBottom: 10 }}>FILTER HISTORY</SectionLabel>
+            <SectionLabel style={{ paddingBottom: 12 }}>Filter history</SectionLabel>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
               {STATUS_FILTERS.map((filter) => {
                 const on = statusFilter === filter.id;
@@ -299,7 +299,7 @@ export default function RideHistory() {
 
         <View style={{ flexDirection: 'row', gap: 12, marginBottom: 12 }}>
           <Card style={[st.stat, { flex: 1 }]}>
-            <Text style={st.statLabel}>COMPLETION RATE</Text>
+            <Text style={st.statLabel}>Completion rate</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={[st.statIcon, { backgroundColor: DT.successSoft }]}>
                 <TrendingUp size={14} color={DT.successInk} />
@@ -308,7 +308,7 @@ export default function RideHistory() {
             </View>
           </Card>
           <Card tone="dark" style={[st.stat, { flex: 1 }]}>
-            <Text style={[st.statLabel, { color: DT.gold }]}>TOTAL EARNED</Text>
+            <Text style={[st.statLabel, { color: DT.gold }]}>Total earned</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={[st.statIcon, { backgroundColor: 'rgba(202,168,62,0.16)' }]}>
                 <IndianRupee size={12} color={DT.gold} />
@@ -321,12 +321,12 @@ export default function RideHistory() {
         </View>
 
         <Card style={st.trips}>
-          <Text style={st.tripsLabel}>TRIPS ON RECORD</Text>
+          <Text style={st.tripsLabel}>Trips on record</Text>
           <Text style={st.tripsValue}>{stats.totalTrips}</Text>
         </Card>
 
         <View style={{ gap: 12 }}>
-          <SectionLabel style={{ paddingLeft: 4 }}>ACTIVITY LOG</SectionLabel>
+          <SectionLabel style={{ paddingLeft: 4 }}>Activity log</SectionLabel>
 
           {loading ? (
             <View style={st.msg}>
@@ -368,14 +368,14 @@ export default function RideHistory() {
 
                   <View style={{ flexDirection: 'row', gap: 12 }}>
                     <View style={st.mini}>
-                      <Text style={st.miniLabel}>TRIP DATE</Text>
+                      <Text style={st.miniLabel}>Trip date</Text>
                       <View style={st.miniRow}>
                         <Calendar size={12} color={DT.inkSoft} />
                         <Text style={st.miniValue}>{item.shortDate}</Text>
                       </View>
                     </View>
                     <View style={st.mini}>
-                      <Text style={st.miniLabel}>PAYMENT</Text>
+                      <Text style={st.miniLabel}>Payment</Text>
                       <View style={st.miniRow}>
                         <IndianRupee size={12} color={DT.inkSoft} />
                         <Text style={st.miniValue}>{item.paymentMethod}</Text>
@@ -390,7 +390,7 @@ export default function RideHistory() {
                         <View style={st.line} />
                       </View>
                       <View style={{ flex: 1, minWidth: 0, paddingBottom: 12 }}>
-                        <Text style={st.locLabel}>PICKUP</Text>
+                        <Text style={st.locLabel}>Pickup</Text>
                         <Text style={st.loc}>{item.pickup}</Text>
                       </View>
                     </View>
@@ -399,7 +399,7 @@ export default function RideHistory() {
                         <View style={[st.dot, { backgroundColor: DT.danger }]} />
                       </View>
                       <View style={{ flex: 1, minWidth: 0 }}>
-                        <Text style={st.locLabel}>DROP</Text>
+                        <Text style={st.locLabel}>Drop</Text>
                         <Text style={st.loc}>{item.drop}</Text>
                       </View>
                     </View>
@@ -436,37 +436,37 @@ export default function RideHistory() {
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
   sq: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)', backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  filterBox: { marginBottom: 16, padding: 14 },
-  filterBtn: { minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10 },
-  filterBtnText: { fontSize: 11, letterSpacing: 0.6, minWidth: 40, ...fo(800) },
+  filterBox: { marginBottom: 16, padding: 16 },
+  filterBtn: { minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12 },
+  filterBtnText: { fontSize: 11, minWidth: 40, ...fo(800) },
   tabs: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   tab: { flex: 1, minHeight: 44, justifyContent: 'center', borderRadius: 999, borderWidth: 1, alignItems: 'center' },
-  tabText: { fontSize: 11, letterSpacing: 0.8, minWidth: 40, textAlign: 'center', ...fo(800) },
+  tabText: { fontSize: 11, minWidth: 40, textAlign: 'center', ...fo(800) },
   stat: { padding: 16, gap: 4 },
-  statLabel: { fontSize: 10, letterSpacing: 0.8, minWidth: 90, color: DT.muted, lineHeight: 14, marginBottom: 4, ...fo(800) },
+  statLabel: { fontSize: 11, minWidth: 90, color: DT.muted, lineHeight: 14, marginBottom: 4, ...fo(800) },
   statIcon: { width: 28, height: 28, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   statValue: { fontSize: 20, lineHeight: 26, fontVariant: ['tabular-nums'], ...fo(800) },
-  trips: { marginBottom: 20, paddingVertical: 14 },
-  tripsLabel: { fontSize: 11, letterSpacing: 0.8, minWidth: 100, color: DT.muted, ...fo(800) },
+  trips: { marginBottom: 20, paddingVertical: 16 },
+  tripsLabel: { fontSize: 11, minWidth: 100, color: DT.muted, ...fo(800) },
   tripsValue: { marginTop: 4, fontSize: 26, color: DT.ink, ...fo(800) },
   msg: { backgroundColor: DT.card, padding: 24, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, alignItems: 'center', justifyContent: 'center', gap: 12, ...shadow('sm') },
   msgText: { fontSize: 13, textAlign: 'center', ...fo(700) },
-  item: { backgroundColor: DT.card, padding: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, gap: 14, ...shadow('sm') },
+  item: { backgroundColor: DT.card, padding: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, gap: 16, ...shadow('sm') },
   typeIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   itemTitle: { fontSize: 14, lineHeight: 18, color: DT.ink, ...fo(800) },
   itemSub: { fontSize: 11, color: DT.inkSoft, ...fo(600) },
-  itemDate: { fontSize: 10, letterSpacing: 0.6, color: DT.muted, ...fo(600) },
+  itemDate: { fontSize: 11, color: DT.muted, ...fo(600) },
   earn: { fontSize: 18, lineHeight: 24, color: DT.ink, fontVariant: ['tabular-nums'], ...fo(800) },
-  mini: { flex: 1, borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, paddingHorizontal: 12, paddingVertical: 10 },
-  miniLabel: { fontSize: 10, letterSpacing: 0.8, minWidth: 60, color: DT.muted, ...fo(800) },
+  mini: { flex: 1, borderRadius: DT.radius.md, backgroundColor: DT.bgSoft, paddingHorizontal: 12, paddingVertical: 12 },
+  miniLabel: { fontSize: 11, minWidth: 60, color: DT.muted, ...fo(800) },
   miniRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 6 },
   miniValue: { fontSize: 12, color: DT.ink, ...fo(700) },
   rail: { width: 12, alignItems: 'center', alignSelf: 'stretch' },
   dot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
   line: { flex: 1, width: 2, marginTop: 2, backgroundColor: DT.border },
-  locLabel: { fontSize: 10, letterSpacing: 0.8, minWidth: 40, color: DT.muted, ...fo(800) },
+  locLabel: { fontSize: 11, minWidth: 40, color: DT.muted, ...fo(800) },
   loc: { fontSize: 13, lineHeight: 18, color: DT.ink, ...fo(600) },
-  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: DT.radius.md, backgroundColor: DT.bg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 12, paddingVertical: 10 },
+  foot: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderRadius: DT.radius.md, backgroundColor: DT.bg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 12, paddingVertical: 12 },
   footGroup: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  footText: { fontSize: 10, letterSpacing: 0.6, color: DT.inkSoft, ...fo(700) },
+  footText: { fontSize: 11, color: DT.inkSoft, ...fo(700) },
 });

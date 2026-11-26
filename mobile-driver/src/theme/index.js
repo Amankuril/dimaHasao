@@ -97,13 +97,14 @@ export const font = { xs: 11, sm: 12, md: 14, lg: 16, xl: 20, xxl: 24, xxxl: 30 
  */
 const POPPINS = {
   300: 'Poppins_400Regular', 400: 'Poppins_400Regular', 500: 'Poppins_500Medium', 600: 'Poppins_600SemiBold',
-  700: 'Poppins_700Bold', 800: 'Poppins_800ExtraBold', 900: 'Poppins_800ExtraBold',
+  // Capped at 600 (unslop): hierarchy comes from size and colour, not weight.
+  700: 'Poppins_600SemiBold', 800: 'Poppins_600SemiBold', 900: 'Poppins_600SemiBold',
 };
 const MONTSERRAT = {
   400: 'Montserrat_400Regular', 500: 'Montserrat_500Medium', 600: 'Montserrat_600SemiBold',
-  700: 'Montserrat_700Bold', 800: 'Montserrat_800ExtraBold', 900: 'Montserrat_900Black',
+  700: 'Montserrat_600SemiBold', 800: 'Montserrat_600SemiBold', 900: 'Montserrat_600SemiBold',
 };
-const INTER = { 400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold', 700: 'Inter_700Bold', 800: 'Inter_700Bold', 900: 'Inter_700Bold' };
+const INTER = { 400: 'Inter_400Regular', 500: 'Inter_500Medium', 600: 'Inter_600SemiBold', 700: 'Inter_600SemiBold', 800: 'Inter_600SemiBold', 900: 'Inter_600SemiBold' };
 
 /** Body font of the whole user app (.dh-app, global.css). */
 export function poppins(weight = 400) {
@@ -121,7 +122,7 @@ export function cinzel() {
 export function playfair(weight = 400, italic = false) {
   // Loaded on the web: 400, 600, 700 upright; 400 and 600 italic.
   if (italic) return { fontFamily: weight >= 600 ? 'PlayfairDisplay_600SemiBold_Italic' : 'PlayfairDisplay_400Regular_Italic' };
-  const w = weight >= 700 ? '700Bold' : weight >= 600 ? '600SemiBold' : '400Regular';
+  const w = weight >= 600 ? '600SemiBold' : '400Regular'; // capped at 600 (unslop)
   return { fontFamily: `PlayfairDisplay_${w}` };
 }
 /** `font-inter` */
@@ -129,13 +130,13 @@ export function inter(weight = 400) {
   return { fontFamily: INTER[weight] || INTER[400] };
 }
 
-const OUTFIT = { 300: 'Outfit_400Regular', 400: 'Outfit_400Regular', 500: 'Outfit_500Medium', 600: 'Outfit_600SemiBold', 700: 'Outfit_700Bold', 800: 'Outfit_800ExtraBold', 900: 'Outfit_900Black' };
+const OUTFIT = { 300: 'Outfit_400Regular', 400: 'Outfit_400Regular', 500: 'Outfit_500Medium', 600: 'Outfit_600SemiBold', 700: 'Outfit_600SemiBold', 800: 'Outfit_600SemiBold', 900: 'Outfit_600SemiBold' }; // capped at 600 (unslop)
 /** Body font of the taxi module (Taxi/index.css: 'Outfit'). */
 export function outfit(weight = 400) {
   return { fontFamily: OUTFIT[weight] || OUTFIT[400] };
 }
 
-const JAKARTA = { 300: 'PlusJakartaSans_400Regular', 400: 'PlusJakartaSans_400Regular', 500: 'PlusJakartaSans_500Medium', 600: 'PlusJakartaSans_600SemiBold', 700: 'PlusJakartaSans_700Bold', 800: 'PlusJakartaSans_800ExtraBold' };
+const JAKARTA = { 300: 'PlusJakartaSans_400Regular', 400: 'PlusJakartaSans_400Regular', 500: 'PlusJakartaSans_500Medium', 600: 'PlusJakartaSans_600SemiBold', 700: 'PlusJakartaSans_600SemiBold', 800: 'PlusJakartaSans_600SemiBold' }; // capped at 600 (unslop)
 /** Driver onboarding font (onboarding.css: 'Plus Jakarta Sans'). */
 export function jakarta(weight = 400) {
   return { fontFamily: JAKARTA[weight] || JAKARTA[400] };

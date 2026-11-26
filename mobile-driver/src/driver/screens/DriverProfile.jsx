@@ -433,7 +433,7 @@ export default function DriverProfile() {
                       accessibilityLabel={item.label}
                       style={({ pressed }) => [st.row, idx > 0 && st.rowDivider, pressed && item.type !== 'toggle' && { backgroundColor: DT.bg }]}
                     >
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16, flex: 1 }}>
                         <View style={[st.iconTile, danger && { backgroundColor: DT.dangerSoft }]}>
                           <item.Icon size={20} color={danger ? DT.danger : DT.brand} />
                         </View>
@@ -471,7 +471,7 @@ export default function DriverProfile() {
             <View style={st.support}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: DT.success }} />
-                <Text style={st.supportTitle}>DISTRICT SUPPORT</Text>
+                <Text style={st.supportTitle}>District support</Text>
               </View>
 
               <View style={{ gap: 20 }}>
@@ -481,7 +481,7 @@ export default function DriverProfile() {
                       <Mail size={18} color={DT.brand} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={st.supportLabel}>EMAIL SUPPORT</Text>
+                      <Text style={st.supportLabel}>Email support</Text>
                       <Text style={st.supportValue}>{supportInfo.email}</Text>
                     </View>
                   </Pressable>
@@ -493,7 +493,7 @@ export default function DriverProfile() {
                       <Phone size={18} color={DT.brand} />
                     </View>
                     <View style={{ flex: 1 }}>
-                      <Text style={st.supportLabel}>CALL SUPPORT</Text>
+                      <Text style={st.supportLabel}>Call support</Text>
                       <Text style={st.supportValue}>{supportInfo.phone}</Text>
                     </View>
                   </Pressable>
@@ -574,14 +574,14 @@ const st = StyleSheet.create({
   helpBtn: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.12)' },
   help: { fontSize: 13, color: DT.onBrand, ...fo(700) },
   name: { fontSize: 22, lineHeight: 28, color: DT.onBrand, ...fo(700) },
-  ratingChip: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.14)' },
+  ratingChip: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 4, borderRadius: DT.radius.pill, backgroundColor: 'rgba(255,255,255,0.14)' },
   rating: { fontSize: 13, color: DT.accent, ...fo(700) },
   avatar: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderWidth: 2, borderColor: DT.gold },
   badge: { position: 'absolute', bottom: -4, right: -4, width: 22, height: 22, backgroundColor: DT.success, borderRadius: 11, borderWidth: 2, borderColor: DT.brandDeep, alignItems: 'center', justifyContent: 'center' },
   errorLine: { fontSize: 12, color: DT.danger, ...fo(500) },
   infoLabel: { fontSize: 11, color: DT.muted, ...fo(500) },
   infoValue: { fontSize: 13, color: DT.ink, ...fo(700) },
-  sectionTitle: { paddingHorizontal: 8, marginBottom: 10 },
+  sectionTitle: { paddingHorizontal: 8, marginBottom: 12 },
   listCard: { padding: 0, overflow: 'hidden', borderRadius: DT.radius.xl },
   row: { minHeight: 64, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12 },
   rowDivider: { borderTopWidth: 1, borderTopColor: DT.borderSoft },
@@ -591,11 +591,11 @@ const st = StyleSheet.create({
   toggle: { width: 44, height: 24, borderRadius: 12, justifyContent: 'center' },
   knob: { position: 'absolute', top: 2, width: 20, height: 20, borderRadius: 10, backgroundColor: DT.onBrand, ...shadow('sm') },
   support: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 20, ...shadow('sm') },
-  supportTitle: { fontSize: 13, letterSpacing: 0.65, minWidth: 120, color: DT.ink, ...fo(700) },
+  supportTitle: { fontSize: 13, minWidth: 120, color: DT.ink, ...fo(700) },
   supportIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
-  supportLabel: { fontSize: 10, letterSpacing: 1, minWidth: 90, color: DT.muted, ...fo(700) },
+  supportLabel: { fontSize: 11, minWidth: 90, color: DT.muted, ...fo(700) },
   supportValue: { fontSize: 14, color: DT.ink, ...fo(700) },
-  logoutBtn: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft },
+  logoutBtn: { minHeight: 52, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft },
   logout: { fontSize: 14, color: DT.dangerInk, ...fo(700) },
   logoutPanel: { width: '100%', maxWidth: 320, borderRadius: DT.radius.xl, backgroundColor: DT.card, padding: 24, borderWidth: 1, borderColor: DT.borderSoft, ...shadow('2xl') },
   logoutTitle: { fontSize: 18, letterSpacing: -0.45, color: DT.ink, ...fo(700) },

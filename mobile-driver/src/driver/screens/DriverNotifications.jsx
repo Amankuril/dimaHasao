@@ -328,7 +328,7 @@ export default function DriverNotifications() {
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
-            <Text style={styles.label} numberOfLines={1}>{activeTab === 'schedule' ? 'SCHEDULED RIDES' : 'ADMIN & SYSTEM ALERTS'}</Text>
+            <Text style={styles.label} numberOfLines={1}>{activeTab === 'schedule' ? 'Scheduled rides' : 'Admin & system alerts'}</Text>
             <Text style={styles.label2}>{totalCount} VISIBLE</Text>
           </View>
           <Press
@@ -338,7 +338,7 @@ export default function DriverNotifications() {
             style={[styles.pill, { borderColor: DT.border, backgroundColor: DT.card }, busy ? { opacity: 0.5 } : null]}
           >
             {busy ? <Spinner size={14} color={DT.brand} strokeWidth={2.5} /> : <RefreshCw size={14} color={DT.brand} strokeWidth={2.5} />}
-            <Text style={[styles.pillText, { color: DT.brand }]}>REFRESH</Text>
+            <Text style={[styles.pillText, { color: DT.brand }]}>Refresh</Text>
           </Press>
           {activeTab === 'alerts' ? (
             <Press
@@ -348,7 +348,7 @@ export default function DriverNotifications() {
               style={[styles.pill, { borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft }, clearing || loading || alertItems.length === 0 ? { opacity: 0.5 } : null]}
             >
               <Trash2 size={14} color={DT.danger} strokeWidth={2.5} />
-              <Text style={[styles.pillText, { color: DT.dangerInk }]}>CLEAR ALL</Text>
+              <Text style={[styles.pillText, { color: DT.dangerInk }]}>Clear all</Text>
             </Press>
           ) : null}
         </View>
@@ -393,7 +393,7 @@ export default function DriverNotifications() {
                 <Text style={[styles.cardTitle, { flex: 1 }]}>{notification.title || 'Notification'}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <Text style={styles.time}>{formatNotificationTime(notification.sentAt)}</Text>
-                  <Press scale={1} onPress={() => handleRemoveSingle(notification.id)} accessibilityLabel="Remove notification" hitSlop={6} style={{ padding: 10, margin: -6 }}>
+                  <Press scale={1} onPress={() => handleRemoveSingle(notification.id)} accessibilityLabel="Remove notification" hitSlop={6} style={{ padding: 12, margin: -6 }}>
                     <Trash2 size={16} color={DT.faint} strokeWidth={2.5} />
                   </Press>
                 </View>
@@ -435,11 +435,11 @@ export default function DriverNotifications() {
 
                 <View style={{ marginTop: 12, flexDirection: 'row', gap: 8 }}>
                   <View style={styles.stat}>
-                    <Text style={styles.statLabel}>FARE</Text>
+                    <Text style={styles.statLabel}>Fare</Text>
                     <Text style={styles.statValue}>{formatFareLabel(ride.fare || ride.baseFare)}</Text>
                   </View>
                   <View style={styles.stat}>
-                    <Text style={styles.statLabel}>DISTANCE</Text>
+                    <Text style={styles.statLabel}>Distance</Text>
                     <Text style={styles.statValue}>{formatDistanceLabel(ride.estimatedDistanceMeters)}</Text>
                   </View>
                 </View>
@@ -473,7 +473,7 @@ export default function DriverNotifications() {
               style={[styles.pager, currentPage === 1 || busy ? { opacity: 0.4 } : null]}
             >
               <ArrowLeft size={14} color={DT.brand} strokeWidth={2.5} />
-              <Text style={styles.pagerText}>PREV</Text>
+              <Text style={styles.pagerText}>Prev</Text>
             </Press>
             <Text style={styles.page}>PAGE {currentPage}</Text>
             <Press
@@ -482,7 +482,7 @@ export default function DriverNotifications() {
               accessibilityLabel="Next page"
               style={[styles.pager, !hasMore || busy ? { opacity: 0.4 } : null]}
             >
-              <Text style={styles.pagerText}>NEXT</Text>
+              <Text style={styles.pagerText}>Next</Text>
               <ChevronRight size={14} color={DT.brand} strokeWidth={2.5} />
             </Press>
           </View>
@@ -496,14 +496,14 @@ const styles = StyleSheet.create({
   countPill: { minWidth: 36, alignItems: 'center', backgroundColor: DT.gold, paddingHorizontal: 12, paddingVertical: 6, borderRadius: DT.radius.pill },
   countPillText: { fontSize: 13, lineHeight: 18, color: DT.ctaInk, ...outfit(800) },
   pill: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, borderRadius: DT.radius.pill, borderWidth: 1, paddingHorizontal: 12 },
-  pillText: { fontSize: 10, lineHeight: 15, letterSpacing: 0.8, minWidth: 48, ...outfit(800) },
+  pillText: { fontSize: 11, lineHeight: 15, minWidth: 48, ...outfit(800) },
   tabs: { flexDirection: 'row', gap: 6, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card, padding: 4, ...shadow('sm') },
   tab: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: DT.radius.pill, paddingHorizontal: 12 },
   tabOn: { backgroundColor: DT.brand },
-  tabText: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 64, textAlign: 'center', ...outfit(800) },
-  tabCount: { fontSize: 10, lineHeight: 14, borderRadius: DT.radius.pill, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', ...outfit(800) },
-  label: { fontSize: 11, lineHeight: 16, letterSpacing: 0.8, minWidth: 120, color: DT.ink, ...outfit(800) },
-  label2: { fontSize: 10, lineHeight: 15, letterSpacing: 0.8, minWidth: 80, color: DT.muted, ...outfit(700) },
+  tabText: { fontSize: 11, lineHeight: 16, minWidth: 64, textAlign: 'center', ...outfit(800) },
+  tabCount: { fontSize: 11, lineHeight: 15, borderRadius: DT.radius.pill, paddingHorizontal: 8, paddingVertical: 2, overflow: 'hidden', ...outfit(800) },
+  label: { fontSize: 11, lineHeight: 16, minWidth: 120, color: DT.ink, ...outfit(800) },
+  label2: { fontSize: 11, lineHeight: 15, minWidth: 80, color: DT.muted, ...outfit(700) },
   skeletonCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.lg, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, padding: 16 },
   state: { alignItems: 'center', justifyContent: 'center', paddingVertical: 64, gap: 16 },
   stateIcon: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, borderRadius: DT.radius.xl, alignItems: 'center', justifyContent: 'center', ...shadow('sm') },
@@ -513,18 +513,18 @@ const styles = StyleSheet.create({
   card: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
   cardIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   cardTitle: { fontSize: 14, lineHeight: 20, color: DT.ink, ...outfit(700) },
-  time: { fontSize: 10, lineHeight: 14, color: DT.muted, marginTop: 2, ...outfit(600) },
+  time: { fontSize: 11, lineHeight: 15, color: DT.muted, marginTop: 2, ...outfit(600) },
   body: { fontSize: 13, lineHeight: 19, color: DT.inkSoft, marginTop: 4, ...outfit(500) },
   image: { marginTop: 12, borderRadius: DT.radius.md, overflow: 'hidden', borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.bg },
-  serviceLocation: { fontSize: 10, lineHeight: 14, letterSpacing: 0.8, color: DT.muted, marginTop: 8, ...outfit(700) },
-  scheduleAt: { marginTop: 4, fontSize: 10, lineHeight: 15, letterSpacing: 0.8, color: DT.info, ...outfit(800) },
+  serviceLocation: { fontSize: 11, lineHeight: 15, color: DT.muted, marginTop: 8, ...outfit(700) },
+  scheduleAt: { marginTop: 4, fontSize: 11, lineHeight: 15, color: DT.info, ...outfit(800) },
   countdown: { marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.successInk, ...outfit(800) },
   stat: { flex: 1, borderRadius: DT.radius.md, backgroundColor: DT.bg, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 12, paddingVertical: 8 },
-  statLabel: { fontSize: 9, lineHeight: 12, letterSpacing: 0.8, minWidth: 50, color: DT.muted, ...outfit(800) },
+  statLabel: { fontSize: 11, lineHeight: 15, minWidth: 50, color: DT.muted, ...outfit(800) },
   statValue: { marginTop: 4, fontSize: 14, lineHeight: 20, color: DT.ink, ...outfit(800) },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   infoText: { flex: 1, fontSize: 12, lineHeight: 18, color: DT.inkSoft, ...outfit(600) },
   pager: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, borderRadius: DT.radius.pill, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, ...shadow('sm') },
-  pagerText: { fontSize: 12, lineHeight: 16, letterSpacing: 1, minWidth: 40, color: DT.brand, ...outfit(800) },
-  page: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 60, textAlign: 'center', color: DT.muted, ...outfit(800) },
+  pagerText: { fontSize: 12, lineHeight: 16, minWidth: 40, color: DT.brand, ...outfit(800) },
+  page: { fontSize: 11, lineHeight: 16, minWidth: 60, textAlign: 'center', color: DT.muted, ...outfit(800) },
 });

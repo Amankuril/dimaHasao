@@ -203,11 +203,11 @@ export default function DriverReferral() {
           </View>
 
           <View style={styles.codeBox}>
-            <Text style={styles.codeLabel}>YOUR REFERRAL CODE</Text>
+            <Text style={styles.codeLabel}>Your referral code</Text>
             <Text style={styles.code} selectable>{referralCode || 'Not available'}</Text>
           </View>
 
-          <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
+          <View style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}>
             <CtaButton
               variant="cta"
               title="Copy"
@@ -229,7 +229,7 @@ export default function DriverReferral() {
           </View>
 
           <View style={styles.linkBox}>
-            <Text style={styles.linkLabel}>SHARE LINK</Text>
+            <Text style={styles.linkLabel}>Share link</Text>
             <Text style={styles.link} selectable>{referralShareLink || 'Share link will appear once your referral code is ready.'}</Text>
           </View>
         </View>
@@ -292,14 +292,14 @@ const styles = StyleSheet.create({
   lang: { fontSize: 11, lineHeight: 16, color: DT.onBrandMuted, marginTop: 4, ...outfit(500) },
   gift: { width: 48, height: 48, borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },
   codeBox: { borderRadius: DT.radius.lg, borderWidth: 1.5, borderStyle: 'dashed', borderColor: DT.gold, backgroundColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 16, paddingVertical: 16, alignItems: 'center' },
-  code: { fontSize: 26, lineHeight: 34, letterSpacing: 2, color: DT.onBrand, textAlign: 'center', marginTop: 4, ...outfit(800) },
-  codeLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.2, minWidth: 140, textAlign: 'center', color: DT.onBrandMuted, ...outfit(700) },
-  linkBox: { marginTop: 14, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 14, paddingVertical: 12 },
-  linkLabel: { fontSize: 10, lineHeight: 15, letterSpacing: 1.2, minWidth: 90, color: DT.gold, ...outfit(700) },
+  code: { fontSize: 26, lineHeight: 34, color: DT.onBrand, textAlign: 'center', marginTop: 4, ...outfit(800) },
+  codeLabel: { fontSize: 11, lineHeight: 15, minWidth: 140, textAlign: 'center', color: DT.onBrandMuted, ...outfit(700) },
+  linkBox: { marginTop: 16, borderRadius: DT.radius.md, backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 16, paddingVertical: 12 },
+  linkLabel: { fontSize: 11, lineHeight: 15, minWidth: 90, color: DT.gold, ...outfit(700) },
   link: { marginTop: 4, fontSize: 12, lineHeight: 17, color: DT.onBrand, ...outfit(500) },
   panel: { width: '100%', maxWidth: 448, alignSelf: 'center', borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, overflow: 'hidden', ...shadow('sm') },
   tabs: { flexDirection: 'row', gap: 8 },
-  tab: { flex: 1, minHeight: 44, borderRadius: DT.radius.pill, paddingVertical: 10, alignItems: 'center', justifyContent: 'center' },
+  tab: { flex: 1, minHeight: 44, borderRadius: DT.radius.pill, paddingVertical: 12, alignItems: 'center', justifyContent: 'center' },
   tabOn: { backgroundColor: DT.brand },
   tabText: { fontSize: 12, lineHeight: 16, ...outfit(700) },
   how: { fontSize: 18, lineHeight: 26, color: DT.brand, ...playfair(700) },

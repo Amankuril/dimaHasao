@@ -187,7 +187,7 @@ export default function DriverBankDetails() {
               <Landmark size={24} color={DT.gold} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={st.darkEyebrow}>PAYOUT SETUP</Text>
+              <Text style={st.darkEyebrow}>Payout setup</Text>
               <Text style={st.darkSummary}>{summary}</Text>
               <Text style={st.darkNote}>These details will be used when you send a withdrawal request.</Text>
             </View>
@@ -213,7 +213,7 @@ export default function DriverBankDetails() {
                       <Text style={st.qrSub}>Upload your payout QR image from gallery or camera.</Text>
                     </View>
 <CtaButton
-                      title={uploading ? 'UPLOADING...' : 'UPLOAD QR'}
+                      title={uploading ? 'Uploading...' : 'Upload QR'}
                       variant="brand"
                       onPress={handleQrUpload}
                       disabled={uploading}
@@ -247,14 +247,14 @@ export default function DriverBankDetails() {
 
 const st = StyleSheet.create({
   root: { flex: 1, backgroundColor: DT.bg },
-  dark: { borderRadius: DT.radius.xl, padding: 22, ...shadow('lg') },
-  darkIcon: { width: 56, height: 56, borderRadius: 18, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
-  darkEyebrow: { fontSize: 11, letterSpacing: 1.4, minWidth: 100, color: DT.gold, ...fo(800) },
+  dark: { borderRadius: DT.radius.xl, padding: 24, ...shadow('lg') },
+  darkIcon: { width: 56, height: 56, borderRadius: 16, backgroundColor: 'rgba(202,168,62,0.14)', borderWidth: 1, borderColor: 'rgba(202,168,62,0.35)', alignItems: 'center', justifyContent: 'center' },
+  darkEyebrow: { fontSize: 11, minWidth: 100, color: DT.gold, ...fo(800) },
   darkSummary: { marginTop: 8, fontSize: 18, color: DT.onBrand, ...fo(800) },
   darkNote: { marginTop: 8, fontSize: 13, lineHeight: 19, color: DT.onBrandMuted, ...fo(500) },
-  card: { borderRadius: DT.radius.xl, padding: 22 },
+  card: { borderRadius: DT.radius.xl, padding: 24 },
   loading: { paddingVertical: 64, textAlign: 'center', fontSize: 14, color: DT.muted, ...fo(600) },
-  fieldLabel: { fontSize: 11, letterSpacing: 0.8, minWidth: 60, color: DT.muted, ...fo(800) },
+  fieldLabel: { fontSize: 11, minWidth: 60, color: DT.muted, ...fo(800) },
   input: { height: 52, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg, paddingHorizontal: 16, paddingVertical: 0, fontSize: 15, color: DT.ink, ...fo(600) },
   qrBox: { borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bgSoft, padding: 16 },
   qrPreview: { height: 144, width: '100%', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: DT.radius.md, borderWidth: 1, borderStyle: 'dashed', borderColor: DT.brandBorder, backgroundColor: DT.card },

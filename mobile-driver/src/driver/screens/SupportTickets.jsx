@@ -167,7 +167,7 @@ export default function SupportTickets() {
         </View>
         <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 16 }}>
           <View>
-            <Text style={styles.label}>TICKET TITLE</Text>
+            <Text style={styles.label}>Ticket title</Text>
             <Press scale={1} onPress={() => setShowTitles((v) => !v)} accessibilityRole="combobox" accessibilityState={{ expanded: showTitles }} accessibilityLabel={`Ticket title, ${selectedTitle || 'not selected'}`} style={[styles.field, { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }]}>
               <Text style={[styles.fieldText, selectedTitle ? null : { color: DT.faint }]} numberOfLines={1}>{selectedTitle || 'Select title'}</Text>
               <ChevronDown size={16} color={DT.muted} />
@@ -199,7 +199,7 @@ export default function SupportTickets() {
           </View>
 
           <View>
-            <Text style={styles.label}>OR CUSTOM TITLE</Text>
+            <Text style={styles.label}>Or custom title</Text>
             <TextInput
               value={customTitle}
               onChangeText={(text) => {
@@ -223,7 +223,7 @@ export default function SupportTickets() {
           </View>
 
           <View>
-            <Text style={styles.label}>DESCRIPTION</Text>
+            <Text style={styles.label}>Description</Text>
             <TextInput
               value={description}
               onChangeText={(text) => {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 6, marginTop: 16, backgroundColor: 'rgba(255,255,255,0.12)', padding: 4, borderRadius: DT.radius.pill },
   tab: { flex: 1, minHeight: 44, borderRadius: DT.radius.pill, alignItems: 'center', justifyContent: 'center' },
   tabOn: { backgroundColor: DT.card },
-  tabText: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 64, textAlign: 'center', color: DT.onBrand, ...fo(800) },
+  tabText: { fontSize: 11, lineHeight: 16, minWidth: 64, textAlign: 'center', color: DT.onBrand, ...fo(800) },
   error: { borderRadius: DT.radius.md, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
   errorText: { fontSize: 13, lineHeight: 18, color: DT.dangerInk, ...fo(700) },
   empty: { alignItems: 'center', paddingVertical: 80, gap: 4 },
@@ -269,14 +269,14 @@ const styles = StyleSheet.create({
   ticket: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, padding: 16, ...shadow('sm') },
   ticketIcon: { width: 44, height: 44, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   ticketTitle: { flex: 1, fontSize: 14, lineHeight: 20, color: DT.ink, ...fo(700) },
-  status: { fontSize: 10, lineHeight: 14, minWidth: 54, textAlign: 'center', paddingHorizontal: 10, paddingVertical: 3, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(800) },
+  status: { fontSize: 11, lineHeight: 15, minWidth: 54, textAlign: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: DT.radius.pill, overflow: 'hidden', ...fo(800) },
   ticketMeta: { fontSize: 11, lineHeight: 16, color: DT.muted, marginTop: 4, ...fo(500) },
   sheet: { backgroundColor: DT.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingHorizontal: 20, paddingTop: 16 },
   handle: { width: 40, height: 4, borderRadius: 2, backgroundColor: DT.border, alignSelf: 'center', marginBottom: 16 },
   sheetHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   sheetTitle: { fontSize: 20, lineHeight: 28, color: DT.brand, ...playfair(700) },
   sheetClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.bgSoft, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 11, lineHeight: 16, letterSpacing: 1, minWidth: 90, color: DT.muted, marginLeft: 4, marginBottom: 6, ...fo(800) },
+  label: { fontSize: 11, lineHeight: 16, minWidth: 90, color: DT.muted, marginLeft: 4, marginBottom: 6, ...fo(800) },
   field: { minHeight: 52, borderRadius: DT.radius.md, paddingHorizontal: 16, paddingVertical: 12, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.card },
   fieldText: { fontSize: 14, color: DT.ink, ...fo(600) },
   fieldFocus: { borderColor: DT.brand },

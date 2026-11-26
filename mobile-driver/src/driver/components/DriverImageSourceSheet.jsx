@@ -34,9 +34,9 @@ export default function DriverImageSourceSheet({ visible, onClose, onPick }) {
 }
 
 const styles = StyleSheet.create({
-  sheet: { backgroundColor: DT.card, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, paddingHorizontal: 20, paddingTop: 12, gap: 10 },
+  sheet: { backgroundColor: DT.card, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, paddingHorizontal: 20, paddingTop: 12, gap: 12 },
   grab: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: DT.border, marginBottom: 6 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 60, paddingHorizontal: 14, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 16, minHeight: 60, paddingHorizontal: 16, borderRadius: DT.radius.lg, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg },
   iconBox: { width: 40, height: 40, borderRadius: 14, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   text: { fontSize: 15, lineHeight: 20, color: DT.ink, ...outfit(700) },
 });

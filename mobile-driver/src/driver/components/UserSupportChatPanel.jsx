@@ -355,7 +355,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
     <View style={[isPlainSurface ? { flex: 1, backgroundColor: DT.bg, overflow: 'hidden' } : [st.card, { flex: 1 }], style, { paddingBottom: bottomGap }]}>
       <View style={st.head}>
         <View style={[st.row, { flexShrink: 1, minWidth: 0 }]}>
-          <View style={[st.iconBox, { marginRight: 14 }]}><MessageCircle size={20} color={DT.accent} /></View>
+          <View style={[st.iconBox, { marginRight: 16 }]}><MessageCircle size={20} color={DT.accent} /></View>
           <View style={{ flexShrink: 1, minWidth: 0 }}>
             <Text numberOfLines={1} style={[{ fontSize: 18, color: DT.ink }, fo(800)]}>{title}</Text>
             <View style={[st.row, { flexWrap: 'wrap' }]}>
@@ -367,7 +367,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
         </View>
         <View style={[st.conn, isConnected ? { borderColor: DT.successSoft, backgroundColor: DT.successSoft } : { borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft }]}>
           <Dot color={isConnected ? DT.success : DT.danger} animate={isConnected} />
-          <Text style={[st.tiny, { fontSize: 10, letterSpacing: 0.4, marginLeft: 8, color: isConnected ? DT.successInk : DT.dangerInk }, fo(800)]}>
+          <Text style={[st.tiny, { fontSize: 11, marginLeft: 8, color: isConnected ? DT.successInk : DT.dangerInk }, fo(800)]}>
             {isConnected ? 'Connection: Live' : 'Connection: Offline'}
           </Text>
         </View>
@@ -380,7 +380,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
           </View>
           <View style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
             <Text numberOfLines={1} style={[{ fontSize: 15, color: DT.ink }, fo(800)]}>{peerName}</Text>
-            <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 60, color: DT.successInk }, fo(700)]}>{threadLabel}</Text>
+            <Text style={[{ fontSize: 11, minWidth: 60, color: DT.successInk }, fo(700)]}>{threadLabel}</Text>
           </View>
         </View>
         <View style={st.row}>
@@ -426,7 +426,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
                       </View>
                       <View style={[st.row, { marginTop: 4, justifyContent: isMine ? 'flex-end' : 'flex-start' }]}>
                         <Clock3 size={11} color={DT.muted} />
-                        <Text style={[{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.4, color: DT.muted, marginLeft: 6 }, fo(700)]}>{formatTime(message.createdAt)}</Text>
+                        <Text style={[{ fontSize: 11, color: DT.muted, marginLeft: 6 }, fo(700)]}>{formatTime(message.createdAt)}</Text>
                       </View>
                     </View>
                   </View>
@@ -450,7 +450,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
             returnKeyType="send"
             placeholder="Type a message to admin"
             placeholderTextColor={DT.faint}
-            style={[{ flex: 1, fontSize: 15, minHeight: 44, color: DT.ink, marginHorizontal: 10, paddingVertical: 0 }, fo(600)]}
+            style={[{ flex: 1, fontSize: 15, minHeight: 44, color: DT.ink, marginHorizontal: 12, paddingVertical: 0 }, fo(600)]}
           />
           <Press onPress={handleSend} disabled={!canSend} accessibilityLabel="Send message" style={[st.sendBtn, { backgroundColor: canSend ? DT.cta : DT.bgSoft }]}>
             {sending ? <ActivityIndicator size="small" color={DT.ctaInk} /> : <Send size={18} color={canSend ? DT.ctaInk : DT.faint} strokeWidth={2.5} />}
@@ -459,7 +459,7 @@ export default function UserSupportChatPanel({ title = 'Support Chat', subtitle 
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
           {quickReplies.map((reply) => (
             <Press key={reply} onPress={() => setDraft(reply)} style={st.chip}>
-              <Text style={[{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 40, color: DT.brand }, fo(700)]}>{reply}</Text>
+              <Text style={[{ fontSize: 11, minWidth: 40, color: DT.brand }, fo(700)]}>{reply}</Text>
             </Press>
           ))}
         </View>
@@ -472,20 +472,20 @@ const st = StyleSheet.create({
   card: { borderRadius: DT.radius.xl, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, overflow: 'hidden', ...shadow('md') },
   row: { flexDirection: 'row', alignItems: 'center' },
   iconBox: { width: 48, height: 48, borderRadius: 24, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 60, color: DT.muted },
-  tiny: { fontSize: 10, lineHeight: 14, textTransform: 'uppercase', letterSpacing: 0.4, minWidth: 40 },
+  eyebrow: { fontSize: 11, minWidth: 60, color: DT.muted },
+  tiny: { fontSize: 11, lineHeight: 15, minWidth: 40 },
   head: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: DT.borderSoft, backgroundColor: DT.card },
   conn: { flexDirection: 'row', alignItems: 'center', flexShrink: 0, borderWidth: 1, borderRadius: DT.radius.pill, paddingHorizontal: 12, paddingVertical: 6 },
-  threadHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: DT.borderSoft, backgroundColor: DT.card },
+  threadHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: DT.borderSoft, backgroundColor: DT.card },
   avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.brand, alignItems: 'center', justifyContent: 'center' },
-  toolBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 22, paddingHorizontal: 12 },
-  loadingPill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 18, paddingVertical: 12, ...shadow('sm') },
+  toolBtn: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: 16, paddingHorizontal: 12 },
+  loadingPill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.borderSoft, backgroundColor: DT.card, paddingHorizontal: 20, paddingVertical: 12, ...shadow('sm') },
   msgAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
-  bubble: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10, ...shadow('xs') },
+  bubble: { borderRadius: 20, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 12, ...shadow('xs') },
   foot: { borderTopWidth: 1, borderTopColor: DT.borderSoft, backgroundColor: DT.card, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, padding: 16 },
   err: { marginBottom: 12, borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
   inputBar: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.border, backgroundColor: DT.bg, paddingLeft: 8, paddingRight: 6, paddingVertical: 6 },
   shieldBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: DT.brandSoft, alignItems: 'center', justifyContent: 'center' },
   sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  chip: { minHeight: 36, justifyContent: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 14 },
+  chip: { minHeight: 36, justifyContent: 'center', borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft, paddingHorizontal: 16 },
 });

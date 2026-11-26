@@ -72,7 +72,7 @@ function Bubble({ m }) {
     >
       <View style={[st.bubble, isUser ? st.bubbleMe : st.bubbleOther]}>
         <Text style={[{ fontSize: 14, lineHeight: 22.75, color: isUser ? DT.onBrand : DT.ink }, fo(600)]}>{m.text}</Text>
-        <Text style={[{ fontSize: 10, marginTop: 4, minWidth: 30, color: isUser ? DT.onBrandMuted : DT.muted }, fo(700)]}>{m.time}</Text>
+        <Text style={[{ fontSize: 11, marginTop: 4, minWidth: 30, color: isUser ? DT.onBrandMuted : DT.muted }, fo(700)]}>{m.time}</Text>
       </View>
     </Animated.View>
   );
@@ -205,7 +205,7 @@ export default function Chat() {
           )}
         />
 
-        <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: 20, gap: 10, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <ScrollView ref={scrollRef} style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingTop: 20, gap: 12, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
           {isJoiningRide ? (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
               <View style={st.pill}>
@@ -269,13 +269,13 @@ export default function Chat() {
 
 const st = StyleSheet.create({
   callBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: DT.cta, alignItems: 'center', justifyContent: 'center' },
-  pill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 18, paddingVertical: 12, ...shadow('sm') },
+  pill: { flexDirection: 'row', alignItems: 'center', borderRadius: DT.radius.pill, backgroundColor: DT.card, borderWidth: 1, borderColor: DT.borderSoft, paddingHorizontal: 20, paddingVertical: 12, ...shadow('sm') },
   errBox: { borderRadius: DT.radius.md, borderWidth: 1, borderColor: DT.dangerSoft, backgroundColor: DT.dangerSoft, paddingHorizontal: 16, paddingVertical: 12 },
-  bubble: { maxWidth: '80%', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
+  bubble: { maxWidth: '80%', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 20 },
   bubbleMe: { backgroundColor: DT.brand, borderBottomRightRadius: 6, ...shadow('sm') },
   bubbleOther: { backgroundColor: DT.card, borderWidth: 1, borderColor: DT.border, borderBottomLeftRadius: 6, ...shadow('xs') },
-  footer: { backgroundColor: DT.card, borderTopWidth: 1, borderTopColor: DT.borderSoft, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, paddingHorizontal: 16, paddingTop: 12, gap: 10, ...shadow('navTop') },
-  chip: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 14, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft },
-  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: DT.bg, borderRadius: DT.radius.pill, paddingLeft: 18, paddingRight: 6, paddingVertical: 6, borderWidth: 1, borderColor: DT.border },
+  footer: { backgroundColor: DT.card, borderTopWidth: 1, borderTopColor: DT.borderSoft, borderTopLeftRadius: DT.radius.xl, borderTopRightRadius: DT.radius.xl, paddingHorizontal: 16, paddingTop: 12, gap: 12, ...shadow('navTop') },
+  chip: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 16, borderRadius: DT.radius.pill, borderWidth: 1, borderColor: DT.brandBorder, backgroundColor: DT.brandSoft },
+  inputRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: DT.bg, borderRadius: DT.radius.pill, paddingLeft: 20, paddingRight: 6, paddingVertical: 6, borderWidth: 1, borderColor: DT.border },
   sendBtn: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });
