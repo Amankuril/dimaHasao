@@ -440,6 +440,9 @@ const toUserPayload = (user, options = {}) => ({
   referralCode: user.referralCode || '',
   referralCount: Number(user.referralCount || 0),
   currentRideId: user.currentRideId || null,
+  // Drivers' average rating of this rider (0 until rated).
+  taxiRating: Number(user.taxiRating || 0),
+  taxiRatingCount: Number(user.taxiRatingCount || 0),
 });
 
 const ensureUserCanLogin = (user) => {

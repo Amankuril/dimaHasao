@@ -83,8 +83,9 @@ export default function SupportTickets() {
       setErrors({});
       setShowForm(false);
     } catch (apiError) {
-      setError(apiError?.message || 'Unable to raise support ticket');
-      setShowForm(false);
+      // Keep the form open with what the driver typed; it used to close and
+      // leave the error behind it on the page.
+      setErrors((prev) => ({ ...prev, submit: apiError?.message || 'Unable to raise support ticket' }));
     } finally {
       setSubmitting(false);
     }
@@ -247,6 +248,12 @@ export default function SupportTickets() {
             ) : null}
           </View>
 
+          {errors.submit ? (
+            <View style={[styles.fieldErrorRow, { marginBottom: 12 }]}>
+              <AlertCircle size={12} color={DT.danger} strokeWidth={3} />
+              <Text style={styles.fieldErrorText}>{errors.submit}</Text>
+            </View>
+          ) : null}
           <CtaButton variant="brand" title="Submit ticket" loading={submitting} onPress={handleSubmit} accessibilityLabel="Submit ticket" />
         </ScrollView>
       </BottomSheet>

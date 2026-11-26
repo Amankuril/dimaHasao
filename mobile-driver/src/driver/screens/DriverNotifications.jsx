@@ -329,7 +329,7 @@ export default function DriverNotifications() {
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.label} numberOfLines={1}>{activeTab === 'schedule' ? 'Scheduled rides' : 'Admin & system alerts'}</Text>
-            <Text style={styles.label2}>{totalCount} VISIBLE</Text>
+            <Text style={styles.label2}>{totalCount} shown</Text>
           </View>
           <Press
             onPress={() => loadAllData(currentPage)}

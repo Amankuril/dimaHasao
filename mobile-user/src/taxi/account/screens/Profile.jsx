@@ -66,7 +66,7 @@ const SECTIONS = [
 export default function Profile() {
   const bottomPad = useNavPad(space.xxl);
   const { logout } = useAuth();
-  const [profile, setProfile] = useState({ name: '', phone: '', profileImage: '', stats: { trips: 0, rating: 4.9, wallet: 0 } });
+  const [profile, setProfile] = useState({ name: '', phone: '', profileImage: '', stats: { trips: 0, rating: 0, wallet: 0 } });
 
   useEffect(() => {
     let alive = true;
@@ -93,7 +93,8 @@ export default function Profile() {
         const pg = pickObject(rd?.pagination, rd?.data?.pagination);
         const trips = pickNumber(pg.total, rd?.total, rd?.count, user.totalRides, user.total_trips, user.totalTrips, stored?.totalRides);
         const wallet = pickNumber(wd.balance, wd.walletBalance, wd.amount, user.walletBalance, user.wallet?.balance, user.wallet_amount, stored?.walletBalance);
-        const rating = pickNumber(user.rating, user.avgRating, user.average_rating, stored?.rating, 4.9);
+        // Drivers' rating of this rider (taxiRating); 0 until rated, never a made-up 4.9.
+        const rating = pickNumber(user.taxiRating, user.rating, user.avgRating, user.average_rating, stored?.rating, 0);
         if (!alive) return;
         setProfile({
           name: user.name || stored?.name || 'User',
@@ -162,7 +163,7 @@ export default function Profile() {
               <Text style={[type.caption, { color: color.textMuted }]}>Rating</Text>
               <View style={st.ratingRow}>
                 <Star size={14} color={color.gold} fill={color.gold} />
-                <Text style={[type.price, { color: color.text }]}>{profile.stats.rating}</Text>
+                <Text style={[type.price, { color: color.text }]}>{Number(profile.stats.rating) > 0 ? Number(profile.stats.rating).toFixed(1) : 'New'}</Text>
               </View>
             </View>
             <View style={st.stat} accessible accessibilityLabel={`Credits ₹${profile.stats.wallet}`}>

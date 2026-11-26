@@ -97,7 +97,7 @@ export default function RideComplete() {
                 <Text style={styles.driverSub} numberOfLines={1}>{vehicleLabel}</Text>
                 <View style={styles.ratingPill}>
                   <Star size={12} color={color.gold} fill={color.gold} />
-                  <Text style={styles.ratingText}>{driver.rating || '4.9'}</Text>
+                  <Text style={styles.ratingText}>{Number(driver.rating) > 0 ? Number(driver.rating).toFixed(1) : 'New'}</Text>
                 </View>
               </View>
               <View style={styles.vehiclePhoto}>

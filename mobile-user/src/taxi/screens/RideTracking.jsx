@@ -154,7 +154,7 @@ export default function RideTracking() {
               </View>
               <View style={styles.ratingBadge}>
                 <Star size={11} color={color.onGold} fill={color.onGold} />
-                <Text style={styles.ratingText}>{driver.rating || '4.9'}</Text>
+                <Text style={styles.ratingText}>{Number(driver.rating) > 0 ? Number(driver.rating).toFixed(1) : 'New'}</Text>
               </View>
             </View>
             <View style={{ flex: 1, minWidth: 0, gap: space.xxs }}>

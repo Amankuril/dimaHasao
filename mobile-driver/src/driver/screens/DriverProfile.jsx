@@ -389,7 +389,7 @@ export default function DriverProfile() {
             </Text>
             <View style={st.ratingChip}>
               <Star size={13} color={DT.goldBright} fill={DT.goldBright} />
-              <Text style={st.rating}>{driverRating.toFixed(1)} rating</Text>
+              <Text style={st.rating}>{driverRating > 0 ? `${driverRating.toFixed(1)} rating` : 'New driver · no ratings yet'}</Text>
             </View>
           </View>
         </View>

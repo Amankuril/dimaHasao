@@ -90,7 +90,7 @@ export default function RideDetail() {
       endTime: ride?.completedAt || timeSource,
       statusLabel: status.charAt(0).toUpperCase() + status.slice(1),
       driverName: driver.name || 'Captain',
-      rating: driver.rating || '4.9',
+      rating: Number(driver.rating) > 0 ? Number(driver.rating).toFixed(1) : 'New',
       plate: driver.vehicleNumber || 'Assigned',
       vehicle: driver.vehicleType || ride?.vehicleIconType || 'Taxi',
       paymentMethod: String(ride?.paymentMethod || ride?.payment_method || ride?.paymentType || ride?.payment_type || 'cash').trim().toLowerCase() === 'cash' ? 'Cash' : 'Online',

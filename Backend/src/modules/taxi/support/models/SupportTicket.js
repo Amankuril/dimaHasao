@@ -20,10 +20,13 @@ export const SupportTicket = defineSupportTicketType(
   'TaxiSupportTicket',
   {
     ticketCode: { type: String, required: true, unique: true, trim: true, index: true },
+    // Null for a custom title: the create controller accepts one ("Or custom
+    // title" in both apps), but this field was required, so every custom-title
+    // ticket failed with "Path `titleId` is required".
     titleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TaxiSupportTicketTitle',
-      required: true,
+      default: null,
     },
     title: { type: String, required: true, trim: true, maxlength: 140 },
     userType: { type: String, enum: ['user', 'driver', 'owner'], required: true, index: true },

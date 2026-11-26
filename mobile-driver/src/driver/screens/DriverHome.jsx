@@ -4,7 +4,7 @@ import { useFocusEffect, useIsFocused } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BarChart2, Bell, CalendarClock, Camera, ChevronRight, Clock, IndianRupee, Navigation, Power, Target, Wallet } from 'lucide-react-native';
+import { BarChart2, Bell, CalendarClock, Camera, ChevronRight, Clock, IndianRupee, Navigation, Power, Target, Wallet, X } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { toast } from '../../lib/notify';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
@@ -1544,7 +1544,7 @@ const DriverHome = () => {
           <Text style={[outfit(900), st.selfieKicker]}>Daily check-in</Text>
           <Text style={[outfit(900), st.selfieTitle]}>{"Upload today's selfie"}</Text>
           <Text style={[outfit(600), st.dlgBody]}>
-            Before going online, submit a fresh selfie for today. This helps verify the driver account like Rapido-style daily check-in.
+            Before going online, submit a fresh selfie for today. It confirms the person driving is the account holder.
           </Text>
 
           {selfieError ? (
@@ -1570,7 +1570,7 @@ const DriverHome = () => {
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <Camera size={16} color={DT.ctaInk} />
-                <Text numberOfLines={1} style={[outfit(800), st.dlgBtnText, { color: DT.ctaInk, flexShrink: 1 }]}>Take new selfie</Text>
+                <Text numberOfLines={1} style={[outfit(800), st.dlgBtnText, { color: DT.ctaInk, flexShrink: 1 }]}>Take selfie</Text>
               </View>
             </Press>
           </View>
@@ -1586,9 +1586,9 @@ const DriverHome = () => {
               <Text style={[outfit(900), st.sheetTitle]}>Scheduled rides</Text>
               <Text style={[outfit(600), st.sheetSub]}>Upcoming scheduled requests available for this driver.</Text>
             </View>
-            <Press onPress={() => setIsScheduleSheetOpen(false)} style={st.sheetClose}>
-              <View style={{ transform: [{ rotate: '45deg' }] }}>
-                <ChevronRight size={18} color={DT.muted} />
+            <Press onPress={() => setIsScheduleSheetOpen(false)} accessibilityLabel="Close scheduled rides" style={st.sheetClose}>
+              <View>
+                <X size={18} strokeWidth={1.75} color={DT.inkSoft} />
               </View>
             </Press>
           </View>
@@ -1748,7 +1748,8 @@ const DriverHome = () => {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <Text style={[outfit(900), st.summaryTitle]}>Today&apos;s summary</Text>
-              <Pulse style={st.summaryDot} />
+              {/* The live dot: green and pulsing only while online. */}
+              {isOnline ? <Pulse style={st.summaryDot} /> : <View style={[st.summaryDot, { backgroundColor: DT.faint }]} />}
             </View>
             <Animated.View style={[st.chevron, { transform: [{ rotate: chevron.interpolate({ inputRange: [0, 1], outputRange: ['-90deg', '90deg'] }) }] }]}>
               <ChevronRight size={16} strokeWidth={2.8} color={DT.onBrandMuted} />

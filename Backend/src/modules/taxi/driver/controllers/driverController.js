@@ -1712,6 +1712,14 @@ export const createDriverWithdrawalRequest = async (req, res) => {
     throw new ApiError(400, `amount must be at least ${minimumTransferAmount}`);
   }
 
+  // Admin pays a withdrawal out to these details; a request with none (it was
+  // accepted with an empty snapshot) could never be paid.
+  const payout = serializeDriverBankDetails(driver.bankDetails || {});
+  const hasPayoutDetails = Boolean(payout.upiId || payout.qrCodeImage || (payout.accountNumber && payout.ifsc));
+  if (!hasPayoutDetails) {
+    throw new ApiError(400, "Add your UPI ID, UPI QR or bank account in Bank details before withdrawing");
+  }
+
   // Pending requests are not deducted until approval, so they have to count
   // here: otherwise ₹400 and ₹300 against a ₹494 balance were both accepted, and
   // simultaneous requests all passed. Approval still re-checks the live balance.

@@ -109,7 +109,8 @@ const ACTIVE_SEARCH_NONCE_CLEANUPS = new Map();
 
 const normalizeDriver = (driver = {}) => ({
   name: driver.name || 'Captain',
-  rating: driver.rating || '4.9',
+  // A driver with no ratings yet is 'New', not a made-up 4.9.
+  rating: Number(driver.rating) > 0 ? Number(driver.rating).toFixed(1) : 'New',
   vehicle: driver.vehicle || driver.vehicleType || driver.vehicle_type || 'Taxi',
   vehicleType: driver.vehicleType || driver.vehicle_type || driver.vehicle || 'Taxi',
   plate: driver.plate || driver.vehicleNumber || driver.vehicle_number || 'Assigned',

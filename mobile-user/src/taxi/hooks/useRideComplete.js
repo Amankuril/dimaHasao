@@ -104,7 +104,7 @@ export function useRideComplete() {
   const serviceType = String(state.serviceType || state.type || 'ride').toLowerCase();
   const driver = state.driver || {
     name: 'Captain',
-    rating: '4.9',
+    rating: 'New',
     vehicle: serviceType === 'parcel' ? 'Delivery' : 'Taxi',
     plate: 'Assigned',
     profileImage: '',

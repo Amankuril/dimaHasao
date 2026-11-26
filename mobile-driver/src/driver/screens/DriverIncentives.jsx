@@ -153,7 +153,7 @@ export default function DriverIncentives() {
             <View style={{ flex: 1 }}>
               <Text style={st.statLabel}>Rating</Text>
               <View style={st.statRow}>
-                <Text style={st.statValue}>{driverRating.toFixed(1)}</Text>
+                <Text style={st.statValue}>{driverRating > 0 ? driverRating.toFixed(1) : 'New'}</Text>
                 <Star size={14} color={DT.goldBright} fill={DT.goldBright} />
               </View>
             </View>
