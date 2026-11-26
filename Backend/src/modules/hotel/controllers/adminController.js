@@ -223,6 +223,12 @@ export const getAllPartners = async (req, res) => {
       query.partnerApprovalStatus = approvalStatus;
     }
 
+    // view=requests: new joiners waiting for (or refused) approval.
+    // view=registered: approved partners. Same split as restaurants.
+    const view = String(req.query.view || '');
+    if (view === 'requests' && !approvalStatus) query.partnerApprovalStatus = { $in: ['pending', 'rejected'] };
+    if (view === 'registered' && !approvalStatus) query.partnerApprovalStatus = 'approved';
+
     if (status) {
       if (status === 'blocked') {
         query.isBlocked = true;
@@ -236,12 +242,36 @@ export const getAllPartners = async (req, res) => {
      * are serialised straight to JSON, so they do not need to be full Mongoose
      * documents. Nothing here is saved back.
      */
-    const [total, partners] = await Promise.all([
+    const [total, partners, requestsCount, registeredCount] = await Promise.all([
       Partner.countDocuments(query),
-      Partner.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Partner.find(query).select('-password').sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+      Partner.countDocuments({ partnerApprovalStatus: 'pending' }),
+      Partner.countDocuments({ partnerApprovalStatus: 'approved' }),
     ]);
 
-    res.status(200).json({ success: true, partners, total, page, limit });
+    // Properties per partner, so the list shows what each one actually runs.
+    const ids = partners.map((p) => p._id);
+    const propertyCounts = ids.length
+      ? await Property.aggregate([
+          { $match: { partnerId: { $in: ids } } },
+          { $group: { _id: '$partnerId', total: { $sum: 1 }, live: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } } } },
+        ])
+      : [];
+    const byPartner = new Map(propertyCounts.map((r) => [String(r._id), r]));
+    const rows = partners.map((p) => ({
+      ...p,
+      propertyCount: byPartner.get(String(p._id))?.total || 0,
+      livePropertyCount: byPartner.get(String(p._id))?.live || 0,
+    }));
+
+    res.status(200).json({
+      success: true,
+      partners: rows,
+      total,
+      page,
+      limit,
+      counts: { requests: requestsCount, registered: registeredCount },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Server error fetching partners' });
   }
@@ -268,9 +298,17 @@ export const getAllHotels = async (req, res) => {
     if (status) {
       query.status = status;
     }
+    // view=requests: submitted listings awaiting review (or refused);
+    // view=live: approved listings guests can book.
+    const view = String(req.query.view || '');
+    if (view === 'requests' && !status) query.status = { $in: ['pending', 'rejected'] };
+    if (view === 'live' && !status) query.status = 'approved';
 
     if (type) {
       query.propertyType = String(type).toLowerCase();
+    }
+    if (req.query.city) {
+      query['address.city'] = { $regex: String(req.query.city).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
     }
 
     /*
@@ -278,7 +316,7 @@ export const getAllHotels = async (req, res) => {
      * are serialised straight to JSON, so they do not need to be full Mongoose
      * documents. Nothing here is saved back.
      */
-    const [total, hotels] = await Promise.all([
+    const [total, hotels, requestsCount, liveCount] = await Promise.all([
       Property.countDocuments(query),
       Property.find(query)
         .populate('partnerId', 'name email phone')
@@ -286,9 +324,36 @@ export const getAllHotels = async (req, res) => {
         .skip(skip)
         .limit(limit)
         .lean(),
+      Property.countDocuments({ status: 'pending' }),
+      Property.countDocuments({ status: 'approved' }),
     ]);
 
-    res.status(200).json({ success: true, hotels, total, page, limit });
+    // Bookings per property for the list (all-time and upcoming).
+    const pids = hotels.map((h) => h._id);
+    const bookingAgg = pids.length
+      ? await Booking.aggregate([
+          { $match: { propertyId: { $in: pids } } },
+          {
+            $group: {
+              _id: '$propertyId',
+              total: { $sum: 1 },
+              upcoming: {
+                $sum: {
+                  $cond: [{ $and: [{ $in: ['$bookingStatus', ['confirmed', 'pending']] }, { $gte: ['$checkInDate', new Date()] }] }, 1, 0],
+                },
+              },
+            },
+          },
+        ])
+      : [];
+    const byProperty = new Map(bookingAgg.map((r) => [String(r._id), r]));
+    const rows = hotels.map((h) => ({
+      ...h,
+      bookingCount: byProperty.get(String(h._id))?.total || 0,
+      upcomingBookingCount: byProperty.get(String(h._id))?.upcoming || 0,
+    }));
+
+    res.status(200).json({ success: true, hotels: rows, total, page, limit, counts: { requests: requestsCount, live: liveCount } });
   } catch (e) {
     res.status(500).json({ success: false, message: 'Server error fetching hotels' });
   }
@@ -305,6 +370,22 @@ export const getAllBookings = async (req, res) => {
 
     if (status) {
       query.bookingStatus = status;
+    }
+
+    // view tabs: requests (need action) · upcoming · in-house · completed · cancelled
+    const VIEWS = {
+      requests: { bookingStatus: { $in: ['pending', 'awaiting_payment'] } },
+      upcoming: { bookingStatus: 'confirmed' },
+      inhouse: { bookingStatus: 'checked_in' },
+      completed: { bookingStatus: { $in: ['checked_out', 'completed'] } },
+      cancelled: { bookingStatus: { $in: ['cancelled', 'rejected', 'no_show'] } },
+    };
+    const view = String(req.query.view || '');
+    if (!status && VIEWS[view]) Object.assign(query, VIEWS[view]);
+    if (req.query.from || req.query.to) {
+      query.checkInDate = {};
+      if (req.query.from) query.checkInDate.$gte = new Date(`${req.query.from}T00:00:00+05:30`);
+      if (req.query.to) query.checkInDate.$lte = new Date(`${req.query.to}T23:59:59.999+05:30`);
     }
 
     if (search) {
@@ -341,19 +422,22 @@ export const getAllBookings = async (req, res) => {
      * are serialised straight to JSON, so they do not need to be full Mongoose
      * documents. Nothing here is saved back.
      */
-    const [total, bookings] = await Promise.all([
+    const countEntries = Object.entries(VIEWS);
+    const [total, bookings, ...viewCounts] = await Promise.all([
       Booking.countDocuments(query),
       Booking.find(query)
         .populate('userId', 'name email phone')
         .populate('propertyId', 'propertyName address')
         .populate('roomTypeId', 'name')
-        .sort({ createdAt: -1 })
+        .sort(view === 'upcoming' ? { checkInDate: 1 } : { createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
+      ...countEntries.map(([, q]) => Booking.countDocuments(q)),
     ]);
+    const counts = Object.fromEntries(countEntries.map(([key], i) => [key, viewCounts[i]]));
 
-    res.status(200).json({ success: true, bookings, total, page, limit });
+    res.status(200).json({ success: true, bookings, total, page, limit, counts });
   } catch (e) {
     console.error('Get All Bookings Error:', e);
     res.status(500).json({ success: false, message: 'Server error fetching bookings' });

@@ -10,10 +10,13 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
 import StatusDot from '../components/StatusDot';
+import ViewTabs, { useListView } from '../components/ViewTabs';
 
 const StatusBadge = ({ label, type }) => <StatusDot status={type} label={label} />;
 
 const AdminPartners = () => {
+    const [view, setView] = useListView('registered');
+    const [counts, setCounts] = useState({ requests: 0, registered: 0 });
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalUsers, setTotalUsers] = useState(0);
@@ -43,11 +46,13 @@ const AdminPartners = () => {
                 limit,
                 search: currentFilters.search,
                 status: currentFilters.status,
-                approvalStatus: currentFilters.approvalStatus
+                approvalStatus: currentFilters.approvalStatus,
+                view: currentFilters.view
             };
             const data = await adminService.getPartners(params);
             if (data.success) {
                 setUsers(data.partners);
+                if (data.counts) setCounts(data.counts);
                 setTotalUsers(data.total);
                 setTotalPages(Math.ceil(data.total / limit));
             }
@@ -63,10 +68,14 @@ const AdminPartners = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchUsers(currentPage, filters);
+            fetchUsers(currentPage, { ...filters, view });
         }, 300); // 300ms debounce for search
         return () => clearTimeout(timer);
-    }, [currentPage, filters, fetchUsers]);
+    }, [currentPage, filters, fetchUsers, view]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [view]);
 
     // Handlers
     const handleFilterChange = (key, value) => {
@@ -79,7 +88,7 @@ const AdminPartners = () => {
             const res = await adminService.updatePartnerStatus(userId, isBlocked);
             if (res.success) {
                 toast.success(`Partner ${isBlocked ?'blocked' : 'unblocked'} successfully`);
-                fetchUsers(currentPage, filters);
+                fetchUsers(currentPage, { ...filters, view });
             }
         } catch {
             toast.error('Failed to update partner status');
@@ -91,7 +100,7 @@ const AdminPartners = () => {
             const res = await adminService.updatePartnerApproval(userId, status);
             if (res.success) {
                 toast.success(`Partner ${status}`);
-                fetchUsers(currentPage, filters);
+                fetchUsers(currentPage, { ...filters, view });
             }
         } catch {
             toast.error('Failed to update approval status');
@@ -148,7 +157,7 @@ const AdminPartners = () => {
                         const res = await adminService.deletePartner(user._id);
                         if (res.success) {
                             toast.success('Partner deleted successfully');
-                            fetchUsers(currentPage, filters);
+                            fetchUsers(currentPage, { ...filters, view });
                         }
                     } catch {
                         toast.error('Failed to delete partner');
@@ -200,8 +209,12 @@ const AdminPartners = () => {
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-medium text-neutral-900">Partner management ({totalUsers})</h2>
-                    <p className="mt-1 text-sm text-neutral-500">Owners and operators who list stays on the platform</p>
+                    <h2 className="text-2xl font-medium text-neutral-900">{view === 'requests' ? 'New partner requests' : 'Registered partners'} ({totalUsers})</h2>
+                    <p className="mt-1 text-sm text-neutral-500">
+                        {view === 'requests'
+                            ? 'Owners who signed up and are waiting for approval (or were rejected)'
+                            : 'Approved owners and operators who list stays on the platform'}
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -212,6 +225,15 @@ const AdminPartners = () => {
                     </button>
                 </div>
             </div>
+
+            <ViewTabs
+                value={view}
+                onChange={setView}
+                tabs={[
+                    { value: 'requests', label: 'New requests', count: counts.requests },
+                    { value: 'registered', label: 'Registered', count: counts.registered },
+                ]}
+            />
 
             {/* Filter Bar */}
             <div className="bg-white p-4 border border-neutral-900/[0.08] rounded-xl flex flex-col md:flex-row gap-4 items-center">
@@ -247,7 +269,7 @@ const AdminPartners = () => {
                             <tr className="bg-neutral-50 border-b border-neutral-100 text-xs text-neutral-500">
                                 <th className="p-4">Partner details</th>
                                 <th className="p-4">Contact info</th>
-                                <th className="p-4">Role</th>
+                                <th className="p-4">Properties</th>
                                 <th className="p-4">Account status</th>
                                 <th className="p-4">Approval</th>
                                 <th className="p-4">Joined date</th>
@@ -258,7 +280,7 @@ const AdminPartners = () => {
                             {loading ? (
                                 [1, 2, 3, 4, 5].map(i => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan="6" className="p-4"><div className="h-10 bg-neutral-50 rounded-lg"></div></td>
+                                        <td colSpan="7" className="p-4"><div className="h-10 bg-neutral-50 rounded-lg"></div></td>
                                     </tr>
                                 ))
                             ) : (
@@ -301,13 +323,24 @@ const AdminPartners = () => {
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
-                                                    <span className="text-[13px] text-neutral-600">Partner</span>
+                                                    <span className="text-[13px] text-neutral-700">{user.livePropertyCount || 0} live</span>
+                                                    <span className="text-xs text-neutral-500"> / {user.propertyCount || 0} total</span>
                                                 </td>
                                                 <td className="p-4">
                                                     <StatusBadge label={user.isBlocked ? 'Blocked' : 'Active'} type={user.isBlocked ? 'blocked' : 'active'} />
                                                 </td>
                                                 <td className="p-4">
-                                                    <StatusBadge type={user.partnerApprovalStatus || 'pending'} />
+                                                    {view === 'requests' && user.partnerApprovalStatus === 'pending' ? (
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => handleAction('approve', user)} className="px-3 py-1 rounded-md bg-[#0a4d2b] text-white text-xs font-medium hover:opacity-90">Approve</button>
+                                                            <button onClick={() => handleAction('reject', user)} className="px-3 py-1 rounded-md border border-red-200 text-red-700 text-xs font-medium hover:bg-red-50">Reject</button>
+                                                        </div>
+                                                    ) : (
+                                                        <StatusBadge type={user.partnerApprovalStatus || 'pending'} />
+                                                    )}
+                                                    {user.partnerApprovalStatus === 'pending' && user.onboardingComplete === false ? (
+                                                        <p className="mt-1 text-[11px] text-amber-700">KYC not submitted yet</p>
+                                                    ) : null}
                                                 </td>
                                                 <td className="p-4 text-xs text-neutral-500">
                                                     {new Date(user.createdAt).toLocaleDateString('en-IN', {
@@ -357,10 +390,10 @@ const AdminPartners = () => {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="6" className="p-8 text-center text-neutral-500">
+                                            <td colSpan="7" className="p-8 text-center text-neutral-500">
                                                 <div className="flex flex-col items-center gap-2">
                                                     <Users size={32} className="text-neutral-300" />
-                                                    <p className="text-xs font-medium">No partners found</p>
+                                                    <p className="text-xs font-medium">{view === 'requests' ? 'No new partner requests' : 'No partners found'}</p>
                                                 </div>
                                             </td>
                                         </tr>

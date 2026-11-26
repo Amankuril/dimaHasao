@@ -54,7 +54,7 @@ export function HotelCard({ hotel, stay }) {
               {hotel.location}
             </Text>
           </View>
-          {hotel.distanceFromStation ? <Text style={styles.distance}>{hotel.distanceFromStation} from station</Text> : null}
+          {hotel.distanceFromStation ? <Text style={styles.distance}>{hotel.distanceFromStation} away</Text> : null}
         </View>
       </View>
 

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Linking } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
+import { getDeviceCoordinates } from '../../../utils/deviceLocation';
+import { chooseImageSource } from '../../../../components/ImageSourceHost';
 import { confirm } from '../../../../lib/notify';
 import { localStore, readJson } from '../../../../lib/storage';
 import { clearRouteState } from '../../../../lib/routeState';
@@ -127,25 +128,7 @@ export function useHomestayWizard() {
     setError('');
     setLoadingLocation(true);
     try {
-      let perm = await Location.getForegroundPermissionsAsync();
-      if (!perm.granted && perm.canAskAgain !== false) perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) {
-        const denied = new Error('Location permission denied');
-        denied.code = 1;
-        throw denied;
-      }
-
-      let pos;
-      try {
-        pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-      } catch (geoErr) {
-        const unavailable = new Error(geoErr?.message || 'Location unavailable');
-        unavailable.code = /timeout|timed out/i.test(String(geoErr?.message)) ? 3 : 2;
-        throw unavailable;
-      }
-
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const { lat, lng } = await getDeviceCoordinates();
 
       // Call Backend API
       const res = await hotelService.getAddressFromCoordinates(lat, lng);
@@ -382,15 +365,17 @@ export function useHomestayWizard() {
   };
 
   /** Opens the camera / gallery sheet; `onDone(urls)` gets the uploaded URLs. */
-  const requestUpload = (type, onDone, { multiple = false } = {}) => {
+  const requestUpload = async (type, onDone, { multiple = false } = {}) => {
     setError('');
-    setPickerRequest({ type, multiple, onDone });
+    // The app-wide camera / gallery sheet (same one the food screens use).
+    const source = await chooseImageSource();
+    if (source) await pickFrom(source, { type, multiple, onDone });
   };
 
   const closePicker = () => setPickerRequest(null);
 
-  const pickFrom = async (source) => {
-    const request = pickerRequest;
+  const pickFrom = async (source, explicitRequest = null) => {
+    const request = explicitRequest || pickerRequest;
     setPickerRequest(null);
     if (!request) return;
     try {

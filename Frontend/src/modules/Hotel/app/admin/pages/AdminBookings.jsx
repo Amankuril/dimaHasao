@@ -10,6 +10,7 @@ import ConfirmationModal from '../components/ConfirmationModal';
 import adminService from '../../../services/adminService';
 import toast from 'react-hot-toast';
 import StatusDot from '../components/StatusDot';
+import ViewTabs, { useListView } from '../components/ViewTabs';
 
 const BookingStatusBadge = ({ status }) => <StatusDot status={status} />;
 
@@ -29,7 +30,18 @@ const MetricCard = ({ label, value, subLabel, loading }) => (
     </div>
 );
 
+const BOOKING_VIEWS = [
+    { value: 'requests', label: 'Needs action', title: 'Booking requests', hint: 'Waiting for payment or confirmation' },
+    { value: 'upcoming', label: 'Upcoming', title: 'Upcoming stays', hint: 'Confirmed bookings, soonest check-in first' },
+    { value: 'inhouse', label: 'In-house', title: 'Guests in-house', hint: 'Checked in and currently staying' },
+    { value: 'completed', label: 'Completed', title: 'Completed stays', hint: 'Checked out' },
+    { value: 'cancelled', label: 'Cancelled', title: 'Cancelled bookings', hint: 'Cancelled, rejected or no-show' },
+    { value: 'all', label: 'All', title: 'All bookings', hint: 'Every stay booked across the district, newest first' },
+];
+
 const AdminBookings = () => {
+    const [view, setView] = useListView('upcoming');
+    const [counts, setCounts] = useState({});
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalBookings, setTotalBookings] = useState(0);
@@ -62,13 +74,15 @@ const AdminBookings = () => {
                     page,
                     limit,
                     search: currentFilters.search,
-                    status: currentFilters.status
+                    status: currentFilters.status,
+                    view: currentFilters.view === 'all' ? undefined : currentFilters.view
                 }),
                 adminService.getDashboardStats()
             ]);
 
             if (bookingsRes.success) {
                 setBookings(bookingsRes.bookings);
+                if (bookingsRes.counts) setCounts(bookingsRes.counts);
                 setTotalBookings(bookingsRes.total);
                 setTotalPages(Math.ceil(bookingsRes.total / limit));
             }
@@ -98,10 +112,17 @@ const AdminBookings = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchBookings(currentPage, filters);
+            fetchBookings(currentPage, { ...filters, view });
         }, 300);
         return () => clearTimeout(timer);
-    }, [currentPage, filters, fetchBookings]);
+    }, [currentPage, filters, fetchBookings, view]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+        setFilters((prev) => ({ ...prev, status: '' }));
+    }, [view]);
+
+    const viewMeta = BOOKING_VIEWS.find((v) => v.value === view) || BOOKING_VIEWS[BOOKING_VIEWS.length - 1];
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
@@ -113,7 +134,7 @@ const AdminBookings = () => {
             const res = await adminService.updateBookingStatus(bookingId, newStatus);
             if (res.success) {
                 toast.success(`Booking ${newStatus} successfully`);
-                fetchBookings(currentPage, filters);
+                fetchBookings(currentPage, { ...filters, view });
             }
         } catch {
             toast.error('Failed to update booking status');
@@ -178,8 +199,8 @@ const AdminBookings = () => {
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-medium text-neutral-900">Booking management ({totalBookings})</h2>
-                    <p className="mt-1 text-sm text-neutral-500">Every stay booked across the district, newest first</p>
+                    <h2 className="text-2xl font-medium text-neutral-900">{viewMeta.title} ({totalBookings})</h2>
+                    <p className="mt-1 text-sm text-neutral-500">{viewMeta.hint}</p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -197,6 +218,12 @@ const AdminBookings = () => {
                 <MetricCard label="Pending" value={globalStats.pending} loading={loading} />
             </div>
 
+            <ViewTabs
+                value={view}
+                onChange={setView}
+                tabs={BOOKING_VIEWS.map((v) => ({ value: v.value, label: v.label, count: v.value === 'all' ? undefined : counts[v.value] }))}
+            />
+
             <div className="bg-white p-4 border border-neutral-900/[0.08] rounded-xl flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-1">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
@@ -209,6 +236,7 @@ const AdminBookings = () => {
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
+                    {view === 'all' ? (
                     <select
                         value={filters.status}
                         onChange={(e) => handleFilterChange('status', e.target.value)}
@@ -216,10 +244,16 @@ const AdminBookings = () => {
                     >
                         <option value="">All statuses</option>
                         <option value="pending">Pending</option>
+                        <option value="awaiting_payment">Awaiting payment</option>
                         <option value="confirmed">Confirmed</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="checked_in">Checked in</option>
+                        <option value="checked_out">Checked out</option>
                         <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="no_show">No-show</option>
                     </select>
+                    ) : null}
                 </div>
             </div>
 
@@ -295,6 +329,10 @@ const AdminBookings = () => {
                                                         <span className="flex items-center gap-1">
                                                             Out {booking.checkOutDate ? new Date(booking.checkOutDate).toLocaleDateString() : '—'}
                                                         </span>
+                                                        <span className="text-neutral-500 font-normal">
+                                                            {booking.totalNights ? `${booking.totalNights} night${booking.totalNights > 1 ? 's' : ''}` : ''}
+                                                            {booking.roomTypeId?.name ? ` · ${booking.roomTypeId.name}` : ''}
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4">
@@ -302,6 +340,7 @@ const AdminBookings = () => {
                                                 </td>
                                                 <td className="p-4 text-right font-mono text-sm text-neutral-900 tabular-nums">
                                                     ₹{booking.totalAmount?.toLocaleString('en-IN')}
+                                                    <p className="font-sans text-[11px] text-neutral-500 capitalize">{booking.paymentStatus || 'pending'}{booking.paymentMethod ? ` · ${booking.paymentMethod}` : ''}</p>
                                                 </td>
                                                 <td className="p-4 text-center relative">
                                                     <button

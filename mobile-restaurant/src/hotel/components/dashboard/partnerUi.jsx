@@ -1,5 +1,7 @@
 import { forwardRef, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
+import { Clock } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBadge } from '../../../components/ds';
 import { color, radii, space, type } from '../../../theme';
@@ -142,6 +144,87 @@ export const Field = forwardRef(function Field({ label, hint, error, multiline, 
     </View>
   );
 });
+
+/** "3:00 PM" / "15:00" -> Date today at that time (now when unreadable). */
+function timeTextToDate(text) {
+  const m = String(text || '').trim().match(/^(\d{1,2}):(\d{2})\s*([AaPp][Mm])?$/);
+  const d = new Date();
+  if (!m) return d;
+  let h = Number(m[1]);
+  if (m[3]) {
+    const pm = m[3].toLowerCase() === 'pm';
+    if (h === 12) h = pm ? 12 : 0;
+    else if (pm) h += 12;
+  }
+  d.setHours(h, Number(m[2]), 0, 0);
+  return d;
+}
+
+function dateToTimeText(date) {
+  let h = date.getHours();
+  const min = String(date.getMinutes()).padStart(2, '0');
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  h %= 12;
+  if (h === 0) h = 12;
+  return `${h}:${min} ${suffix}`;
+}
+
+/**
+ * A time input that opens the phone's clock picker instead of a free-text box
+ * (partners typed "12", "noon", "12.00pm"…). Stores "h:mm AM/PM". Optional
+ * `presets` show as one-tap chips for the usual times.
+ */
+export function TimeField({ label, value, onChange, placeholder = 'Select time', presets = [], error, hint, style }) {
+  const [iosOpen, setIosOpen] = useState(false);
+  const open = () => {
+    if (Platform.OS === 'android') {
+      DateTimePickerAndroid.open({
+        value: timeTextToDate(value),
+        mode: 'time',
+        is24Hour: false,
+        onChange: (event, date) => {
+          if (event.type === 'set' && date) onChange(dateToTimeText(date));
+        },
+      });
+    } else {
+      setIosOpen((v) => !v);
+    }
+  };
+  return (
+    <View style={[{ gap: space.xs + 2 }, style]}>
+      {label ? <Text style={ui.fieldLabel}>{label}</Text> : null}
+      <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={`${label || 'Time'}: ${value || 'not set'}. Change`} style={[ui.inputBox, error && { borderColor: color.danger }]}>
+        <Text style={[ui.input, { textAlignVertical: 'center', paddingTop: 13 }, !value && { color: color.textDisabled }]}>{value || placeholder}</Text>
+        <Clock size={18} color={color.primary} />
+      </Pressable>
+      {Platform.OS !== 'android' && iosOpen ? (
+        <DateTimePicker value={timeTextToDate(value)} mode="time" display="spinner" onChange={(e, date) => date && onChange(dateToTimeText(date))} />
+      ) : null}
+      {presets.length ? (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs }}>
+          {presets.map((p) => (
+            <Pressable
+              key={p}
+              onPress={() => onChange(p)}
+              accessibilityLabel={`Set ${p}`}
+              style={{
+                paddingHorizontal: space.sm,
+                paddingVertical: 6,
+                borderRadius: radii.pill,
+                borderWidth: 1,
+                borderColor: value === p ? color.primary : color.border,
+                backgroundColor: value === p ? color.primarySoft : color.surface,
+              }}
+            >
+              <Text style={[type.small, { color: value === p ? color.primary : color.textSecondary }]}>{p}</Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
+      {error ? <Text style={ui.error}>{error}</Text> : hint ? <Text style={ui.hint}>{hint}</Text> : null}
+    </View>
+  );
+}
 
 /** White bar pinned to the bottom with the safe-area inset. */
 export function PinnedBar({ children, style }) {

@@ -2,7 +2,7 @@ import { Image, StyleSheet, Text, View } from 'react-native';
 import { BedDouble, Camera, Clock, MapPin, Plus, Search } from 'lucide-react-native';
 import { Button, StatusBadge } from '../../../../components/ds';
 import { color, radii, space, type } from '../../../../theme';
-import { Field, InfoTile, KeyValue, sentence } from '../../../components/dashboard/partnerUi';
+import { Field, InfoTile, KeyValue, TimeField, sentence } from '../../../components/dashboard/partnerUi';
 import {
   AddPhotoTile,
   ChoiceSwitch,
@@ -312,8 +312,8 @@ export function StepRules({ w }) {
           silent there; the message is shown here so Continue never appears dead. */}
       <ErrorBanner message={w.error} />
       <View style={{ flexDirection: 'row', gap: space.md }}>
-        <Field style={{ flex: 1 }} label="Check-in time" right={clockIcon} placeholder="e.g. 12:00 PM" value={f.checkInTime} onChangeText={(v) => set('checkInTime', v)} />
-        <Field style={{ flex: 1 }} label="Check-out time" right={clockIcon} placeholder="e.g. 11:00 AM" value={f.checkOutTime} onChangeText={(v) => set('checkOutTime', v)} />
+        <TimeField style={{ flex: 1 }} label="Check-in time" placeholder="12:00 PM" presets={['12:00 PM', '1:00 PM', '2:00 PM']} value={f.checkInTime} onChange={(v) => set('checkInTime', v)} />
+        <TimeField style={{ flex: 1 }} label="Check-out time" placeholder="11:00 AM" presets={['10:00 AM', '11:00 AM', '12:00 PM']} value={f.checkOutTime} onChange={(v) => set('checkOutTime', v)} />
       </View>
 
       <Field

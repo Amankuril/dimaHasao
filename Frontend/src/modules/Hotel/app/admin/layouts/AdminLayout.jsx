@@ -40,8 +40,11 @@ const HOTEL_ADMIN_BASE = '/hotel/admin';
 const MENU_ITEMS = [
     { icon: LayoutDashboard, label: 'Dashboard', path: `${HOTEL_ADMIN_BASE}/dashboard` },
     { icon: Users, label: 'User management', path: `${HOTEL_ADMIN_BASE}/users` },
-    { icon: Building2, label: 'Partner management', path: `${HOTEL_ADMIN_BASE}/partners` },
-    { icon: Home, label: 'Property management', path: `${HOTEL_ADMIN_BASE}/properties` },
+    // Same split as restaurants: new joiners apart from the registered list.
+    { icon: Building2, label: 'New partner requests', path: `${HOTEL_ADMIN_BASE}/partners?view=requests`, badgeKey: 'partnerRequests' },
+    { icon: Building2, label: 'Registered partners', path: `${HOTEL_ADMIN_BASE}/partners?view=registered`, isDefaultFor: `${HOTEL_ADMIN_BASE}/partners` },
+    { icon: Home, label: 'Property requests', path: `${HOTEL_ADMIN_BASE}/properties?view=requests`, badgeKey: 'propertyRequests' },
+    { icon: Home, label: 'Live properties', path: `${HOTEL_ADMIN_BASE}/properties?view=live`, isDefaultFor: `${HOTEL_ADMIN_BASE}/properties` },
     { icon: LayoutGrid, label: 'Categories', path: `${HOTEL_ADMIN_BASE}/categories` },
     { icon: Calendar, label: 'Bookings', path: `${HOTEL_ADMIN_BASE}/bookings` },
     { icon: Star, label: 'Reviews', path: `${HOTEL_ADMIN_BASE}/reviews` },
@@ -66,6 +69,35 @@ const AdminLayout = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [isNotifOpen, setIsNotifOpen] = useState(false);
     const notifRef = useRef(null);
+    const [pendingCounts, setPendingCounts] = useState({ partnerRequests: 0, propertyRequests: 0 });
+
+    // Waiting-for-approval counts for the sidebar badges; refreshed on navigation.
+    useEffect(() => {
+        let alive = true;
+        Promise.all([
+            adminService.getPartners({ view: 'requests', limit: 1 }).catch(() => null),
+            adminService.getHotels({ view: 'requests', limit: 1 }).catch(() => null),
+        ]).then(([partners, hotels]) => {
+            if (!alive) return;
+            setPendingCounts({
+                partnerRequests: Number(partners?.counts?.requests || 0),
+                propertyRequests: Number(hotels?.counts?.requests || 0),
+            });
+        });
+        return () => { alive = false; };
+    }, [location.pathname, location.search]);
+
+    const isItemActive = (item) => {
+        const [path, query] = item.path.split('?');
+        const view = new URLSearchParams(query || '').get('view');
+        const currentView = new URLSearchParams(location.search).get('view');
+        if (location.pathname === path) {
+            if (!view) return true;
+            return currentView === view || (!currentView && item.isDefaultFor === path);
+        }
+        // Detail pages (/partners/:id) light up the default list entry.
+        return location.pathname.startsWith(`${path}/`) && (!view || item.isDefaultFor === path);
+    };
 
     useEffect(() => {
         loadNotifications();
@@ -157,7 +189,8 @@ const AdminLayout = () => {
                             </div>
                         ) : (
                             visibleMenuItems.map((item) => {
-                                const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
+                                const isActive = isItemActive(item);
+                                const badge = item.badgeKey === 'unread' ? unreadCount : pendingCounts[item.badgeKey] || 0;
                                 return (
                                     <NavLink
                                         key={item.path}
@@ -167,10 +200,10 @@ const AdminLayout = () => {
                                     >
                                         <item.icon strokeWidth={1.5} className={navIconClass(isActive)} />
                                         {!isCollapsed && <span className="min-w-0 flex-1 truncate">{item.label}</span>}
-                                        {item.badgeKey === 'unread' && unreadCount > 0 && !isCollapsed && (
-                                            <span className={navCountClass}>{unreadCount > 99 ? '99+' : unreadCount}</span>
+                                        {item.badgeKey && badge > 0 && !isCollapsed && (
+                                            <span className={navCountClass}>{badge > 99 ? '99+' : badge}</span>
                                         )}
-                                        {item.badgeKey === 'unread' && unreadCount > 0 && isCollapsed && <span className={navDotClass} />}
+                                        {item.badgeKey && badge > 0 && isCollapsed && <span className={navDotClass} />}
                                     </NavLink>
                                 );
                             })

@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Building2 } from 'lucide-react-native';
-import { createHotelProfile, fetchPartnerProfiles, submitHotelKyc } from '../../api/partner';
+import { checkHotelEmailAvailable, createHotelProfile, fetchPartnerProfiles, submitHotelKyc } from '../../api/partner';
 import { Button, Card, EmptyState } from '../../components/ds';
 import {
   HOTEL_BUSINESS_DEFAULTS,
@@ -58,11 +58,18 @@ export default function AddHotelBusiness() {
 
   const scrollToTop = () => scrollRef.current?.scrollTo?.({ y: 0, animated: false });
 
-  const goNext = () => {
+  const goNext = async () => {
     const errors = validateHotelBusinessFields(business);
     if (errors.length) {
       toast.error(errors[0]);
       return;
+    }
+    if (business.email?.trim() && !alreadyHasHotel) {
+      const { available, message } = await checkHotelEmailAvailable(business.email.trim(), business.phone || prefill.phone || '');
+      if (!available) {
+        toast.error(message || 'That email is already registered to another partner.');
+        return;
+      }
     }
     setStep(2);
     scrollToTop();

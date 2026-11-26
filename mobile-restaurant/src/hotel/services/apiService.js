@@ -1,4 +1,6 @@
 import { hotelApi, toQuery } from './api';
+import { geocodeGooglePlaceId, reverseGeocodeWithGoogle } from '../../restaurant/utils/googleGeocoding';
+import { fetchPlaceSuggestions } from '../../restaurant/utils/googlePlaces';
 import api from '../../api/client';
 import { cachedRead, keyFor, TTL } from '../../lib/apiCache';
 import { setPartnerSession, clearPartnerSession } from '../utils/partnerAuth';
@@ -156,14 +158,32 @@ export const hotelService = {
   /** `formData` is a FormData of picked image files (uri / name / type). */
   uploadImages: (formData) => body(hotelApi.post('/hotels/upload', formData)),
   uploadImagesBase64: (images) => body(hotelApi.post('/hotels/upload-base64', { images })),
+  /**
+   * Address for a point, through the same geocode service the food module
+   * uses (/food/geocode/reverse). Falls back to the hotel endpoint.
+   * Shape: { country, state, city, area, fullAddress, pincode, latitude, longitude }.
+   */
   getAddressFromCoordinates: async (lat, lng) => {
     try {
-      const response = await hotelApi.post('/hotels/location/address', { lat, lng });
-      return response.data;
-    } catch (error) {
-      const err = error.response?.data || { message: error.message };
-      if (!err?.mapsUnavailable) console.error('[getAddressFromCoordinates] Backend error:', err);
-      throw err;
+      const geo = await reverseGeocodeWithGoogle(lat, lng);
+      return {
+        success: true,
+        country: geo.country || 'India',
+        state: geo.state || '',
+        city: geo.city || '',
+        area: geo.area || '',
+        fullAddress: geo.formattedAddress || '',
+        pincode: geo.pincode || '',
+        latitude: lat,
+        longitude: lng,
+      };
+    } catch {
+      try {
+        const response = await hotelApi.post('/hotels/location/address', { lat, lng });
+        return response.data;
+      } catch (error) {
+        throw error.response?.data || { message: 'Could not find an address for this location. Enter it below.' };
+      }
     }
   },
   saveOnboardingStep: async (data) => {
@@ -180,15 +200,37 @@ export const hotelService = {
       return fail(error);
     }
   },
+  /**
+   * Place search through the food module's Google Places service (autocomplete
+   * + text search, /maps/autocomplete and /food/geocode/text-search), so the
+   * hotel wizard suggests the same places the restaurant address picker does.
+   * Shape kept: { results: [{ name, lat, lng, type }] }.
+   */
   searchLocation: async (query) => {
+    const suggestions = await fetchPlaceSuggestions(query).catch(() => []);
+    const resolved = await Promise.all(
+      suggestions.slice(0, 6).map(async (s) => {
+        let lat = Number(s.latitude);
+        let lng = Number(s.longitude);
+        if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) {
+          const place = await geocodeGooglePlaceId(s.placeId).catch(() => null);
+          lat = Number(place?.latitude);
+          lng = Number(place?.longitude);
+        }
+        if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        return { name: s.display || s.mainText, mainText: s.mainText, secondaryText: s.secondaryText, lat, lng, type: 'address' };
+      })
+    );
+    const results = resolved.filter(Boolean);
+    if (results.length) return { success: true, results };
+    // Nothing from Places: try the hotel geocoder before giving up.
     try {
       const response = await hotelApi.get(`/hotels/location/search?query=${encodeURIComponent(query)}`);
       return response.data;
     } catch (error) {
       const err = error.response?.data || { message: error.message };
-      // A deployment without a Maps key answers 503 with this flag; callers handle it.
-      if (!err?.mapsUnavailable) console.error('[searchLocation] Backend error:', err);
-      throw err;
+      if (err?.mapsUnavailable) throw err;
+      return { success: true, results: [] };
     }
   },
   calculateDistance: (originLat, originLng, destLat, destLng) =>

@@ -11,10 +11,13 @@ import adminService from '../../../services/adminService';
 import { categoryService } from '../../../services/categoryService';
 import toast from 'react-hot-toast';
 import StatusDot from '../components/StatusDot';
+import ViewTabs, { useListView } from '../components/ViewTabs';
 
 const PropertyStatusBadge = ({ status }) => <StatusDot status={status} />;
 
 const AdminProperties = () => {
+    const [view, setView] = useListView('live');
+    const [counts, setCounts] = useState({ requests: 0, live: 0 });
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [totalProperties, setTotalProperties] = useState(0);
@@ -56,11 +59,13 @@ const AdminProperties = () => {
                 limit,
                 search: currentFilters.search,
                 status: currentFilters.status,
-                type: currentFilters.type || undefined
+                type: currentFilters.type || undefined,
+                view: currentFilters.view === 'all' ? undefined : currentFilters.view
             };
             const data = await adminService.getHotels(params);
             if (data.success) {
                 setProperties(data.hotels || []);
+                if (data.counts) setCounts(data.counts);
                 setTotalProperties(data.total || 0);
                 setTotalPages(Math.ceil((data.total || 0) / limit));
             } else {
@@ -80,10 +85,15 @@ const AdminProperties = () => {
 
     useEffect(() => {
         const timer = setTimeout(() => {
-            fetchProperties(currentPage, filters);
+            fetchProperties(currentPage, { ...filters, view });
         }, 300);
         return () => clearTimeout(timer);
-    }, [currentPage, filters, fetchProperties]);
+    }, [currentPage, filters, fetchProperties, view]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+        setFilters((prev) => ({ ...prev, status: '' }));
+    }, [view]);
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
@@ -105,7 +115,7 @@ const AdminProperties = () => {
                         const res = await adminService.updateHotelStatus(property._id, newStatus);
                         if (res.success) {
                             toast.success(`Property ${action}ed successfully`);
-                            fetchProperties(currentPage, filters);
+                            fetchProperties(currentPage, { ...filters, view });
                         }
                     } catch {
                         toast.error('Failed to update status');
@@ -124,7 +134,7 @@ const AdminProperties = () => {
                         const res = await adminService.deleteHotel(property._id);
                         if (res.success) {
                             toast.success('Property deleted successfully');
-                            fetchProperties(currentPage, filters);
+                            fetchProperties(currentPage, { ...filters, view });
                         }
                     } catch {
                         toast.error('Failed to delete property');
@@ -175,8 +185,16 @@ const AdminProperties = () => {
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-medium text-neutral-900">Property management ({totalProperties})</h2>
-                    <p className="mt-1 text-sm text-neutral-500">Every listed stay, with its approval status</p>
+                    <h2 className="text-2xl font-medium text-neutral-900">
+                        {view === 'requests' ? 'Property requests' : view === 'live' ? 'Live properties' : 'All properties'} ({totalProperties})
+                    </h2>
+                    <p className="mt-1 text-sm text-neutral-500">
+                        {view === 'requests'
+                            ? 'New listings submitted by partners, waiting for review'
+                            : view === 'live'
+                              ? 'Approved stays guests can find and book'
+                              : 'Every listed stay, including drafts'}
+                    </p>
                 </div>
                 <div className="flex gap-2">
                     <button
@@ -187,6 +205,16 @@ const AdminProperties = () => {
                     </button>
                 </div>
             </div>
+
+            <ViewTabs
+                value={view}
+                onChange={setView}
+                tabs={[
+                    { value: 'requests', label: 'Requests', count: counts.requests },
+                    { value: 'live', label: 'Live', count: counts.live },
+                    { value: 'all', label: 'All' },
+                ]}
+            />
 
             <div className="bg-white p-4 border border-neutral-900/[0.08] rounded-xl flex flex-col md:flex-row gap-4 items-center">
                 <div className="relative flex-1">
@@ -200,17 +228,19 @@ const AdminProperties = () => {
                     />
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
+                    {view === 'all' ? (
                     <select
                         value={filters.status}
                         onChange={(e) => handleFilterChange('status', e.target.value)}
                         className="px-4 py-2 bg-neutral-50 border border-transparent rounded-lg text-sm outline-none focus:bg-white focus:border-neutral-400 transition-colors"
                     >
                         <option value="">All statuses</option>
+                        <option value="draft">Draft</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
-                        <option value="suspended">Suspended</option>
                     </select>
+                    ) : null}
                     <select
                         value={filters.type}
                         onChange={(e) => handleFilterChange('type', e.target.value)}
@@ -236,6 +266,8 @@ const AdminProperties = () => {
                                 <th className="p-4">Property name</th>
                                 <th className="p-4">Type</th>
                                 <th className="p-4">Owner</th>
+                                <th className="p-4">Bookings</th>
+                                <th className="p-4">{view === 'requests' ? 'Submitted' : 'Listed'}</th>
                                 <th className="p-4">Status</th>
                                 <th className="p-4 text-center">Actions</th>
                             </tr>
@@ -244,7 +276,7 @@ const AdminProperties = () => {
                             {loading ? (
                                 [1, 2, 3, 4, 5].map(i => (
                                     <tr key={i} className="animate-pulse">
-                                        <td colSpan="6" className="p-4"><div className="h-10 bg-neutral-50 rounded-lg"></div></td>
+                                        <td colSpan="7" className="p-4"><div className="h-10 bg-neutral-50 rounded-lg"></div></td>
                                     </tr>
                                 ))
                             ) : (
@@ -291,7 +323,21 @@ const AdminProperties = () => {
                                                     <p className="text-xs text-neutral-500 normal-case">{property.partnerId?.email || 'No email'}</p>
                                                 </td>
                                                 <td className="p-4">
-                                                    <PropertyStatusBadge status={property.status} />
+                                                    <p className="text-[13px] text-neutral-700">{property.bookingCount || 0} total</p>
+                                                    <p className="text-xs text-neutral-500">{property.upcomingBookingCount || 0} upcoming</p>
+                                                </td>
+                                                <td className="p-4 text-xs text-neutral-500">
+                                                    {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                                                </td>
+                                                <td className="p-4">
+                                                    {view === 'requests' && property.status === 'pending' ? (
+                                                        <div className="flex gap-2">
+                                                            <button onClick={(e) => { e.stopPropagation(); handleAction('approve', property); }} className="px-3 py-1 rounded-md bg-[#0a4d2b] text-white text-xs font-medium hover:opacity-90">Approve</button>
+                                                            <button onClick={(e) => { e.stopPropagation(); handleAction('reject', property); }} className="px-3 py-1 rounded-md border border-red-200 text-red-700 text-xs font-medium hover:bg-red-50">Reject</button>
+                                                        </div>
+                                                    ) : (
+                                                        <PropertyStatusBadge status={property.status} />
+                                                    )}
                                                 </td>
                                                 <td className="p-4 text-center relative">
                                                     <button
@@ -327,7 +373,7 @@ const AdminProperties = () => {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="6" className="p-8 text-center text-neutral-500">
+                                            <td colSpan="7" className="p-8 text-center text-neutral-500">
                                                 <div className="flex flex-col items-center gap-2">
                                                     <Building2 size={32} className="text-neutral-300" />
                                                     <p className="text-xs font-medium">No properties found</p>

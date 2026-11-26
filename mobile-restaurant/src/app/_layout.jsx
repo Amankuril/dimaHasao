@@ -33,6 +33,7 @@ import { ToastContainer } from '../components/Toast';
 import { ConfirmModalContainer } from '../components/ConfirmModal';
 import PartnerWorkspaceSwitcher from '../restaurant/components/PartnerWorkspaceSwitcher';
 import RazorpayHost from '../components/RazorpayHost';
+import ImageSourceHost from '../components/ImageSourceHost';
 
 export { default as ErrorBoundary } from '../components/CrashScreen';
 
@@ -80,6 +81,7 @@ function Boot() {
       <ConfirmModalContainer />
       {/* Hotel wallet "add money" opens Razorpay checkout in a WebView through this host. */}
       <RazorpayHost />
+      <ImageSourceHost />
     </AnimatedSplash>
   );
 }

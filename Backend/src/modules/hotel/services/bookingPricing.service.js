@@ -192,6 +192,27 @@ export const quoteStay = async ({
   // only rate there is.
   const commissionRate = settings.defaultCommission || 10;
 
+  /*
+   * Only a listed stay can be sold, and only its own rooms. A delisted or
+   * unapproved property (or a room id from another property, or a room the
+   * partner switched off) priced and booked as normal.
+   */
+  if (property.status !== 'approved' || property.isLive === false) {
+    const error = new Error('This stay is not taking bookings right now');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (String(roomType.propertyId || '') !== String(property._id)) {
+    const error = new Error('That room does not belong to this stay');
+    error.statusCode = 400;
+    throw error;
+  }
+  if (roomType.isActive === false) {
+    const error = new Error(`${roomType.name || 'This room'} is not available to book`);
+    error.statusCode = 400;
+    throw error;
+  }
+
   const checkIn = new Date(checkInDate);
   const checkOut = new Date(checkOutDate);
 

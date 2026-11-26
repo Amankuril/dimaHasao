@@ -1,3 +1,4 @@
+import { chooseImageSource } from '../../../../components/ImageSourceHost';
 import { Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -24,18 +25,7 @@ function assetToFile(asset) {
 
 /** Camera or library, as the sheet the other pickers show. Resolves 'camera' | 'gallery' | null. */
 export function askImageSource() {
-  return new Promise((resolve) => {
-    Alert.alert(
-      'Add photo',
-      'Choose how you want to upload your photo.',
-      [
-        { text: 'Use Camera', onPress: () => resolve('camera') },
-        { text: 'Upload from Device', onPress: () => resolve('gallery') },
-        { text: 'Cancel', style: 'cancel', onPress: () => resolve(null) },
-      ],
-      { cancelable: true, onDismiss: () => resolve(null) },
-    );
-  });
+  return chooseImageSource();
 }
 
 /** Picks images from the camera (one) or the library (several when `multiple`). Resolves [] when cancelled. */

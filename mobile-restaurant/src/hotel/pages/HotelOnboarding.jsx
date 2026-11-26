@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, ScrollView, StyleSheet, Text, View } from 'react-
 import { StatusBar } from 'expo-status-bar';
 import { Building2 } from 'lucide-react-native';
 import { completePartnerSignup } from '../../api/auth';
-import { submitHotelKyc } from '../../api/partner';
+import { checkHotelEmailAvailable, submitHotelKyc } from '../../api/partner';
 import { Button, Card } from '../../components/ds';
 import HeritageHeader from '../../components/HeritageHeader';
 import { toast } from '../../lib/notify';
@@ -54,11 +54,21 @@ export default function HotelOnboarding() {
 
   const scrollToTop = () => scrollRef.current?.scrollTo?.({ y: 0, animated: false });
 
-  const goNext = () => {
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const goNext = async () => {
     const errors = validateHotelBusinessFields(business);
     if (errors.length) {
       toast.error(errors[0]);
       return;
+    }
+    if (business.email?.trim()) {
+      setCheckingEmail(true);
+      const { available, message } = await checkHotelEmailAvailable(business.email.trim(), sessionStore.getItem(PHONE_KEY) || '');
+      setCheckingEmail(false);
+      if (!available) {
+        toast.error(message || 'That email is already registered to another partner.');
+        return;
+      }
     }
     setStep(2);
     scrollToTop();
@@ -140,10 +150,10 @@ export default function HotelOnboarding() {
       <PinnedBar>
         <View style={styles.narrowBar}>
           <Button
-            title={loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}
+            title={loading ? 'Submitting' : checkingEmail ? 'Checking…' : step === 1 ? 'Continue' : 'Submit for review'}
             size="lg"
-            loading={loading}
-            disabled={loading}
+            loading={loading || checkingEmail}
+            disabled={loading || checkingEmail}
             onPress={step === 1 ? goNext : submit}
             accessibilityLabel={loading ? 'Submitting' : step === 1 ? 'Continue' : 'Submit for review'}
           />

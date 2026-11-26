@@ -142,8 +142,11 @@ export const adaptProperty = (property = {}) => {
     location: [address.area, address.city].filter(Boolean).join(', ') || address.fullAddress || '',
     address: address.fullAddress
       || [address.area, address.city, address.state, address.pincode].filter(Boolean).join(', '),
-    // Only shown when the backend actually computed a distance (geo search).
-    distanceFromStation: property.distance ? `${(property.distance / 1000).toFixed(1)} km` : '',
+    // Only shown when the backend actually computed a distance (geo search
+    // from the guest's position).
+    distanceFromStation: property.distance != null ? `${(property.distance / 1000).toFixed(1)} km` : '',
+    distanceKm: property.distance != null ? Number(property.distance) / 1000 : null,
+    city: String(address.city || '').trim(),
     travelTime: '',
     rating: Number(property.avgRating ?? property.averageRating ?? property.rating ?? 0),
     reviewCount: Number(property.totalReviews ?? property.reviewCount ?? 0),
@@ -188,6 +191,12 @@ export const fetchHotels = async (params = {}) => {
   if (params.search) query.search = params.search;
   if (params.type && params.type !== 'All') query.type = String(params.type).toLowerCase();
   if (params.guests) query.guests = params.guests;
+  if (Number.isFinite(params.lat) && Number.isFinite(params.lng)) {
+    query.lat = params.lat;
+    query.lng = params.lng;
+    query.radius = params.radius || 150;
+    query.sort = 'distance';
+  }
 
   const { data } = await hotelClient.get('/properties', { params: query });
   return unwrapList(data).map(adaptProperty);

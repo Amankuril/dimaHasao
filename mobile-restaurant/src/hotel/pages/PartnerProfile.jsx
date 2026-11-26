@@ -6,6 +6,7 @@ import { mediaUrl } from '../../api/client';
 import { Button, Card, IconButton, ListRow, StatusBadge } from '../../components/ds';
 import { useAuth } from '../../context/AuthContext';
 import { openCamera, openGallery } from '../../lib/images';
+import { chooseImageSource } from '../../components/ImageSourceHost';
 import { localStore } from '../../lib/storage';
 import { toast } from '../../lib/notify';
 import { useNavigate } from '../../lib/webRouter';
@@ -204,13 +205,11 @@ const PartnerProfile = () => {
     }
   };
 
-  const choosePhoto = () => {
+  const choosePhoto = async () => {
     if (uploading) return;
-    Alert.alert('Profile photo', undefined, [
-      { text: 'Take photo', onPress: () => openCamera({ fileNamePrefix: 'profile', onSelectFile: uploadPicked }) },
-      { text: 'Choose from gallery', onPress: () => openGallery({ fileNamePrefix: 'profile', onSelectFile: uploadPicked }) },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    const source = await chooseImageSource({ title: 'Profile photo' });
+    if (source === 'camera') openCamera({ fileNamePrefix: 'profile', onSelectFile: uploadPicked });
+    if (source === 'gallery') openGallery({ fileNamePrefix: 'profile', onSelectFile: uploadPicked });
   };
 
   const statusLabel = approvalStatus === 'approved' ? 'Verified partner' : approvalStatus === 'rejected' ? 'Rejected' : 'Pending approval';

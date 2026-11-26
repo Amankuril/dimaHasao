@@ -6,8 +6,13 @@ import { ShadDialog } from './ShadDialog';
 import { openCamera, openGallery } from '../utils/imageUploadUtils';
 
 /** Port of Food/components/ImageSourcePicker.jsx: "Use Camera" / "Upload from Device". */
-export function ImageSourcePicker({ isOpen, onClose, onFileSelect, title = 'Update photo', description = 'Choose how you want to upload your photo.', fileNamePrefix = 'upload' }) {
+export function ImageSourcePicker({ isOpen, onClose, onFileSelect, onSource, title = 'Update photo', description = 'Choose how you want to upload your photo.', fileNamePrefix = 'upload' }) {
   const pick = async (open) => {
+    // onSource: the caller opens the picker itself (see components/ImageSourceHost).
+    if (onSource) {
+      onSource(open === openCamera ? 'camera' : 'gallery');
+      return;
+    }
     onClose();
     // The picker opens once the dialog is gone, as the web closes before opening.
     await open({ onSelectFile: onFileSelect, fileNamePrefix });

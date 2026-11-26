@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { BackHandler, KeyboardAvoidingView, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
-import * as Location from 'expo-location';
+import { getDeviceCoordinates } from '../utils/deviceLocation';
 import { ArrowRight } from 'lucide-react-native';
 import { confirm } from '../../lib/notify';
 import { clearRouteState } from '../../lib/routeState';
@@ -147,28 +147,7 @@ const AddHotelWizard = () => {
     setError('');
     setLoadingLocation(true);
     try {
-      // 1. Permission
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted) {
-        setError('Location permission denied. Please enable it in device settings.');
-        return;
-      }
-      if (!(await Location.hasServicesEnabledAsync())) {
-        setError('Location unavailable. Check your GPS/network.');
-        return;
-      }
-
-      // 2. Get Coordinates
-      let timer;
-      const pos = await Promise.race([
-        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
-        new Promise((_, reject) => {
-          timer = setTimeout(() => reject({ code: 3 }), 15000);
-        }),
-      ]).finally(() => clearTimeout(timer));
-
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const { lat, lng } = await getDeviceCoordinates();
 
       // 3. Call Backend API
       let res;
@@ -181,12 +160,7 @@ const AddHotelWizard = () => {
       }
       applyAddress(res, lat, lng);
     } catch (err) {
-      console.error('[useCurrentLocation] Error:', err);
-      if (err && err.code === 3) {
-        setError('Location request timed out.');
-      } else {
-        setError('Location unavailable. Check your GPS/network.');
-      }
+      setError(err?.message || 'Location unavailable. Check your GPS/network.');
     } finally {
       setLoadingLocation(false);
     }
@@ -710,6 +684,45 @@ const AddHotelWizard = () => {
     }
   };
 
+  /*
+   * The location step used to have no check, so a property could be submitted
+   * without a pin: its empty coordinates became [0, 0] and every such stay sat
+   * at the same point, invisible to "near me" search. Require a pin; when only
+   * an address was typed, find it on the map first.
+   */
+  const nextFromLocation = async () => {
+    setError('');
+    const { city, fullAddress, area, state } = propertyForm.address || {};
+    if (!String(city || '').trim() || !String(fullAddress || '').trim()) {
+      setError('Add the full address and city of the property.');
+      return;
+    }
+    let lng = Number(propertyForm.location.coordinates[0]);
+    let lat = Number(propertyForm.location.coordinates[1]);
+    const hasPin = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0) && propertyForm.location.coordinates[0] !== '';
+    if (!hasPin) {
+      setLoadingLocation(true);
+      try {
+        const res = await hotelService.searchLocation([fullAddress, area, city, state].filter(Boolean).join(', '));
+        const hit = res?.results?.[0];
+        if (hit && Number.isFinite(hit.lat) && Number.isFinite(hit.lng)) {
+          lat = hit.lat;
+          lng = hit.lng;
+          updatePropertyForm(['location', 'coordinates'], [String(lng), String(lat)]);
+        }
+      } catch {
+        // handled below
+      } finally {
+        setLoadingLocation(false);
+      }
+      if (!Number.isFinite(lat) || !Number.isFinite(lng) || (lat === 0 && lng === 0)) {
+        setError('Pin the property on the map: tap "Use current location" at the property, or search and pick its address.');
+        return;
+      }
+    }
+    setStep(3);
+  };
+
   const handleNext = () => {
     if (loading) return;
     switch (step) {
@@ -717,7 +730,7 @@ const AddHotelWizard = () => {
         nextFromProperty();
         break;
       case 2:
-        setStep(3); // Location next
+        nextFromLocation();
         break;
       case 3:
         setStep(4); // Amenities next

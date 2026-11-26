@@ -48,6 +48,7 @@ export const blankDocuments = () => REQUIRED_DOCS_HOTEL.map((d) => ({ type: d.ty
 
 // The step furniture (heading, error banner, search status, select) is shared
 // with the homestay and resort wizards; see hotel/components/wizardUi.
+import { chooseImageSource } from '../../../../components/ImageSourceHost';
 export { ErrorBanner, SearchStatus, SectionHeading, SelectBox as Select } from '../../../components/wizardUi';
 
 /**
@@ -86,15 +87,6 @@ export function pickImages({ multiple = false } = {}) {
         resolve([]);
       }
     };
-    Alert.alert(
-      'Add photo',
-      'Choose how you want to upload your photo.',
-      [
-        { text: 'Use camera', onPress: () => finish('camera') },
-        { text: 'Upload from device', onPress: () => finish('gallery') },
-        { text: 'Cancel', style: 'cancel', onPress: () => resolve([]) },
-      ],
-      { cancelable: true, onDismiss: () => resolve([]) }
-    );
+    chooseImageSource().then((source) => (source ? finish(source) : resolve([])));
   });
 }

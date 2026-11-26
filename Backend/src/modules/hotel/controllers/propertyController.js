@@ -70,6 +70,12 @@ export const createProperty = async (req, res) => {
 
     const { propertyName, contactNumber, propertyType, description, shortDescription, coverImage, propertyImages, amenities, address, location, nearbyPlaces, checkInTime, checkOutTime, cancellationPolicy, houseRules, documents, roomTypes, hostLivesOnProperty, familyFriendly, resortType, activities, hotelCategory, starRating, dynamicCategory } = req.body;
     if (!propertyName || !propertyType || !coverImage) return res.status(400).json({ message: 'Missing required fields' });
+    // An unpinned property used to save as [0, 0]: every one sat at the same
+    // point and none showed up in "stays near me". Require a real pin.
+    const [pinLng, pinLat] = (location?.coordinates || []).map(Number);
+    if (!Number.isFinite(pinLat) || !Number.isFinite(pinLng) || (pinLat === 0 && pinLng === 0) || Math.abs(pinLat) > 90 || Math.abs(pinLng) > 180) {
+      return res.status(400).json({ message: 'Pin the property location on the map before submitting.' });
+    }
     const lowerType = propertyType.toLowerCase();
     const requiredDocs = PROPERTY_DOCUMENTS[lowerType] || [];
     const nearbyPlacesArray = Array.isArray(nearbyPlaces) ? nearbyPlaces : [];

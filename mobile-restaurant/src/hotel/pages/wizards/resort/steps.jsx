@@ -2,7 +2,7 @@ import { Linking, Text, View } from 'react-native';
 import { BedDouble, Camera, Clock, MapPin, Plus } from 'lucide-react-native';
 import { Button } from '../../../../components/ds';
 import { color, space, type } from '../../../../theme';
-import { Field, KeyValue, sentence } from '../../../components/dashboard/partnerUi';
+import { Field, KeyValue, TimeField, sentence } from '../../../components/dashboard/partnerUi';
 import {
   AddPhotoTile,
   CoverPhoto,
@@ -283,8 +283,8 @@ export function StepRules({ w }) {
       <ErrorBanner message={w.error} />
       <View style={{ gap: space.lg }}>
         <View style={{ flexDirection: 'row', gap: space.md }}>
-          <Field style={{ flex: 1 }} label="Check-in time" right={clockIcon} placeholder="3:00 PM" value={asText(f.checkInTime)} onChangeText={(v) => set('checkInTime', v)} />
-          <Field style={{ flex: 1 }} label="Check-out time" right={clockIcon} placeholder="11:00 AM" value={asText(f.checkOutTime)} onChangeText={(v) => set('checkOutTime', v)} />
+          <TimeField style={{ flex: 1 }} label="Check-in time" placeholder="2:00 PM" presets={['12:00 PM', '1:00 PM', '2:00 PM']} value={asText(f.checkInTime)} onChange={(v) => set('checkInTime', v)} />
+          <TimeField style={{ flex: 1 }} label="Check-out time" placeholder="11:00 AM" presets={['10:00 AM', '11:00 AM', '12:00 PM']} value={asText(f.checkOutTime)} onChange={(v) => set('checkOutTime', v)} />
         </View>
 
         <Field

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import * as Location from 'expo-location';
+import { getDeviceCoordinates } from '../../../utils/deviceLocation';
 import { confirm } from '../../../../lib/notify';
 import { clearRouteState } from '../../../../lib/routeState';
 import { localStore } from '../../../../lib/storage';
@@ -137,16 +137,7 @@ export function useResortWizard() {
     setError('');
     setLoadingLocation(true);
     try {
-      const perm = await Location.requestForegroundPermissionsAsync();
-      if (!perm.granted) {
-        throw Object.assign(new Error('denied'), { code: 1 });
-      }
-      if (!(await Location.hasServicesEnabledAsync())) {
-        throw Object.assign(new Error('unavailable'), { code: 2 });
-      }
-      const pos = await withTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }), 15000, 'Location request timed out.');
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
+      const { lat, lng } = await getDeviceCoordinates();
       const res = await hotelService.getAddressFromCoordinates(lat, lng);
       applyResolvedAddress(res, lat, lng);
     } catch (err) {

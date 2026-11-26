@@ -40,3 +40,18 @@ export const createHotelProfile = async ({ name, email } = {}) =>
  */
 export const submitHotelKyc = async (formData) =>
   unwrap(await upload('/partner/profiles/hotel/kyc', formData, { method: 'PATCH', auth: authFor() }));
+
+/**
+ * Whether an email is free for a new hotel partner. Asked on the step that
+ * collects it so a taken email is reported there, not one step later.
+ * Network trouble resolves to "available": the server still checks on create.
+ */
+export const checkHotelEmailAvailable = async (email, phone = '') => {
+  try {
+    const res = await api.post('/partner/check-email', { email, phone }, { quiet: true });
+    return { available: unwrap(res)?.available !== false, message: res?.data?.message || '' };
+  } catch (err) {
+    if (err?.response?.status === 400) return { available: false, message: err.response.data?.message || 'Enter a valid email address' };
+    return { available: true, message: '' };
+  }
+};

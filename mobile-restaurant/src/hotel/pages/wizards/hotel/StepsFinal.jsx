@@ -1,7 +1,7 @@
 import { Linking, Text, View } from 'react-native';
 import { Clock, FileText, MapPin } from 'lucide-react-native';
 import { color, space, type } from '../../../../theme';
-import { Field, KeyValue } from '../../../components/dashboard/partnerUi';
+import { Field, KeyValue, TimeField } from '../../../components/dashboard/partnerUi';
 import { DocumentRow, DoneState, GroupLabel, Notice, ReviewBlock, ReviewDocLine, ToggleChip } from '../../../components/wizardUi';
 import { ErrorBanner, HOUSE_RULES_OPTIONS, SectionHeading } from './shared';
 
@@ -21,8 +21,8 @@ export function StepRules({ propertyForm, updatePropertyForm, error }) {
 
       <View style={{ gap: space.lg }}>
         <View style={{ flexDirection: 'row', gap: space.md }}>
-          <Field style={{ flex: 1 }} label="Check-in time" placeholder="12:00 PM" right={clockIcon} value={propertyForm.checkInTime} onChangeText={(v) => updatePropertyForm('checkInTime', v)} />
-          <Field style={{ flex: 1 }} label="Check-out time" placeholder="11:00 AM" right={clockIcon} value={propertyForm.checkOutTime} onChangeText={(v) => updatePropertyForm('checkOutTime', v)} />
+          <TimeField style={{ flex: 1 }} label="Check-in time" placeholder="12:00 PM" presets={['12:00 PM', '1:00 PM', '2:00 PM']} value={propertyForm.checkInTime} onChange={(v) => updatePropertyForm('checkInTime', v)} />
+          <TimeField style={{ flex: 1 }} label="Check-out time" placeholder="11:00 AM" presets={['10:00 AM', '11:00 AM', '12:00 PM']} value={propertyForm.checkOutTime} onChange={(v) => updatePropertyForm('checkOutTime', v)} />
         </View>
 
         <Field

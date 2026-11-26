@@ -10,6 +10,7 @@ import { verifyAccessToken } from '../../../core/auth/token.util.js';
 import { asyncHandler } from '../../../utils/asyncHandler.js';
 import { getMyProfiles, addHotelProfile, submitHotelKyc } from '../controllers/partner.controller.js';
 import { uploadDocuments } from '../../../middleware/upload.js';
+import Partner from '../../hotel/models/Partner.js';
 
 const router = express.Router();
 
@@ -49,6 +50,28 @@ export const authenticatePartner = (req, res, next) => {
         return res.status(401).json({ success: false, message: 'Invalid or expired token' });
     }
 };
+
+/**
+ * Is this email free for a hotel partner? Asked on the onboarding step that
+ * collects it, so a taken email is reported there instead of after the next
+ * step (where the account is actually created). `phone` is the applicant's own
+ * number: their own existing account does not count as "taken".
+ */
+router.post('/check-email', asyncHandler(async (req, res) => {
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        return res.status(400).json({ success: false, message: 'Enter a valid email address' });
+    }
+    const digits = String(req.body?.phone || '').replace(/\D/g, '').slice(-10);
+    const taken = await Partner.findOne({ email }).select('phone').lean();
+    const ownedBySameNumber = taken && digits && String(taken.phone || '').replace(/\D/g, '').slice(-10) === digits;
+    const available = !taken || Boolean(ownedBySameNumber);
+    return res.status(200).json({
+        success: true,
+        data: { available },
+        message: available ? 'Email is available' : 'That email is already registered to another partner.',
+    });
+}));
 
 router.get('/profiles', authenticatePartner, asyncHandler(getMyProfiles));
 router.post('/profiles/hotel', authenticatePartner, asyncHandler(addHotelProfile));
