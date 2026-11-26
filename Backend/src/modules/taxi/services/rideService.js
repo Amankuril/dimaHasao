@@ -915,7 +915,7 @@ export const createRideRecord = async ({
 
 export const getRideDetails = async (rideId) => {
   const ride = await Ride.findById(rideId)
-    .populate('userId', 'name phone')
+    .populate('userId', 'name phone taxiRating taxiRatingCount')
     .populate('driverId', 'name phone profileImage vehicleType vehicleIconType vehicleNumber vehicleColor vehicleMake vehicleModel vehicleImage rating');
 
   if (!ride) {
@@ -931,7 +931,7 @@ const activeRideStatuses = [RIDE_STATUS.SEARCHING, RIDE_STATUS.ACCEPTED, RIDE_ST
 
 const populateRideRealtime = async (rideId) =>
   Ride.findById(rideId)
-    .populate('userId', 'name phone')
+    .populate('userId', 'name phone taxiRating taxiRatingCount')
     .populate('driverId', 'name phone profileImage vehicleType vehicleIconType vehicleNumber vehicleColor vehicleMake vehicleModel vehicleImage rating');
 
 /*
@@ -996,6 +996,14 @@ export const serializeRideRealtime = (ride, { viewerRole = null } = {}) => ({
   startedAt: ride.startedAt,
   completedAt: ride.completedAt,
   feedback: ride.feedback || null,
+  driverFeedback: ride.driverFeedback?.submittedAt ? ride.driverFeedback : null,
+  waitingCharge: ride.waitingCharge ? {
+        seconds: Number(ride.waitingCharge.seconds || 0),
+        freeMinutes: Number(ride.waitingCharge.freeMinutes || 0),
+        billableMinutes: Number(ride.waitingCharge.billableMinutes || 0),
+        perMinute: Number(ride.waitingCharge.perMinute || 0),
+        amount: Number(ride.waitingCharge.amount || 0),
+      } : null,
   lastDriverLocation: ride.lastDriverLocation?.coordinates?.length
     ? {
         type: ride.lastDriverLocation.type,
@@ -1005,7 +1013,16 @@ export const serializeRideRealtime = (ride, { viewerRole = null } = {}) => ({
         updatedAt: ride.lastDriverLocation.updatedAt,
       }
     : null,
-  user: ride.userId,
+  // The rider as the driver sees them, with the rating drivers have given.
+  user: ride.userId && typeof ride.userId === 'object' && ride.userId.name !== undefined
+    ? {
+        _id: ride.userId._id,
+        name: ride.userId.name,
+        phone: ride.userId.phone,
+        rating: Number(ride.userId.taxiRating || 0),
+        ratingCount: Number(ride.userId.taxiRatingCount || 0),
+      }
+    : ride.userId,
   driver: ride.driverId,
   messages: (ride.messages || []).slice(-30).map((message) => ({
     id: String(message._id),
@@ -1051,7 +1068,7 @@ export const getActiveRideForIdentity = async ({ role, entityId }) => {
       status: { $in: activeRideStatuses },
     })
       .sort({ updatedAt: -1 })
-      .populate('userId', 'name phone')
+      .populate('userId', 'name phone taxiRating taxiRatingCount')
       .populate('driverId', 'name phone profileImage vehicleType vehicleIconType vehicleNumber vehicleColor vehicleMake vehicleModel vehicleImage rating');
 
     return rides.find((ride) => !isRideScheduledForFuture(ride)) || null;
@@ -1164,6 +1181,8 @@ export const listRideHistoryForIdentity = async ({ role, entityId, limit = 50, p
     startedAt: ride.startedAt,
     completedAt: ride.completedAt,
     feedback: ride.feedback || null,
+    driverFeedback: ride.driverFeedback?.submittedAt ? ride.driverFeedback : null,
+    waitingCharge: ride.waitingCharge?.amount ? { billableMinutes: Number(ride.waitingCharge.billableMinutes || 0), amount: Number(ride.waitingCharge.amount || 0) } : null,
     createdAt: ride.createdAt,
     updatedAt: ride.updatedAt,
     user: role === 'driver' ? (ride.userId || null) : null,
@@ -1288,6 +1307,28 @@ const rideStatusConfig = {
   },
 };
 
+/**
+ * The waiting charge a trip earns when it starts.
+ *
+ * The clock runs from the driver's arrival at pickup (`arrivedAt`, set by the
+ * `arriving` update) to the start (`startedAt`), both server times, so the
+ * driver's phone clock cannot inflate it. Whole minutes are rounded up, the
+ * free minutes in the ride's pricing snapshot come off, and the rest is billed
+ * at the snapshot's per-minute rate — the same arithmetic the driver app shows
+ * on the PIN screen ("Rs 1/min · 3 billable"). A ride with no arrival time
+ * (the arrival update never reached the server) waits for free.
+ */
+export const computeRideWaitingCharge = ({ arrivedAt, startedAt, pricingSnapshot }) => {
+  const perMinute = Math.max(0, Number(pricingSnapshot?.waiting_charge ?? 0)) || 0;
+  const freeMinutes = Math.max(0, Number(pricingSnapshot?.free_waiting_before ?? 0)) || 0;
+  const arrived = arrivedAt ? new Date(arrivedAt).getTime() : NaN;
+  const started = startedAt ? new Date(startedAt).getTime() : NaN;
+  const seconds = Number.isFinite(arrived) && Number.isFinite(started) ? Math.max(0, Math.floor((started - arrived) / 1000)) : 0;
+  const billableMinutes = Math.max(0, Math.ceil(seconds / 60) - freeMinutes);
+  const amount = Math.round(billableMinutes * perMinute * 100) / 100;
+  return { seconds, freeMinutes, billableMinutes, perMinute, amount };
+};
+
 const RIDE_OTP_MAX_ATTEMPTS = 5;
 const RIDE_OTP_LOCK_MS = 10 * 60 * 1000;
 
@@ -1377,6 +1418,19 @@ export const updateRideLifecycle = async ({ rideId, driverId, nextStatus, paymen
     updates.startedAt = new Date();
     updates.otpFailedAttempts = 0;
     updates.otpLockedUntil = null;
+
+    // Bill the wait at pickup into the fare now, so the payment screen, the
+    // online collection amount, commission and driver earnings all use the
+    // same total. Charged once: only the call that sets startedAt gets here.
+    const waiting = computeRideWaitingCharge({
+      arrivedAt: ride.arrivedAt,
+      startedAt: updates.startedAt,
+      pricingSnapshot: ride.pricingSnapshot,
+    });
+    updates.waitingCharge = waiting;
+    if (waiting.amount > 0) {
+      updates.fare = Math.round((Number(ride.fare || 0) + waiting.amount) * 100) / 100;
+    }
   }
 
   if (paymentMethod !== undefined && paymentMethod !== null && String(paymentMethod).trim()) {
@@ -1532,6 +1586,57 @@ export const updateRideDriverLocation = async ({ rideId, driverId, coordinates, 
     speed: ride.lastDriverLocation.speed,
     updatedAt: ride.lastDriverLocation.updatedAt,
   };
+};
+
+/**
+ * The driver rates the rider after a completed ride (the rider's own rating of
+ * the driver is submitRideFeedback). One rating per ride: the ride is claimed
+ * atomically, so a double tap cannot count twice. The rider's average is kept
+ * on the consumer record as taxiRating (one decimal), like Driver.rating.
+ */
+export const submitDriverRideFeedback = async ({ rideId, driverId, rating, comment = '' }) => {
+  const numericRating = Number(rating);
+  if (!Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+    throw new ApiError(400, 'rating must be an integer between 1 and 5');
+  }
+
+  const ride = await Ride.findOneAndUpdate(
+    {
+      _id: rideId,
+      driverId,
+      status: RIDE_STATUS.COMPLETED,
+      'driverFeedback.submittedAt': null,
+    },
+    {
+      $set: {
+        driverFeedback: {
+          rating: numericRating,
+          comment: String(comment || '').trim().slice(0, 500),
+          submittedAt: new Date(),
+        },
+      },
+    },
+    { returnDocument: 'after' },
+  );
+
+  if (!ride) {
+    const existing = await Ride.findOne({ _id: rideId, driverId }).select('status driverFeedback').lean();
+    if (!existing) throw new ApiError(404, 'Ride not found');
+    if (existing.driverFeedback?.submittedAt) throw new ApiError(409, 'You have already rated this ride');
+    throw new ApiError(409, 'Only a completed ride can be rated');
+  }
+
+  await User.updateOne({ _id: ride.userId }, [
+    {
+      $set: {
+        taxiRatingCount: { $add: [{ $ifNull: ['$taxiRatingCount', 0] }, 1] },
+        taxiRatingTotal: { $add: [{ $ifNull: ['$taxiRatingTotal', 0] }, numericRating] },
+      },
+    },
+    { $set: { taxiRating: { $round: [{ $divide: ['$taxiRatingTotal', '$taxiRatingCount'] }, 1] } } },
+  ]);
+
+  return ride;
 };
 
 export const submitRideFeedback = async ({ rideId, userId, rating, comment = '', tipAmount = 0 }) => {

@@ -463,6 +463,22 @@ const rideSchema = new mongoose.Schema(
         default: null,
       },
     },
+    // The driver's rating of the rider (the rider rates the driver in `feedback`).
+    driverFeedback: {
+      rating: { type: Number, default: null, min: 1, max: 5 },
+      comment: { type: String, default: '', trim: true, maxlength: 500 },
+      submittedAt: { type: Date, default: null },
+    },
+    // Billed when the trip starts: time from the driver's arrival at pickup to
+    // the PIN, less the free minutes in the pricing snapshot, at its per-minute
+    // rate. `amount` is already included in `fare`.
+    waitingCharge: {
+      seconds: { type: Number, default: 0, min: 0 },
+      freeMinutes: { type: Number, default: 0, min: 0 },
+      billableMinutes: { type: Number, default: 0, min: 0 },
+      perMinute: { type: Number, default: 0, min: 0 },
+      amount: { type: Number, default: 0, min: 0 },
+    },
   },
   { timestamps: true },
 );

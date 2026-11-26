@@ -198,6 +198,12 @@ const userSchema = new mongoose.Schema(
             adminNote: { type: String, default: '' },
         },
         currentRideId: { type: mongoose.Schema.Types.ObjectId, ref: 'TaxiRide', default: null },
+        // How drivers rate this rider after completed taxi rides (1-5, average
+        // to one decimal). Taxi-specific, so named for it: the consumer record
+        // is shared by every module.
+        taxiRating: { type: Number, default: 0, min: 0, max: 5 },
+        taxiRatingCount: { type: Number, default: 0, min: 0 },
+        taxiRatingTotal: { type: Number, default: 0, min: 0 },
 
         // — hotel —
         isPartner: { type: Boolean, default: false },

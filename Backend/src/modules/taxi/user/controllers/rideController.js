@@ -7,7 +7,7 @@ import { Driver } from '../../driver/models/Driver.js';
 import { WalletTransaction } from '../../driver/models/WalletTransaction.js';
 import { applyDriverWalletAdjustment, serializeDriverWallet } from '../../driver/services/walletService.js';
 import { RIDE_LIVE_STATUS, RIDE_STATUS } from '../../constants/index.js';
-import { createRideRecord, ensureRideParticipantAccess, getAllowedRidePaymentMethodsForPricing, getActiveRideForIdentity, getRideDetails, getRideRoom, listRideHistoryForIdentity, serializeRideRealtime, submitRideFeedback, updateRideLifecycle } from "../../services/rideService.js";
+import { createRideRecord, ensureRideParticipantAccess, getAllowedRidePaymentMethodsForPricing, getActiveRideForIdentity, getRideDetails, getRideRoom, listRideHistoryForIdentity, serializeRideRealtime, submitDriverRideFeedback, submitRideFeedback, updateRideLifecycle } from "../../services/rideService.js";
 
 import { cancelRideByUser, emitToDriver, getSocketServer, startDispatchFlow } from "../../services/dispatchService.js";
 
@@ -503,6 +503,28 @@ export const updateRideStatus = async (req, res) => {
   res.json({
     success: true,
     data: serializeRideRealtime(ride),
+  });
+};
+
+/**
+ * @route PATCH /v1/taxi/rides/:rideId/driver-feedback
+ * The driver's 1-5 rating of the rider, once per completed ride.
+ */
+export const submitDriverRideReview = async (req, res) => {
+  if (req.auth.role !== 'driver') {
+    throw new ApiError(403, 'Only drivers can rate riders');
+  }
+
+  const ride = await submitDriverRideFeedback({
+    rideId: req.params.rideId,
+    driverId: req.auth.sub,
+    rating: req.body.rating,
+    comment: req.body.comment,
+  });
+
+  res.json({
+    success: true,
+    data: { rideId: String(ride._id), driverFeedback: ride.driverFeedback },
   });
 };
 

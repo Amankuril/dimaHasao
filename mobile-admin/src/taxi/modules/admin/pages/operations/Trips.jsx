@@ -57,7 +57,17 @@ const normalizeRow = (row = {}) => ({
   transportType: row.transportType || row.transport_type || row.service_type || row.module || '--',
   tripStatus: String(row.tripStatus || row.trip_status || row.status || '').toUpperCase(),
   paymentOption: String(row.paymentOption || row.payment_option || row.payment_method || 'CASH').toUpperCase(),
+  fare: Number(row.fare || 0),
+  commissionAmount: Number(row.commissionAmount || 0),
+  driverEarnings: Number(row.driverEarnings || 0),
+  waitingCharge: row.waitingCharge || null,
+  riderRatingOfDriver: row.riderRatingOfDriver || null,
+  driverRatingOfRider: row.driverRatingOfRider || null,
+  pickupAddress: row.pickupAddress || row.pickupLabel || '',
+  dropAddress: row.dropAddress || row.dropLabel || '',
 });
+
+const rupees = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const DetailRow = ({ label, value }) => (
   <Div className="gap-0.5">
@@ -84,6 +94,17 @@ const TripDetailsModal = ({ trip, onClose }) => {
           <DetailRow label="Driver Name" value={trip.driverName} />
           <DetailRow label="Transport Type" value={String(trip.transportType).toLowerCase()} />
           <DetailRow label="Payment Option" value={String(trip.paymentOption).toLowerCase()} />
+          {trip.pickupAddress || trip.dropAddress ? (
+            <DetailRow label="Route" value={`${trip.pickupAddress || '--'} to ${trip.dropAddress || '--'}`} />
+          ) : null}
+          <DetailRow label="Fare" value={rupees(trip.fare)} />
+          {trip.waitingCharge?.amount ? (
+            <DetailRow label="Waiting Charge" value={`Incl. ${rupees(trip.waitingCharge.amount)} (${trip.waitingCharge.billableMinutes} min × ${rupees(trip.waitingCharge.perMinute)})`} />
+          ) : null}
+          <DetailRow label="Admin Commission" value={rupees(trip.commissionAmount)} />
+          <DetailRow label="Driver Earnings" value={rupees(trip.driverEarnings)} />
+          <DetailRow label="Rider Rated Driver" value={trip.riderRatingOfDriver ? `${trip.riderRatingOfDriver} / 5` : 'Not rated'} />
+          <DetailRow label="Driver Rated Rider" value={trip.driverRatingOfRider ? `${trip.driverRatingOfRider} / 5` : 'Not rated'} />
           <Div className="gap-1 pt-2 border-t border-slate-100">
             <Span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Trip Status</Span>
             <StatusBadge status={String(trip.tripStatus).toLowerCase()} label={String(trip.tripStatus).toLowerCase() || 'unknown'} />

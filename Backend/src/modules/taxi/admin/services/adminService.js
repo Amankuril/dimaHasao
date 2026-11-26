@@ -3708,8 +3708,18 @@ const toAdminRideRow = (ride) => {
     tripStatus,
     rideStatus: ride.status,
     liveStatus: ride.liveStatus,
-    paymentOption: 'CASH',
+    // Was hardcoded 'CASH', so online-paid trips were listed as cash.
+    paymentOption: String(ride.paymentMethod || 'cash').toUpperCase(),
     fare: Number(ride.fare || 0),
+    commissionAmount: Number(ride.commissionAmount || 0),
+    driverEarnings: Number(ride.driverEarnings || 0),
+    waitingCharge: ride.waitingCharge?.amount
+      ? { amount: Number(ride.waitingCharge.amount), billableMinutes: Number(ride.waitingCharge.billableMinutes || 0), perMinute: Number(ride.waitingCharge.perMinute || 0) }
+      : null,
+    riderRatingOfDriver: ride.feedback?.rating ? Number(ride.feedback.rating) : null,
+    driverRatingOfRider: ride.driverFeedback?.rating ? Number(ride.driverFeedback.rating) : null,
+    pickupAddress: ride.pickupAddress || '',
+    dropAddress: ride.dropAddress || '',
     pickupLabel: formatRidePointLabel(ride.pickupLocation, 'Pickup'),
     dropLabel: formatRidePointLabel(ride.dropLocation, 'Drop'),
     pickupLocation: ride.pickupLocation,

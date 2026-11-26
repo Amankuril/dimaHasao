@@ -45,7 +45,17 @@ const normalizeRow = (row = {}) => ({
   transportType: row.transportType || row.transport_type || row.service_type || row.module || '--',
   tripStatus: String(row.tripStatus || row.trip_status || row.status || '').toUpperCase(),
   paymentOption: String(row.paymentOption || row.payment_option || row.payment_method || 'CASH').toUpperCase(),
+  fare: Number(row.fare || 0),
+  commissionAmount: Number(row.commissionAmount || 0),
+  driverEarnings: Number(row.driverEarnings || 0),
+  waitingCharge: row.waitingCharge || null,
+  riderRatingOfDriver: row.riderRatingOfDriver || null,
+  driverRatingOfRider: row.driverRatingOfRider || null,
+  pickupAddress: row.pickupAddress || row.pickupLabel || '',
+  dropAddress: row.dropAddress || row.dropLabel || '',
 });
+
+const rupees = (value) => `₹${Number(value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const TripDetailsModal = ({ trip, onClose }) => {
   if (!trip) return null;
@@ -83,6 +93,36 @@ const TripDetailsModal = ({ trip, onClose }) => {
             <div>
               <p className="text-xs text-neutral-500 mb-1">Payment option</p>
               <p className="text-[13px] font-medium text-neutral-900 capitalize">{String(trip.paymentOption).toLowerCase()}</p>
+            </div>
+            {trip.pickupAddress || trip.dropAddress ? (
+              <div className="col-span-2">
+                <p className="text-xs text-neutral-500 mb-1">Route</p>
+                <p className="text-[13px] font-medium text-neutral-900">{trip.pickupAddress || '--'}</p>
+                <p className="text-[13px] text-neutral-500">to {trip.dropAddress || '--'}</p>
+              </div>
+            ) : null}
+            <div className="col-span-2 rounded-lg border border-neutral-100 divide-y divide-neutral-100">
+              {[
+                ['Fare', rupees(trip.fare)],
+                ...(trip.waitingCharge?.amount
+                  ? [[`Waiting charge (${trip.waitingCharge.billableMinutes} min × ${rupees(trip.waitingCharge.perMinute)})`, `incl. ${rupees(trip.waitingCharge.amount)}`]]
+                  : []),
+                ['Admin commission', rupees(trip.commissionAmount)],
+                ['Driver earnings', rupees(trip.driverEarnings)],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between px-3 py-2">
+                  <span className="text-xs text-neutral-500">{label}</span>
+                  <span className="text-[13px] font-medium text-neutral-900 tabular-nums">{value}</span>
+                </div>
+              ))}
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1">Rider rated driver</p>
+              <p className="text-[13px] font-medium text-neutral-900">{trip.riderRatingOfDriver ? `${trip.riderRatingOfDriver} / 5` : 'Not rated'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-neutral-500 mb-1">Driver rated rider</p>
+              <p className="text-[13px] font-medium text-neutral-900">{trip.driverRatingOfRider ? `${trip.driverRatingOfRider} / 5` : 'Not rated'}</p>
             </div>
             <div className="col-span-2 pt-2 border-t border-neutral-50">
               <p className="text-xs text-neutral-500 mb-2">Trip status</p>
@@ -141,6 +181,8 @@ const handlePrintInvoice = (trip) => {
           <tr><th>Driver</th><td>${trip.driverName}</td></tr>
           <tr><th>Transport type</th><td style="text-transform: capitalize;">${String(trip.transportType).toLowerCase()}</td></tr>
           <tr><th>Payment method</th><td style="text-transform: capitalize;">${String(trip.paymentOption).toLowerCase()}</td></tr>
+          ${trip.waitingCharge?.amount ? `<tr><th>Waiting charge</th><td>${rupees(trip.waitingCharge.amount)} (${trip.waitingCharge.billableMinutes} min)</td></tr>` : ''}
+          <tr><th>Total fare</th><td class="highlight">${rupees(trip.fare)}</td></tr>
           <tr><th>Trip status</th><td style="text-transform: capitalize;">${String(trip.tripStatus).toLowerCase()}</td></tr>
         </table>
         <div class="footer">
