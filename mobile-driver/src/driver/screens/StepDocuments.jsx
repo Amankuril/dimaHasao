@@ -17,6 +17,7 @@ import {
 } from '../services/registrationService';
 import { flattenDriverDocumentFields, getDocumentPreviewUrl } from '../utils/documentTemplates';
 import OnboardingShell from '../components/OnboardingShell';
+import { docNumberRule } from '../utils/idFormats';
 import DriverImageSourceSheet from '../components/DriverImageSourceSheet';
 import { DateField, Field, OnboardingLoading, Spin } from '../components/OnboardingFields';
 import { OB, jk, obCard } from '../components/onboardingTheme';
@@ -155,7 +156,7 @@ export default function StepDocuments() {
       fields.filter((field) => {
         if (!field.isRequired) return false;
         if (!isUploaded(field)) return true;
-        if (field.hasIdentifyNumber && !String(meta[field.key]?.identifyNumber || '').trim()) return true;
+        if (field.hasIdentifyNumber && !docNumberRule(field).valid(String(meta[field.key]?.identifyNumber || '').trim())) return true;
         if (field.hasExpiryDate && !String(meta[field.key]?.expiryDate || '').trim()) return true;
         return false;
       }),
@@ -277,15 +278,25 @@ export default function StepDocuments() {
                 </View>
               </Press>
 
-              {field.hasIdentifyNumber && (
-                <Field
-                  label="Document number"
-                  value={meta[field.key]?.identifyNumber || ''}
-                  onChange={setMetaValue(field.key, 'identifyNumber')}
-                  placeholder="As printed on the document"
-                  valid={Boolean(String(meta[field.key]?.identifyNumber || '').trim())}
-                />
-              )}
+              {field.hasIdentifyNumber && (() => {
+                const rule = docNumberRule(field);
+                const value = meta[field.key]?.identifyNumber || '';
+                const ok = rule.valid(value);
+                return (
+                  <Field
+                    label="Document number"
+                    value={value}
+                    onChange={(next) => setMetaValue(field.key, 'identifyNumber')(rule.mask(next))}
+                    inputMode={rule.numeric ? 'numeric' : undefined}
+                    autoCapitalize="characters"
+                    maxLength={rule.max}
+                    placeholder={rule.example || 'As printed on the document'}
+                    valid={ok}
+                    invalid={Boolean(value) && !ok}
+                    hint={value && !ok && rule.example ? `Format: ${rule.example}` : ''}
+                  />
+                );
+              })()}
 
               {field.hasExpiryDate && (
                 <DateField

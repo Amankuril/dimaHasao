@@ -10,6 +10,7 @@ import {
   saveDriverRegistrationSession,
   saveDriverVehicle,
 } from '../services/registrationService';
+import { isVehicleNumberValid, maskLetters, maskName, maskVehicleNumber, VEHICLE_NUMBER_MAX } from '../utils/idFormats';
 import OnboardingShell from '../components/OnboardingShell';
 import { ChipGroup, Field, OnboardingLoading, SelectField } from '../components/OnboardingFields';
 import { obCard } from '../components/onboardingTheme';
@@ -37,10 +38,6 @@ const SERVICE_CATEGORIES = [
   { value: 'outstation', label: 'Outstation' },
 ];
 
-const PLATE_PATTERNS = [
-  /^[A-Z]{2}\d{1,2}[A-Z]{1,3}\d{4}$/,
-  /^[A-Z]{2}\d{1,2}[A-Z]{4}\d{4}$/,
-];
 
 const currentYear = new Date().getFullYear();
 
@@ -135,7 +132,9 @@ export default function StepVehicle() {
   );
 
   const plate = String(form.number || '').toUpperCase();
-  const plateValid = plate.length > 0 && PLATE_PATTERNS.some((pattern) => pattern.test(plate));
+  const plateValid = isVehicleNumberValid(plate);
+  const rc = String(form.rcNumber || '').toUpperCase();
+  const rcValid = isVehicleNumberValid(rc);
   const yearValid = /^\d{4}$/.test(String(form.year)) && Number(form.year) >= 1980 && Number(form.year) <= currentYear;
 
   const handleContinue = async () => {
@@ -144,7 +143,8 @@ export default function StepVehicle() {
       [!form.locationId, 'Choose the city you will drive in.'],
       [form.serviceCategories.length === 0, 'Choose at least one service category.'],
       [!form.vehicleTypeId, 'Choose your vehicle type.'],
-      [!String(form.rcNumber).trim(), 'Enter the RC (registration certificate) number.'],
+      [!rc, 'Enter the RC (registration certificate) number.'],
+      [!rcValid, 'Enter the RC number as printed on the RC, for example AS01AB1234.'],
       [requiredFor('make') && !form.make.trim(), `Enter the ${labelFor('make', 'brand / make').toLowerCase()}.`],
       [requiredFor('model') && !form.model.trim(), `Enter the ${labelFor('model', 'model').toLowerCase()}.`],
       [requiredFor('color') && !form.color.trim(), `Enter the ${labelFor('color', 'exterior color').toLowerCase()}.`],
@@ -254,10 +254,22 @@ export default function StepVehicle() {
         <Field
           label="RC number"
           icon={FileText}
-          value={form.rcNumber}
-          onChange={(value) => set('rcNumber')(value.replace(/[^A-Za-z0-9]/g, '').toUpperCase())}
-          placeholder="Registration certificate number"
-          valid={Boolean(String(form.rcNumber).trim())}
+          value={rc}
+          onChange={(value) => {
+            const next = maskVehicleNumber(value);
+            // The RC number is the registration number, so fill the plate while it still matches.
+            setForm((current) => ({
+              ...current,
+              rcNumber: next,
+              number: !current.number || current.number === current.rcNumber ? next : current.number,
+            }));
+          }}
+          maxLength={VEHICLE_NUMBER_MAX}
+          autoCapitalize="characters"
+          placeholder="AS01AB1234"
+          valid={rcValid}
+          invalid={rc.length > 0 && !rcValid}
+          hint={rc.length > 0 && !rcValid ? 'Format: AS01AB1234 (or 22BH1234AB for BH series).' : ''}
         />
 
         <View style={styles.row}>
@@ -265,7 +277,8 @@ export default function StepVehicle() {
             <Field
               label={labelFor('make', 'Brand')}
               value={form.make}
-              onChange={set('make')}
+              onChange={(value) => set('make')(maskName(value, 30))}
+              maxLength={30}
               placeholder={placeholderFor('make', 'Maruti Suzuki')}
               valid={Boolean(form.make.trim())}
             />
@@ -274,7 +287,8 @@ export default function StepVehicle() {
             <Field
               label={labelFor('model', 'Model')}
               value={form.model}
-              onChange={set('model')}
+              onChange={(value) => set('model')(maskName(value, 30))}
+              maxLength={30}
               placeholder={placeholderFor('model', 'Swift')}
               valid={Boolean(form.model.trim())}
             />
@@ -289,7 +303,7 @@ export default function StepVehicle() {
               inputMode="numeric"
               maxLength={4}
               value={form.year}
-              onChange={(value) => set('year')(value.replace(/\D/g, ''))}
+              onChange={(value) => set('year')(value.replace(/\D/g, '').replace(/^[^12]/, '').slice(0, 4))}
               placeholder={String(currentYear)}
               valid={yearValid}
               invalid={Boolean(form.year) && !yearValid}
@@ -300,7 +314,8 @@ export default function StepVehicle() {
               label={labelFor('color', 'Colour')}
               icon={Palette}
               value={form.color}
-              onChange={set('color')}
+              onChange={(value) => set('color')(maskLetters(value, 20))}
+              maxLength={20}
               placeholder={placeholderFor('color', 'White')}
               valid={Boolean(form.color.trim())}
             />
@@ -311,11 +326,13 @@ export default function StepVehicle() {
           label={labelFor('number', 'Plate number')}
           icon={Hash}
           value={plate}
-          onChange={(value) => set('number')(value.replace(/[^A-Za-z0-9]/g, '').toUpperCase())}
+          onChange={(value) => set('number')(maskVehicleNumber(value))}
+          maxLength={VEHICLE_NUMBER_MAX}
+          autoCapitalize="characters"
           placeholder={placeholderFor('number', 'AS01AB1234')}
           valid={plateValid}
           invalid={plate.length > 0 && !plateValid}
-          hint={plate.length > 0 && !plateValid ? 'Use the format AS01AB1234.' : ''}
+          hint={plate.length > 0 && !plateValid ? 'Format: AS01AB1234 (or 22BH1234AB for BH series).' : ''}
         />
       </View>
 
@@ -326,7 +343,8 @@ export default function StepVehicle() {
               key={config.field_key}
               label={config.name || config.field_key}
               value={form.customFields?.[config.field_key] || ''}
-              onChange={setCustom(config.field_key)}
+              onChange={(value) => setCustom(config.field_key)(String(value).slice(0, 60))}
+              maxLength={60}
               placeholder={config.placeholder || ''}
               hint={config.help_text || ''}
               valid={Boolean(String(form.customFields?.[config.field_key] || '').trim())}

@@ -21,6 +21,34 @@ import {
   getDocumentPreviewUrl,
   normalizeDriverDocumentTemplates,
 } from '../utils/documentTemplates';
+import {
+  isDrivingLicenceValid,
+  isPanValid,
+  isVehicleNumberValid,
+  maskDrivingLicence,
+  maskLetters,
+  maskPan,
+  maskVehicleNumber,
+  VEHICLE_NUMBER_MAX,
+} from '../utils/idFormats';
+
+/** Keystroke masks + final checks for the document-number modal, by mode. */
+const META_RULES = {
+  rc: { mask: maskVehicleNumber, valid: isVehicleNumberValid, max: VEHICLE_NUMBER_MAX },
+  license: { mask: maskDrivingLicence, valid: isDrivingLicenceValid, max: 15 },
+  pan: { mask: maskPan, valid: isPanValid, max: 10 },
+  gst: { mask: (v) => String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15), valid: (v) => /^\d{2}[A-Z]{5}\d{4}[A-Z][A-Z0-9]Z[A-Z0-9]$/.test(v || ''), max: 15 },
+  bank: { mask: (v) => String(v || '').replace(/\D/g, '').slice(0, 18), valid: (v) => /^\d{9,18}$/.test(v || ''), max: 18, numeric: true },
+};
+const maskIfsc = (v) => {
+  let out = '';
+  for (const c of String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '')) {
+    const i = out.length;
+    if (i < 4 ? /[A-Z]/.test(c) : i === 4 ? c === '0' : true) out += c;
+    if (out.length >= 11) break;
+  }
+  return out;
+};
 
 const formatDate = (value) => {
   if (!value) return 'Uploaded';
@@ -506,6 +534,8 @@ export default function DriverDocuments() {
   const metaSaveDisabled =
     metaModal.isSubmitting ||
     !metaModal.identifyNumber ||
+    (META_RULES[metaModal.mode] && !META_RULES[metaModal.mode].valid(metaModal.identifyNumber)) ||
+    (metaModal.mode === 'bank' && !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(metaModal.ifsc || '')) ||
     (metaModal.mode === 'license' && !metaModal.birthDate) ||
     (metaModal.mode === 'bank' && (!metaModal.ifsc || !metaModal.accountHolderName));
   const expirySaveDisabled = expiryModal.isSubmitting || !expiryModal.value;
@@ -758,7 +788,9 @@ export default function DriverDocuments() {
               </View>
               <FocusInput
                 value={metaModal.identifyNumber}
-                onChangeText={(text) => setMetaModal((prev) => ({ ...prev, identifyNumber: text.toUpperCase() }))}
+                onChangeText={(text) => setMetaModal((prev) => ({ ...prev, identifyNumber: META_RULES[prev.mode]?.mask(text) ?? text.toUpperCase().slice(0, 20) }))}
+                maxLength={META_RULES[metaModal.mode]?.max || 20}
+                keyboardType={META_RULES[metaModal.mode]?.numeric ? 'number-pad' : 'default'}
                 placeholder={metaPlaceholder}
                 placeholderTextColor="rgba(15,23,43,0.5)"
                 autoCapitalize="characters"
@@ -775,7 +807,8 @@ export default function DriverDocuments() {
                 </View>
                 <FocusInput
                   value={metaModal.ifsc}
-                  onChangeText={(text) => setMetaModal((prev) => ({ ...prev, ifsc: text.toUpperCase() }))}
+                  onChangeText={(text) => setMetaModal((prev) => ({ ...prev, ifsc: maskIfsc(text) }))}
+                  maxLength={11}
                   placeholder="Enter IFSC code"
                   placeholderTextColor="rgba(15,23,43,0.5)"
                   autoCapitalize="characters"
@@ -793,7 +826,8 @@ export default function DriverDocuments() {
                 </View>
                 <FocusInput
                   value={metaModal.accountHolderName}
-                  onChangeText={(text) => setMetaModal((prev) => ({ ...prev, accountHolderName: text }))}
+                  onChangeText={(text) => setMetaModal((prev) => ({ ...prev, accountHolderName: maskLetters(text, 60) }))}
+                  maxLength={60}
                   placeholder="Enter account holder name"
                   placeholderTextColor="rgba(15,23,43,0.5)"
                   accessibilityLabel="Account holder name"

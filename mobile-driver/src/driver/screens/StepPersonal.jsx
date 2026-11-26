@@ -140,7 +140,8 @@ export default function StepPersonal() {
           label="Full name"
           icon={User}
           value={fullName}
-          onChange={(value) => setFullName(value.replace(/[^A-Za-z .'-]/g, ''))}
+          onChange={(value) => setFullName(value.replace(/[^A-Za-z .'-]/g, '').replace(/^[^A-Za-z]+/, '').replace(/\s{2,}/g, ' ').slice(0, 60))}
+          maxLength={60}
           placeholder="As printed on your licence"
           valid={nameValid}
           autoFocus
@@ -151,7 +152,8 @@ export default function StepPersonal() {
           icon={Mail}
           type="email"
           value={email}
-          onChange={(value) => setEmail(value.trim())}
+          onChange={(value) => setEmail(value.replace(/[^A-Za-z0-9._%+@-]/g, '').replace(/@(?=.*@)/g, '').toLowerCase().slice(0, 80))}
+          maxLength={80}
           placeholder="name@gmail.com"
           valid={emailValid}
         />
@@ -167,7 +169,9 @@ export default function StepPersonal() {
             label="Referral code"
             icon={Tag}
             value={referral}
-            onChange={(value) => setReferral(value.toUpperCase())}
+            onChange={(value) => setReferral(value.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 20))}
+            maxLength={20}
+            autoCapitalize="characters"
             placeholder="ZETO-BONUS-9080"
             hint="Optional — leave it blank if you do not have one."
             autoFocus

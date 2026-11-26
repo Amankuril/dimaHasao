@@ -96,6 +96,7 @@ export function Field({
   hint = '',
   readOnly = false,
   autoFocus = false,
+  autoCapitalize,
 }) {
   const [focused, setFocused] = useState(false);
   return (
@@ -109,7 +110,7 @@ export function Field({
           placeholder={placeholder}
           placeholderTextColor={DT.faint}
           keyboardType={type === 'email' ? 'email-address' : inputMode === 'numeric' ? 'number-pad' : 'default'}
-          autoCapitalize={type === 'email' ? 'none' : undefined}
+          autoCapitalize={type === 'email' ? 'none' : autoCapitalize}
           autoCorrect={type === 'email' ? false : undefined}
           maxLength={maxLength}
           editable={!readOnly}

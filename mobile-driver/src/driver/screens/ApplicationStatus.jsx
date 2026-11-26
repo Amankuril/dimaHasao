@@ -5,7 +5,7 @@ import { CheckCircle2, Clock, FileText, HelpCircle, ShieldCheck, TrendingUp } fr
 import { useNavigate } from '../../lib/webRouter';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { outfit, playfair } from '../../theme';
-import { BrandHero, LogoBadge } from '../components/OnboardingShell';
+import { BrandHero, LogoBadge, StatusBarBackdrop } from '../components/OnboardingShell';
 import { obCard, up } from '../components/onboardingTheme';
 import { Chip, CtaButton } from '../ui/Surface';
 import { DT } from '../ui/dt';
@@ -105,6 +105,7 @@ export default function ApplicationStatus() {
           style={styles.maxW}
         />
       </View>
+      <StatusBarBackdrop />
     </View>
   );
 }

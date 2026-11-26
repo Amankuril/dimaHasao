@@ -15,7 +15,7 @@ import {
   getLocalDriverToken,
   persistDriverAuthSession,
 } from '../services/registrationService';
-import { BrandHero, DRIVER_BRAND_LOGO } from '../components/OnboardingShell';
+import { BrandHero, DRIVER_BRAND_LOGO, StatusBarBackdrop } from '../components/OnboardingShell';
 import { Spin } from '../components/OnboardingFields';
 import { jk, obCard, up } from '../components/onboardingTheme';
 import { Chip } from '../ui/Surface';
@@ -251,6 +251,7 @@ export default function RegistrationStatus() {
   const HeroIcon = toneSet.Icon;
 
   return (
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
     <ScrollView
       style={{ flex: 1, backgroundColor: DT.bg }}
       onLayout={(e) => setViewH(e.nativeEvent.layout.height)}
@@ -379,6 +380,8 @@ export default function RegistrationStatus() {
         </View>
       </View>
     </ScrollView>
+    <StatusBarBackdrop />
+    </View>
   );
 }
 

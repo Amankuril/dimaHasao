@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Loader2 } from 'lucide-react-native';
 import { Press } from '../../components/ui';
@@ -18,6 +19,21 @@ export const DRIVER_BRAND_LOGO = require('../../../assets/images/driver-logo.web
 
 /** The steps a driver walks, in order. The shell derives progress from this. */
 export const ONBOARDING_STEPS = ['phone', 'otp', 'personal', 'vehicle', 'documents'];
+
+/**
+ * A solid strip behind the system status bar. The onboarding pages scroll
+ * edge-to-edge, so without it the form slid under the clock/battery icons.
+ */
+export function StatusBarBackdrop() {
+  const insets = useSafeAreaInsets();
+  return (
+    <>
+      {/* Light icons on the green strip; reverts to the app's dark style when the screen unmounts. */}
+      <StatusBar style="light" />
+      {insets.top ? <View pointerEvents="none" style={[styles.statusBackdrop, { height: insets.top }]} /> : null}
+    </>
+  );
+}
 
 /** The green hero block: rounded bottom corners, gold serif title, cream subtitle. */
 export function BrandHero({ top = 0, children, style }) {
@@ -40,6 +56,7 @@ export function LogoBadge({ size = 64 }) {
 export function AuthScaffold({ title, subtitle, children, footer = null, icon = null }) {
   const insets = useSafeAreaInsets();
   return (
+    <View style={{ flex: 1, backgroundColor: DT.bg }}>
     <ScrollView
       style={{ flex: 1, backgroundColor: DT.bg }}
       keyboardShouldPersistTaps="handled"
@@ -58,6 +75,8 @@ export function AuthScaffold({ title, subtitle, children, footer = null, icon = 
         {footer ? <View style={{ marginTop: 20 }}>{footer}</View> : null}
       </View>
     </ScrollView>
+    <StatusBarBackdrop />
+    </View>
   );
 }
 
@@ -141,6 +160,8 @@ export default function OnboardingShell({
         </View>
       </ScrollView>
 
+      <StatusBarBackdrop />
+
       <View style={styles.fixed} pointerEvents="box-none">
         <LinearGradient colors={['rgba(248,250,252,0)', DT.bg, DT.bg]} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} pointerEvents="none" />
         <View style={[styles.maxW, { gap: 12, paddingTop: 36, paddingBottom: 20 + insets.bottom, paddingHorizontal: 20 }]}>
@@ -196,5 +217,6 @@ const styles = StyleSheet.create({
   title: { ...playfair(700), fontSize: 28, lineHeight: 36, color: DT.gold },
   subtitle: { ...jk(500), fontSize: 14, lineHeight: 21, color: DT.onBrandMuted },
   fixed: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  statusBackdrop: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: DT.brandDeep, zIndex: 50, elevation: 50 },
   ctaText: { ...jk(800), fontSize: 15, lineHeight: 20 },
 });
