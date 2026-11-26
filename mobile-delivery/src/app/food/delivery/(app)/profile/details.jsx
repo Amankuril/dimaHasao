@@ -17,6 +17,7 @@ import useDeliveryBackNavigation from '../../../../../delivery/hooks/useDelivery
 import { showUserFacingApiError } from '../../../../../lib/apiError';
 import { openCamera, openGallery, prepareUploadFile } from '../../../../../lib/images';
 import { toast } from '../../../../../lib/notify';
+import { isVehicleNumberValid, maskVehicleNumber } from '../../../../../lib/idFormats';
 import { color, radii, space, touch, type as typo } from '../../../../../theme';
 
 /*
@@ -59,6 +60,7 @@ const VEHICLE_OPTIONS = [
   { value: 'bike', label: 'Bike' },
   { value: 'scooter', label: 'Scooter' },
   { value: 'bicycle', label: 'Bicycle' },
+  { value: 'auto', label: 'Auto' },
   { value: 'car', label: 'Car' },
 ];
 
@@ -375,13 +377,10 @@ export default function ProfileDetailsV2() {
     const brand = vehicleInput.brand.trim();
     const type = vehicleInput.type;
 
-    if (!num) return toast.error('Vehicle number is required');
+    if (!num && type !== 'bicycle') return toast.error('Vehicle number is required');
     if (!brand) return toast.error('Vehicle brand is required');
-
-    // Accept common formats like MH12AB1234 or MH12A1234
-    const numRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,2}[0-9]{4}$/i;
-    if (!numRegex.test(num.replace(/\s+/g, ''))) {
-      return toast.error('Please enter a valid vehicle number (e.g. MH12AB1234)');
+    if (num && !isVehicleNumberValid(num)) {
+      return toast.error('Please enter a valid vehicle number (e.g. AS01AB1234)');
     }
 
     try {
@@ -655,8 +654,9 @@ export default function ProfileDetailsV2() {
             <FieldLabel>Vehicle number</FieldLabel>
             <ThemedInput
               value={vehicleInput.number}
-              onChangeText={(v) => setVehicleInput((s) => ({ ...s, number: v.toUpperCase() }))}
-              placeholder="E.g. UP 80 AB 1234"
+              onChangeText={(v) => setVehicleInput((s) => ({ ...s, number: maskVehicleNumber(v) }))}
+              maxLength={11}
+              placeholder="E.g. AS01AB1234"
               placeholderTextColor={color.textDisabled}
               autoCapitalize="characters"
               radius={radii.md}

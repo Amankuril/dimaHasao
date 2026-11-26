@@ -11,6 +11,8 @@ import { prefetchModuleFcmToken } from '../../../../delivery/push';
 import { sessionStore } from '../../../../lib/storage';
 import { color, radii, space, touch, type } from '../../../../theme';
 
+import { isVehicleNumberValid, maskDrivingLicence, maskPan, maskVehicleNumber } from '../../../../lib/idFormats';
+
 // Web: pages/auth/SignupStep1.jsx (/food/delivery/signup/details)
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i;
@@ -19,6 +21,7 @@ const VEHICLE_TYPES = [
   { value: 'bike', label: 'Bike' },
   { value: 'scooter', label: 'Scooter' },
   { value: 'bicycle', label: 'Bicycle' },
+  { value: 'auto', label: 'Auto' },
   { value: 'car', label: 'Car' },
 ];
 
@@ -99,8 +102,9 @@ export default function SignupStep1() {
     let updatedValue = value;
     if (name === 'vehicleNumber' || name === 'panNumber' || name === 'drivingLicenseNumber') updatedValue = value.toUpperCase();
     if (name === 'name') updatedValue = sanitizeNameValue(value);
-    if (name === 'vehicleNumber') updatedValue = updatedValue.slice(0, 10);
-    if (name === 'drivingLicenseNumber') updatedValue = updatedValue.replace(/[^A-Z0-9]/g, '').slice(0, 15);
+    if (name === 'vehicleNumber') updatedValue = maskVehicleNumber(value);
+    if (name === 'drivingLicenseNumber') updatedValue = maskDrivingLicence(value);
+    if (name === 'panNumber') updatedValue = maskPan(value);
     if (name === 'aadharNumber') updatedValue = value.replace(/\D/g, '').slice(0, 12);
     if (name === 'city' || name === 'state') updatedValue = sanitizeLocationValue(value);
     if (name === 'email') {
@@ -128,9 +132,11 @@ export default function SignupStep1() {
     else if (!isValidLocationValue(formData.city)) e.city = 'City can contain letters only';
     if (!formData.state.trim()) e.state = 'State is required';
     else if (!isValidLocationValue(formData.state)) e.state = 'State can contain letters only';
-    if (!formData.vehicleNumber.trim()) e.vehicleNumber = 'Vehicle number is required';
-    else if (!/^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/.test(formData.vehicleNumber)) {
-      e.vehicleNumber = 'Invalid Indian vehicle number format (e.g., MH12AB1234)';
+    // A bicycle carries no registration plate.
+    const needsPlate = formData.vehicleType !== 'bicycle';
+    if (needsPlate && !formData.vehicleNumber.trim()) e.vehicleNumber = 'Vehicle number is required';
+    else if (formData.vehicleNumber.trim() && !isVehicleNumberValid(formData.vehicleNumber)) {
+      e.vehicleNumber = 'Invalid vehicle number (e.g., AS01AB1234 or 22BH1234AB)';
     }
     if (!formData.drivingLicenseNumber.trim()) e.drivingLicenseNumber = 'Driving license number is required';
     else if (!/^[A-Z]{2}[0-9]{2}[0-9]{4}[0-9]{7}$/.test(formData.drivingLicenseNumber)) {
@@ -263,8 +269,8 @@ export default function SignupStep1() {
               {field('vehicleName', 'Vehicle name or model, optional', { placeholder: 'e.g., Honda Activa' })}
             </View>
             <View>
-              <Label>Vehicle number</Label>
-              {field('vehicleNumber', 'Vehicle number', { placeholder: 'e.g., MH12AB1234', maxLength: 10, autoCapitalize: 'characters' })}
+              <Label required={formData.vehicleType !== 'bicycle'}>Vehicle number</Label>
+              {field('vehicleNumber', 'Vehicle number', { placeholder: 'e.g., AS01AB1234', maxLength: 11, autoCapitalize: 'characters' })}
               <Err errors={errors} name="vehicleNumber" />
             </View>
           </Card>

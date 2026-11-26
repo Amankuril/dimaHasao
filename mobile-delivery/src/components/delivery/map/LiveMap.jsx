@@ -40,6 +40,8 @@ const useGoogle = Platform.OS === 'android' || Constants.expoConfig?.extra?.iosG
 // Google zoom level <-> latitude span for the initial region.
 const zoomToDelta = (zoom) => 360 / 2 ** zoom;
 
+// A zero-length, invisible line used while there is no route to draw.
+const HIDDEN_LINE = (p) => [toLL(p), toLL(p)];
 const toLL = (p) => ({ latitude: p.lat, longitude: p.lng });
 const dist = (a, b) => (a && b ? getHaversineDistance(a.lat, a.lng, b.lat, b.lng) : Infinity);
 
@@ -62,6 +64,7 @@ export function LiveMap({ onMapClick, onMapLoad, onPathReceived, onPolylineRecei
   const tripStatus = useDeliveryStore((state) => state.getFocusedTripStatus());
   const mapRef = useRef(null);
   const [ready, setReady] = useState(false);
+  const [riderImgReady, setRiderImgReady] = useState(false);
   const [directions, setDirections] = useState(null); // { path: [{lat,lng}], encoded }
   const [zones, setZones] = useState([]);
   const [lastDirectionsAt, setLastDirectionsAt] = useState(0);
@@ -236,28 +239,52 @@ export function LiveMap({ onMapClick, onMapLoad, onPathReceived, onPolylineRecei
         }}
         onPress={(e) => onMapClick?.(e.nativeEvent.coordinate.latitude, e.nativeEvent.coordinate.longitude)}
       >
-        {remainingPath.length > 0 ? <Polyline coordinates={remainingPath} strokeColor="rgba(59,130,246,0.9)" strokeWidth={8} zIndex={12} /> : null}
+        {/*
+         * Every overlay stays mounted at a fixed child index and is hidden
+         * instead of unmounted. react-native-maps (Fabric, Android) stores
+         * children with features.set(index) on add but features.remove(index)
+         * on removal, so mounting/unmounting a marker shifts the list and the
+         * route line silently drops off the map while the rider keeps moving.
+         */}
+        <Polyline
+          coordinates={remainingPath.length > 1 ? remainingPath : HIDDEN_LINE(seed)}
+          strokeColor={remainingPath.length > 1 ? '#2563EB' : 'transparent'}
+          strokeWidth={remainingPath.length > 1 ? 7 : 0.1}
+          zIndex={12}
+        />
 
-        {showRestaurantMarker ? (
-          <Marker coordinate={toLL(restaurantPoint)} anchor={{ x: 0.5, y: 1 }} zIndex={20} tracksViewChanges={false}>
-            <Image source={CUTLERY_IMG} style={{ width: 48, height: 48 }} />
-          </Marker>
-        ) : null}
+        <Marker
+          coordinate={toLL(restaurantPoint || seed)}
+          anchor={{ x: 0.5, y: 1 }}
+          zIndex={20}
+          opacity={showRestaurantMarker ? 1 : 0}
+          tracksViewChanges={false}
+        >
+          <Image source={CUTLERY_IMG} style={{ width: 48, height: 48 }} />
+        </Marker>
 
-        {showCustomerMarker ? (
-          <Marker coordinate={toLL(customerPoint)} anchor={{ x: 0.5, y: 1 }} zIndex={20} tracksViewChanges={false}>
-            <CustomerPin />
-          </Marker>
-        ) : null}
+        <Marker
+          coordinate={toLL(customerPoint || seed)}
+          anchor={{ x: 0.5, y: 1 }}
+          zIndex={20}
+          opacity={showCustomerMarker ? 1 : 0}
+          tracksViewChanges={false}
+        >
+          <CustomerPin />
+        </Marker>
 
-        {rider ? (
-          // translate(-50%, -88%): the bike sits on the GPS point; rotated by heading.
-          <Marker coordinate={toLL(rider)} anchor={{ x: 0.5, y: 0.88 }} zIndex={999} tracksViewChanges={false}>
-            <View style={{ width: 72, height: 72, transform: [{ rotate: `${rider.heading || 0}deg` }] }}>
-              <Image source={RIDER_IMG} style={{ width: 72, height: 72 }} resizeMode="contain" />
-            </View>
-          </Marker>
-        ) : null}
+        {/* translate(-50%, -88%): the bike sits on the GPS point; rotated by heading. */}
+        <Marker
+          coordinate={toLL(rider || seed)}
+          anchor={{ x: 0.5, y: 0.88 }}
+          zIndex={999}
+          opacity={rider ? 1 : 0}
+          flat
+          rotation={rider?.heading || 0}
+          tracksViewChanges={!riderImgReady}
+        >
+          <Image source={RIDER_IMG} style={{ width: 72, height: 72 }} resizeMode="contain" onLoad={() => setRiderImgReady(true)} />
+        </Marker>
 
         {zones.map((zone) => (
           <Polygon key={zone._id} coordinates={zone.paths} fillColor="rgba(34,197,94,0.03)" strokeColor="rgba(34,197,94,0.1)" strokeWidth={1} zIndex={1} />

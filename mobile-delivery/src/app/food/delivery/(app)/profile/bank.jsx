@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Edit2, Save } from 'lucide-react-native';
-import { deliveryApi as deliveryAPI } from '../../../../../api/delivery';
+import { clearMeCache, deliveryApi as deliveryAPI } from '../../../../../api/delivery';
+import { isPanValid, maskPan } from '../../../../../lib/idFormats';
 import { Button, Card, IconButton, ScreenHeader } from '../../../../../components/ds';
 import { Spinner } from '../../../../../components/Loader';
 import { ThemedInput } from '../../../../../components/ui';
@@ -20,6 +21,26 @@ const FIELDS = [
   ['Bank name', 'bankName'],
   ['PAN number', 'panNumber'],
 ];
+
+const maskIfsc = (v) => {
+  let out = '';
+  for (const c of String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, '')) {
+    const i = out.length;
+    if (i < 4 ? /[A-Z]/.test(c) : i === 4 ? c === '0' : true) out += c;
+    if (out.length >= 11) break;
+  }
+  return out;
+};
+
+/** Keystroke masks: a wrong character is simply not accepted. */
+const MASKS = {
+  accountHolderName: (v) => v.replace(/[^A-Za-z .]/g, '').replace(/\s{2,}/g, ' ').slice(0, 60),
+  accountNumber: (v) => v.replace(/\D/g, '').slice(0, 18),
+  ifscCode: maskIfsc,
+  bankName: (v) => v.replace(/[^A-Za-z .&()-]/g, '').replace(/\s{2,}/g, ' ').slice(0, 60),
+  panNumber: maskPan,
+};
+const NUMERIC = new Set(['accountNumber']);
 
 export default function ProfileBankV2() {
   const goBack = useDeliveryBackNavigation();
@@ -53,16 +74,21 @@ export default function ProfileBankV2() {
   }, []);
 
   const handleSave = async () => {
-    if (!form.accountNumber || !form.ifscCode) return toast.error('Missing mandatory fields');
+    if (!form.accountHolderName.trim()) return toast.error('Enter the account holder name');
+    if (!/^\d{9,18}$/.test(form.accountNumber)) return toast.error('Account number must be 9 to 18 digits');
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.ifscCode)) return toast.error('Enter a valid IFSC code (e.g. SBIN0001234)');
+    if (form.panNumber && !isPanValid(form.panNumber)) return toast.error('Enter a valid PAN (e.g. ABCDE1234F)');
     setIsSaving(true);
     try {
-      const response = await deliveryAPI.updateProfileDetails({
+      // The bank-details route; /profile/details used to drop these fields.
+      const response = await deliveryAPI.updateProfile({
         documents: {
           bankDetails: { accountHolderName: form.accountHolderName, accountNumber: form.accountNumber, ifscCode: form.ifscCode, bankName: form.bankName },
           pan: { number: form.panNumber },
         },
       });
       if (response?.data?.success) {
+        clearMeCache();
         toast.success('Bank details updated');
         setIsEditing(false);
       }
@@ -105,7 +131,9 @@ export default function ProfileBankV2() {
                   <Text style={styles.label}>{label}</Text>
                   <ThemedInput
                     value={form[key]}
-                    onChangeText={(v) => setForm((f) => ({ ...f, [key]: v }))}
+                    onChangeText={(v) => setForm((f) => ({ ...f, [key]: MASKS[key] ? MASKS[key](v) : v }))}
+                    keyboardType={NUMERIC.has(key) ? 'number-pad' : 'default'}
+                    autoCapitalize={key === 'ifscCode' || key === 'panNumber' ? 'characters' : 'words'}
                     placeholder={`Enter ${label.replace(/^[A-Z][a-z]/, (m) => m.toLowerCase())}`}
                     placeholderTextColor={color.textDisabled}
                     radius={radii.md}

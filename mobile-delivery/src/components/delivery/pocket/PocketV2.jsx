@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Animated, Easing, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 import { ChevronRight, FileText, IndianRupee, LayoutGrid, Receipt, ShieldCheck, Wallet } from 'lucide-react-native';
 import { deliveryApi as deliveryAPI } from '../../../api/delivery';
@@ -91,18 +91,6 @@ function AmountField({ value, onChangeText, placeholder, editable = true, access
   );
 }
 
-const getCurrentWeekRange = () => {
-  const now = new Date();
-  const mondayOffset = (now.getDay() + 6) % 7;
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(now.getDate() - mondayOffset);
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  const f = (d) => `${d.getDate()} ${d.toLocaleString('en-US', { month: 'short' })}`;
-  return `${f(start)} - ${f(end)}`;
-};
-
 const formatOfferValidTill = (validTill) => {
   if (!validTill) return '';
   const parsed = new Date(validTill);
@@ -122,7 +110,8 @@ export default function PocketV2() {
     weeklyEarnings: 0,
     weeklyOrders: 0,
     payoutAmount: 0,
-    payoutPeriod: 'Current Week',
+    payoutPeriod: 'No recent payout',
+    totalEarned: 0,
     bankDetailsFilled: false,
   });
   const [activeOffer, setActiveOffer] = useState({ targetAmount: 0, targetOrders: 0, currentOrders: 0, currentEarnings: 0, validTill: '', isLive: false });
@@ -135,7 +124,9 @@ export default function PocketV2() {
     if (!wallet || typeof wallet !== 'object') return;
     setWalletState((prev) => ({
       ...prev,
-      totalBalance: Number(wallet.pocketBalance) || prev.totalBalance,
+      // `||` kept the old figure when a withdrawal took the balance to 0.
+      totalBalance: wallet.pocketBalance != null ? Number(wallet.pocketBalance) || 0 : prev.totalBalance,
+      totalEarned: wallet.totalEarned != null ? (Number(wallet.totalEarned) || 0) + (Number(wallet.totalBonus) || 0) : prev.totalEarned,
       cashInHand: Number(wallet.cashInHand) ?? prev.cashInHand,
       availableCashLimit: Number(wallet.availableCashLimit) ?? prev.availableCashLimit,
       totalCashLimit: Number(wallet.totalCashLimit) ?? prev.totalCashLimit,
@@ -161,6 +152,22 @@ export default function PocketV2() {
   // Web: refresh on visibilitychange -> visible.
   useOnForeground(refreshWalletSilent);
 
+  // The tab stays mounted, so coming back from the bank-details screen never
+  // re-read the profile and the "Submit bank details" card stayed up.
+  useFocusEffect(
+    useCallback(() => {
+      // Also re-read the wallet so a withdrawal made on the balance screen shows here at once.
+      refreshWalletSilent();
+      deliveryAPI
+        .getProfile()
+        .then((res) => {
+          const filled = Boolean(res?.data?.data?.profile?.documents?.bankDetails?.accountNumber);
+          setWalletState((prev) => (prev.bankDetailsFilled === filled ? prev : { ...prev, bankDetailsFilled: filled }));
+        })
+        .catch(() => {});
+    }, [refreshWalletSilent]),
+  );
+
   useEffect(() => {
     (async () => {
       try {
@@ -179,6 +186,7 @@ export default function PocketV2() {
           pendingCashSubmission: Number(wallet.pendingCashSubmission) || 0,
           availableToDeposit: wallet.availableToDeposit != null ? Number(wallet.availableToDeposit) : Math.max(0, Number(wallet.cashInHand) || 0),
           weeklyEarnings: Number(summary.totalEarnings) || 0,
+          totalEarned: (Number(wallet.totalEarned) || 0) + (Number(wallet.totalBonus) || 0),
           weeklyOrders: Number(summary.totalOrders) || 0,
           payoutAmount: Number(wallet.lastPayout?.amount) || 0,
           payoutPeriod: wallet.lastPayout?.date ? new Date(wallet.lastPayout.date).toLocaleDateString() : 'No recent payout',
@@ -336,15 +344,15 @@ export default function PocketV2() {
             variant="outline"
             fullWidth={false}
             accessibilityLabel="Submit bank details"
-            onPress={() => router.push('/food/delivery/profile/details')}
+            onPress={() => router.push('/food/delivery/profile/bank')}
           />
         </View>
       ) : null}
 
-      <Card onPress={() => router.push('/food/delivery/pocket/details')} accessibilityLabel="This week's earnings">
+      <Card onPress={() => router.push('/food/delivery/pocket/balance')} accessibilityLabel="Pocket balance">
         <View style={styles.heroHead}>
           <Text style={[type.label, styles.heroLabel]} numberOfLines={1}>
-            Earnings · {getCurrentWeekRange()}
+            Pocket balance
           </Text>
           <ChevronRight size={20} color={color.textMuted} />
         </View>
@@ -352,10 +360,13 @@ export default function PocketV2() {
           {loading ? (
             <Skeleton style={{ height: 36, width: 140 }} />
           ) : (
-            <Money value={formatINR(walletState.weeklyEarnings, { decimals: 0 })} style={type.display} />
+            <Money value={formatINR(walletState.totalBalance, { decimals: 0 })} style={type.display} />
           )}
         </View>
-        <Text style={[type.small, { color: color.primary }]}>View trips and earnings</Text>
+        <Text style={[type.small, { color: color.textSecondary }]}>
+          Total earned {formatINR(walletState.totalEarned || 0, { decimals: 0 })} · this week {formatINR(walletState.weeklyEarnings, { decimals: 0 })}
+        </Text>
+        <Text style={[type.small, { color: color.primary }]}>Withdraw</Text>
       </Card>
 
       {hasActiveOffer ? (

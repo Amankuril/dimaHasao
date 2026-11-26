@@ -55,7 +55,10 @@ export default function NewOrderCard({
   const routeSummary = formatPickupRouteSummary(metrics);
   if (!order) return null;
 
-  const earnings = order.earnings || order.riderEarning || order.pricing?.total || (order.orderAmount ? order.orderAmount * 0.1 : 0);
+  // The rider's payout only. It used to fall back to the customer's bill
+  // (pricing.total) or 10 % of it, which showed money the rider never gets.
+  const earnings = Number(order.earnings ?? order.riderEarning ?? 0) || 0;
+  const tripKm = Number(order.distanceKm);
   const displayId = order?.orderId || order?.displayOrderId || order?._id;
   const restaurantName = order.restaurantName || order.restaurant_name || order.restaurantId?.restaurantName || order.restaurantId?.name || 'Restaurant';
   const restaurantAddress =
@@ -114,6 +117,7 @@ export default function NewOrderCard({
             </Text>
             <View style={styles.summaryRow}>
               <Text style={styles.earn}>₹{Number(earnings || 0).toFixed(2)}</Text>
+              {Number.isFinite(tripKm) && tripKm > 0 ? <Text style={styles.summary}>· {tripKm.toFixed(1)} km trip</Text> : null}
               <Text style={[styles.summary, { color: metrics.isReady ? color.textSecondary : color.textMuted }]} numberOfLines={1}>
                 · {routeSummary}
               </Text>

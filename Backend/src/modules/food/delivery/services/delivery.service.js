@@ -298,6 +298,12 @@ export const updateDeliveryPartnerProfile = async (userId, payload, files) => {
 };
 
 export const updateDeliveryPartnerDetails = async (userId, payload) => {
+    // Older app builds save bank details through this route. It used to drop
+    // them silently (success toast, nothing stored, "Submit bank details"
+    // banner never cleared), so hand them to the bank-details path.
+    if (payload?.documents?.bankDetails || payload?.documents?.pan) {
+        await updateDeliveryPartnerBankDetails(userId, { documents: payload.documents });
+    }
     const partner = await FoodDeliveryPartner.findById(userId);
     if (!partner) {
         throw new ValidationError('Delivery partner not found');

@@ -84,7 +84,8 @@ export default function PocketBalanceV2() {
         const withdrawalLimit = Number(wallet.deliveryWithdrawalLimit) || 100;
         setW({
           pocketBalance,
-          weeklyEarnings: Number(summary.totalEarnings) || 0,
+          weeklyEarnings: Number(wallet.totalEarned) || 0,
+          pendingWithdrawals: Number(wallet.pendingWithdrawals) || 0,
           totalBonus: Number(wallet.totalBonus) || 0,
           totalWithdrawn: Number(wallet.totalWithdrawn) || 0,
           cashCollected: Number(wallet.cashInHand) || 0,
@@ -217,9 +218,12 @@ export default function PocketBalanceV2() {
             <View style={{ marginTop: space.md }}>
               <SectionHeader title="Pocket details" />
               <Card padded={false}>
-                <DetailRow label="Earnings" value={formatINR(w.weeklyEarnings, { decimals: 2 })} />
+                <DetailRow label="Total earnings" value={formatINR(w.weeklyEarnings, { decimals: 2 })} />
                 <DetailRow label="Bonus" value={formatINR(w.totalBonus, { decimals: 2 })} />
-                <DetailRow label="Amount withdrawn" value={formatINR(w.totalWithdrawn, { decimals: 2 })} />
+                <DetailRow label="Amount withdrawn" value={`− ${formatINR(w.totalWithdrawn, { decimals: 2 })}`} />
+                {w.pendingWithdrawals > 0 ? (
+                  <DetailRow label="Withdrawal in process" value={`− ${formatINR(w.pendingWithdrawals, { decimals: 2 })}`} subLabel="Already taken off your balance" />
+                ) : null}
                 <DetailRow label="Cash collected" value={formatINR(w.cashCollected, { decimals: 2 })} />
                 <DetailRow label="Deductions" value={formatINR(w.deductions, { decimals: 2 })} />
                 <DetailRow label="Pocket balance" value={formatINR(w.pocketBalance, { decimals: 2 })} strong />

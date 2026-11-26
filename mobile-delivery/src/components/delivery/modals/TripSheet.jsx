@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Animated, Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
+import { useKeyboardHeight } from '../../../lib/useKeyboard';
 import { color, elevation, radii, space } from '../../../theme';
 
 /*
@@ -17,6 +18,10 @@ export default function TripSheet({ visible = true, onBackdropPress, onRequestCl
   const insets = useSafeAreaInsets();
   const y = useAnimatedValue(height);
   const dim = useAnimatedValue(0);
+  // A translucent Modal is never resized for the keyboard on Android
+  // (edge-to-edge), so the OTP boxes sat under the number pad. Lift the sheet
+  // by the keyboard height ourselves.
+  const keyboard = useKeyboardHeight();
 
   useEffect(() => {
     if (!visible) return;
@@ -35,8 +40,17 @@ export default function TripSheet({ visible = true, onBackdropPress, onRequestCl
           {/* The pickup panel's dim has no click handler; the verification panels close on it. */}
           <Pressable style={StyleSheet.absoluteFill} onPress={onBackdropPress} disabled={!onBackdropPress} accessibilityLabel="Close" />
         </Animated.View>
-        <Animated.View style={[styles.sheet, { maxHeight: height * 0.84, transform: [{ translateY: y }] }]}>
-          <ScrollView bounces={false} contentContainerStyle={[styles.content, { paddingBottom: space.xxl + insets.bottom }, contentStyle]}>
+        <Animated.View
+          style={[
+            styles.sheet,
+            { marginBottom: keyboard, maxHeight: Math.max(240, (height - keyboard - insets.top) * (keyboard ? 0.98 : 0.84)), transform: [{ translateY: y }] },
+          ]}
+        >
+          <ScrollView
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={[styles.content, { paddingBottom: keyboard ? space.lg : space.xxl + insets.bottom }, contentStyle]}
+          >
             {children}
           </ScrollView>
         </Animated.View>
