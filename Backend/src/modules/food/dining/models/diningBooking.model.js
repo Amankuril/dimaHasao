@@ -42,6 +42,10 @@ const diningBookingSchema = new mongoose.Schema(
             enum: ['pending', 'accepted', 'confirmed', 'checked-in', 'completed', 'cancelled', 'rejected'],
             default: 'pending'
         },
+        cancelledBy: { type: String, enum: ['user', 'restaurant', 'admin', null], default: null },
+        cancelledAt: { type: Date },
+        checkedInAt: { type: Date },
+        completedAt: { type: Date },
         review: {
             rating: { type: Number, min: 1, max: 5 },
             comment: { type: String, trim: true },

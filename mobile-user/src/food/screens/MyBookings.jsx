@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AppState, FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, AppState, FlatList, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ArrowLeft, Calendar, Clock, MapPin, Star, Users, Utensils, X } from 'lucide-react-native';
 import { diningAPI } from '../../api/food';
 import Image from '../../components/Img';
@@ -147,10 +147,32 @@ export default function MyBookings() {
       if (response.data.success) {
         toast.success('Review submitted! Thank you for your feedback.');
         setSelectedBooking(null);
+        fetchBookings({ silent: true });
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to submit review');
     }
+  };
+
+  const handleCancel = (booking) => {
+    Alert.alert('Cancel this booking?', `${booking.restaurant?.name || 'Restaurant'} · ${formatShortDate(booking.date)} ${booking.timeSlot}`, [
+      { text: 'Keep it', style: 'cancel' },
+      {
+        text: 'Cancel booking',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const res = await diningAPI.cancelBooking(booking._id);
+            const updated = res?.data?.data;
+            setBookings((prev) => prev.map((b) => (String(b._id) === String(booking._id) ? { ...b, ...(updated || {}), status: 'cancelled' } : b)));
+            toast.success('Booking cancelled');
+          } catch (error) {
+            toast.error(error.response?.data?.message || 'Could not cancel the booking');
+            fetchBookings({ silent: true });
+          }
+        },
+      },
+    ]);
   };
 
   if (loading) return <Loader />;
@@ -183,7 +205,10 @@ export default function MyBookings() {
           <Chip icon={Users}>{booking.guests} Guests</Chip>
         </View>
 
-        {booking.status === 'completed' ? <Button title="Rate & review" icon={Star} variant="secondary" size="sm" onPress={() => setSelectedBooking(booking)} style={{ minHeight: 44 }} /> : null}
+        {booking.status === 'completed' && !booking.review?.rating ? <Button title="Rate & review" icon={Star} variant="secondary" size="sm" onPress={() => setSelectedBooking(booking)} style={{ minHeight: 44 }} /> : null}
+        {['pending', 'accepted', 'confirmed'].includes(String(booking.status)) ? (
+          <Button title="Cancel booking" variant="outline" size="sm" onPress={() => handleCancel(booking)} style={{ minHeight: 44 }} />
+        ) : null}
       </View>
     );
   };

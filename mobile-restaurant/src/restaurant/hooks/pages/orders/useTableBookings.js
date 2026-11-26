@@ -132,13 +132,13 @@ export function useTableBookings() {
       const response = await diningAPI.updateBookingStatusRestaurant(bookingId, newStatus);
       if (response.data.success) {
         setBookings(prev => prev.map(b =>
-          b._id === bookingId ? { ...b, status: newStatus } : b
+          b._id === bookingId ? { ...b, ...(response.data.data || {}), status: response.data.data?.status || newStatus } : b
         ));
-        toast.success(`Booking ${newStatus === 'accepted' ? 'accepted' : 'declined'}`);
+        toast.success({ accepted: 'Booking accepted', 'checked-in': 'Guest checked in', completed: 'Visit completed', cancelled: 'Booking declined', rejected: 'Booking declined' }[newStatus] || 'Booking updated');
       }
     } catch (error) {
       debugError("Error updating booking status:", error);
-      toast.error("Failed to update booking status");
+      toast.error(error?.response?.data?.message || "Failed to update booking status");
     }
   };
 

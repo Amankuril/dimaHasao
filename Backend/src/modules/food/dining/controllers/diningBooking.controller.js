@@ -95,3 +95,25 @@ export async function createBookingReviewController(req, res, next) {
         next(error);
     }
 }
+
+export async function getMyBookingController(req, res, next) {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return sendError(res, 401, 'Unauthorized');
+        const booking = await bookingService.getUserBooking(req.params.bookingId, userId);
+        return sendResponse(res, 200, 'Booking fetched successfully', booking);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export async function cancelMyBookingController(req, res, next) {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) return sendError(res, 401, 'Unauthorized');
+        const booking = await bookingService.cancelBookingByUser(req.params.bookingId, userId);
+        return sendResponse(res, 200, 'Booking cancelled', booking);
+    } catch (error) {
+        next(error);
+    }
+}

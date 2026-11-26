@@ -352,13 +352,13 @@ export function useDiningReservations() {
              if (response.data.success) {
                 // Update local state
                 setBookings(prev => prev.map(b =>
-                    b._id === bookingId ? { ...b, status: newStatus } : b
+                    b._id === bookingId ? { ...b, ...(response.data.data || {}), status: response.data.data?.status || newStatus } : b
                 ))
-                toast.success(`Booking ${newStatus === 'accepted' ? 'confirmed' : 'declined'}`)
+                toast.success({ accepted: 'Booking confirmed', 'checked-in': 'Guest checked in', completed: 'Visit completed', cancelled: 'Booking declined', rejected: 'Booking declined' }[newStatus] || 'Booking updated')
             }
         } catch (error) {
             debugError("Error updating status:", error)
-            toast.error("Failed to update status")
+            toast.error(error?.response?.data?.message || "Failed to update status")
         }
     }
 

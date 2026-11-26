@@ -4,7 +4,9 @@ import {
     getMyBookingsController,
     getRestaurantBookingsController,
     updateBookingStatusController,
-    createBookingReviewController
+    createBookingReviewController,
+    getMyBookingController,
+    cancelMyBookingController
 } from '../controllers/diningBooking.controller.js';
 import { authMiddleware } from '../../../../core/auth/auth.middleware.js';
 import { requireRoles } from '../../../../core/roles/role.middleware.js';
@@ -21,5 +23,10 @@ router.get('/by-restaurant/:restaurantIdentifier', authMiddleware, requireRoles(
 
 // Restaurant status update
 router.patch('/:bookingId/status', authMiddleware, requireRoles('RESTAURANT'), updateBookingStatusController);
+
+// Guest: read one booking / cancel it (pending or accepted only). Registered
+// after /by-restaurant so that path is never read as a booking id.
+router.get('/:bookingId', authMiddleware, requireRoles('USER'), getMyBookingController);
+router.patch('/:bookingId/cancel', authMiddleware, requireRoles('USER'), cancelMyBookingController);
 
 export default router;

@@ -438,6 +438,7 @@ export const diningAPI = {
   createReview: (payload = {}) =>
     apiClient.post(`/food/dining/bookings/${payload?.bookingId}/review`, { rating: payload?.rating, comment: payload?.comment }, { contextModule: 'user' }),
   createBooking: (payload = {}) => apiClient.post('/food/dining/bookings', payload, { contextModule: 'user' }),
+  cancelBooking: (id) => apiClient.patch(`/food/dining/bookings/${id}/cancel`, {}, { contextModule: 'user' }),
 };
 
 /** The stored food user (web: localStorage `user_user`). */
