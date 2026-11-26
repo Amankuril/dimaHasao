@@ -201,6 +201,29 @@ export async function updateTransactionStatus(orderId, kind, details = {}) {
     const transaction = await FoodTransaction.findOne(query);
     if (!transaction) return null;
 
+    // Idempotent: the same event delivered twice (retried request, duplicate
+    // webhook, double tap) changes nothing and adds no second history row.
+    const last = transaction.history?.[transaction.history.length - 1];
+    if (last?.kind === kind && (!details.status || transaction.status === details.status) &&
+        (!details.paymentMethod || transaction.paymentMethod === details.paymentMethod)) {
+        return transaction;
+    }
+
+    // A refunded ledger is final, and cash that was never collected cannot be
+    // "captured" on an order that was cancelled — that is what turned a
+    // cancelled COD order into "Paid".
+    if (details.status === 'captured') {
+        if (transaction.status === 'refunded') return transaction;
+        const order = await mongoose.model('FoodOrder').findById(orderId).select('orderStatus payment.method').lean();
+        const method = details.paymentMethod || order?.payment?.method || transaction.paymentMethod;
+        const isCancelled = String(order?.orderStatus || '').startsWith('cancelled');
+        if (isCancelled && (method === 'cash' || method === 'wallet')) return transaction;
+    }
+    if (details.status === 'failed' && transaction.status === 'captured' && transaction.paymentMethod !== 'cash') {
+        // Money was captured online; cancelling must refund it, not mark it failed.
+        details = { ...details, status: transaction.status };
+    }
+
     if (details.status) transaction.status = details.status;
     if (details.razorpayPaymentId) transaction.gateway.razorpayPaymentId = details.razorpayPaymentId;
     if (details.razorpaySignature) transaction.gateway.razorpaySignature = details.razorpaySignature;

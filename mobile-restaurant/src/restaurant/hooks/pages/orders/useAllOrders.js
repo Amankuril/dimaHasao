@@ -36,6 +36,8 @@ const allOrdersStatusGroup = {
   completed: 1,
   picked_up: 1,
   cancelled: 1,
+  canceled: 1,
+  refunded: 1,
 };
 
 const allOrdersStatusPriority = {
@@ -57,6 +59,13 @@ const getAllOrdersTimestamp = (order) =>
   order?.createdAt ||
   new Date().toISOString();
 
+const isToday = (value) => {
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+};
+
 const TERMINAL_STATUSES = new Set(["delivered", "completed", "picked_up", "cancelled"]);
 
 const HIDDEN_FROM_ORDERS_TAB = new Set([
@@ -75,15 +84,18 @@ const transformOrderForList = (order) => {
   // pending and never matched the accept flow.
   const rawStatus = order?.orderStatus ?? order?.status;
   const normalizedStatus = String(rawStatus || "").toLowerCase();
-  // Filter out cancelled, delivered, refunded, completed orders from front of Orders tab
-  if (HIDDEN_FROM_ORDERS_TAB.has(normalizedStatus)) return null;
-  const isTerminal = TERMINAL_STATUSES.has(normalizedStatus);
+  // "All" = every running order + orders completed or cancelled TODAY.
+  // Older finished orders live in the Completed / Cancelled tabs.
+  const isFinished = HIDDEN_FROM_ORDERS_TAB.has(normalizedStatus) || normalizedStatus.startsWith("cancel");
+  if (isFinished && !isToday(getAllOrdersTimestamp(order))) return null;
+  const isTerminal = isFinished || TERMINAL_STATUSES.has(normalizedStatus);
   // Dining orders are handled via Dining Booking tab, not the food order list
   if (String(order.orderType || "").toLowerCase() === "dining") return null;
   return {
     orderId: order.orderId || order._id,
     mongoId: order._id,
-    status: rawStatus || "pending",
+    // Cancelled orders may carry cancelled_by_restaurant / _user etc.
+    status: normalizedStatus.startsWith("cancel") ? "cancelled" : (rawStatus || "pending"),
     customerName: order.userId?.name || order.customerName || "Customer",
     type: order.orderType === "takeaway"
       ? "Takeaway"
@@ -139,7 +151,7 @@ export function useAllOrders({ onSelectOrder, onCancel, onVerifyTakeaway, refres
 
     const fetchOrders = async () => {
       try {
-        const response = await restaurantAPI.getOrders();
+        const response = await restaurantAPI.getOrders({ limit: 100 });
 
         if (!isMounted) return;
 

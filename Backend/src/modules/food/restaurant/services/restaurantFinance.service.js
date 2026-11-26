@@ -136,24 +136,30 @@ export async function getRestaurantFinance(restaurantId, query = {}) {
             0
         );
 
-    // Deduct all effective withdrawals from available balance.
-    // Both pending and approved reduce withdrawable amount; rejected should not.
-    const effectiveWithdrawalsAgg = await FoodRestaurantWithdrawal.aggregate([
-        {
-            $match: {
-                restaurantId: rid,
-                $expr: {
-                    $in: [
-                        { $toLower: { $trim: { input: '$status' } } },
-                        ['pending', 'approved']
-                    ]
-                }
-            }
-        },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
+    // Simple wallet: everything earned on delivered orders, minus every
+    // withdrawal the moment it is requested (pending + approved). A rejected
+    // request gives the money back. No settlement cycle.
+    const withdrawalsAgg = await FoodRestaurantWithdrawal.aggregate([
+        { $match: { restaurantId: rid } },
+        { $group: { _id: { $toLower: { $trim: { input: '$status' } } }, total: { $sum: '$amount' } } }
     ]);
-    const totalEffectiveWithdrawals = Number(effectiveWithdrawalsAgg?.[0]?.total || 0);
-    const availableBalance = Math.max(0, globalEstimatedPayout - totalEffectiveWithdrawals);
+    const withdrawnBy = Object.fromEntries(withdrawalsAgg.map((r) => [r._id, Number(r.total) || 0]));
+    const pendingWithdrawals = withdrawnBy.pending || 0;
+    const approvedWithdrawals = (withdrawnBy.approved || 0) + (withdrawnBy.paid || 0) + (withdrawnBy.completed || 0);
+    const totalEffectiveWithdrawals = pendingWithdrawals + approvedWithdrawals;
+    const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+    const availableBalance = round2(Math.max(0, globalEstimatedPayout - totalEffectiveWithdrawals));
+    const deliveredOrderCount = allUnsettledTransactions.filter(
+        (tx) => tx.orderId && ['delivered', 'completed'].includes(tx.orderId.orderStatus)
+    ).length;
+
+    const wallet = {
+        availableBalance,
+        totalEarned: round2(globalEstimatedPayout),
+        totalWithdrawn: round2(approvedWithdrawals),
+        pendingWithdrawals: round2(pendingWithdrawals),
+        totalOrders: deliveredOrderCount
+    };
 
     const currentCycle = {
         start: { ...nowWindow.startMeta },
@@ -227,6 +233,8 @@ export async function getRestaurantFinance(restaurantId, query = {}) {
             restaurantId: restaurant?._id ? `REST${restaurant._id.toString().slice(-6).padStart(6, '0')}` : 'N/A',
             address
         },
+        wallet,
+        // Kept for app builds that still read the old cycle shape.
         currentCycle,
         invoiceSummary,
         pastCycles: pastCyclesResult

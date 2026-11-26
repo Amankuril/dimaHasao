@@ -110,7 +110,8 @@ export default function HubFinance() {
     });
   };
 
-  const payout = financeData?.currentCycle?.estimatedPayout || 0;
+  const wallet = financeData?.wallet;
+  const payout = wallet?.availableBalance ?? financeData?.currentCycle?.estimatedPayout ?? 0;
   const canWithdraw = payout > 0;
 
   const restaurantId = restaurantData?.restaurantId || financeData?.restaurant?.restaurantId;
@@ -197,7 +198,7 @@ export default function HubFinance() {
         {activeTab === 'payouts' ? (
           <View style={{ gap: space.xxl }}>
             <View>
-              <SectionHeader title="Current cycle" />
+              <SectionHeader title="Wallet" />
               <Card>
                 {loading ? (
                   <View style={styles.loadingRow}>
@@ -206,11 +207,26 @@ export default function HubFinance() {
                   </View>
                 ) : (
                   <>
-                    <Text style={styles.overline}>Estimated payout</Text>
+                    <Text style={styles.overline}>Available balance</Text>
                     <Money large value={inr2(payout)} style={{ marginTop: space.xs }} />
-                    <Text style={[styles.muted, { marginTop: space.xs }]}>
-                      {financeData?.currentCycle?.totalOrders || 0} {financeData?.currentCycle?.totalOrders === 1 ? 'order' : 'orders'}
-                    </Text>
+                    {wallet ? (
+                      <View style={{ marginTop: space.md, gap: space.xs }}>
+                        <View style={styles.walletRow}>
+                          <Text style={styles.muted}>Total earned ({wallet.totalOrders || 0} {wallet.totalOrders === 1 ? 'order' : 'orders'})</Text>
+                          <Text style={styles.walletValue}>{inr2(wallet.totalEarned)}</Text>
+                        </View>
+                        <View style={styles.walletRow}>
+                          <Text style={styles.muted}>Withdrawn</Text>
+                          <Text style={styles.walletValue}>− {inr2(wallet.totalWithdrawn)}</Text>
+                        </View>
+                        {wallet.pendingWithdrawals > 0 ? (
+                          <View style={styles.walletRow}>
+                            <Text style={styles.muted}>Withdrawal in process</Text>
+                            <Text style={styles.walletValue}>− {inr2(wallet.pendingWithdrawals)}</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                    ) : null}
                     <Button
                       title="Withdraw"
                       icon={Wallet}
@@ -258,7 +274,7 @@ export default function HubFinance() {
             </View>
 
             <View>
-              <SectionHeader title="Past cycles" />
+              <SectionHeader title="Earnings history" />
               <View style={{ gap: space.md }}>
                 <View style={styles.filterRow}>
                   <Press scale={1} onPress={() => setShowDateRangePicker(!showDateRangePicker)} accessibilityLabel={`Date range ${selectedDateRange}`} style={styles.rangeBtn}>
@@ -276,7 +292,7 @@ export default function HubFinance() {
                 {loadingPastCycles ? (
                   <Card style={styles.loadingRow}>
                     <ActivityIndicator size="small" color={color.primary} />
-                    <Text style={styles.muted}>Loading past cycles...</Text>
+                    <Text style={styles.muted}>Loading earnings...</Text>
                   </Card>
                 ) : (
                   <>
@@ -463,6 +479,8 @@ export default function HubFinance() {
 }
 
 const styles = StyleSheet.create({
+  walletRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
+  walletValue: { ...type.bodyStrong, color: color.text },
   page: { flex: 1, backgroundColor: color.bg },
   headerActions: { flexDirection: 'row', alignItems: 'center' },
   tabsWrap: { paddingHorizontal: space.lg, paddingTop: space.md, paddingBottom: space.xs },

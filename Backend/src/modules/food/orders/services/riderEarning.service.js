@@ -35,6 +35,34 @@ export function invalidateCommissionRulesCache(zoneId) {
   }
 }
 
+/**
+ * How a rider payout is made up, for the admin order view:
+ * base payout for the first slab + per-km amounts for each slab after it.
+ * Mirrors getRiderEarning exactly.
+ */
+export async function explainRiderEarning(distanceKm, zoneId) {
+  const d = Number(distanceKm);
+  const rules = await getActiveCommissionRules(zoneId);
+  const sorted = [...rules].sort((a, b) => (a.minDistance || 0) - (b.minDistance || 0));
+  const baseRule = sorted.find((r) => Number(r.minDistance || 0) === 0) || null;
+  const base = Number(baseRule?.basePayout || 0) || 0;
+  const slabs = [];
+  if (Number.isFinite(d) && d > 0) {
+    for (const r of sorted) {
+      const perKm = Number(r.commissionPerKm || 0);
+      if (!Number.isFinite(perKm) || perKm <= 0) continue;
+      const min = Number(r.minDistance || 0);
+      const max = r.maxDistance == null ? null : Number(r.maxDistance);
+      if (d <= min) continue;
+      const upper = max == null ? d : Math.min(d, max);
+      const km = Math.max(0, upper - min);
+      if (km > 0) slabs.push({ fromKm: min, toKm: upper, km: Math.round(km * 100) / 100, ratePerKm: perKm, amount: Math.round(km * perKm * 100) / 100 });
+    }
+  }
+  const total = Math.round(base + slabs.reduce((sum, x) => sum + x.amount, 0));
+  return { basePayout: base, baseUptoKm: Number(baseRule?.maxDistance ?? 0) || null, slabs, total };
+}
+
 /** Base payout when distance cannot be resolved (minDistance === 0 slab). */
 export async function getBaseRiderPayoutFallback(zoneId) {
   const rules = await getActiveCommissionRules(zoneId);
@@ -168,6 +196,7 @@ export async function ensureRiderEarningOnOrder(order) {
 
   order.riderEarning = earningResolved.riderEarning;
   order.markModified?.('riderEarning');
+  if (earningResolved.distanceKm != null) order.distanceKm = earningResolved.distanceKm;
 
   if (earningResolved.deliveryGeocoded && earningResolved.deliveryPoint) {
     const geo = toGeoJsonPoint(earningResolved.deliveryPoint);

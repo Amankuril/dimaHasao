@@ -28,7 +28,7 @@ import {
 import { getIO, rooms } from '../../../../config/socket.js';
 import { addOrderJob } from '../../../../queues/producers/order.producer.js';
 import { fetchPolyline, toGeoJsonPoint } from '../utils/googleMaps.js';
-import { resolveRiderEarningForDelivery } from './riderEarning.service.js';
+import { explainRiderEarning, resolveRiderEarningForDelivery } from './riderEarning.service.js';
 import { getFirebaseDB } from '../../../../config/firebase.js';
 import * as foodTransactionService from './foodTransaction.service.js';
 import * as userWalletService from '../../user/services/userWallet.service.js';
@@ -782,6 +782,7 @@ export async function createOrder(userId, dto) {
     deliveryFleet: dto.deliveryFleet || "standard",
     scheduledAt: dto.scheduledAt ? new Date(dto.scheduledAt) : null,
     riderEarning,
+    distanceKm: Number.isFinite(Number(distanceKm)) && distanceKm != null ? Number(distanceKm) : null,
     platformProfit,
   });
 
@@ -1089,6 +1090,45 @@ export async function listOrdersUser(userId, query) {
   return { ...paginated, orders: paginated.data };
 }
 
+/** Straight-line km between two GeoJSON points ([lng, lat]); null if either is missing. */
+function haversineKmFromGeo(a, b) {
+  const pa = a?.coordinates;
+  const pb = b?.coordinates;
+  if (!Array.isArray(pa) || !Array.isArray(pb) || pa.length < 2 || pb.length < 2) return null;
+  const [lng1, lat1] = pa.map(Number);
+  const [lng2, lat2] = pb.map(Number);
+  if (![lat1, lng1, lat2, lng2].every(Number.isFinite)) return null;
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return Math.round(2 * R * Math.asin(Math.sqrt(h)) * 100) / 100;
+}
+
+/**
+ * Admin-only money view of the delivery leg: distance, what the customer paid
+ * for delivery, what the rider is paid and how that payout is made up.
+ */
+async function buildDeliveryEconomics(order) {
+  if (String(order.orderType || "delivery") !== "delivery") return null;
+  const storedKm = Number(order.distanceKm);
+  const distanceKm = Number.isFinite(storedKm) && storedKm > 0
+    ? Math.round(storedKm * 100) / 100
+    : haversineKmFromGeo(order.restaurantId?.location, order.deliveryAddress?.location);
+  const zoneId = order.zoneId || order.restaurantId?.zoneId || null;
+  const breakdown = distanceKm ? await explainRiderEarning(distanceKm, zoneId) : null;
+  const deliveryFeeCharged = Number(order.pricing?.deliveryFee || 0);
+  const riderEarning = Number(order.riderEarning || 0);
+  return {
+    distanceKm,
+    distanceSource: Number.isFinite(storedKm) && storedKm > 0 ? "route" : distanceKm ? "straight_line" : null,
+    deliveryFeeCharged,
+    riderEarning,
+    deliveryMargin: Math.round((deliveryFeeCharged - riderEarning) * 100) / 100,
+    breakdown,
+  };
+}
+
 export async function getOrderById(
   orderId,
   { userId, restaurantId, deliveryPartnerId, admin } = {},
@@ -1109,7 +1149,11 @@ export async function getOrderById(
     .lean();
   if (!order) throw new NotFoundError("Order not found");
 
-  if (admin) return normalizeOrderForClient(order);
+  if (admin) {
+    const out = normalizeOrderForClient(order);
+    out.deliveryEconomics = await buildDeliveryEconomics(order).catch(() => null);
+    return out;
+  }
 
   const orderUserId = order.userId?._id?.toString() || order.userId?.toString();
   const orderRestaurantId = order.restaurantId?._id?.toString() || order.restaurantId?.toString();
@@ -2498,28 +2542,27 @@ export async function completeTakeawayOrderRestaurant(orderId, restaurantId, otp
     throw new ValidationError("Invalid OTP");
   }
 
+  // Atomic: only the request that moves the order out of `from` completes it.
+  // The old read-modify-save let a double tap (or a retry) run the ledger
+  // capture, notifications and events twice.
   const from = order.orderStatus;
-  order.orderStatus = "delivered";
-  if (!order.deliveryVerification) {
-    order.deliveryVerification = {};
-  }
-  order.deliveryVerification.dropOtp = {
-    required: true,
-    verified: true,
-    code: existingOtp
-  };
-  
-  order.deliveredAt = new Date();
-  
-  pushStatusHistory(order, {
-    byRole: "RESTAURANT",
-    byId: restaurantId,
-    from,
-    to: "delivered",
-    note: "Takeaway order completed. OTP verified successfully."
+  const now = new Date();
+  const won = await transitionOrderStatus(order._id, from, "delivered", {
+    set: {
+      "deliveryVerification.dropOtp": { required: true, verified: true },
+      "deliveryState.deliveredAt": now,
+      "deliveryState.currentPhase": "delivered",
+      deliveredAt: now,
+    },
+    history: { byRole: "RESTAURANT", byId: restaurantId, note: "Takeaway order completed. OTP verified successfully." },
   });
-
-  await order.save();
+  if (!won) {
+    const latest = await FoodOrder.findById(order._id).lean();
+    if (latest?.orderStatus === "delivered") return normalizeOrderForClient(latest);
+    throw new ValidationError("Order status changed in the meantime; please refresh and try again");
+  }
+  // The handover code has done its job; do not keep it readable.
+  await FoodOrder.updateOne({ _id: order._id }, { $set: { deliveryOtp: "" } });
 
   // Reset COD Cancellation Count on any successful delivery
   if (order.userId) {

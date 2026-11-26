@@ -494,6 +494,7 @@ export function buildDeliverySocketPayload(orderDoc, restaurantDoc = null) {
     userPhone: order?.customerPhone || order?.deliveryAddress?.phone || order?.userId?.phone || "",
     note: order?.note || "",
     riderEarning: order?.riderEarning || 0,
+    distanceKm: order?.distanceKm ?? null,
     // Never fall back to customer deliveryFee — that is not rider payout
     earnings: Number(order?.riderEarning || 0) || 0,
     deliveryFee: order?.pricing?.deliveryFee || 0,

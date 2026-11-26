@@ -227,6 +227,21 @@ export default function UserOrderDetails() {
 
   const statusTone = isCancelled ? { tone: 'danger', Icon: X, label: 'Cancelled' } : isDelivered ? { tone: 'success', Icon: Check, label: order.orderType === 'takeaway' ? 'Picked up' : 'Delivered' } : { tone: 'warning', Icon: ShoppingBag, label: 'Processing' };
   const payBadge = (cod) => <StatusBadge tone={cod ? 'neutral' : 'success'} label={cod ? 'COD' : 'Online'} />;
+  // What actually happened to the money, so a cancelled COD order never reads "Paid".
+  const payStatus = String(order.payment?.status || '').toLowerCase();
+  const totalLabel = isCod
+    ? isDelivered
+      ? 'Paid in cash'
+      : isCancelled
+        ? 'Not charged'
+        : 'To pay on delivery'
+    : payStatus === 'refunded'
+      ? 'Refunded'
+      : isCancelled && ['paid', 'captured', 'authorized'].includes(payStatus)
+        ? 'Refund in process'
+        : ['paid', 'captured', 'authorized', 'settled'].includes(payStatus)
+          ? 'Paid'
+          : 'Total';
 
   return (
     <View style={styles.page}>
@@ -357,7 +372,7 @@ export default function UserOrderDetails() {
                 ₹{Number(pricing.subtotal || pricing.total || 0).toFixed(2)}
               </Text>
             </View>
-            <BillRow label="GST (govt. taxes)" value={`₹${Number(pricing.tax || 0).toFixed(2)}`} />
+            {Number(pricing.tax || 0) > 0 ? <BillRow label="GST (govt. taxes)" value={`₹${Number(pricing.tax || 0).toFixed(2)}`} /> : null}
             {order.orderType !== 'takeaway' && order.orderType !== 'dining' ? (
               <BillRow label="Delivery fee" tone={pricing.deliveryFee ? undefined : 'success'} value={pricing.deliveryFee ? `₹${Number(pricing.deliveryFee).toFixed(2)}` : 'Free'} />
             ) : null}
@@ -366,7 +381,7 @@ export default function UserOrderDetails() {
             <Divider />
             <View style={styles.line}>
               <View style={styles.row}>
-                <Text style={[type.bodyStrong, { color: color.text }]}>Paid</Text>
+                <Text style={[type.bodyStrong, { color: color.text }]}>{totalLabel}</Text>
                 {payBadge(isCod)}
               </View>
               <Text style={[type.price, { color: color.text }]}>₹{Number(pricing.total || 0).toFixed(2)}</Text>
@@ -388,7 +403,7 @@ export default function UserOrderDetails() {
           <Divider />
           <InfoRow icon={CreditCard} title="Payment method">
             <View style={[styles.row, { marginTop: 2 }]}>
-              <Text style={[type.small, { color: color.textSecondary }]}>Paid via</Text>
+              <Text style={[type.small, { color: color.textSecondary }]}>{isCod ? 'Cash' : 'Paid via'}</Text>
               <StatusBadge tone={paymentMethod.toLowerCase() === 'cash' || paymentMethod.toLowerCase() === 'cod' ? 'neutral' : 'success'} label={paymentMethod.toUpperCase()} />
             </View>
           </InfoRow>

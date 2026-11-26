@@ -60,7 +60,6 @@ export default function FinanceDetailsPage() {
     goBack, restaurantData, activeTab, setActiveTab, isTransitioning, setIsTransitioning, showDownloadPopup, setShowDownloadPopup, showEmailPopup, setShowEmailPopup,
     expandedSections, tabs, handleDownload, handleEmail, settlementData: s, estimatedPayout, toggleSection,
   } = useFinanceDetailsPage();
-  const period = `${s.start} - ${s.end} ${s.month}'${s.year}`;
 
   return (
     <View style={styles.page}>
@@ -84,14 +83,9 @@ export default function FinanceDetailsPage() {
           <View style={{ gap: space.xxl }}>
             <Card style={styles.hero}>
               <View style={{ flex: 1, minWidth: 0 }}>
-                <Text style={styles.overline}>Active earnings</Text>
+                <Text style={styles.overline}>Available balance</Text>
                 <Money large value={money(estimatedPayout)} style={{ marginVertical: space.xs }} />
-                <Text style={styles.small}>from {period}</Text>
-                <Text style={[styles.small, { marginTop: space.xs }]}>Payout date: -</Text>
-              </View>
-              <View style={styles.periodBox}>
-                <Text style={styles.small}>Payout for</Text>
-                <Text style={styles.periodText}>{period}</Text>
+                <Text style={styles.small}>Earnings from delivered orders, minus withdrawals. Withdraw any time.</Text>
               </View>
             </Card>
 

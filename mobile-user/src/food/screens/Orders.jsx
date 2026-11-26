@@ -452,7 +452,20 @@ export default function Orders() {
     const isUserCancelled = order.isUserCancelled || (isCancelled && order.cancelledBy === 'user');
     const restaurantImage = order.restaurantImage || order.items?.[0]?.image || FALLBACK_REST;
     const location = order.restaurantLocation || `${order.address?.city || ''}, ${order.address?.state || ''}`.trim() || 'Location not available';
-    const payTone = order.payment?.status === 'completed' || (isDelivered && isCodOrWallet) ? 'success' : order.payment?.status === 'failed' ? 'danger' : 'warning';
+    const isCashOrder = ['cash', 'cod'].includes(m) || ['cash', 'cod'].includes(order.paymentMethod);
+    const anyCancel = isCancelled || String(order.status || '').startsWith('cancel');
+    const payStatus = String(order.payment?.status || '').toLowerCase();
+    // Cash that was never collected is "Not charged", never "Paid" / "Cod pending".
+    const payLabel = isCashOrder && anyCancel
+      ? 'Not charged'
+      : isDelivered && isCodOrWallet
+        ? 'Paid'
+        : payStatus === 'cod_pending'
+          ? 'Pay on delivery'
+          : anyCancel && payStatus === 'paid'
+            ? 'Refund in process'
+            : sentence(order.payment?.status);
+    const payTone = order.payment?.status === 'completed' || (isDelivered && isCodOrWallet) || payStatus === 'refunded' ? 'success' : order.payment?.status === 'failed' ? 'danger' : isCashOrder && anyCancel ? 'neutral' : 'warning';
     let status;
     if (isRestaurantCancelled) status = { tone: 'danger', label: 'Cancelled' };
     else if (paymentFailed) status = { tone: 'danger', label: 'Payment failed' };
@@ -601,7 +614,7 @@ export default function Orders() {
               {formatDate(order.createdAt)} ·{' '}
               {order.payment?.method === 'cash' || order.payment?.method === 'cod' ? 'Cash on Delivery' : order.payment?.method === 'wallet' ? 'Wallet' : 'Online'}
             </Text>
-            {order.payment?.status ? <StatusBadge tone={payTone} label={isDelivered && isCodOrWallet ? 'Paid' : sentence(order.payment.status)} /> : null}
+            {order.payment?.status ? <StatusBadge tone={payTone} label={payLabel} /> : null}
           </View>
         </View>
 

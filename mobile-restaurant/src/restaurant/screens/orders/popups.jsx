@@ -408,7 +408,8 @@ export function OrderSheet({ h }) {
   if (!visible) return null;
   const status = lower(order.status);
   const pickedUp = status === 'delivered' && order.type === 'Takeaway';
-  const pay = paymentMeta(order.paymentMethod) || { label: 'Paid online', tone: 'success' };
+  // No method on the record is "unknown", not "paid".
+  const pay = paymentMeta(order.paymentMethod) || { label: 'Payment pending', tone: 'neutral' };
   const close = () => h.setIsSheetOpen(false);
   const typeMeta = orderTypeMeta(order.type);
   return (

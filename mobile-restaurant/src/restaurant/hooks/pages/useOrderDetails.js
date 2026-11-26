@@ -124,8 +124,6 @@ export function useOrderDetails() {
               0,
               itemSubtotal + packagingFee
             )
-          // Restaurant view: never show customer payment-due as their bill
-          const paidAmount = total
 
           const addressParts = [
             order.address?.street,
@@ -183,16 +181,24 @@ export function useOrderDetails() {
           ).toLowerCase()
           const paymentMethod = String(order.payment?.method || "").toLowerCase()
 
+          const isCashOrder = ["cash", "cod"].includes(paymentMethod)
+          const isCancelled = orderStatusRaw.startsWith("cancel")
           let paymentStatus = "PENDING"
-          if (["completed", "paid", "captured", "success", "succeeded"].includes(rawPaymentStatus)) {
+          if (isCashOrder) {
+            // Cash is only ever collected at the door. A cancelled COD order
+            // collected nothing, whatever the payment record says.
+            paymentStatus = orderStatusRaw === "delivered" ? "PAID" : isCancelled ? "NOT COLLECTED" : "COD"
+          } else if (["refunded", "refund"].includes(rawPaymentStatus)) {
+            paymentStatus = "REFUNDED"
+          } else if (isCancelled && ["completed", "paid", "captured", "success", "succeeded"].includes(rawPaymentStatus)) {
+            paymentStatus = "REFUND PENDING"
+          } else if (["completed", "paid", "captured", "success", "succeeded"].includes(rawPaymentStatus)) {
             paymentStatus = "PAID"
           } else if (["failed", "declined"].includes(rawPaymentStatus)) {
             paymentStatus = "FAILED"
-          } else if (["refunded", "refund"].includes(rawPaymentStatus)) {
-            paymentStatus = "REFUNDED"
-          } else if (paymentMethod === "cash") {
-            paymentStatus = orderStatusRaw === "delivered" ? "PAID" : "COD"
           }
+          // Only money actually received counts as "Amount paid".
+          const paidAmount = paymentStatus === "PAID" ? total : 0
           
           const statusLower = orderStatusRaw
           const reached = {
@@ -307,7 +313,7 @@ export function useOrderDetails() {
       ).join('')
       const billRows = [
         ["Item Subtotal:", formatMoney(b.itemSubtotal)],
-        ["Taxes:", formatMoney(b.taxes)],
+        ...(Number(b.taxes) > 0 ? [["GST:", formatMoney(b.taxes)]] : []),
       ]
       if (Number(b.packagingFee) > 0) billRows.push(["Packaging Fee:", formatMoney(b.packagingFee)])
       if (Number(b.deliveryFee) > 0) billRows.push(["Delivery Fee:", formatMoney(b.deliveryFee)])

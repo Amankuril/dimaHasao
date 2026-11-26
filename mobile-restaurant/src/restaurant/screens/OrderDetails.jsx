@@ -237,7 +237,8 @@ function OrderDetailsScreen({ onReload }) {
           <SectionHeader title="Bill details" />
           <Card>
             <BillRow label="Item subtotal" value={formatMoney(b.itemSubtotal)} />
-            <BillRow label="Taxes" value={formatMoney(b.taxes)} />
+            {/* GST only exists when the admin sets a GST rate (Fee settings); it is 0 otherwise. */}
+            {Number(b.taxes) > 0 ? <BillRow label="GST" value={formatMoney(b.taxes)} /> : null}
             {Number(b.packagingFee) > 0 ? <BillRow label="Packaging fee" value={formatMoney(b.packagingFee)} /> : null}
             {Number(b.deliveryFee) > 0 ? <BillRow label="Delivery fee" value={formatMoney(b.deliveryFee)} /> : null}
             {Number(b.platformFee) > 0 ? <BillRow label="Platform fee" value={formatMoney(b.platformFee)} /> : null}
@@ -247,7 +248,7 @@ function OrderDetailsScreen({ onReload }) {
             <View style={styles.totalRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.sm, flexShrink: 1 }}>
                 <Text style={styles.totalLabel}>Total bill</Text>
-                {b.paymentStatus ? <StatusBadge label={/^cod$/i.test(String(b.paymentStatus)) ? 'COD' : sentence(b.paymentStatus)} tone={/paid|success|captured/i.test(String(b.paymentStatus)) ? 'success' : 'neutral'} /> : null}
+                {b.paymentStatus ? <StatusBadge label={/^cod$/i.test(String(b.paymentStatus)) ? 'COD' : sentence(b.paymentStatus)} tone={/^paid$|^refunded$/i.test(String(b.paymentStatus)) ? 'success' : /not collected|refund pending|failed/i.test(String(b.paymentStatus)) ? 'danger' : 'neutral'} /> : null}
               </View>
               <Text style={styles.totalValue}>{formatMoney(b.total)}</Text>
             </View>

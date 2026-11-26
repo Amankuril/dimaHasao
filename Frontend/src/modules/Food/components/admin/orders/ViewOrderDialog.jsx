@@ -132,6 +132,25 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
   const [draftOrderStatus, setDraftOrderStatus] = useState("Pending")
   const [draftPaymentStatus, setDraftPaymentStatus] = useState("Pending")
   const [updatingStatuses, setUpdatingStatuses] = useState(false)
+  const [economics, setEconomics] = useState(null)
+
+  // Distance + delivery money (fee charged vs rider payout) come from the
+  // order detail endpoint; the list row does not carry them.
+  useEffect(() => {
+    if (!isOpen || !order?.id) return
+    let alive = true
+    setEconomics(null)
+    adminAPI
+      .getOrderById(order.id)
+      .then((res) => {
+        const detail = res?.data?.data?.order || res?.data?.order
+        if (alive) setEconomics(detail?.deliveryEconomics || null)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+  }, [isOpen, order?.id])
 
   useEffect(() => {
     if (!isOpen || !order) return
@@ -959,6 +978,51 @@ export default function ViewOrderDialog({ isOpen, onOpenChange, order, onOrderUp
                   <span className="font-medium text-neutral-900">₹{order.vatTax.toFixed(2)}</span>
                 </div>
               )}
+              {economics ? (
+                <div className="mt-1 mb-2 rounded-lg border border-neutral-200 bg-neutral-50 p-3 space-y-1.5">
+                  <div className="flex items-center gap-2 text-sm font-medium text-neutral-800">
+                    <Truck className="w-4 h-4" /> Delivery money
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Distance (restaurant → customer)</span>
+                    <span className="font-medium text-neutral-900">
+                      {economics.distanceKm ? `${economics.distanceKm} km` : "Not available"}
+                      {economics.distanceSource === "straight_line" ? <span className="text-neutral-400 font-normal"> (straight line)</span> : null}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Delivery fee taken from customer</span>
+                    <span className="font-medium text-neutral-900">₹{Number(economics.deliveryFeeCharged || 0).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-neutral-600">Paid to delivery partner</span>
+                    <span className="font-medium text-neutral-900">₹{Number(economics.riderEarning || 0).toFixed(2)}</span>
+                  </div>
+                  {economics.breakdown ? (
+                    <div className="pl-3 border-l-2 border-neutral-200 space-y-0.5 text-xs text-neutral-500">
+                      <div className="flex justify-between">
+                        <span>Base payout{economics.breakdown.baseUptoKm ? ` (first ${economics.breakdown.baseUptoKm} km)` : ""}</span>
+                        <span>₹{Number(economics.breakdown.basePayout || 0).toFixed(2)}</span>
+                      </div>
+                      {(economics.breakdown.slabs || []).map((slab, i) => (
+                        <div key={i} className="flex justify-between">
+                          <span>{slab.km} km × ₹{slab.ratePerKm}/km ({slab.fromKm}–{slab.toKm} km)</span>
+                          <span>₹{Number(slab.amount || 0).toFixed(2)}</span>
+                        </div>
+                      ))}
+                      {Math.round(economics.breakdown.total) !== Math.round(economics.riderEarning || 0) ? (
+                        <div className="text-amber-600">Current rules give ₹{economics.breakdown.total}; the order kept the payout set when it was placed.</div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                  <div className="flex justify-between text-sm pt-1 border-t border-neutral-200">
+                    <span className="text-neutral-600">Platform keeps on delivery</span>
+                    <span className={`font-medium ${economics.deliveryMargin < 0 ? "text-rose-600" : "text-emerald-600"}`}>
+                      {economics.deliveryMargin < 0 ? "−" : ""}₹{Math.abs(Number(economics.deliveryMargin || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ) : null}
               <div className="pt-2 border-t border-neutral-200">
                 <div className="flex justify-between items-center">
                   <span className="text-base font-medium text-neutral-700">Total amount</span>
