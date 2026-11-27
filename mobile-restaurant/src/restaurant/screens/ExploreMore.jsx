@@ -57,11 +57,15 @@ export default function ExploreMore() {
     isLoggingOut, logoutConfirmOpen, setLogoutConfirmOpen, restaurantData, setRestaurantData, loadingRestaurant, restaurantDisplayAddress, userData, restaurantDisplayName,
     handleLogout, handleLogoutAllDevices, getFilteredSections,
   } = useExploreMore();
+  // The server stores takeaway as takeawaySettings.isEnabled; this screen read
+  // a non-existent isTakeawayEnabled, so it always said "Off" and the switch
+  // opened off (saving it unchanged turned takeaway off).
+  const takeawayOn = Boolean(restaurantData?.takeawaySettings?.isEnabled ?? restaurantData?.isTakeawayEnabled);
   const sections = getFilteredSections();
 
   const openItem = (item) => {
     if (item.id === 6) {
-      setTempTakeawayEnabled(restaurantData?.isTakeawayEnabled || false);
+      setTempTakeawayEnabled(takeawayOn);
       setTakeawayModalOpen(true);
     } else if (item.route) {
       navigate(item.route, { state: { from: location.pathname } });
@@ -77,7 +81,7 @@ export default function ExploreMore() {
     setIsTakeawayUpdating(true);
     try {
       await restaurantAPI.updateTakeawaySettings({ isEnabled: tempTakeawayEnabled });
-      setRestaurantData((prev) => ({ ...prev, isTakeawayEnabled: tempTakeawayEnabled }));
+      setRestaurantData((prev) => ({ ...prev, isTakeawayEnabled: tempTakeawayEnabled, takeawaySettings: { ...(prev?.takeawaySettings || {}), isEnabled: tempTakeawayEnabled } }));
       setTakeawayModalOpen(false);
       toast.success(`Takeaway ${tempTakeawayEnabled ? 'enabled' : 'disabled'} successfully`, { duration: 2000 });
     } catch {
@@ -146,7 +150,7 @@ export default function ExploreMore() {
                       title={item.label}
                       onPress={() => openItem(item)}
                       divider={index < section.items.length - 1}
-                      right={item.id === 6 && section.key === 'manage-outlet' ? <StatusBadge label={restaurantData?.isTakeawayEnabled ? 'On' : 'Off'} tone={restaurantData?.isTakeawayEnabled ? 'primary' : 'neutral'} style={{ alignSelf: 'center' }} /> : null}
+                      right={item.id === 6 && section.key === 'manage-outlet' ? <StatusBadge label={takeawayOn ? 'On' : 'Off'} tone={takeawayOn ? 'primary' : 'neutral'} style={{ alignSelf: 'center' }} /> : null}
                     />
                   ))}
                 </Card>

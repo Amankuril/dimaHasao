@@ -74,7 +74,7 @@ export default function Inventory() {
             <Input
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder={isAddons ? 'Search add-ons' : 'Search categories or items'}
+              placeholder={isAddons ? 'Search add-ons' : 'Search menu'}
               accessibilityLabel="Search"
               style={{ flex: 1 }}
               left={<Search size={18} color={color.textMuted} />}

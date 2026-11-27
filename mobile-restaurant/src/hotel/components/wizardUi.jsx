@@ -1,5 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+// Resolves the API's site-relative /uploads/... paths (the plain RN Image
+// rendered them blank: no host).
+import Image from '../../components/Img';
 import { StatusBar } from 'expo-status-bar';
 import { AlertCircle, Check, CheckCircle2, ChevronDown, Eye, ImagePlus, Info, MapPin, Pencil, Plus, Trash2, X } from 'lucide-react-native';
 import { Button, IconButton, StatusBadge } from '../../components/ds';

@@ -1061,6 +1061,11 @@ export const markCheckIn = async (req, res) => {
     if (booking.bookingStatus !== 'confirmed') {
       return res.status(400).json({ message: 'Booking must be confirmed to check in.' });
     }
+    // Same day rule as No Show: a guest could be checked in days before the
+    // stay began (found on a device test, 2 days early).
+    if (istCalendarDay(new Date()) < istCalendarDay(booking.checkInDate)) {
+      return res.status(400).json({ message: 'A guest can only be checked in from the check-in date.' });
+    }
 
     booking.bookingStatus = 'checked_in';
     await booking.save();

@@ -13,6 +13,7 @@ import DateRangeDialog from '../components/DateRangeDialog';
 import { useHubFinance } from '../hooks/pages/useHubFinance';
 import { DialogHead, StatTile, dialogPanel, inr2, useKeyboardHeight } from './finance/financeUi';
 import { Field, Input, ScreenHeader } from './inventory/partnerKit';
+import { toast } from '../../lib/notify';
 
 const formatDateForDisplay = (date) => {
   const day = date.getDate();
@@ -129,18 +130,18 @@ export default function HubFinance() {
   const submitWithdrawal = async () => {
     const amount = parseFloat(withdrawalAmount);
     if (!amount || amount <= 0) {
-      alert('Please enter a valid amount');
+      toast.error('Please enter a valid amount');
       return;
     }
     if (amount > payout) {
-      alert('Amount cannot exceed available balance');
+      toast.error('Amount cannot exceed available balance');
       return;
     }
     try {
       setSubmittingWithdrawal(true);
       const response = await restaurantAPI.createWithdrawalRequest(amount);
       if (response.data?.success) {
-        alert('Withdrawal request submitted successfully!');
+        toast.success('Withdrawal request submitted successfully!');
         setShowWithdrawalModal(false);
         setWithdrawalAmount('');
         const financeResponse = await restaurantAPI.getFinance();
@@ -152,10 +153,10 @@ export default function HubFinance() {
         const withdrawalList = Array.isArray(withdrawalPayload) ? withdrawalPayload : Array.isArray(withdrawalPayload?.withdrawals) ? withdrawalPayload.withdrawals : [];
         setWithdrawalRequests(withdrawalList);
       } else {
-        alert(response.data?.message || 'Failed to submit withdrawal request');
+        toast.error(response.data?.message || 'Failed to submit withdrawal request');
       }
     } catch (error) {
-      alert(error.response?.data?.message || 'Failed to submit withdrawal request. Please try again.');
+      toast.error(error.response?.data?.message || 'Failed to submit withdrawal request. Please try again.');
     } finally {
       setSubmittingWithdrawal(false);
     }

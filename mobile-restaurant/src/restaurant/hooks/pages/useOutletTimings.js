@@ -127,8 +127,10 @@ export function useOutletTimings() {
         [day]: {
           ...prev[day],
           isOpen: newOpen,
-          openingTime: newOpen ? (prev[day].openingTime || "09:00") : "",
-          closingTime: newOpen ? (prev[day].closingTime || "22:00") : ""
+          // Keep the day's hours while it is closed, so reopening restores
+          // them instead of resetting to 9 AM - 10 PM.
+          openingTime: prev[day].openingTime || "09:00",
+          closingTime: prev[day].closingTime || "22:00"
         }
       }
     })

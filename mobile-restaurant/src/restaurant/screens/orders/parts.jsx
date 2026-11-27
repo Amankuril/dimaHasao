@@ -120,7 +120,10 @@ export const OrderCard = memo(function OrderCard({
         </View>
         <View style={styles.headText}>
           <View style={styles.idRow}>
-            <Text style={styles.id} numberOfLines={1} selectable>
+            {/* `selectable` + numberOfLines on Android wraps and clips the
+                text instead of ellipsizing it ("#FOD-27512685" with "09"
+                hidden below), so the id is no longer selectable here. */}
+            <Text style={styles.id} numberOfLines={1} ellipsizeMode="middle">
               #{orderId}
             </Text>
             <StatusBadge label={statusLabel} tone={statusTone} />
@@ -254,7 +257,7 @@ const styles = StyleSheet.create({
   photo: { width: 56, height: 56, borderRadius: radii.md, overflow: 'hidden', backgroundColor: color.surfaceMuted, alignItems: 'center', justifyContent: 'center' },
   headText: { flex: 1, minWidth: 0, gap: space.xs },
   idRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
-  id: { ...t.subheading, color: color.text, flexShrink: 1 },
+  id: { ...t.subheading, color: color.text, flexShrink: 1, minWidth: 0 },
   customer: { ...t.small, color: color.textSecondary },
   metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: space.xs + 2, marginTop: space.xxs },
   adminNote: { ...t.caption, color: color.textMuted, fontStyle: 'italic' },

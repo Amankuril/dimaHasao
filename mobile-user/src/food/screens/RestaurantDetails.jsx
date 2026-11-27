@@ -613,11 +613,16 @@ export default function RestaurantDetails() {
                 <View style={styles.emptyMenuIcon}>
                   <Utensils size={28} color={color.primary} />
                 </View>
-                <Text style={styles.emptyMenuTitle}>{vegMode && rawHasAnyDish ? 'No veg dishes available' : 'Menu coming soon'}</Text>
+                {/* A menu whose dishes are all out of stock read "still setting up their menu". */}
+                <Text style={styles.emptyMenuTitle}>
+                  {vegMode && rawHasAnyDish ? 'No veg dishes available' : rawHasAnyDish ? 'Nothing available right now' : 'Menu coming soon'}
+                </Text>
                 <Text style={styles.emptyMenuBody}>
                   {vegMode && rawHasAnyDish
                     ? `${restaurant?.name || 'This restaurant'} doesn't have any veg dishes on their menu right now.`
-                    : `${restaurant?.name || 'This restaurant'} is still setting up their menu. Check back soon.`}
+                    : rawHasAnyDish
+                      ? `Every dish at ${restaurant?.name || 'this restaurant'} is sold out at the moment. Check back later.`
+                      : `${restaurant?.name || 'This restaurant'} is still setting up their menu. Check back soon.`}
                 </Text>
               </View>
             ) : null}

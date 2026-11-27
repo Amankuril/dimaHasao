@@ -63,6 +63,8 @@ const notifyAdminOfNewProperty = async (property) => {
   }
 };
 
+const toFlag = (v) => v === true || v === 'true' || v === 1 || v === '1';
+
 export const createProperty = async (req, res) => {
   try {
     const partner = await Partner.findById(req.user._id);
@@ -100,8 +102,10 @@ export const createProperty = async (req, res) => {
       cancellationPolicy,
       houseRules,
       dynamicCategory: dynamicCategoryId,
-      hostLivesOnProperty: lowerType === 'homestay' ? hostLivesOnProperty : undefined,
-      familyFriendly: lowerType === 'homestay' ? familyFriendly : undefined,
+      // Older app builds send '' for an untouched toggle, which failed the
+      // Boolean cast and blocked the whole submit.
+      hostLivesOnProperty: lowerType === 'homestay' ? toFlag(hostLivesOnProperty) : undefined,
+      familyFriendly: lowerType === 'homestay' ? toFlag(familyFriendly) : undefined,
       resortType: lowerType === 'resort' ? resortType : undefined,
       activities: lowerType === 'resort' ? activities : undefined,
       hotelCategory: ['hotel', 'lodge'].includes(lowerType) ? hotelCategory : undefined,
@@ -197,9 +201,10 @@ export const updateProperty = async (req, res) => {
       'isLive'
     ];
 
+    const FLAG_FIELDS = new Set(['hostLivesOnProperty', 'familyFriendly', 'isLive']);
     updatableFields.forEach(field => {
       if (Object.prototype.hasOwnProperty.call(payload, field)) {
-        property[field] = payload[field];
+        property[field] = FLAG_FIELDS.has(field) ? toFlag(payload[field]) : payload[field];
       }
     });
 

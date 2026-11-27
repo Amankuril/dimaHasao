@@ -8,6 +8,7 @@ import { reverseGeocodeWithGoogle } from '../../utils/googleGeocoding'
 import { formatLocationPreview } from '../../utils/googlePlaces'
 import { localStore } from '../../../lib/storage'
 import { alert } from '../../../lib/webShim'
+import { toast } from '../../../lib/notify'
 
 const debugError = (...args) => console.error("[EditRestaurantAddress]", ...args)
 
@@ -359,7 +360,7 @@ export function useEditRestaurantAddress() {
 
   const handleUpdateClick = () => {
     if (!hasMovedPin) {
-      alert("Please move the map or search your outlet location before updating.")
+      toast.error("Please move the map or search your outlet location before updating.")
       return
     }
     setShowSelectOptionDialog(true)
@@ -367,7 +368,7 @@ export function useEditRestaurantAddress() {
 
   const handleProceedUpdate = () => {
     if (selectedOption === "update_address") {
-      alert("For major address updates, FSSAI verification may be required. Please contact support.")
+      toast.info("For major address updates, FSSAI verification may be required. Please contact support.")
       setShowSelectOptionDialog(false)
       return
     }

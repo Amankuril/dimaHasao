@@ -24,6 +24,7 @@ export default function Feedback() {
   const h = useFeedback();
   const {
     activeTab, setActiveTab, navigate, location, goBack, showBack, tabs, complaints, isComplaintsLoading, displayedReviews, restaurantData, setIsFilterOpen,
+    reviewSearch, setReviewSearch, isLoadingReviews,
     isComplaintsFilterOpen, setIsComplaintsFilterOpen, complaintsFilterValues, setComplaintsFilterValues, isDateSelectorOpen, setIsDateSelectorOpen, selectedDateRange,
     customDateRange, setCustomDateRange, isCustomDateOpen, setIsCustomDateOpen, handleComplaintsFilterApply, handleComplaintsFilterReset, handleDateRangeSelect, handleCustomDateApply,
     handleTouchStart, handleTouchMove, handleTouchEnd,
@@ -93,7 +94,7 @@ export default function Feedback() {
   ) : (
     <View style={styles.filters}>
       {/* As on the web, this box is not wired to the list. */}
-      <Input placeholder="Search reviews" accessibilityLabel="Search reviews" left={<Search size={18} color={color.textMuted} />} style={{ flex: 1 }} />
+      <Input value={reviewSearch} onChangeText={setReviewSearch} placeholder="Search reviews" accessibilityLabel="Search reviews" left={<Search size={18} color={color.textMuted} />} style={{ flex: 1 }} />
       <IconButton icon={SlidersHorizontal} label="Filters" variant="soft" size={48} onPress={() => setIsFilterOpen(true)} style={styles.filterBtn} />
     </View>
   );
@@ -106,7 +107,14 @@ export default function Feedback() {
         <EmptyState icon={MessageSquareWarning} title="No complaints found" />
       </Card>
     )
-  ) : null;
+  ) : isLoadingReviews ? (
+    <ActivityIndicator size="small" color={color.primary} style={{ padding: 40 }} />
+  ) : (
+    // The reviews tab rendered nothing at all when there were none.
+    <Card padded={false}>
+      <EmptyState icon={Star} title={reviewSearch?.trim() ? 'No matching reviews' : 'No reviews yet'} />
+    </Card>
+  );
 
   return (
     <View style={styles.page}>

@@ -381,7 +381,7 @@ export function useExploreMore() {
 
   const handleSubmitScheduleOff = () => {
     if (!startDate || !endDate) {
-      alert("Please select start and end dates")
+      toast.error("Please select start and end dates")
       return
     }
     setDateTimePickerOpen(false)
@@ -418,7 +418,7 @@ export function useExploreMore() {
 
   const helpItems = [
     { id: 1, label: "Support", icon: LifeBuoy, route: "/food/restaurant/help-centre/support" },
-    { id: 2, label: "Share your feedback", icon: Edit, route: "/food/restaurant/Share-Feedback" },
+    { id: 2, label: "Share your feedback", icon: Edit, route: "/food/restaurant/share-feedback" },
   ]
 
   const accountingItems = [

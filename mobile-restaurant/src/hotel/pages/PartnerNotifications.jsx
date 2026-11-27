@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Animated, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, CheckCircle, AlertCircle, Info, Tag } from 'lucide-react-native';
-import { Press } from '../../components/ui';
+import { useFocusEffect } from 'expo-router';
+import { hotelService } from '../services/apiService';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { EmptyState, SectionHeader } from '../../components/ds';
 import { color, radii, space, tone, type } from '../../theme';
@@ -10,10 +11,34 @@ import PartnerHeader from '../components/PartnerHeader';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerNotifications.jsx
- * (/hotel/partner/notifications). As on the web this is the static "Recent"
- * list; its "Mark as Read" / "Mark all read" buttons have no handler there
- * either. The GSAP stagger-in is an Animated fade/slide.
+ * (/hotel/partner/notifications). It used to show four invented notices
+ * ("Payout Processed ₹15,000 ... HDFC ending 8821", a review from "Arjun
+ * Mehta", a "Monsoon Sale") with buttons that did nothing. It now reads the
+ * partner's inbox (GET /hotels/notifications); "Mark all read" calls the
+ * server.
  */
+
+// Relative time for an inbox item ("5 min ago", "2 days ago").
+const ago = (iso) => {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return '';
+  const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (m < 1) return 'Just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hr${h === 1 ? '' : 's'} ago`;
+  const d = Math.round(h / 24);
+  return `${d} day${d === 1 ? '' : 's'} ago`;
+};
+
+// Server notification type -> the card's look.
+const kindOf = (t = '') => {
+  const v = String(t).toLowerCase();
+  if (/cancel|reject|fail|no_show|alert|kyc/.test(v)) return 'alert';
+  if (/payout|payment|paid|settle|withdraw|approved/.test(v)) return 'success';
+  if (/offer|promo/.test(v)) return 'promo';
+  return 'info';
+};
 
 const ICONS = { success: CheckCircle, alert: AlertCircle, info: Info, promo: Tag };
 const TONES = { success: 'success', alert: 'danger', info: 'info', promo: 'gold' };
@@ -43,42 +68,70 @@ const NotificationItem = ({ notif }) => {
           <Text style={styles.time}>{notif.time}</Text>
         </View>
         <Text style={styles.desc}>{notif.desc}</Text>
-        {!notif.read && (
-          <Press scale={1} style={styles.markRead}>
-            <Text style={styles.markReadText}>Mark as read</Text>
-          </Press>
-        )}
       </View>
       {!notif.read && <View style={styles.dot} />}
     </View>
   );
 };
 
-const notifications = [
-  { id: 1, type: 'alert', title: 'Action Required: Update KYC', desc: 'Your business pan card verification is pending. Please re-upload clearer image.', time: '2h ago', read: false },
-  { id: 2, type: 'success', title: 'Payout Processed', desc: '₹15,000 has been transferred to your HDFC Bank account ending in 8821.', time: 'Yesterday', read: true },
-  { id: 3, type: 'info', title: 'New Review Received', desc: 'Arjun Mehta rated your property 5 stars! "Excellent stay, loved the food."', time: '1d ago', read: false },
-  { id: 4, type: 'promo', title: 'Boost Your Visibility', desc: 'Get 20% more bookings this weekend by opting into our "Monsoon Sale".', time: '3d ago', read: true },
-];
 
 const PartnerNotifications = () => {
   const insets = useSafeAreaInsets();
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const res = await hotelService.getNotifications(1, 50);
+      const list = Array.isArray(res?.notifications) ? res.notifications : [];
+      setNotifications(
+        list.map((n) => ({
+          id: n._id,
+          type: kindOf(n.type || n.data?.type),
+          title: n.title || 'Notification',
+          desc: n.body || n.message || '',
+          time: ago(n.createdAt),
+          read: Boolean(n.isRead),
+        })),
+      );
+    } catch {
+      setNotifications([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const markAllRead = async () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try { await hotelService.markAllNotificationsRead(); } catch { load(); }
+  };
+
   return (
     <View style={styles.page}>
       <PartnerHeader title="Notifications" subtitle="Alerts & updates" />
 
-      <ScrollView contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxxl + insets.bottom }} showsVerticalScrollIndicator={false}>
-        <SectionHeader title="Recent" action="Mark all read" onAction={() => {}} />
+      <ScrollView
+        contentContainerStyle={{ padding: space.lg, paddingBottom: space.xxxl + insets.bottom }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} colors={[color.primary]} />}
+      >
+        <SectionHeader title="Recent" action={notifications.some((n) => !n.read) ? 'Mark all read' : undefined} onAction={markAllRead} />
 
         <View style={{ gap: space.md }}>
-          {notifications.length > 0 ? (
+          {loading ? (
+            <ActivityIndicator color={color.primary} style={{ padding: space.xl }} />
+          ) : notifications.length > 0 ? (
             notifications.map((n, i) => (
               <Reveal key={n.id} index={i}>
                 <NotificationItem notif={n} />
               </Reveal>
             ))
           ) : (
-            <EmptyState icon={Bell} title="No new notifications" />
+            <EmptyState icon={Bell} title="No notifications yet" />
           )}
         </View>
       </ScrollView>

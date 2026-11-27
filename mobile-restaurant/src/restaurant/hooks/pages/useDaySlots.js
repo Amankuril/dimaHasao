@@ -8,6 +8,7 @@ import { useCompanyName } from '../useCompanyName'
 import { localStore } from '../../../lib/storage'
 import { events } from '../../../lib/events'
 import { alert } from '../../../lib/webShim'
+import { toast } from '../../../lib/notify'
 
 const debugLog = (...args) => {}
 
@@ -134,7 +135,7 @@ export function useDaySlots() {
 
   const addSlot = () => {
     if (dayData.slots.length >= 3) {
-      alert("Maximum 3 slots allowed per day")
+      toast.error("Maximum 3 slots allowed per day")
       return
     }
     setDayData(prev => ({
@@ -154,7 +155,7 @@ export function useDaySlots() {
 
   const deleteSlot = (slotId) => {
     if (dayData.slots.length === 1) {
-      alert("At least one slot is required")
+      toast.error("At least one slot is required")
       return
     }
     
@@ -195,7 +196,7 @@ export function useDaySlots() {
       navigate("/food/restaurant/outlet-timings")
     } catch (error) {
       debugError("Error saving day slots:", error)
-      alert("Error saving slots. Please try again.")
+      toast.error("Error saving slots. Please try again.")
     }
   }
 

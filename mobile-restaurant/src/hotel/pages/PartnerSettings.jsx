@@ -1,19 +1,23 @@
-import { useState } from 'react';
+import Constants from 'expo-constants';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bell, ChevronRight, CreditCard, Globe, Lock, LogOut, Moon, Smartphone } from 'lucide-react-native';
+import { ChevronRight, CreditCard, LogOut } from 'lucide-react-native';
 import { Press } from '../../components/ui';
 import { Card, SectionHeader } from '../../components/ds';
 import { useNavigate } from '../../lib/webRouter';
 import { color, radii, space, type } from '../../theme';
 import PartnerHeader from '../components/PartnerHeader';
+import { clearPartnerSessions } from '../../restaurant/utils/partnerSession';
+import usePartnerStore from '../store/partnerStore';
 
 /*
  * Port of Frontend/src/modules/Hotel/app/partner/pages/PartnerSettings.jsx
- * (/hotel/partner/settings). As on the web, the toggles are local state only
- * and the security rows and Sign Out have no action; the link goes to
- * /hotel/partner/bank-details (the web's /hotel/bank-details redirects there).
- * The gsap entrance is dropped.
+ * (/hotel/partner/settings). The web's page carried push / SMS / dark-mode
+ * toggles that were local state only, "Two-factor authentication" and
+ * "Change password" rows with no action (partners sign in by phone OTP, there
+ * is no password), a fixed "v1.0.2" and a Sign out button that did nothing.
+ * Only what works is kept: bank details, a working sign out, and the real
+ * app version.
  */
 
 const SettingItem = ({ icon: Icon, label, type: kind = 'toggle', value, onChange, last, onPress }) => {
@@ -59,15 +63,13 @@ const Section = ({ title }) => <SectionHeader title={title} style={{ marginTop: 
 const PartnerSettings = () => {
   const navigate = useNavigate();
   const insets = useSafeAreaInsets();
-  const [settings, setSettings] = useState({
-    notifications: true,
-    emailAlerts: false,
-    darkMode: false,
-  });
-
-  const toggle = (key) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  // Same as the sidebar's Log Out: signs out of both businesses.
+  const signOut = async () => {
+    await clearPartnerSessions();
+    usePartnerStore.getState().resetForm();
+    navigate('/hotel/partner/login');
   };
+  const version = Constants.expoConfig?.version || '';
 
   return (
     <View style={{ flex: 1, backgroundColor: color.bg }}>
@@ -81,29 +83,8 @@ const PartnerSettings = () => {
             <SettingItem icon={CreditCard} label="Saved bank details" type="link" last onPress={() => navigate('/hotel/partner/bank-details')} />
           </Card>
 
-          {/* Account Section */}
-          <Section title="General" />
-          <Card padded={false}>
-            <SettingItem icon={Bell} label="Push notifications" value={settings.notifications} onChange={() => toggle('notifications')} />
-            <SettingItem icon={Smartphone} label="SMS alerts" value={settings.emailAlerts} onChange={() => toggle('emailAlerts')} />
-            <SettingItem icon={Globe} label="Language" type="value" value="English (UK)" last />
-          </Card>
-
-          {/* Security Section */}
-          <Section title="Security" />
-          <Card padded={false}>
-            <SettingItem icon={Lock} label="Two-factor authentication" type="link" />
-            <SettingItem icon={Lock} label="Change password" type="link" last />
-          </Card>
-
-          {/* App Section */}
-          <Section title="System" />
-          <Card padded={false}>
-            <SettingItem icon={Moon} label="Dark mode" value={settings.darkMode} onChange={() => toggle('darkMode')} last />
-          </Card>
-
           <Card padded={false} style={{ marginTop: space.xl }}>
-            <Press scale={1} accessibilityLabel="Sign out" style={styles.signOut}>
+            <Press scale={1} onPress={signOut} accessibilityLabel="Sign out" style={styles.signOut}>
               <View style={[styles.itemIcon, { backgroundColor: color.dangerSoft }]}>
                 <LogOut size={18} color={color.danger} />
               </View>
@@ -111,7 +92,7 @@ const PartnerSettings = () => {
             </Press>
           </Card>
 
-          <Text style={styles.version}>Dima Hasao Partner App v1.0.2</Text>
+          {version ? <Text style={styles.version}>Dima Hasao Partner App v{version}</Text> : null}
         </View>
       </ScrollView>
     </View>

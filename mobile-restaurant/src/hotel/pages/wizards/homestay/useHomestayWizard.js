@@ -620,8 +620,9 @@ export function useHomestayWizard() {
         contactNumber: propertyForm.contactNumber,
         description: propertyForm.description,
         shortDescription: propertyForm.shortDescription,
-        hostLivesOnProperty: propertyForm.hostLivesOnProperty,
-        familyFriendly: propertyForm.familyFriendly,
+        // Drafts saved before the fix still hold ''; send a real boolean.
+        hostLivesOnProperty: Boolean(propertyForm.hostLivesOnProperty),
+        familyFriendly: Boolean(propertyForm.familyFriendly),
         coverImage: propertyForm.coverImage,
         propertyImages: propertyForm.propertyImages.filter(Boolean),
         address: propertyForm.address,

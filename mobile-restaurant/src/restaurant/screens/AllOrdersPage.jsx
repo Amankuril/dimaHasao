@@ -59,7 +59,7 @@ export default function AllOrdersPage() {
       </View>
 
       <View style={styles.idRow}>
-        <Text style={styles.orderId} selectable numberOfLines={1}>
+        <Text style={styles.orderId} numberOfLines={1} ellipsizeMode="middle">
           #{order.id}
         </Text>
         <IconButton icon={Copy} iconSize={16} label="Copy order ID" iconColor={color.textMuted} onPress={() => h.handleCopyOrderId(order.id, noop)} />
@@ -157,7 +157,7 @@ export default function AllOrdersPage() {
         title="Order History"
         subtitle={`${filteredOrders.length} ${filteredOrders.length === 1 ? 'order' : 'orders'} found`}
         onBack={h.goBack}
-        right={<IconButton icon={HelpCircle} label="Help" variant="inverse" onPress={() => h.navigate('/food/restaurant/support')} />}
+        right={<IconButton icon={HelpCircle} label="Help" variant="inverse" onPress={() => h.navigate('/food/restaurant/help-centre/support')} />}
       />
       <FlatList
         data={h.loading || h.error ? [] : filteredOrders}

@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Animated, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+// Resolves the API's site-relative /uploads/... paths (the plain RN Image
+// rendered them blank: no host).
+import Image from '../../components/Img';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X, User, Building, List,

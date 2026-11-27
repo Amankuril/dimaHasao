@@ -26,7 +26,9 @@ const POSITION_KEY = 'partner_switcher_position';
 const SIZE = 56;
 const DRAG_THRESHOLD = 6;
 const EDGE_MARGIN = 12;
-const DEFAULT_BOTTOM_GAP = 96;
+// Clear of the bottom nav AND the action bars above it (Inventory's "+ Add"
+// / "Menu" sat right under the button at 96).
+const DEFAULT_BOTTOM_GAP = 176;
 
 const readStoredPosition = () => {
   try {

@@ -52,8 +52,10 @@ export const emptyPropertyForm = () => ({
   propertyName: '',
   description: '',
   shortDescription: '',
-  hostLivesOnProperty: '',
-  familyFriendly: '',
+  // Unticked on screen, so false; '' was sent as-is and the server's Boolean
+  // cast rejected it, blocking every submit where these were left untouched.
+  hostLivesOnProperty: false,
+  familyFriendly: false,
   coverImage: '',
   propertyImages: [],
   address: { state: '', city: '', fullAddress: '', pincode: '' },

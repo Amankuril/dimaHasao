@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+// Resolves the API's site-relative /uploads/... paths (the plain RN Image
+// rendered them blank: no host).
+import Image from '../../components/Img';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Camera, CreditCard, Edit, Mail, MapPin, Phone, Save, Store, Trash2, User } from 'lucide-react-native';
 import { mediaUrl } from '../../api/client';

@@ -10,6 +10,7 @@ import { restaurantAPI } from '../../../api/restaurant'
 import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
 import { alert } from '../../../lib/webShim'
+import { toast } from '../../../lib/notify'
 
 const debugLog = (...args) => { }
 
@@ -615,11 +616,11 @@ return `
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', dialogTitle: fileName, UTI: 'com.adobe.pdf' })
       } else {
-        alert(`Report saved to ${uri}`)
+        toast.success(`Report saved to ${uri}`)
       }
     } catch (error) {
       debugError('Error downloading PDF:', error)
-      alert(`Failed to download PDF: ${error.message}. Please check console for details.`)
+      toast.error("Could not download the report. Please try again.")
       setShowDownloadMenu(false)
     }
   }

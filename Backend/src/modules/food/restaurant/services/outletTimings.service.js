@@ -165,8 +165,12 @@ export async function upsertOutletTimingsForRestaurant(restaurantId, outletTimin
         return {
             day,
             isOpen,
-            openingTime: isOpen ? normalizeTime(src.openingTime, fallbackOpen) : '',
-            closingTime: isOpen ? normalizeTime(src.closingTime, fallbackClose) : ''
+            // Keep the hours when a day is closed. They used to be blanked, so
+            // switching a day off and on again reset it to the default
+            // (e.g. 9 PM became 10 PM). `isOpen` alone decides open/closed;
+            // the open-now checks read it before the times.
+            openingTime: normalizeTime(src.openingTime, fallbackOpen),
+            closingTime: normalizeTime(src.closingTime, fallbackClose)
         };
     });
 

@@ -1,4 +1,7 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+// Resolves the API's site-relative /uploads/... paths (the plain RN Image
+// rendered them blank: no host).
+import Image from '../../../../components/Img';
 import { BedDouble, Camera, Clock, MapPin, Plus, Search } from 'lucide-react-native';
 import { Button, StatusBadge } from '../../../../components/ds';
 import { color, radii, space, type } from '../../../../theme';

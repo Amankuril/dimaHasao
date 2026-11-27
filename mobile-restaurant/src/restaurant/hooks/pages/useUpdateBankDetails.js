@@ -110,7 +110,7 @@ export function useUpdateBankDetails() {
       })
       setLastUpdated(doc.updatedAt || "")
     } catch (error) {
-      alert(error?.response?.data?.message || "Failed to load bank details")
+      toast.error(error?.response?.data?.message || "Failed to load bank details")
     } finally {
       setLoading(false)
     }
@@ -168,9 +168,9 @@ export function useUpdateBankDetails() {
       await restaurantAPI.updateProfile(payload)
       await loadProfile()
       setErrors({})
-      alert("Bank details updated successfully")
+      toast.success("Bank details updated successfully")
     } catch (error) {
-      alert(error?.response?.data?.message || "Failed to update bank details")
+      toast.error(error?.response?.data?.message || "Failed to update bank details")
     } finally {
       setSaving(false)
     }

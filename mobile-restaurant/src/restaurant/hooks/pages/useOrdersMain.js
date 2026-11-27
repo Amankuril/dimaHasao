@@ -609,7 +609,7 @@ export function useOrdersMain() {
       // Trigger profile refresh event
       events.emit("restaurantProfileRefresh");
 
-      alert(
+      toast.success(
         "Restaurant reverified successfully! Verification will be done in 24 hours.",
       );
     } catch (error) {
@@ -627,7 +627,7 @@ export function useOrdersMain() {
         const errorMessage =
           error.response?.data?.message ||
           "Your session has expired. Please login again.";
-        alert(errorMessage);
+        toast.error(errorMessage);
         // The axios interceptor should handle redirecting to login
         // But if it doesn't, we can manually redirect
         if (!error.response?.data?.message?.includes("inactive")) {
@@ -641,7 +641,7 @@ export function useOrdersMain() {
         const errorMessage =
           error.response?.data?.message ||
           "Failed to reverify restaurant. Please try again.";
-        alert(errorMessage);
+        toast.error(errorMessage);
       }
     } finally {
       setIsReverifying(false);
@@ -833,6 +833,10 @@ export function useOrdersMain() {
                 restaurantId: orderToPopup.restaurantId,
                 restaurantName: orderToPopup.restaurantName,
                 items: orderToPopup.items || [],
+                // Without pricing the popup fell back to summing items and
+                // dropped the packaging fee: the same order read ₹125 from the
+                // live alert and ₹120 when found by this poll on app open.
+                pricing: orderToPopup.pricing,
                 total: orderToPopup.pricing?.total || 0,
                 customerAddress: orderToPopup.address,
                 status: orderToPopup.status,

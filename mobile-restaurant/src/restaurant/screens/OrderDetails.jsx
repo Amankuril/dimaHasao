@@ -149,7 +149,7 @@ function OrderDetailsScreen({ onReload }) {
           </View>
 
           <View style={styles.idRow}>
-            <Text style={styles.orderId} selectable numberOfLines={1}>
+            <Text style={styles.orderId} numberOfLines={1} ellipsizeMode="middle">
               #{orderData.id}
             </Text>
             <IconButton icon={Copy} iconSize={16} iconColor={color.textMuted} label="Copy order ID" onPress={h.handleCopyOrderId} />

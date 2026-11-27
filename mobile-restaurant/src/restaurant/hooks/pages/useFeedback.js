@@ -89,6 +89,8 @@ export function useFeedback() {
   })
   const [isFilterLoading, setIsFilterLoading] = useState(false)
   const [displayedReviews, setDisplayedReviews] = useState([])
+  // The search box was not wired to anything; typing filtered nothing.
+  const [reviewSearch, setReviewSearch] = useState('')
   
   const [isComplaintsFilterOpen, setIsComplaintsFilterOpen] = useState(false)
   const [selectedComplaintsFilterCategory, setSelectedComplaintsFilterCategory] = useState("issueType")
@@ -292,7 +294,10 @@ export function useFeedback() {
   }, [isLoadingRestaurant, restaurantData])
 
   useEffect(() => {
-    let filtered = [...reviews]
+    const q = reviewSearch.trim().toLowerCase()
+    let filtered = q
+      ? reviews.filter((r) => [r.userName, r.orderNumber, r.reviewText].some((v) => String(v || '').toLowerCase().includes(q)))
+      : [...reviews]
     if (filterValues.sortBy) {
       filtered.sort((a, b) => {
         const dateA = new Date(a.date); const dateB = new Date(b.date)
@@ -304,7 +309,7 @@ export function useFeedback() {
       })
     }
     setDisplayedReviews(filtered)
-  }, [reviews, filterValues])
+  }, [reviews, filterValues, reviewSearch])
 
   const handleFilterReset = () => { setFilterValues({ duration: null, sortBy: "newest", reviewType: [] }) } // the web also calls an undefined setIsFilterApply() here
   const handleFilterApply = () => { setIsFilterLoading(true); setIsFilterOpen(false); setTimeout(() => setIsFilterLoading(false), 200) }
@@ -419,6 +424,8 @@ export function useFeedback() {
     isFilterLoading,
     setIsFilterLoading,
     displayedReviews,
+    reviewSearch,
+    setReviewSearch,
     setDisplayedReviews,
     isComplaintsFilterOpen,
     setIsComplaintsFilterOpen,
