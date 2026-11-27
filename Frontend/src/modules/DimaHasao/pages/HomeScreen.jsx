@@ -12,13 +12,13 @@ import { CONSUMER_BRAND_LOGO, logoFallback } from "@/shared/constants/brandLogo"
 const HERO_SLIDES = [
   {
     id: 1,
-    image: '/carousal-2.png',
+    image: '/carousal-2.webp',
     position: 'object-[center_35%]',
     alt: 'Dima Hasao Landmark Gate'
   },
   {
     id: 2,
-    image: '/carousal-3.png',
+    image: '/carousal-3.webp',
     position: 'object-[center_35%]',
     alt: 'I Love Dima Hasao Mountain Viewpoint'
   }

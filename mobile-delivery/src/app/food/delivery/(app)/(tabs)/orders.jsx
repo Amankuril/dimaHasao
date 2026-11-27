@@ -108,8 +108,11 @@ export default function OrdersV2() {
       }
       toast.success('Order accepted — added to your queue');
       setActiveTab('accepted');
-    } catch {
-      // useOrderManager already toasts
+    } catch (error) {
+      // useOrderManager already toasts. Re-throw so the slider resets: it read
+      // a swallowed failure as success and kept showing "Order Accepted" for an
+      // order the server had refused (e.g. cash limit too low).
+      throw error;
     }
   };
 

@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   vehicleRing: { position: 'absolute', width: 40, height: 40, borderRadius: 20, borderWidth: 1, borderColor: color.primaryBorder, backgroundColor: 'rgba(10,77,43,0.08)' },
   vehicleImg: { width: 36, height: 36 },
   routeCard: { position: 'absolute', left: space.lg, right: space.lg + 44 + space.sm, backgroundColor: color.surface, borderRadius: radii.lg, paddingHorizontal: space.lg, paddingVertical: space.md, borderWidth: 1, borderColor: color.border, ...elevation.float },
-  routeLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textMuted, width: 44 },
+  routeLabel: { ...type.caption, fontFamily: 'Poppins_600SemiBold', color: color.textMuted, minWidth: 56, flexShrink: 0 },
   routeText: { ...type.bodyStrong, flex: 1, minWidth: 0, color: color.text },
   routeDivider: { height: StyleSheet.hairlineWidth, backgroundColor: color.border, marginVertical: space.sm, marginLeft: 12 + space.sm },
   closeBtn: { position: 'absolute', right: space.lg, backgroundColor: color.surface, borderWidth: 1, borderColor: color.border, ...elevation.float },

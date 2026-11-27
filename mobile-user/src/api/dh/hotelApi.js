@@ -148,8 +148,14 @@ export const adaptProperty = (property = {}) => {
     distanceKm: property.distance != null ? Number(property.distance) / 1000 : null,
     city: String(address.city || '').trim(),
     travelTime: '',
-    rating: Number(property.avgRating ?? property.averageRating ?? property.rating ?? 0),
     reviewCount: Number(property.totalReviews ?? property.reviewCount ?? 0),
+    // The Property model defaulted avgRating to 3, so unreviewed stays read
+    // "3 ★ (0 reviews)". No reviews means no rating.
+    rating: Number(property.totalReviews ?? property.reviewCount ?? 0) > 0
+      ? Number(property.avgRating ?? property.averageRating ?? property.rating ?? 0)
+      : 0,
+    // Only a policy that actually offers it earns the "Free cancellation" badge.
+    freeCancellation: /free\s*cancel/i.test(String(property.cancellationPolicy || '')),
     startingPrice,
     originalPrice: null,
     taxRate: 0.12,
@@ -314,6 +320,7 @@ export const adaptBooking = (booking = {}) => {
     paymentMethod: booking.paymentMethod === 'pay_at_hotel' ? 'Pay at Property' : 'Online',
     paymentStatus: booking.paymentStatus === 'paid' ? 'Paid' : 'Unpaid',
     status: STAY_STATUS[booking.bookingStatus] || booking.bookingStatus || 'Confirmed',
+    bookingStatus: booking.bookingStatus || '',
     bookingDate: stayDate(booking.createdAt),
     image: property.coverImage || (property.propertyImages || [])[0] || PLACEHOLDER_IMAGE,
     guestName: booking.guestContact?.name || '',
@@ -322,6 +329,12 @@ export const adaptBooking = (booking = {}) => {
 };
 
 /** The signed-in guest's stays. */
+/** The guest's own cancellation; the server decides what can be cancelled and any refund. */
+export const cancelHotelBooking = async (bookingRef, reason = 'Cancelled by guest in app') => {
+  const res = await apiClient.post(`/hotel/bookings/${encodeURIComponent(bookingRef)}/cancel`, { reason });
+  return res?.data || {};
+};
+
 export const fetchMyHotelBookings = () =>
   cachedRead(
     'hotel:bookings',

@@ -112,7 +112,8 @@ const propertySchema = new mongoose.Schema({
   isLive: { type: Boolean, default: false },
 
   // RATINGS
-  avgRating: { type: Number, default: 3 },
+  // 0 until a guest reviews it; a default of 3 showed every new stay as rated.
+  avgRating: { type: Number, default: 0 },
   totalReviews: { type: Number, default: 0 }
 
 }, { timestamps: true });

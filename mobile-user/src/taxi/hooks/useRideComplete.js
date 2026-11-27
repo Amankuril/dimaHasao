@@ -96,7 +96,13 @@ export function useRideComplete() {
 
   const routeHome = getTaxiUserRoutePrefix(location.pathname);
   const rideId = state.rideId || '';
-  const fare = Number(state.fare || 22);
+  // The server's figures once loaded; the route state until then. The fallback
+  // used to be a made-up ₹22, shown as the fare when the state had none.
+  const [serverFare, setServerFare] = useState(null);
+  const [waitingCharge, setWaitingCharge] = useState(() => Number(state.waitingCharge?.amount || 0));
+  const fare = Number(serverFare ?? state.fare ?? 0) || 0;
+  // Waiting at pickup is billed into the fare; show it as its own line.
+  const baseFare = Math.max(0, fare - waitingCharge);
   const paymentMethod = state.paymentMethod || 'Cash';
   const paymentMethodLabel = PAYMENT_OPTIONS.find((option) => option.id === selectedPaymentMethod)?.label || paymentMethod;
   const pickup = state.pickup || 'Pickup';
@@ -172,6 +178,8 @@ export function useRideComplete() {
         if (active) {
           setPaymentCollection(payload?.driverPaymentCollection || null);
           setRideLiveStatus(nextLiveStatus);
+          if (Number.isFinite(Number(payload?.fare))) setServerFare(Number(payload.fare));
+          setWaitingCharge(Number(payload?.waitingCharge?.amount || 0));
         }
 
         if (!active || !feedback) {
@@ -468,6 +476,8 @@ export function useRideComplete() {
     routeHome,
     rideId,
     fare,
+    baseFare,
+    waitingCharge,
     paymentMethod,
     paymentMethodLabel,
     pickup,

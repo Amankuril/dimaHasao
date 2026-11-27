@@ -222,7 +222,9 @@ export default function HotelBookingScreen() {
     if (!MOBILE.test(guestPhone.replace(/\D/g, '').slice(-10))) {
       return showToast('Please enter a valid 10-digit mobile number');
     }
-    if (!EMAIL.test(guestEmail.trim())) return showToast('Please enter a valid email address');
+    // Optional: phone sign-in leaves most guests without one, and the server only
+    // uses it to send a confirmation. Checked only when something was typed.
+    if (guestEmail.trim() && !EMAIL.test(guestEmail.trim())) return showToast('Please enter a valid email address');
     if (!quote) return showToast(quoteError || 'Please wait for the price to load');
 
     // The picker chooses between paying now and paying at the property;
@@ -384,7 +386,7 @@ export default function HotelBookingScreen() {
           <View style={{ gap: space.md }}>
             <Field label="Full name" value={guestName} onChangeText={setGuestName} autoCapitalize="words" autoComplete="name" />
             <Field label="Phone number" value={guestPhone} onChangeText={setGuestPhone} keyboardType="phone-pad" autoComplete="tel" />
-            <Field label="Email ID" value={guestEmail} onChangeText={setGuestEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+            <Field label="Email ID (optional)" value={guestEmail} onChangeText={setGuestEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
             <Field label="Special requests (optional)" placeholder="e.g. Early check-in, high floor, quiet room" value={specialRequest} onChangeText={setSpecialRequest} />
           </View>
         </Panel>
@@ -543,7 +545,7 @@ export default function HotelBookingScreen() {
                 onPress={() => {
                   setIsSuccessModalOpen(false);
                   router.dismissTo('/app');
-                  router.navigate('/app/bookings');
+                  router.navigate('/app/bookings?tab=hotels');
                 }}
               />
               <GreenButton

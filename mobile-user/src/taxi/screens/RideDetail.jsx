@@ -76,15 +76,18 @@ export default function RideDetail() {
     const driver = ride?.driver || ride?.driverId || {};
     const timeSource = ride?.completedAt || ride?.startedAt || ride?.acceptedAt || ride?.createdAt || ride?.updatedAt;
     const fare = Number(ride?.fare || 0);
-    const taxes = Math.max(Math.round(fare * 0.18), 0);
+    // Taxi fares carry no tax; this used to invent an 18% "Taxes & fees" line.
+    // The only add-on is the waiting charge billed at pickup.
+    const waiting = Number(ride?.waitingCharge?.amount || 0);
     const status = String(ride?.status || ride?.liveStatus || 'trip').toLowerCase();
     const rideCode = String(ride?.rideId || ride?._id || ride?.id || id || 'ride');
     return {
       pickup: pickFirstString(ride?.pickupAddress, ride?.pickup?.address, ride?.pickup?.name) || coordLabel(ride?.pickupLocation || ride?.pickup, 'Pickup location'),
       drop: pickFirstString(ride?.dropAddress, ride?.drop?.address, ride?.drop?.name, ride?.destinationAddress) || coordLabel(ride?.dropLocation || ride?.drop, 'Drop location'),
       fare,
-      taxes,
-      baseFare: Math.max(fare - taxes, 0),
+      waiting,
+      baseFare: Math.max(fare - waiting, 0),
+      canRate: status === 'completed' && !ride?.feedback?.submittedAt,
       timeSource,
       startTime: ride?.startedAt || ride?.acceptedAt || timeSource,
       endTime: ride?.completedAt || timeSource,
@@ -98,6 +101,32 @@ export default function RideDetail() {
       shortRideCode: rideCode.length > 14 ? `${rideCode.slice(0, 6)}...${rideCode.slice(-4)}` : rideCode,
     };
   }, [ride, id]);
+
+  const openRating = () => {
+    const driver = ride?.driver || ride?.driverId || {};
+    navigate(`${routePrefix}/ride/complete`, {
+      state: {
+        rideId: String(ride?.rideId || ride?._id || ride?.id || id || ''),
+        fare: Number(ride?.fare || 0),
+        waitingCharge: ride?.waitingCharge || null,
+        paymentMethod: details.paymentMethod,
+        pickup: details.pickup,
+        drop: details.drop,
+        serviceType: ride?.serviceType || 'ride',
+        liveStatus: 'completed',
+        status: 'completed',
+        feedback: ride?.feedback || null,
+        driver: {
+          name: driver.name || 'Captain',
+          rating: details.rating,
+          vehicle: details.vehicle,
+          plate: details.plate,
+          profileImage: driver.profileImage || '',
+          vehicleImage: driver.vehicleImage || '',
+        },
+      },
+    });
+  };
 
   const handleShare = () => {
     const text = `My ${appName} trip #${details.shortRideCode} - ${details.pickup} to ${details.drop} | Rs ${details.fare}.00`;
@@ -189,10 +218,12 @@ export default function RideDetail() {
             <Text style={[type.body, styles.grow, { color: color.textSecondary }]}>Base fare</Text>
             <Text style={[type.bodyStrong, { color: color.text }]}>Rs {details.baseFare}.00</Text>
           </View>
-          <View style={styles.row}>
-            <Text style={[type.body, styles.grow, { color: color.textSecondary }]} numberOfLines={1}>{'Taxes & fees'}</Text>
-            <Text style={[type.bodyStrong, { color: color.text }]}>Rs {details.taxes}.00</Text>
-          </View>
+          {details.waiting > 0 ? (
+            <View style={styles.row}>
+              <Text style={[type.body, styles.grow, { color: color.textSecondary }]} numberOfLines={1}>Waiting charge</Text>
+              <Text style={[type.bodyStrong, { color: color.text }]}>Rs {details.waiting}.00</Text>
+            </View>
+          ) : null}
           <View style={[styles.row, styles.totalRow]}>
             <Text style={[type.subheading, styles.grow, { color: color.text }]}>Total paid</Text>
             <Text style={[type.price, { color: color.text }]}>Rs {details.fare}.00</Text>
@@ -217,6 +248,11 @@ export default function RideDetail() {
       </ScrollView>
 
       <CtaBar style={styles.footer}>
+        {/* Rating was only offered on the screen shown right after the trip;
+            leave it once and the ride could never be rated. */}
+        {details.canRate ? (
+          <Button title="Rate ride" icon={Star} variant="outline" size="lg" onPress={openRating} style={{ flex: 1 }} />
+        ) : null}
         <Button title="Rebook ride" icon={Repeat} size="lg" onPress={rebook} accessibilityLabel="Rebook this ride" style={{ flex: 2 }} />
         <Button title="Help" icon={HelpCircle} variant="outline" size="lg" onPress={toSupport} style={{ flex: 1 }} />
       </CtaBar>

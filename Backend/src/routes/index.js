@@ -32,6 +32,7 @@ import * as systemConfigController from '../modules/food/admin/controllers/syste
 import { requireRoles } from '../core/roles/role.middleware.js';
 import { getQueuesController } from '../controllers/admin.controller.js';
 import webhookRoutes from '../core/payments/routes/webhook.routes.js';
+import checkoutReturnRoutes from '../core/payments/routes/checkoutReturn.routes.js';
 import searchRoutes from '../modules/food/search/routes/search.routes.js';
 import diningBookingRoutes from '../modules/food/dining/routes/diningBooking.routes.js';
 import { maintenanceModeMiddleware } from '../modules/food/admin/middleware/maintenanceMode.middleware.js';
@@ -92,6 +93,7 @@ router.use('/v1/food/notifications', authMiddleware, requireRoles('USER', 'RESTA
 router.use('/v1/food/orders', authMiddleware, requireRoles('USER'), orderUserRoutes);
 router.use('/v1/food/payments', authMiddleware, paymentRoutes);
 router.use('/v1/payments/webhook', webhookRoutes);
+router.use('/v1/payments/checkout', checkoutReturnRoutes);
 router.use('/v1/fcm-tokens', fcmRoutes);
 router.use('/fcm-tokens', fcmRoutes);
 

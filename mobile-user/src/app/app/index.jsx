@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, BackHandler, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Image from '../../components/Img';
 import { Redirect, router, useFocusEffect } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
+import { fetchFestivals } from '../../api/dh/festivalApi';
+import useNotificationInbox from '../../food/hooks/useNotificationInbox';
+import { fetchPackages } from '../../api/dh/toursApi';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Fa from '../../components/Fa';
@@ -18,8 +22,11 @@ import { cinzel, color, elevation, playfair, poppins, radii, space, type } from 
 // Web: DimaHasao/pages/HomeScreen.jsx (/app). Signed-out visitors go to /app/login.
 
 const HERO_SLIDES = [
-  { id: 1, image: '/carousal-2.png', alt: 'Dima Hasao Landmark Gate' },
-  { id: 2, image: '/carousal-3.png', alt: 'I Love Dima Hasao Mountain Viewpoint' },
+  // WebP is ~200 KB against 2.4 MB for the PNG, which left the hero blank for
+  // 10+ s on mobile data. The PNG stays as the fallback (a server that has not
+  // got the .webp yet).
+  { id: 1, image: '/carousal-2.webp', fallback: '/carousal-2.png', alt: 'Dima Hasao Landmark Gate' },
+  { id: 2, image: '/carousal-3.webp', fallback: '/carousal-3.png', alt: 'I Love Dima Hasao Mountain Viewpoint' },
 ];
 
 const JUTHAI = [
@@ -29,7 +36,9 @@ const JUTHAI = [
 function Hero() {
   const insets = useSafeAreaInsets();
   const { setIsNotificationsOpen } = useBooking();
+  const { unreadCount: unread } = useNotificationInbox('user', { pollMs: 60000 });
   const [index, setIndex] = useState(0);
+  const [failed, setFailed] = useState({});
   const fade = useAnimatedValue(1);
 
   useEffect(() => {
@@ -45,7 +54,8 @@ function Hero() {
   return (
     <View style={[styles.hero, { height: 340 + insets.top }]}>
       <Animated.Image
-        source={{ uri: webAsset(HERO_SLIDES[index].image) }}
+        source={{ uri: webAsset(failed[index] ? HERO_SLIDES[index].fallback : HERO_SLIDES[index].image) }}
+        onError={() => setFailed((prev) => (prev[index] ? prev : { ...prev, [index]: true }))}
         accessibilityLabel={HERO_SLIDES[index].alt}
         style={[StyleSheet.absoluteFill, { opacity: fade, transform: [{ scale: fade.interpolate({ inputRange: [0, 1], outputRange: [1.02, 1] }) }] }]}
         resizeMode="cover"
@@ -91,7 +101,8 @@ function Hero() {
         </Press>
         <Press scale={0.9} onPress={() => setIsNotificationsOpen(true)} accessibilityLabel="View Notifications" style={styles.roundBtn}>
           <Fa name="fa-solid fa-bell" size={18} color={color.textInverse} />
-          <View style={styles.bellDot} />
+          {/* Was always on; now only when the inbox has something unread. */}
+          {unread > 0 ? <View style={styles.bellDot} /> : null}
         </Press>
       </View>
     </View>
@@ -169,52 +180,87 @@ export default function HomeScreen() {
 
         <QuickLinksGrid />
 
-        <View style={styles.gutter}>
-          <SectionHeader plain title="Happening soon" />
-          <Press scale={0.98} onPress={() => router.navigate('/app/festivals')} style={styles.festival} accessibilityRole="button" accessibilityLabel="Falcon Festival Umrangso 2026, Nov 14 to 17. Passes from ₹250. Book passes">
-            <Image source={{ uri: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80' }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-            <LinearGradient colors={['rgba(6,28,14,0.95)', 'rgba(6,28,14,0.7)', 'rgba(6,28,14,0.2)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
-            <View style={styles.festivalBody}>
-              <View style={styles.festivalMeta}>
-                <StatusBadge label="Official gala" tone="gold" icon={fa('fa-solid fa-star')} />
-                <Text style={styles.festivalDates}>Nov 14 – 17, 2026</Text>
-              </View>
-              <View style={{ gap: 2 }}>
-                <Text style={styles.festivalTitle} numberOfLines={2}>
-                  Falcon Festival Umrangso 2026
-                </Text>
-                <Text style={styles.festivalDesc} numberOfLines={2}>
-                  Live concerts, lake kayaking & Amur Falcon trails.
-                </Text>
-              </View>
-              <View style={styles.festivalFoot}>
-                <Text style={styles.festivalPrice}>Passes from ₹250</Text>
-                <View style={styles.festivalBtn}>
-                  <Text style={styles.festivalBtnText}>Book passes</Text>
-                  <Fa name="fa-solid fa-arrow-right" size={12} color={color.onGold} />
-                </View>
-              </View>
-            </View>
-          </Press>
-        </View>
-
-        <View style={styles.gutter}>
-          <Press scale={0.98} onPress={() => router.navigate('/app/packages')} style={styles.packages} accessibilityRole="button" accessibilityLabel="Guided treks and heritage tours. All-inclusive private packages from ₹3,600 per person">
-            <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
-              <Text style={styles.packagesKicker}>Curated expeditions</Text>
-              <Text style={styles.packagesTitle}>Guided treks & heritage tours</Text>
-              <Text style={styles.packagesDesc}>All-inclusive private packages from ₹3,600/person</Text>
-            </View>
-            <View style={styles.packagesArrow}>
-              <Fa name="fa-solid fa-arrow-right" size={18} color={color.onGold} />
-            </View>
-          </Press>
-        </View>
+        <HappeningSoon />
+        <PackagesTeaser />
 
         <PromoBanner />
         <WhyVisitGrid />
       </View>
     </ScrollView>
+  );
+}
+
+const inr = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
+
+/*
+ * The next festival from the API. This card used to be hardcoded (Falcon
+ * Festival, Nov 14-17, passes from ₹250), so it kept advertising an event
+ * after it ended. It hides itself when nothing is coming up.
+ */
+function HappeningSoon() {
+  const { data: festivals = [] } = useQuery({
+    queryKey: ['festivals', 'upcoming'],
+    queryFn: () => fetchFestivals({ upcoming: 'true' }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const fest = festivals.find((f) => f.isFeatured) || festivals[0];
+  if (!fest) return null;
+  const prices = fest.ticketCategories.map((c) => c.price).filter((p) => p >= 0);
+  const minPrice = prices.length ? Math.min(...prices) : null;
+  const label = [fest.name, fest.dates, minPrice != null ? `Passes from ${inr(minPrice)}` : '', fest.bookingOpen ? 'Book passes' : 'View details'].filter(Boolean).join('. ');
+
+  return (
+    <View style={styles.gutter}>
+      <SectionHeader plain title="Happening soon" />
+      <Press scale={0.98} onPress={() => router.navigate(`/app/festivals/${fest.id}`)} style={styles.festival} accessibilityRole="button" accessibilityLabel={label}>
+        <Image source={{ uri: fest.heroImage }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <LinearGradient colors={['rgba(6,28,14,0.95)', 'rgba(6,28,14,0.7)', 'rgba(6,28,14,0.2)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+        <View style={styles.festivalBody}>
+          <View style={styles.festivalMeta}>
+            {fest.isFeatured ? <StatusBadge label="Featured" tone="gold" icon={fa('fa-solid fa-star')} /> : null}
+            {fest.dates ? <Text style={styles.festivalDates}>{fest.dates}</Text> : null}
+          </View>
+          <View style={{ gap: 2 }}>
+            <Text style={styles.festivalTitle} numberOfLines={2}>{fest.name}</Text>
+            {fest.tagline ? <Text style={styles.festivalDesc} numberOfLines={2}>{fest.tagline}</Text> : null}
+          </View>
+          <View style={styles.festivalFoot}>
+            <Text style={styles.festivalPrice}>{minPrice != null ? (minPrice === 0 ? 'Free entry' : `Passes from ${inr(minPrice)}`) : ''}</Text>
+            <View style={styles.festivalBtn}>
+              <Text style={styles.festivalBtnText}>{fest.bookingOpen ? 'Book passes' : 'View details'}</Text>
+              <Fa name="fa-solid fa-arrow-right" size={12} color={color.onGold} />
+            </View>
+          </View>
+        </View>
+      </Press>
+    </View>
+  );
+}
+
+/** Packages teaser; the "from" price is the cheapest live package, not a fixed ₹3,600. */
+function PackagesTeaser() {
+  const { data: packages = [] } = useQuery({
+    queryKey: ['packages', 'teaser'],
+    queryFn: () => fetchPackages(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const prices = packages.map((p) => p.pricePerPerson).filter((p) => p > 0);
+  const from = prices.length ? Math.min(...prices) : null;
+  const desc = from != null ? `All-inclusive private packages from ${inr(from)}/person` : 'All-inclusive private packages';
+
+  return (
+    <View style={styles.gutter}>
+      <Press scale={0.98} onPress={() => router.navigate('/app/packages')} style={styles.packages} accessibilityRole="button" accessibilityLabel={`Guided treks and heritage tours. ${desc}`}>
+        <View style={{ flex: 1, minWidth: 0, gap: space.xs }}>
+          <Text style={styles.packagesKicker}>Curated expeditions</Text>
+          <Text style={styles.packagesTitle}>Guided treks & heritage tours</Text>
+          <Text style={styles.packagesDesc}>{desc}</Text>
+        </View>
+        <View style={styles.packagesArrow}>
+          <Fa name="fa-solid fa-arrow-right" size={18} color={color.onGold} />
+        </View>
+      </Press>
+    </View>
   );
 }
 

@@ -146,10 +146,10 @@ export default function HotelDetailScreen() {
             <View style={styles.metrics}>
               <View style={styles.metric}>
                 <View style={[dhs.row, { gap: space.xs, justifyContent: 'center' }]}>
-                  <Text style={styles.metricValue}>{hotel.rating}</Text>
-                  <Fa name="fa-solid fa-star" size={12} color={color.gold} />
+                  <Text style={styles.metricValue}>{hotel.rating > 0 ? hotel.rating.toFixed(1) : 'New'}</Text>
+                  {hotel.rating > 0 ? <Fa name="fa-solid fa-star" size={12} color={color.gold} /> : null}
                 </View>
-                <Text style={styles.metricLabel}>{hotel.reviewCount} reviews</Text>
+                <Text style={styles.metricLabel}>{hotel.reviewCount > 0 ? `${hotel.reviewCount} review${hotel.reviewCount === 1 ? '' : 's'}` : 'No reviews yet'}</Text>
               </View>
               {/* Distance only exists after a geo search; otherwise the two boxes read
                   check-in then check-out, in the order a stay happens. */}
@@ -242,9 +242,10 @@ export default function HotelDetailScreen() {
             <View style={{ gap: space.md }}>
               <Panel style={[dhs.row, { justifyContent: 'space-between', gap: space.md, flexWrap: 'wrap' }]}>
                 <View style={[dhs.row, { gap: space.md }]}>
-                  <Text style={styles.bigRating}>{hotel.rating}</Text>
+                  <Text style={styles.bigRating}>{hotel.rating > 0 ? hotel.rating.toFixed(1) : '–'}</Text>
                   <View style={{ gap: 2 }}>
-                    <Stars rating={4.5} />
+                    {/* Was a fixed 4.5 stars on every stay. */}
+                    <Stars rating={hotel.rating} />
                     <Text style={styles.totalRatings}>{hotel.reviewCount} total ratings</Text>
                   </View>
                 </View>

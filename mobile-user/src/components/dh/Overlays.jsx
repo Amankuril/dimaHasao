@@ -8,6 +8,7 @@ import { useBooking } from '../../context/BookingContext';
 import { NAV_CLEARANCE, navStateFor } from './AppBottomNav';
 import { useAnimatedValue } from '../../lib/useAnimatedValue';
 import { Button, IconButton, fa } from '../ds';
+import useNotificationInbox from '../../food/hooks/useNotificationInbox';
 import { color, elevation, radii, space, tone, type } from '../../theme';
 
 /** MobileFrame's toast: the dark pill above the bottom nav (`showToast(msg)`). */
@@ -21,7 +22,7 @@ export function DhToast() {
 
   useEffect(() => {
     if (toastMessage) {
-      setShown(toastMessage);
+      setShown(typeof toastMessage === 'string' ? { text: toastMessage, tone: 'success' } : toastMessage);
       Animated.spring(anim, { toValue: 1, useNativeDriver: true, stiffness: 300, damping: 24 }).start();
     } else {
       Animated.timing(anim, { toValue: 0, duration: 180, useNativeDriver: true }).start(() => setShown(null));
@@ -42,43 +43,34 @@ export function DhToast() {
       ]}
     >
       <View style={styles.toast}>
-        <Fa name="fa-solid fa-circle-check" size={16} color={color.goldOnDark} />
-        <Text style={styles.toastText}>{shown}</Text>
+        {shown.tone === 'error'
+          ? <Fa name="fa-solid fa-circle-exclamation" size={16} color="#FCA5A5" />
+          : <Fa name="fa-solid fa-circle-check" size={16} color={color.goldOnDark} />}
+        <Text style={styles.toastText}>{shown.text}</Text>
       </View>
     </Animated.View>
   );
 }
 
-const NOTIFICATIONS = [
-  {
-    id: 1,
-    title: 'Falcon Festival 2026 announced',
-    desc: 'Annual wildlife and tribal music extravaganza dates released. Umrangso Lake venue confirmed.',
-    time: '2 hrs ago',
-    icon: 'fa-solid fa-feather-pointed',
-    tone: 'gold',
-  },
-  {
-    id: 2,
-    title: 'Scenic Bird Phenomenon Season',
-    desc: 'Jatinga watchtower observatory is now open for evening visitors. Best time 5:30 PM.',
-    time: '1 day ago',
-    icon: 'fa-solid fa-dove',
-    tone: 'primary',
-  },
-  {
-    id: 3,
-    title: 'Welcome to Dima Hasao Tourism',
-    desc: 'Thank you for exploring our hills! Enjoy verified taxi rides & registered eco guides.',
-    time: '3 days ago',
-    icon: 'fa-solid fa-leaf',
-    tone: 'info',
-  },
-];
+// Relative time for an inbox item ("5 min ago", "2 days ago").
+const ago = (iso) => {
+  const t = new Date(iso).getTime();
+  if (!Number.isFinite(t)) return '';
+  const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (m < 1) return 'Just now';
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} hr${h === 1 ? '' : 's'} ago`;
+  const d = Math.round(h / 24);
+  return `${d} day${d === 1 ? '' : 's'} ago`;
+};
 
 /** Port of components/common/NotificationsDrawer.jsx (slides in from the right). */
 export function NotificationsDrawer() {
   const { isNotificationsOpen, setIsNotificationsOpen } = useBooking();
+  // The drawer listed three hardcoded notices ("Falcon Festival 2026 announced",
+  // "2 hrs ago"). It now reads the account's real inbox.
+  const { items, loading, markAsRead } = useNotificationInbox('user', { limit: 30, enabled: isNotificationsOpen });
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const panelWidth = Math.min(320, width * 0.85);
@@ -122,17 +114,21 @@ export function NotificationsDrawer() {
               <IconButton icon={fa('fa-solid fa-xmark')} label="Close" variant="inverse" onPress={close} />
             </View>
             <ScrollView contentContainerStyle={{ padding: space.lg, gap: space.md }}>
-              {NOTIFICATIONS.map((n) => (
-                <View key={n.id} style={styles.note}>
-                  <View style={[styles.noteIcon, { backgroundColor: tone[n.tone].bg }]}>
-                    <Fa name={n.icon} size={16} color={tone[n.tone].fg} />
+              {items.length === 0 ? (
+                <Text style={[styles.noteDesc, { textAlign: 'center', paddingVertical: space.xl }]}>
+                  {loading ? 'Loading…' : 'No notifications yet. Booking and ride updates will appear here.'}
+                </Text>
+              ) : items.map((n) => (
+                <Pressable key={n.id} onPress={() => !n.read && markAsRead(n.id)} style={[styles.note, !n.read && { borderColor: color.gold }]}>
+                  <View style={[styles.noteIcon, { backgroundColor: tone.primary.bg }]}>
+                    <Fa name="fa-solid fa-bell" size={16} color={tone.primary.fg} />
                   </View>
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <Text style={styles.noteTitle}>{n.title}</Text>
-                    <Text style={styles.noteDesc}>{n.desc}</Text>
-                    <Text style={styles.noteTime}>{n.time}</Text>
+                    {n.message ? <Text style={styles.noteDesc}>{n.message}</Text> : null}
+                    <Text style={styles.noteTime}>{ago(n.createdAt)}</Text>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </ScrollView>
           </View>

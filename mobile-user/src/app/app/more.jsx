@@ -29,7 +29,7 @@ const SERVICES = [
   { title: 'Food & Dining Delivery', desc: 'Authentic Dimasa smoked delicacies & cafes', icon: 'fa-solid fa-utensils', path: '/food/user' },
   { title: 'Taxi & Auto Booking', desc: 'Verified drivers, fixed MRP & instant confirmation', icon: 'fa-solid fa-taxi', path: '/taxi/user' },
   { title: 'Tour & Trek Packages', desc: 'All-inclusive guided expeditions & camps', icon: 'fa-solid fa-suitcase-rolling', path: '/app/packages' },
-  { title: 'Falcon Festival & Events', desc: 'Official government passes & music gala', icon: 'fa-solid fa-ticket', path: '/app/festivals' },
+  { title: 'Festivals & Events', desc: 'Official festival passes & cultural events', icon: 'fa-solid fa-ticket', path: '/app/festivals' },
   { title: 'Help & Support (SOS)', desc: 'Emergency hotlines, ticket raising & FAQs', icon: 'fa-solid fa-headset', tone: 'danger', path: '/app/support' },
   { title: 'Rate & Review', desc: 'Share verified feedback for rides and stays', icon: 'fa-solid fa-star', tone: 'gold', path: '/app/review' },
 ];
@@ -43,7 +43,7 @@ export default function MoreScreen() {
 
   const cultural = [
     { title: 'Local Certified Guides', desc: 'Expert local Dimasa eco-guides & trekking experts', icon: 'fa-solid fa-user-tie', action: () => (tourismDeskPhone ? openExternal(telHref(tourismDeskPhone)) : showToast('The guides desk number is not available right now')) },
-    { title: 'Events & Falcon Festival', desc: 'Annual wildlife festival & cultural passes', icon: 'fa-solid fa-calendar-days', action: () => router.navigate('/app/festivals') },
+    { title: 'Festivals & Events', desc: 'Upcoming festivals & cultural passes', icon: 'fa-solid fa-calendar-days', action: () => router.navigate('/app/festivals') },
     { title: 'Curated Tour Packages', desc: 'All-inclusive 2-Day & 3-Day scenic nature treks', icon: 'fa-solid fa-suitcase-rolling', action: () => router.navigate('/app/packages') },
     { title: 'Authentic Dimasa Cuisine', desc: 'Judima rice brew, smoked meat & organic herbs', icon: 'fa-solid fa-utensils', action: () => router.navigate('/food/user') },
   ];

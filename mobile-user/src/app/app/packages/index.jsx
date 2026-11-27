@@ -34,10 +34,13 @@ function PackageCard({ pkg }) {
           <StatusBadge label={pkg.duration} tone="primary" icon={fa('fa-regular fa-clock')} style={{ backgroundColor: color.surface }} />
           <StatusBadge label={pkg.type} tone="gold" />
         </View>
-        <View style={styles.rating}>
-          <Text style={styles.ratingText}>{pkg.rating}</Text>
-          <Fa name="fa-solid fa-star" size={12} color={color.goldOnDark} />
-        </View>
+        {/* Unreviewed packages showed a "0 ★" badge. */}
+        {pkg.rating > 0 ? (
+          <View style={styles.rating}>
+            <Text style={styles.ratingText}>{pkg.rating.toFixed(1)}</Text>
+            <Fa name="fa-solid fa-star" size={12} color={color.goldOnDark} />
+          </View>
+        ) : null}
         <View style={styles.imageFoot}>
           <View style={[dhs.row, { gap: space.xs + 2, flexShrink: 1 }]}>
             <Fa name="fa-solid fa-map-pin" size={14} color={color.goldOnDark} />

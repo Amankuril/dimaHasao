@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Image from '../../components/Img';
 import { Redirect, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -50,6 +50,22 @@ export default function LoginScreen() {
   }, [step]);
 
   // Already signed in (e.g. the back button reached this screen): go home.
+  // Verify as soon as the 4th digit is in. The button sat under the keyboard,
+  // so a typed code looked like it did nothing. Each code is tried once, so a
+  // wrong one waits for an edit instead of retrying in a loop. Declared before
+  // the early return below (hooks must run in the same order every render);
+  // the handler is defined later, so it is reached through a ref.
+  const autoTriedRef = useRef('');
+  const verifyRef = useRef(null);
+  useEffect(() => {
+    const code = otp.join('');
+    if (step !== 'otp' || code.length !== 4 || isLoading || autoTriedRef.current === code) return;
+    autoTriedRef.current = code;
+    Keyboard.dismiss();
+    verifyRef.current?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otp, step]);
+
   if (user.isLoggedIn && !done.current) return <Redirect href="/app" />;
 
   const handleOtpChange = (index, value) => {
@@ -144,6 +160,8 @@ export default function LoginScreen() {
       setIsLoading(false);
     }
   };
+
+  verifyRef.current = handleVerifyOtp;
 
   const handleCompleteRegistration = async () => {
     if (isLoading) return;

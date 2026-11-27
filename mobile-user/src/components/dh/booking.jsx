@@ -97,7 +97,7 @@ export function Radio({ selected }) {
  * The "Booking confirmed!" dialog. `rows` is the two-column grid, `kicker` /
  * `heading` / `sub` the block above it, `footer` the totals below.
  */
-export function ConfirmedDialog({ visible, icon = 'fa-solid fa-circle-check', title, text, id, kicker, heading, sub, rows = [], footer, onDone, extraActions }) {
+export function ConfirmedDialog({ visible, icon = 'fa-solid fa-circle-check', title, text, id, kicker, heading, sub, rows = [], footer, onDone, extraActions, bookingsTab = 'tours' }) {
   const { height } = useWindowDimensions();
   const leave = (to) => {
     onDone?.();
@@ -141,7 +141,7 @@ export function ConfirmedDialog({ visible, icon = 'fa-solid fa-circle-check', ti
 
         <View style={{ gap: space.sm }}>
           {extraActions}
-          <GreenButton title="View in My Bookings" icon="fa-solid fa-calendar-check" onPress={() => leave('/app/bookings')} />
+          <GreenButton title="View in My Bookings" icon="fa-solid fa-calendar-check" onPress={() => leave(`/app/bookings?tab=${bookingsTab}`)} />
           <GreenButton tone="gray" title="Back to home" onPress={() => leave(null)} />
         </View>
       </ScrollView>

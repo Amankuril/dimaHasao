@@ -206,11 +206,13 @@ export const groupPasses = (passes = []) => {
       passes: [],
       ticketCount: 0,
       totalAmount: 0,
+      amountPaid: 0,
     };
 
     group.passes.push(pass);
     group.ticketCount += pass.ticketCount;
     group.totalAmount += pass.totalAmount;
+    group.amountPaid += pass.amountPaid;
     groups.set(key, group);
   }
 

@@ -90,6 +90,17 @@ const readEditableDate = (value) => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
+// The admin form sends calendar days ("2026-11-17"), which `new Date` reads as
+// UTC midnight: 05:30 IST. A festival ending on the 17th then closed bookings
+// at dawn that day. A bare day means the whole day in India.
+const DAY_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const readFestivalDay = (value, edge) => {
+  if (typeof value === 'string' && DAY_ONLY.test(value.trim())) {
+    return new Date(`${value.trim()}T${edge === 'end' ? '23:59:59.999' : '00:00:00.000'}+05:30`);
+  }
+  return readEditableDate(value);
+};
+
 const slugify = (value) =>
   String(value || '').toLowerCase().trim()
     .replace(/[^a-z0-9]+/g, '-')
@@ -124,8 +135,8 @@ const buildDocument = (payload = {}, existing = null) => ({
   name: String(payload.name || '').trim(),
   tagline: String(payload.tagline || '').trim(),
   dates: String(payload.dates || '').trim(),
-  startDate: readEditableDate(payload.startDate),
-  endDate: readEditableDate(payload.endDate),
+  startDate: readFestivalDay(payload.startDate, 'start'),
+  endDate: readFestivalDay(payload.endDate, 'end'),
   venue: String(payload.venue || '').trim(),
   location: String(payload.location || '').trim(),
   coordinates: {
@@ -164,6 +175,12 @@ const buildDocument = (payload = {}, existing = null) => ({
 const validate = (payload = {}) => {
   if (!String(payload.name || '').trim()) return 'A festival name is required';
   if (!String(payload.heroImage || '').trim()) return 'A hero image is required';
+  // Without an end date a festival never closes for booking and is listed as
+  // upcoming forever (the free-text `dates` cannot be read by the server).
+  const start = readFestivalDay(payload.startDate, 'start');
+  const end = readFestivalDay(payload.endDate, 'end');
+  if (!start || !end) return 'Start and end dates are required';
+  if (end < start) return 'The festival cannot end before it starts';
   const categories = asArray(payload.ticketCategories).filter((c) => String(c?.name || '').trim());
   if (!categories.length) return 'Add at least one ticket category';
   for (const [index, c] of categories.entries()) {

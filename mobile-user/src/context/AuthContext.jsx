@@ -70,6 +70,14 @@ export function AuthProvider({ children }) {
     ['user_authenticated', 'user_user', 'userInfo', 'role', 'chatRole', 'fcm_registered_token_user'].forEach((k) =>
       localStore.removeItem(k),
     );
+    // The account's own data cached by the food module. Left behind, the next
+    // person to sign in on the phone ordered to the previous user's saved
+    // address, name and phone (the rider was shown the wrong customer).
+    [
+      'userAddresses', 'userProfile', 'userPaymentMethods', 'userOrders', 'userFavorites',
+      'userDishFavorites', 'pendingOrderPayload', 'appliedCouponCode', 'food_user_notifications',
+      'shownRatingForOrders', 'food-cart-recipient-details-v1',
+    ].forEach((k) => localStore.removeItem(k));
     sessionStore.removeItem('userAuthData');
     sessionStore.removeItem('dima_user');
     clearApiCache();

@@ -724,8 +724,10 @@ export function useItemDetailsPage() {
       }
 
       const hasVariants = normalizedVariants.length > 0
-      const parsedBasePrice = Number(basePrice)
-      if (!hasVariants && (!Number.isFinite(parsedBasePrice) || parsedBasePrice < 0)) {
+      // An empty price is Number('') === 0, which passed a "< 0" check and
+      // listed the dish at ₹0.
+      const parsedBasePrice = String(basePrice ?? '').trim() === '' ? NaN : Number(basePrice)
+      if (!hasVariants && (!Number.isFinite(parsedBasePrice) || parsedBasePrice <= 0)) {
         toast.error("Please enter a valid base price")
         setUploadingImages(false)
         return

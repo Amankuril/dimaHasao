@@ -40,8 +40,9 @@ const getCreateFoodPricing = (body = {}) => {
         };
     }
 
+    // A blank price arrived as 0 and listed the dish free.
     const price = Number(body.price);
-    if (!Number.isFinite(price) || price < 0) throw new ValidationError('Price is invalid');
+    if (!Number.isFinite(price) || price <= 0) throw new ValidationError('Price must be greater than 0');
     return {
         price,
         variants: []
@@ -63,7 +64,7 @@ const getUpdatedFoodPricing = (existing = {}, body = {}) => {
         }
 
         const nextBasePrice = body.price !== undefined ? Number(body.price) : Number(existingHasVariants ? NaN : existing.price);
-        if (!Number.isFinite(nextBasePrice) || nextBasePrice < 0) {
+        if (!Number.isFinite(nextBasePrice) || nextBasePrice <= 0) {
             throw new ValidationError('Base price is required when variants are removed');
         }
         update.price = nextBasePrice;
@@ -75,7 +76,7 @@ const getUpdatedFoodPricing = (existing = {}, body = {}) => {
             throw new ValidationError('Update variants instead of base price for foods with variants');
         }
         const price = Number(body.price);
-        if (!Number.isFinite(price) || price < 0) throw new ValidationError('Price is invalid');
+        if (!Number.isFinite(price) || price <= 0) throw new ValidationError('Price must be greater than 0');
         update.price = price;
     }
 

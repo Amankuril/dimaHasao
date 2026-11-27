@@ -11,6 +11,9 @@ import { NAV_CLEARANCE } from '../../components/dh/AppBottomNav';
 import { GreenButton, Panel, StateBlock, dhs } from '../../components/dh/ui';
 import { useBooking } from '../../context/BookingContext';
 import { groupPasses } from '../../api/dh/festivalApi';
+import { cancelHotelBooking } from '../../api/dh/hotelApi';
+import { cancelTourBooking } from '../../api/dh/toursApi';
+import { confirm } from '../../lib/notify';
 import { openExternal } from '../../lib/links';
 import { shareHotelInvoice } from '../../lib/hotelInvoice';
 import { color, elevation, radii, space, type } from '../../theme';
@@ -108,6 +111,32 @@ export default function MyBookingsScreen() {
     if (x != null) tabsRef.current?.scrollTo({ x: Math.max(0, x - 24), animated: true });
   }, [activeTab]);
 
+  /*
+   * Guests could not cancel a stay or a tour from the app at all, though both
+   * servers support it. The server decides whether this booking can still be
+   * cancelled and what is refunded; its message is shown as is.
+   */
+  const [cancelling, setCancelling] = useState('');
+  const cancelBooking = async (kind, ref, name) => {
+    if (!ref || cancelling) return;
+    const ok = await confirm(
+      kind === 'hotel' ? 'Cancel this stay?' : 'Cancel this trip?',
+      `${name} will be cancelled. Any refund follows the cancellation policy.`,
+      { confirmText: 'Cancel booking', cancelText: 'Keep it', destructive: true },
+    );
+    if (!ok) return;
+    setCancelling(ref);
+    try {
+      const res = kind === 'hotel' ? await cancelHotelBooking(ref) : await cancelTourBooking(ref);
+      showToast(res?.message || 'Booking cancelled', 'success');
+      refreshAllBookings();
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Could not cancel this booking', 'error');
+    } finally {
+      setCancelling('');
+    }
+  };
+
   // A running ride goes back to live tracking; a finished one opens its receipt.
   const openRide = (booking) => {
     if (!booking?.id) return;
@@ -193,9 +222,14 @@ export default function MyBookingsScreen() {
       />
       <View style={styles.cardFoot}>
         <Total label="Total amount" amount={hb.totalAmount} />
-        {hb.bookingRef && !NO_INVOICE.includes(hb.status) ? (
-          <SmallButton icon="fa-solid fa-file-invoice" title={invoiceFor === hb.bookingRef ? 'Opening…' : 'Invoice'} onPress={() => openInvoice(hb)} disabled={Boolean(invoiceFor)} />
-        ) : null}
+        <View style={{ gap: space.xs, alignItems: 'flex-end' }}>
+          {hb.bookingRef && !NO_INVOICE.includes(hb.status) ? (
+            <SmallButton icon="fa-solid fa-file-invoice" title={invoiceFor === hb.bookingRef ? 'Opening…' : 'Invoice'} onPress={() => openInvoice(hb)} disabled={Boolean(invoiceFor)} />
+          ) : null}
+          {['pending', 'awaiting_payment', 'confirmed'].includes(hb.bookingStatus) ? (
+            <SmallButton icon="fa-solid fa-xmark" title={cancelling === hb.bookingRef ? 'Cancelling…' : 'Cancel'} onPress={() => cancelBooking('hotel', hb.bookingRef, hb.hotelName)} disabled={Boolean(cancelling)} />
+          ) : null}
+        </View>
       </View>
     </Panel>
   );
@@ -267,15 +301,21 @@ export default function MyBookingsScreen() {
                 </Text>
               ) : null}
               <Text style={styles.passCode} numberOfLines={1}>
-                {pass.qrCode || 'Awaiting payment'}
+                {pass.qrCode || (pass.status === 'Cancelled' ? 'No pass issued' : 'Awaiting payment')}
               </Text>
             </View>
-            <SmallButton icon="fa-solid fa-qrcode" title="QR" disabled={!pass.qrCode} onPress={() => showToast(`QR pass ${pass.qrCode} is ready to scan at the entry gate`)} />
+            {pass.qrCode ? (
+              <SmallButton icon="fa-solid fa-qrcode" title="QR" onPress={() => showToast(`QR pass ${pass.qrCode} is ready to scan at the entry gate`)} />
+            ) : null}
           </View>
         ))}
       </View>
       <View style={styles.cardFoot}>
-        <Total label="Paid" amount={group.totalAmount} />
+        {/* A checkout abandoned before paying showed "Paid ₹250". */}
+        <Total
+          label={group.amountPaid > 0 ? 'Paid' : group.status === 'Cancelled' ? 'Not charged' : 'To pay'}
+          amount={group.amountPaid > 0 ? group.amountPaid : group.totalAmount}
+        />
         {group.passes.length > 1 ? <Text style={styles.passTypes}>{`${group.passes.length} pass types · one payment`}</Text> : null}
       </View>
     </Panel>
@@ -317,6 +357,9 @@ export default function MyBookingsScreen() {
             <Text style={styles.due}>₹{tb.balanceDue.toLocaleString('en-IN')} due to the operator</Text>
           ) : null}
         </View>
+        {['pending', 'confirmed'].includes(tb.bookingStatus) ? (
+          <SmallButton icon="fa-solid fa-xmark" title={cancelling === tb.bookingRef ? 'Cancelling…' : 'Cancel'} onPress={() => cancelBooking('tour', tb.bookingRef, tb.packageTitle)} disabled={Boolean(cancelling)} />
+        ) : null}
         <SmallButton
           icon="fa-solid fa-phone"
           title="Call operator"

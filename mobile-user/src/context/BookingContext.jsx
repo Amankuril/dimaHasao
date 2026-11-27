@@ -8,6 +8,9 @@ import { fetchMyPasses } from '../api/dh/festivalApi';
 import { useAuth } from './AuthContext';
 import { localStore } from '../lib/storage';
 
+// Wording that means something went wrong, for toasts that do not pass a tone.
+const TOAST_ERROR_WORDING = /^(please |could ?n[o']t|couldn't|invalid|enter (a|the|your)|no |we could not|cannot|can't|unable)|fail|error|not available|not found|expired|denied|cancelled/i;
+
 /*
  * Port of Frontend/src/modules/DimaHasao/context/BookingContext.jsx.
  *
@@ -67,8 +70,25 @@ export function BookingProvider({ children }) {
   const activePlace = PLACES_DATA.find((p) => p.id === selectedPlaceId) || PLACES_DATA[0];
   const activeTransport = TRANSPORTS_DATA.find((t) => t.id === selectedTransportId) || TRANSPORTS_DATA[1];
 
-  const showToast = useCallback((msg, duration = 3000) => {
-    setToastMessage(msg);
+  /*
+   * showToast(msg)                      tone guessed from the wording
+   * showToast(msg, 'error' | 'success') explicit tone
+   * showToast(msg, 4000)                duration in ms
+   * showToast(msg, { tone, duration })
+   * Every toast used to wear a green tick, errors included, and a tone passed
+   * as the second argument was read as a duration (so it vanished at once).
+   */
+  const showToast = useCallback((msg, opts) => {
+    let duration = 3000;
+    let tone = null;
+    if (typeof opts === 'number') duration = opts;
+    else if (typeof opts === 'string') tone = opts;
+    else if (opts && typeof opts === 'object') {
+      if (Number.isFinite(opts.duration)) duration = opts.duration;
+      if (opts.tone) tone = opts.tone;
+    }
+    if (!tone) tone = TOAST_ERROR_WORDING.test(String(msg || '')) ? 'error' : 'success';
+    setToastMessage(msg ? { text: String(msg), tone } : null);
     if (toastTimer.current) clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToastMessage(null), duration);
   }, []);

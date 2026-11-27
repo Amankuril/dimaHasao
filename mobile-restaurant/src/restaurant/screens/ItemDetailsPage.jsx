@@ -1,5 +1,7 @@
 import { ActivityIndicator, Image, KeyboardAvoidingView, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback } from 'react';
+import { useFocusEffect } from 'expo-router';
 import { Camera, Check, ChevronDown, ChevronLeft, ChevronRight, ImagePlus, Plus, Search, Trash2, X } from 'lucide-react-native';
 import { BottomSheet, Dialog, SelectField } from '../../components/kit';
 import { Button, Card, EmptyState, IconButton, SectionHeader } from '../../components/ds';
@@ -73,6 +75,10 @@ export default function ItemDetailsPage() {
   const insets = useSafeAreaInsets();
   const { height: winH } = useWindowDimensions();
   const h = useItemDetailsPage();
+  // Categories were fetched once on mount, so one approved (or created) after
+  // the screen opened never appeared in the picker. Refresh on every focus.
+  const refreshCategories = h.fetchCategories;
+  useFocusEffect(useCallback(() => { refreshCategories?.(); }, [refreshCategories]));
   const {
     goBack, navigate, location, isNewItem, itemName, setItemName, category, selectedCategoryId, itemDescription, setItemDescription, foodType, setFoodType, isPureVegRestaurant,
     basePrice, setBasePrice, variants, preparationTime, setPreparationTime, isRecommended, setIsRecommended, isInStock, setIsInStock, images, setImages, setImageFiles, uploadingImages,

@@ -34,7 +34,7 @@ export default function RideComplete() {
   const insets = useSafeAreaInsets();
   const {
     navigate, routeHome, shareToast, showSubmittedOverlay, isRideFinalized, serviceType, rideDate, rideTime, handleShare, driver, driverImage, getInitials,
-    vehicleLabel, vehicleVisual, hasVehiclePhoto, setVehicleImageBroken, pickup, drop, fare, selectedTip, setSelectedTip, totalBill, isSubmitted, rating,
+    vehicleLabel, vehicleVisual, hasVehiclePhoto, setVehicleImageBroken, pickup, drop, fare, baseFare, waitingCharge, selectedTip, setSelectedTip, totalBill, isSubmitted, rating,
     setRating, tipsEnabled, minimumTipAmount, availableTipOptions, setError, comment, setComment, error, submitFeedback, isSubmitting,
   } = useRideComplete();
 
@@ -126,8 +126,14 @@ export default function RideComplete() {
             <View style={styles.box}>
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Base fare</Text>
-                <Text style={styles.billValue}>₹{fare.toFixed(2)}</Text>
+                <Text style={styles.billValue}>₹{baseFare.toFixed(2)}</Text>
               </View>
+              {waitingCharge > 0 ? (
+                <View style={[styles.billRow, { marginTop: space.sm }]}>
+                  <Text style={styles.billLabel}>Waiting charge</Text>
+                  <Text style={styles.billValue}>₹{waitingCharge.toFixed(2)}</Text>
+                </View>
+              ) : null}
               <View style={[styles.billRow, { marginTop: space.sm }]}>
                 <Text style={styles.billLabel}>Tip</Text>
                 <Text style={styles.billValue}>₹{Number(selectedTip || 0).toFixed(2)}</Text>

@@ -286,6 +286,10 @@ export const adaptBooking = (booking = {}) => {
   };
 };
 
+/** The traveller's own cancellation; the server applies the refund rules. */
+export const cancelTourBooking = async (bookingRef, reason = 'Cancelled by traveller in app') =>
+  unwrap(await apiClient.post(`/tours/bookings/${encodeURIComponent(bookingRef)}/cancel`, { reason }));
+
 /** The signed-in traveller's tour bookings. */
 export const fetchMyBookings = () =>
   cachedRead(

@@ -180,7 +180,13 @@ export function QuickLinksGrid() {
             <View style={[styles.quickIcon, item.danger && { backgroundColor: color.dangerSoft }]}>
               <Fa name={item.icon} size={18} color={item.danger ? color.danger : color.primary} />
             </View>
-            <Text style={styles.quickLabel} numberOfLines={2}>
+            {/* A one-word label too wide for its fifth of the row broke mid-word ("Package / s"); shrink it on one line instead. */}
+            <Text
+              style={styles.quickLabel}
+              numberOfLines={item.label.includes(' ') ? 2 : 1}
+              adjustsFontSizeToFit={!item.label.includes(' ')}
+              minimumFontScale={0.75}
+            >
               {item.label}
             </Text>
           </Press>

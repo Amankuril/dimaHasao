@@ -91,7 +91,7 @@ export default function AppBottomNav() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const { signedIn } = useAuth();
-  const { bookings } = useBooking();
+  const { bookings, hotelBookings = [], tourBookings = [] } = useBooking();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const { shell, visible } = navStateFor(pathname, signedIn);
@@ -100,7 +100,12 @@ export default function AppBottomNav() {
   const inApp = shell === 'app';
   const extras = shell === 'food' ? FOOD_NAV_EXTRAS : shell === 'taxi' ? TAXI_NAV_EXTRAS : [];
   const extrasTitle = shell === 'food' ? 'Food & Dining' : 'Taxi & Auto';
-  const badge = inApp && bookings.length > 0 ? bookings.length : null;
+  // Counted every ride ever booked (completed ones too) and called them "active".
+  const activeCount =
+    bookings.filter((b) => b.isLive).length
+    + hotelBookings.filter((h) => ['pending', 'awaiting_payment', 'confirmed', 'checked_in'].includes(h.bookingStatus)).length
+    + tourBookings.filter((t) => ['pending', 'confirmed', 'ongoing'].includes(t.bookingStatus)).length;
+  const badge = inApp && activeCount > 0 ? activeCount : null;
 
   const isAnchorActive = (path) => (path === '/app' ? pathname === '/app' || pathname === '/app/' : pathname.startsWith(path));
 

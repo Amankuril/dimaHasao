@@ -281,7 +281,8 @@ export default function TourPackageDetailScreen() {
             <Text style={styles.barPer}>/ person</Text>
           </View>
           {/* Said up front rather than at the payment step. */}
-          {pkg.advancePercent < 100 ? <Text style={styles.advance}>Pay {pkg.advancePercent}% now, rest to the operator</Text> : null}
+          {/* Paid in full at booking; a stored "advance %" used to promise a part-payment that never happened. */}
+          <Text style={styles.advance}>Paid in full when you book</Text>
         </View>
         <GreenButton title="Book package" size="lg" fullWidth={false} iconRight="fa-solid fa-arrow-right" onPress={() => router.push(`/app/packages/${pkg.id}/book`)} />
       </View>

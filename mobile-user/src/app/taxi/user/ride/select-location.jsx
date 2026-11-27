@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Keyboard, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams } from 'expo-router';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { ArrowLeft, Check, ChevronRight, LocateFixed, MapPin, Minus, Navigation, Plus, SearchX, X } from 'lucide-react-native';
@@ -190,7 +191,19 @@ const placeToResult = (p) => {
 export default function SelectLocation() {
   const insets = useSafeAreaInsets();
   const location = useLocation();
-  const routeState = location.state || {};
+  // Screens outside the taxi port (a tourist place's "Book ride") open this
+  // with expo-router params, not the in-memory route state, and the drop they
+  // passed was ignored. Route state still wins when both are present.
+  const searchParams = useLocalSearchParams();
+  const paramState = useMemo(() => {
+    const picked = {};
+    ['flow', 'activeInput', 'drop', 'pickup'].forEach((key) => {
+      const value = Array.isArray(searchParams[key]) ? searchParams[key][0] : searchParams[key];
+      if (typeof value === 'string' && value) picked[key] = value;
+    });
+    return picked;
+  }, [searchParams]);
+  const routeState = useMemo(() => ({ ...paramState, ...(location.state || {}) }), [paramState, location.state]);
   const serviceLocationId = routeState.service_location_id || routeState.serviceLocationId || '';
   const routeActiveInput = routeState.activeInput === 'pickup' || routeState.activeInput === 'drop' ? routeState.activeInput : 'drop';
   const isParcelFlow = routeState.flow === 'parcel' || String(routeState.returnTo || '').includes('/parcel/details');

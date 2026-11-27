@@ -21,7 +21,7 @@ export function HotelCard({ hotel, stay }) {
         ? { pathname: '/app/hotels/[id]', params: { id: hotel.id, nights: String(stay.nights), guests: String(stay.guests) } }
         : `/app/hotels/${hotel.id}`,
     );
-  const label = `${hotel.name}, ${hotel.location}. Rated ${hotel.rating}. From ₹${hotel.startingPrice.toLocaleString('en-IN')} per night. View rooms`;
+  const label = `${hotel.name}, ${hotel.location}. ${hotel.rating > 0 ? `Rated ${hotel.rating}` : 'New, no reviews yet'}. From ₹${hotel.startingPrice.toLocaleString('en-IN')} per night. View rooms`;
 
   // The photo and the body are sibling buttons so the heart is never nested inside one.
   return (
@@ -62,13 +62,20 @@ export function HotelCard({ hotel, stay }) {
         <View style={{ gap: space.xs + 2 }}>
           <View style={[styles.row, { justifyContent: 'space-between', gap: space.sm, flexWrap: 'wrap' }]}>
             <View style={[styles.row, { gap: space.sm }]}>
-              <View style={styles.rating}>
-                <Text style={styles.ratingText}>{hotel.rating}</Text>
-                <Fa name="fa-solid fa-star" size={12} color={color.goldOnDark} />
-              </View>
-              <Text style={styles.reviews}>({hotel.reviewCount} reviews)</Text>
+              {hotel.rating > 0 ? (
+                <>
+                  <View style={styles.rating}>
+                    <Text style={styles.ratingText}>{hotel.rating.toFixed(1)}</Text>
+                    <Fa name="fa-solid fa-star" size={12} color={color.goldOnDark} />
+                  </View>
+                  <Text style={styles.reviews}>({hotel.reviewCount} review{hotel.reviewCount === 1 ? '' : 's'})</Text>
+                </>
+              ) : (
+                <Text style={styles.reviews}>New · no reviews yet</Text>
+              )}
             </View>
-            <StatusBadge label="Free cancellation" tone="success" icon={fa('fa-solid fa-circle-check')} />
+            {/* Was shown on every stay, including ones with no free cancellation. */}
+            {hotel.freeCancellation ? <StatusBadge label="Free cancellation" tone="success" icon={fa('fa-solid fa-circle-check')} /> : null}
           </View>
 
           <Text style={styles.name} numberOfLines={2}>

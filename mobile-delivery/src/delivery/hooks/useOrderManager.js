@@ -34,12 +34,12 @@ export const useOrderManager = () => {
   const acceptOrder = async (order) => {
     if (acceptOrderInFlight.current) {
       toast.info('Already processing this order...');
-      return;
+      throw new Error('Accept already in progress');
     }
     const orderId = resolveOrderId(order);
     if (!orderId) {
       toast.error('Invalid order data');
-      return;
+      throw new Error('Invalid order data');
     }
 
     acceptOrderInFlight.current = true;

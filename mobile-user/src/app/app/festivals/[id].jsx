@@ -378,7 +378,7 @@ export default function FestivalDetailScreen() {
             </View>
 
             <View style={{ gap: space.sm }}>
-              <GreenButton title="View in My Bookings" icon="fa-solid fa-calendar-check" onPress={() => leave('/app/bookings')} />
+              <GreenButton title="View in My Bookings" icon="fa-solid fa-calendar-check" onPress={() => leave('/app/bookings?tab=festivals')} />
               <GreenButton tone="gray" title="Back to home" onPress={() => leave(null)} />
             </View>
           </ScrollView>

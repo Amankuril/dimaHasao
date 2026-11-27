@@ -59,8 +59,9 @@ const fromFestival = (f) => (!f ? BLANK : {
   ...Object.fromEntries(Object.keys(BLANK)
     .filter((k) => f[k] !== undefined && f[k] !== null && !Array.isArray(f[k]))
     .map((k) => [k, f[k]])),
-  startDate: f.startDate ? String(f.startDate).slice(0, 10) : '',
-  endDate: f.endDate ? String(f.endDate).slice(0, 10) : '',
+  // Stored as the start / end of the day in IST; show that calendar day.
+  startDate: f.startDate ? new Date(f.startDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) : '',
+  endDate: f.endDate ? new Date(f.endDate).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }) : '',
   // The stored values, never `bookingWindow.*` — those carry a fallback to the
   // festival's end date, and saving that back would turn a derived value into
   // a real deadline.
@@ -264,11 +265,11 @@ const Festivals = () => {
                 <input className={field} value={form.dates} onChange={set('dates')} placeholder="Nov 14 - nov 17, 2026" /></div>
               <div><label className={label}>Organizer</label>
                 <input className={field} value={form.organizer} onChange={set('organizer')} /></div>
-              <div><label className={label}>Starts</label>
-                <input className={field} type="date" value={form.startDate} onChange={set('startDate')} /></div>
-              <div><label className={label}>Ends</label>
-                <input className={field} type="date" value={form.endDate} onChange={set('endDate')} />
-                <p className="text-xs text-neutral-500 mt-1.5">Used to hide past festivals; the label above is what people read</p></div>
+              <div><label className={label}>Starts *</label>
+                <input className={field} type="date" required value={form.startDate} onChange={set('startDate')} /></div>
+              <div><label className={label}>Ends *</label>
+                <input className={field} type="date" required min={form.startDate || undefined} value={form.endDate} onChange={set('endDate')} />
+                <p className="text-xs text-neutral-500 mt-1.5">Bookings close and the festival leaves the app after this day</p></div>
               <div><label className={label}>Venue</label>
                 <input className={field} value={form.venue} onChange={set('venue')} /></div>
               <div><label className={label}>Location</label>

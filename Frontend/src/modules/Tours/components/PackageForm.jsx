@@ -120,7 +120,6 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
       if (!(n(form.pricePerPerson) > 0)) return 'Set a price per person.';
       if (form.originalPrice && !(n(form.originalPrice) > n(form.pricePerPerson))) return 'The "was" price must be higher than the price per person.';
       if (!(n(form.childPricePercent) >= 0 && n(form.childPricePercent) <= 100)) return 'Child price % must be 0 to 100.';
-      if (!(n(form.advancePercent) >= 1 && n(form.advancePercent) <= 100)) return 'Advance % must be 1 to 100.';
       if (!(n(form.groupSizeMin) >= 1)) return 'Minimum group size must be at least 1.';
       if (!(n(form.groupSizeMax) >= n(form.groupSizeMin))) return 'Maximum group size cannot be below the minimum.';
       if (!(n(form.leadTimeDays) >= 0 && n(form.leadTimeDays) <= 90)) return 'Book-ahead days must be 0 to 90.';
@@ -134,12 +133,6 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
   };
 
   // Mirrors the server's split so the price is not a surprise at booking time.
-  const advancePreview = useMemo(() => {
-    const price = Number(form.pricePerPerson) || 0;
-    if (!price) return null;
-    const advance = Math.ceil((price * Number(form.advancePercent || 100)) / 100);
-    return { advance, balance: price - advance };
-  }, [form.pricePerPerson, form.advancePercent]);
 
   const goNext = () => {
     const problem = problemsIn(step);
@@ -177,7 +170,7 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
       pricePerPerson: Number(form.pricePerPerson),
       originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
       childPricePercent: Number(form.childPricePercent),
-      advancePercent: Number(form.advancePercent),
+      advancePercent: 100,
       leadTimeDays: Number(form.leadTimeDays),
       heroImage: String(form.heroImage).trim(),
       gallery,
@@ -304,24 +297,11 @@ const PackageForm = ({ initial, onSubmit, saving = false, submitLabel = 'Save pa
               <input type="number" min="0" value={form.originalPrice} onChange={set('originalPrice')} className={field} /></div>
             <div><label className={label}>Child price %</label>
               <input type="number" min="0" max="100" value={form.childPricePercent} onChange={set('childPricePercent')} className={field} /></div>
-            <div><label className={label}>Advance %</label>
-              <input type="number" min="1" max="100" value={form.advancePercent} onChange={set('advancePercent')} className={field} /></div>
           </div>
 
-          {advancePreview && (
-            <div className="p-4 bg-[#0a4d2b]/5 border border-[#0a4d2b]/15 rounded-xl text-sm">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Per adult</p>
-              <p className="text-gray-800">
-                Traveller pays <strong>{currency(advancePreview.advance)}</strong> online
-                {advancePreview.balance > 0 && (
-                  <> and <strong>{currency(advancePreview.balance)}</strong> on the day</>
-                )}.
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
-                Tax is charged on the full trip value either way.
-              </p>
-            </div>
-          )}
+          {/* Packages are paid in full at booking (tours pricing.js); an "Advance %"
+              field here promised travellers a part-payment the server never took. */}
+          <p className="text-xs text-gray-500">Travellers pay the full trip price plus tax online when they book.</p>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div><label className={label}>Min group size</label>
