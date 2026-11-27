@@ -623,11 +623,11 @@ export default function DriverWallet() {
             ) : null}
 
             <View style={{ flexDirection: 'row', gap: 12 }}>
-              <CtaButton title="Top up" onPress={() => setShowTopUp(true)} disabled={topUpDisabled} icon={<ArrowUpRight size={17} color={DT.ctaInk} />} style={{ flex: 1 }} />
+              <CtaButton title="Top up" onPress={() => { setError(''); setShowTopUp(true); }} disabled={topUpDisabled} icon={<ArrowUpRight size={17} color={DT.ctaInk} />} style={{ flex: 1 }} />
               <CtaButton
                 title="Withdraw"
                 variant="outline"
-                onPress={() => setShowWithdraw(true)}
+                onPress={() => { setError(''); setShowWithdraw(true); }}
                 disabled={withdrawDisabled}
                 icon={<ArrowDownLeft size={17} color={DT.ink} />}
                 style={{ flex: 1 }}
@@ -791,6 +791,12 @@ export default function DriverWallet() {
                     </Press>
                   ))}
                 </View>
+                {error ? (
+                  <View style={st.errorBox}>
+                    <AlertCircle size={18} color={DT.dangerInk} style={{ marginTop: 2 }} />
+                    <Text style={st.errorText}>{error}</Text>
+                  </View>
+                ) : null}
                 <CtaButton title="Add money" onPress={handleTopUp} loading={processingTopUp} disabled={!rules.walletEnabled} style={{ height: 56 }} />
               </View>
             )}
@@ -828,6 +834,12 @@ export default function DriverWallet() {
                   <TextInput value={withdrawAmount} onChangeText={setWithdrawAmount} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={DT.faint} style={st.amountInput} />
                   <Text style={[st.cardMeta, { marginTop: 8, textAlign: 'center' }]}>Available balance: {money(wallet.balance)}</Text>
                 </View>
+                {error ? (
+                  <View style={st.errorBox}>
+                    <AlertCircle size={18} color={DT.dangerInk} style={{ marginTop: 2 }} />
+                    <Text style={st.errorText}>{error}</Text>
+                  </View>
+                ) : null}
                 <CtaButton title="Send request" variant="brand" onPress={handleWithdrawRequest} loading={processingWithdraw} disabled={!rules.transferEnabled} style={{ height: 56 }} />
               </View>
             )}
