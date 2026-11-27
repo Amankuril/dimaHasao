@@ -128,7 +128,9 @@ export default function MyBookingsScreen() {
     setCancelling(ref);
     try {
       const res = kind === 'hotel' ? await cancelHotelBooking(ref) : await cancelTourBooking(ref);
-      showToast(res?.message || 'Booking cancelled', 'success');
+      // The hotel server's message is written for the partner ("Commission
+      // Refunded"); the tours one is written for the traveller.
+      showToast(kind === 'hotel' ? 'Your stay has been cancelled' : (res?.message || 'Booking cancelled'), 'success');
       refreshAllBookings();
     } catch (err) {
       showToast(err?.response?.data?.message || 'Could not cancel this booking', 'error');

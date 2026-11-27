@@ -332,6 +332,9 @@ export const adaptBooking = (booking = {}) => {
 /** The guest's own cancellation; the server decides what can be cancelled and any refund. */
 export const cancelHotelBooking = async (bookingRef, reason = 'Cancelled by guest in app') => {
   const res = await apiClient.post(`/hotel/bookings/${encodeURIComponent(bookingRef)}/cancel`, { reason });
+  // My Bookings reads through this cache; without clearing it the stay kept
+  // showing "Confirmed" after the server had cancelled it.
+  invalidate('hotel:bookings');
   return res?.data || {};
 };
 
