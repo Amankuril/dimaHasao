@@ -15,6 +15,7 @@ import availabilityRoutes from './availabilityRoutes.js';
 import hotelRoutes from './hotelRoutes.js';
 import categoryRoutes from './categoryRoutes.js';
 import supportRoutes from './supportRoutes.js';
+import faqRoutes from './faqRoutes.js';
 
 // Hotel / property module (ported from Dima Hasao). Sub-paths mirror the original
 // service so the partner panel and admin screens keep working unchanged; the
@@ -38,6 +39,7 @@ hotelRouter.use('/hotels', hotelRoutes);
 // Partner-specific endpoints share the hotel router upstream (e.g. /partners/fcm-token).
 hotelRouter.use('/partners', hotelRoutes);
 hotelRouter.use('/categories', categoryRoutes);
+hotelRouter.use('/faqs', faqRoutes);
 hotelRouter.use('/support', supportRoutes);
 
 export default hotelRouter;

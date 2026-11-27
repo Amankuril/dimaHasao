@@ -1,10 +1,9 @@
-import { Component, Fragment, useEffect, useState } from 'react';
+import { Component, Fragment, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Image from '../Img';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import * as Location from 'expo-location';
 import Fa from '../Fa';
 import { Press } from '../ui';
 import { Dialog } from '../kit';
@@ -109,16 +108,6 @@ export function GalleryViewer({ place }) {
   );
 }
 
-// Same assumption SelectVehicle uses for its fallback ETA.
-const AVERAGE_HILL_ROAD_SPEED_KMPH = 24;
-const toRad = (deg) => (deg * Math.PI) / 180;
-const haversineKm = (from, to) => {
-  if (!from || !to || ![from.lat, from.lng, to.lat, to.lng].every(Number.isFinite)) return null;
-  const dLat = toRad(to.lat - from.lat);
-  const dLng = toRad(to.lng - from.lng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-};
 const googleDirectionsUrl = (lat, lng) => `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
 class MapBoundary extends Component {
@@ -172,37 +161,15 @@ const TRANSPORT_TINT = { bike: tone.primary, auto: tone.gold, cab: tone.neutral 
 
 /** components/places/TransportSelector.jsx */
 export function TransportSelector({ place }) {
-  const { selectedTransportId, setSelectedTransportId, setSelectedPlaceId, pickupLocation } = useBooking();
+  const { selectedTransportId, setSelectedTransportId, setSelectedPlaceId } = useBooking();
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
-  const [liveCoords, setLiveCoords] = useState(null);
   const dest = place.coordinates;
   const hasDest = dest && Number.isFinite(dest.lat) && Number.isFinite(dest.lng);
 
-  // Anchor "From" to where the visitor is when location is already allowed;
-  // otherwise the district hub, exactly as the web falls back. This screen is
-  // not the place that asks for the permission.
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const perm = await Location.getForegroundPermissionsAsync();
-        if (!perm.granted) return;
-        const pos = (await Location.getLastKnownPositionAsync({ maxAge: 5 * 60 * 1000 })) || (await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }));
-        if (!cancelled && pos) setLiveCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      } catch {
-        /* keep the station fallback */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const liveDistanceKm = hasDest ? haversineKm(liveCoords, dest) : null;
-  const fromLabel = liveDistanceKm != null ? 'Your current location' : pickupLocation || 'Haflong Station';
-  const distanceLabel = liveDistanceKm != null ? `${liveDistanceKm < 1 ? '< 1' : liveDistanceKm.toFixed(1)} km` : place.distanceFromStation;
-  const travelTimeLabel =
-    liveDistanceKm != null ? `${Math.max(1, Math.round((liveDistanceKm / AVERAGE_HILL_ROAD_SPEED_KMPH) * 60))} min (Approx.)` : place.travelTime;
+  // "From" is always the visitor. It used to fall back to a fixed "Haflong
+  // Station" (and showed a distance / travel time and fixed fares), which was
+  // wrong for anyone not at the station.
+  const fromLabel = 'Your location';
 
   const handleSelect = (transportId) => {
     setSelectedTransportId(transportId);
@@ -236,9 +203,6 @@ export function TransportSelector({ place }) {
             <Text style={styles.journeyValue} numberOfLines={2}>
               {place.name}
             </Text>
-            <Text style={styles.journeyMeta}>
-              {distanceLabel} away{travelTimeLabel ? ` · ${travelTimeLabel}` : ''}
-            </Text>
           </View>
         </View>
 
@@ -254,17 +218,11 @@ export function TransportSelector({ place }) {
                     <View style={[styles.optionIcon, { backgroundColor: tint.bg }]}>
                       <Fa name={t.iconClass} size={18} color={tint.fg} />
                     </View>
+                    {/* Vehicle only: the fixed fares and "15 min" were not real quotes. */}
                     <View style={styles.optionText}>
                       <Text style={styles.optionName} numberOfLines={1}>
                         {t.name}
                       </Text>
-                      <Text style={styles.optionTime} numberOfLines={1}>
-                        {t.time}
-                      </Text>
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.mrp}>MRP</Text>
-                      <Text style={styles.optionFare}>{t.fareFormatted}</Text>
                     </View>
                     <Button
                       title={isSelected ? 'Book' : 'Select'}
@@ -272,7 +230,7 @@ export function TransportSelector({ place }) {
                       size="sm"
                       fullWidth={false}
                       onPress={() => handleSelect(t.id)}
-                      accessibilityLabel={`${isSelected ? 'Book' : 'Select'} ${t.name}, ${t.fareFormatted}`}
+                      accessibilityLabel={`${isSelected ? 'Book' : 'Select'} ${t.name}`}
                       style={styles.selectBtn}
                     />
                   </View>
@@ -316,14 +274,6 @@ export function TransportSelector({ place }) {
           ) : (
             <Text style={styles.mapUnavailable}>Map unavailable</Text>
           )}
-        </View>
-        <View style={styles.mapStats}>
-          <Text style={styles.mapStat}>
-            Distance: <Text style={styles.mapStatStrong}>{distanceLabel}</Text>
-          </Text>
-          <Text style={styles.mapStat}>
-            Est. time: <Text style={styles.mapStatStrong}>{travelTimeLabel}</Text>
-          </Text>
         </View>
         <View style={{ gap: space.sm }}>
           {hasDest ? (
