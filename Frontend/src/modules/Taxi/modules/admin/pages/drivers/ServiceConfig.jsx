@@ -4,6 +4,7 @@ import {
   Trash2, ChevronRight, MapPin, CheckCircle2, AlertCircle, ToggleLeft, ToggleRight,
   Settings2, Package, Zap, ArrowRight, Edit3, MoreHorizontal, Rocket
 } from 'lucide-react';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 // ─── Tiny helpers ──────────────────────────────────────────────────────────────
 const Tog = ({ on, onToggle }) => (
@@ -80,8 +81,8 @@ const ServiceConfig = () => {
         const token = localStorage.getItem('adminToken') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzdiZTZhYmJlOTJlYjYwMGYwMmQxNiIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwibW9iaWxlIjoiOTk5OTk5OTk5OSIsInJvbGUiOiJzdXBlci1hZG1pbiIsImlhdCI6MTc3NTA0OTExNywiZXhwIjoxODA2NTg1MTE3fQ.5KJmXJwaVefWhnc97EqtArkA1z7ZOhsJwA9fbyRVPdQ';
         
         const [locRes, rideRes] = await Promise.all([
-          fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/service-locations', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/common/ride_modules', { headers: { 'Authorization': `Bearer ${token}` } })
+          fetch(API_BASE_URL + '/admin/service-locations', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(API_BASE_URL + '/common/ride_modules', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         const locData = await locRes.json();
@@ -124,7 +125,7 @@ const ServiceConfig = () => {
       if (!selLocId) return;
       try {
         const token = localStorage.getItem('adminToken') || '';
-        const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/types/${selLocId}`, {
+        const res = await fetch(`${API_BASE_URL}/types/${selLocId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();

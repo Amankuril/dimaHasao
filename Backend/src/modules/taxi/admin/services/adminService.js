@@ -6882,3 +6882,93 @@ export const seedTransportTypes = async () => {
   }
   return results;
 };
+
+/*
+ * Admin cancellation analytics. Reads the `cancellation` record each cancel
+ * path writes (who, why, stage, fee). Rides cancelled before that record
+ * existed still count in the totals, under "Not recorded".
+ */
+const FLAGGED_CANCEL_REASONS = [
+  'driver asked me to cancel',
+  'driver asked for extra fare',
+  'driver is not coming',
+  "don't feel comfortable",
+  'driver is behaving improperly',
+  'driver is moving away',
+  'driver is not responding',
+];
+
+export const getCancellationAnalytics = async () => {
+  const [totalRidesCount, cancelled] = await Promise.all([
+    Ride.countDocuments({}),
+    Ride.find({ status: RIDE_STATUS.CANCELLED })
+      .select('fare driverId userId cancellation acceptedAt arrivedAt updatedAt')
+      .populate('userId', 'name phone')
+      .populate('driverId', 'name phone')
+      .sort({ updatedAt: -1 })
+      .limit(5000)
+      .lean(),
+  ]);
+
+  const totalCancelledRides = cancelled.length;
+  const reasons = new Map();
+  const stageBreakdown = { searching: 0, accepted: 0, arrived: 0 };
+  const byDriver = new Map();
+  const flaggedRides = [];
+  let customerCancellations = 0;
+  let driverCancellations = 0;
+  let totalRevenueLost = 0;
+  let totalCancellationFeesCollected = 0;
+
+  for (const ride of cancelled) {
+    const c = ride.cancellation || {};
+    const by = c.cancelledBy || null;
+    if (by === 'user') customerCancellations += 1;
+    if (by === 'driver') driverCancellations += 1;
+
+    const stage = c.stage || (ride.arrivedAt ? 'arrived' : ride.driverId ? 'accepted' : 'searching');
+    stageBreakdown[stage] = (stageBreakdown[stage] || 0) + 1;
+
+    // Only a ride a driver had taken was revenue in hand; an unmatched search was never going to pay.
+    if (stage !== 'searching') totalRevenueLost += Number(ride.fare || 0);
+    totalCancellationFeesCollected += Number(c.fee || 0);
+
+    const reason = c.reason || (by ? `Cancelled by ${by}` : 'Not recorded');
+    reasons.set(reason, (reasons.get(reason) || 0) + 1);
+
+    if (by === 'driver' && ride.driverId) {
+      const key = String(ride.driverId._id || ride.driverId);
+      const entry = byDriver.get(key) || { driverId: key, driverName: ride.driverId.name || 'Driver', driverPhone: ride.driverId.phone || '', cancellationCount: 0 };
+      entry.cancellationCount += 1;
+      byDriver.set(key, entry);
+    }
+
+    const lower = String(c.reason || '').toLowerCase();
+    if (by === 'user' && FLAGGED_CANCEL_REASONS.some((r) => lower.includes(r))) {
+      flaggedRides.push({
+        rideId: String(ride._id),
+        reason: c.reason,
+        comment: c.comment || '',
+        customerName: ride.userId?.name || '',
+        customerPhone: ride.userId?.phone || '',
+        driverName: ride.driverId?.name || '',
+        driverPhone: ride.driverId?.phone || '',
+        cancelledAt: c.cancelledAt || ride.updatedAt,
+      });
+    }
+  }
+
+  return {
+    totalRidesCount,
+    totalCancelledRides,
+    cancellationRate: totalRidesCount ? Math.round((totalCancelledRides / totalRidesCount) * 1000) / 10 : 0,
+    customerCancellations,
+    driverCancellations,
+    totalRevenueLost: Math.round(totalRevenueLost * 100) / 100,
+    totalCancellationFeesCollected: Math.round(totalCancellationFeesCollected * 100) / 100,
+    reasonsBreakdown: [...reasons.entries()].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count),
+    stageBreakdown,
+    topDriverCancellations: [...byDriver.values()].sort((a, b) => b.cancellationCount - a.cancellationCount).slice(0, 10),
+    flaggedRides: flaggedRides.slice(0, 50),
+  };
+};

@@ -11,6 +11,7 @@ import {
   Activity,
   ArrowRight
 } from 'lucide-react';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 const StatCard = ({ title, value, change, icon: Icon, color }) => (
   <div className="bg-white rounded-xl p-8 border border-neutral-900/[0.08] hover:shadow-md transition-colors duration-300 flex flex-col justify-between h-full group">
@@ -56,7 +57,7 @@ const ReferralDashboard = () => {
     const fetchDashboard = async () => {
       try {
         const token = localStorage.getItem('adminToken') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzdiZTZhYmJlOTJlYjYwMGYwMmQxNiIsImVtYWlsIjoiYWRtaW5AYWRtaW4uY29tIiwibW9iaWxlIjoiOTk5OTk5OTk5OSIsInJvbGUiOiJzdXBlci1hZG1pbiIsImlhdCI6MTc3NTA0OTExNywiZXhwIjoxODA2NTg1MTE3fQ.5KJmXJwaVefWhnc97EqtArkA1z7ZOhsJwA9fbyRVPdQ';
-        const res = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/referral/dashboard', {
+        const res = await fetch(API_BASE_URL + '/admin/referral/dashboard', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const json = await res.json();

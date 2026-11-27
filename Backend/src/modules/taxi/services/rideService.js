@@ -56,6 +56,14 @@ const clearUserActiveRideIfPresent = async (user) => {
     throw new ApiError(409, 'You already have a ride in progress. Finish or cancel it before booking another.');
   }
 
+  activeRide.cancellation = {
+    cancelledBy: 'user',
+    reason: 'Replaced by a new booking',
+    comment: '',
+    stage: 'searching',
+    fee: 0,
+    cancelledAt: new Date(),
+  };
   activeRide.status = RIDE_STATUS.CANCELLED;
   activeRide.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
   await activeRide.save();

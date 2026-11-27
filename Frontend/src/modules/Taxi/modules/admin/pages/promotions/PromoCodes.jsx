@@ -21,8 +21,9 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
-const BASE = globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/promos';
+const BASE = API_BASE_URL + '/admin/promos';
 const LIST_PATH = '/admin/promotions/promo-codes';
 const CREATE_PATH = '/admin/promotions/promo-codes/create';
 const Motion = motion;
@@ -274,7 +275,7 @@ const PromoCodes = () => {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/promotions/bootstrap`, {
+      const res = await fetch(`${API_BASE_URL}/admin/promotions/bootstrap`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronRight, Eye, Loader2, MoreVertical, Search, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 const DriverRatings = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const DriverRatings = () => {
       setIsLoading(true);
       try {
         const token = localStorage.getItem('adminToken');
-        const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/driver-ratings`, {
+        const res = await fetch(`${API_BASE_URL}/admin/driver-ratings`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
         const data = await res.json();

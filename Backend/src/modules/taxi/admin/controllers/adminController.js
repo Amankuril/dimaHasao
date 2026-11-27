@@ -304,6 +304,9 @@ export const getRideModules = asyncHandler(async (_req, res) =>
 export const getOngoingRides = asyncHandler(async (req, res) =>
   ok(res, await adminService.listOngoingRides(req.query)),
 );
+export const getCancellationAnalytics = asyncHandler(async (_req, res) =>
+  ok(res, await adminService.getCancellationAnalytics()),
+);
 export const getRideRequests = asyncHandler(async (req, res) =>
   ok(res, await adminService.listRideRequests(req.query)),
 );
@@ -576,6 +579,12 @@ export const getDriverOnboarding = asyncHandler(async (_req, res) =>
   res.json({
     success: true,
     results: await adminService.listOnboardingScreens("driver"),
+  }),
+);
+export const getOwnerOnboarding = asyncHandler(async (_req, res) =>
+  res.json({
+    success: true,
+    results: await adminService.listOnboardingScreens("owner"),
   }),
 );
 export const createOnboardingScreen = asyncHandler(async (req, res) =>

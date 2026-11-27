@@ -54,6 +54,7 @@ import {
   getDriverNeededDocuments,
   getDriverProfile,
   getDriverOnboarding,
+  getOwnerOnboarding,
   getDrivers,
   getDriverRatings,
   getDriverRatingDetail,
@@ -99,6 +100,7 @@ import {
   restoreDeletedDriver,
   permanentlyDeleteDeletedDriver,
   getRideRequests,
+  getCancellationAnalytics,
   rejectUserDeletionRequest,
   rejectDriverDeletionRequest,
   getUserRequests,
@@ -203,6 +205,8 @@ adminRouter.patch('/admin/drivers/delete-requests/:id/reject', authenticate(['ad
 adminRouter.patch('/admin/drivers/deleted/:id/restore', authenticate(['admin']), restoreDeletedDriver);
 adminRouter.delete('/admin/drivers/deleted/:id', authenticate(['admin']), permanentlyDeleteDeletedDriver);
 adminRouter.post('/admin/drivers', createDriver);
+// Before '/admin/drivers/:id', which otherwise takes "needed-documents" as a driver id (400).
+adminRouter.get('/admin/drivers/needed-documents', getDriverNeededDocuments);
 adminRouter.get('/admin/drivers/:id/profile', getDriverProfile);
 adminRouter.get('/admin/drivers/:id', getDriver);
 adminRouter.patch('/admin/drivers/:id', updateDriver);
@@ -259,7 +263,6 @@ adminRouter.post('/admin/upload-image', uploadImage);
 // Documents a driver must upload. These lived under /admin/owner-management
 // only because the fleet-owner panel happened to render them; drivers are in
 // scope and owners are not, so the path now says what it is.
-adminRouter.get('/admin/drivers/needed-documents', getDriverNeededDocuments);
 adminRouter.get('/admin/drivers/needed-documents/:id', getDriverNeededDocument);
 adminRouter.post('/admin/drivers/needed-documents', createDriverNeededDocument);
 adminRouter.patch('/admin/drivers/needed-documents/:id', updateDriverNeededDocument);
@@ -287,6 +290,7 @@ adminRouter.get('/admin/safety/alerts', authenticate(['admin']), listSafetyAlert
 adminRouter.patch('/admin/safety/alerts/:id/resolve', authenticate(['admin']), resolveSafetyAlert);
 adminRouter.get('/admin/ongoing-rides', getOngoingRides);
 adminRouter.get('/admin/ride-requests', getRideRequests);
+adminRouter.get('/admin/cancellation-analytics', getCancellationAnalytics);
 adminRouter.delete('/admin/ongoing-rides/:id', deleteOngoingRide);
 adminRouter.get('/admin/trips', getIntercityTrips);
 
@@ -345,6 +349,8 @@ adminRouter.post('/on-boarding', authenticate(['admin']), createOnboardingScreen
 adminRouter.patch('/on-boarding/:id', authenticate(['admin']), updateOnboardingScreen);
 adminRouter.delete('/on-boarding/:id', authenticate(['admin']), deleteOnboardingScreen);
 adminRouter.get('/on-boarding-driver', getDriverOnboarding);
+// The admin Onboarding page loads all three audiences at once; without this read the whole page failed.
+adminRouter.get('/on-boarding-owner', getOwnerOnboarding);
 
 adminRouter.get('/admin/reports/user/download', downloadUserReport);
 adminRouter.get('/admin/reports/driver/download', downloadDriverReport);

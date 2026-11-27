@@ -27,6 +27,7 @@ import McvIcon from '@/assets/icons/mcv.png';
 import LuxuryIcon from '@/assets/icons/Luxury.png';
 import PremiumIcon from '@/assets/icons/Premium.png';
 import SuvIcon from '@/assets/icons/SUV.png';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 const mapContainerStyle = { width: '100%', height: '100%' };
 
@@ -467,7 +468,7 @@ const DriverDetails = () => {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const [res, walletRes] = await Promise.all([
         fetch(
-          `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}/profile?t=${Date.now()}`,
+          `${API_BASE_URL}/admin/drivers/${id}/profile?t=${Date.now()}`,
           {
             headers,
             cache: 'no-store',
@@ -900,7 +901,7 @@ const DriverDetails = () => {
                       try {
                         const token = localStorage.getItem('adminToken');
                         await fetch(
-                          `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/wallet/drivers/${id}/adjust`,
+                          `${API_BASE_URL}/admin/wallet/drivers/${id}/adjust`,
                           {
                             method: 'POST',
                             headers: {
@@ -1229,7 +1230,7 @@ const DriverDetails = () => {
                                   };
 
                                   const response = await fetch(
-                                    `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`,
+                                    `${API_BASE_URL}/admin/drivers/${id}`,
                                     {
                                       method: 'PATCH',
                                       headers: {
@@ -1298,7 +1299,7 @@ const DriverDetails = () => {
                                   };
 
                                   const response = await fetch(
-                                    `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`,
+                                    `${API_BASE_URL}/admin/drivers/${id}`,
                                     {
                                       method: 'PATCH',
                                       headers: {

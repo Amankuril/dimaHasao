@@ -779,6 +779,26 @@ export const markDriverRejectedFromDispatch = async (rideId, driverId) => {
   await persistDispatchTrackingProgress({ rideId, rejectedDriverIds: [String(driverId)] });
 };
 
+/*
+ * The cancellation record admin analytics reads. Stage is where the ride was
+ * when it was cancelled: still searching, accepted by a driver, or with the
+ * driver at pickup. Call before the status flips to cancelled.
+ */
+const buildCancellationRecord = (ride, { cancelledBy, reason = '', comment = '', fee = 0 }) => {
+  const live = String(ride?.liveStatus || '').toLowerCase();
+  let stage = 'searching';
+  if (ride?.arrivedAt || live === 'arriving' || live === 'arrived') stage = 'arrived';
+  else if (ride?.driverId || ride?.acceptedAt) stage = 'accepted';
+  return {
+    cancelledBy,
+    reason: String(reason || '').trim().slice(0, 200),
+    comment: String(comment || '').trim().slice(0, 500),
+    stage,
+    fee: Math.max(0, Number(fee) || 0),
+    cancelledAt: new Date(),
+  };
+};
+
 const closeRideAsUnmatched = async (rideId) => {
   const dispatchState = getDispatchState(rideId);
   const ride = await Ride.findOneAndUpdate(
@@ -786,6 +806,7 @@ const closeRideAsUnmatched = async (rideId) => {
     {
       status: RIDE_STATUS.CANCELLED,
       liveStatus: RIDE_LIVE_STATUS.CANCELLED,
+      cancellation: buildCancellationRecord(null, { cancelledBy: 'system', reason: 'No driver found' }),
     },
     { returnDocument: 'after' },
   );
@@ -822,7 +843,7 @@ const closeRideAsUnmatched = async (rideId) => {
   });
 };
 
-export const cancelRideByAdmin = async (rideId) => {
+export const cancelRideByAdmin = async (rideId, { reason = '' } = {}) => {
   stopDispatchFlow(rideId, { releaseLease: false });
 
   const ride = await Ride.findById(rideId);
@@ -832,6 +853,7 @@ export const cancelRideByAdmin = async (rideId) => {
     return null;
   }
 
+  ride.cancellation = buildCancellationRecord(ride, { cancelledBy: 'admin', reason: reason || 'Cancelled by admin' });
   ride.status = RIDE_STATUS.CANCELLED;
   ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
   await ride.save();
@@ -870,7 +892,7 @@ export const cancelRideByAdmin = async (rideId) => {
   return ride;
 };
 
-export const cancelRideByUser = async ({ rideId, userId }) => {
+export const cancelRideByUser = async ({ rideId, userId, reason = '', comment = '' }) => {
   const session = await mongoose.startSession();
   let ride = null;
   let dispatchState = null;
@@ -922,6 +944,12 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
 
     cancellationSettlement = await settleUserCancellationFee(ride, session);
 
+    ride.cancellation = buildCancellationRecord(ride, {
+      cancelledBy: 'user',
+      reason,
+      comment,
+      fee: ['applied', 'existing'].includes(cancellationSettlement?.userDebitStatus) ? cancellationSettlement.feeAmount : 0,
+    });
     ride.status = RIDE_STATUS.CANCELLED;
     ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
     await ride.save({ session });
@@ -1002,7 +1030,7 @@ export const cancelRideByUser = async ({ rideId, userId }) => {
   return ride;
 };
 
-export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
+export const cancelScheduledRideByDriver = async ({ rideId, driverId, reason = '' }) => {
   const session = await mongoose.startSession();
   let ride = null;
   let dispatchState = null;
@@ -1041,6 +1069,11 @@ export const cancelScheduledRideByDriver = async ({ rideId, driverId }) => {
 
     cancellationSettlement = await settleDriverCancellationFee(ride, session);
 
+    ride.cancellation = buildCancellationRecord(ride, {
+      cancelledBy: 'driver',
+      reason: reason || 'Scheduled ride cancelled by driver',
+      fee: ['applied', 'existing'].includes(cancellationSettlement?.driverDebitStatus) ? cancellationSettlement.feeAmount : 0,
+    });
     ride.status = RIDE_STATUS.CANCELLED;
     ride.liveStatus = RIDE_LIVE_STATUS.CANCELLED;
     await ride.save({ session });

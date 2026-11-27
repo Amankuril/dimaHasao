@@ -469,6 +469,16 @@ const rideSchema = new mongoose.Schema(
       comment: { type: String, default: '', trim: true, maxlength: 500 },
       submittedAt: { type: Date, default: null },
     },
+    // Who cancelled, why and at what stage; read by admin cancellation
+    // analytics. Rides cancelled before this existed have none.
+    cancellation: {
+      cancelledBy: { type: String, enum: ['user', 'driver', 'admin', 'system', null], default: null },
+      reason: { type: String, default: '', trim: true, maxlength: 200 },
+      comment: { type: String, default: '', trim: true, maxlength: 500 },
+      stage: { type: String, enum: ['searching', 'accepted', 'arrived', null], default: null },
+      fee: { type: Number, default: 0 },
+      cancelledAt: { type: Date, default: null },
+    },
     // Billed when the trip starts: time from the driver's arrival at pickup to
     // the PIN, less the free minutes in the pricing snapshot, at its per-minute
     // rate. `amount` is already included in `fare`.

@@ -1122,6 +1122,8 @@ export const cancelRide = async (req, res) => {
   const ride = await cancelRideByUser({
     rideId: req.params.rideId,
     userId: req.auth.sub,
+    reason: req.body?.reason,
+    comment: req.body?.comment,
   });
 
   if (!ride) {

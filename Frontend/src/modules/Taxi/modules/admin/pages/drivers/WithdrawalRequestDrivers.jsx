@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ChevronRight, Eye, FileSearch, QrCode, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
-const BASE = () => `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/wallet/drivers/withdrawals`;
+const BASE = () => `${API_BASE_URL}/admin/wallet/drivers/withdrawals`;
 
 const formatDateTime = (value) => {
   if (!value) return '-';

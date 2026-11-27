@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 const Motion = motion;
 const LIST_PATH = '/admin/promotions/banner-image';
@@ -35,7 +36,7 @@ const BannerImage = () => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const token = localStorage.getItem('adminToken') || '';
-  const baseUrl = globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin';
+  const baseUrl = API_BASE_URL + '/admin';
 
   const resolveImageUrl = useCallback(
     (img) => {
@@ -50,7 +51,7 @@ const BannerImage = () => {
   const syncBannersToHomeSettings = useCallback(async (bannersList) => {
     if (!token) return;
     try {
-      const homeRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/general-settings/user-home-management`, {
+      const homeRes = await fetch(`${API_BASE_URL}/admin/general-settings/user-home-management`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!homeRes.ok) return;
@@ -73,7 +74,7 @@ const BannerImage = () => {
         promos: nextPromos
       };
 
-      await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/general-settings/user-home-management`, {
+      await fetch(`${API_BASE_URL}/admin/general-settings/user-home-management`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -90,7 +91,7 @@ const BannerImage = () => {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const bootstrapRes = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/promotions/bootstrap`, {
+      const bootstrapRes = await fetch(`${API_BASE_URL}/admin/promotions/bootstrap`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

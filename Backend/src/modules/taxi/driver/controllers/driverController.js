@@ -1159,6 +1159,7 @@ export const cancelDriverScheduledRide = async (req, res) => {
   const ride = await cancelScheduledRideByDriver({
     rideId,
     driverId: req.auth.sub,
+    reason: req.body?.reason,
   });
 
   if (!ride) {

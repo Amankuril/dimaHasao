@@ -11,6 +11,7 @@ import {
   Loader2,
   CheckCircle2
 } from 'lucide-react';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 const FormSection = ({ title, subTitle, icon: Icon, children }) => (
   <div className="bg-white rounded-xl border border-neutral-900/[0.08] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -69,8 +70,8 @@ const ReferralSettings = () => {
     const fetchAllSettings = async () => {
       try {
         const [uRes, dRes] = await Promise.all([
-          fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/referral/settings/user', { headers: { 'Authorization': `Bearer ${token}` } }),
-          fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/referral/settings/driver', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(API_BASE_URL + '/admin/referral/settings/user', { headers: { 'Authorization': `Bearer ${token}` } }),
+          fetch(API_BASE_URL + '/admin/referral/settings/driver', { headers: { 'Authorization': `Bearer ${token}` } }),
         ]);
 
         const uData = await uRes.json();
@@ -96,7 +97,7 @@ const ReferralSettings = () => {
     if (type === 'driver') { url = 'driver'; body = driverSettings; }
 
     try {
-      const res = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/referral/settings/${url}`, {
+      const res = await fetch(`${API_BASE_URL}/admin/referral/settings/${url}`, {
         method: 'PATCH',
         headers: { 
           'Authorization': `Bearer ${token}`,

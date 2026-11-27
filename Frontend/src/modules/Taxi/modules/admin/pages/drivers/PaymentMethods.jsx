@@ -9,8 +9,9 @@ import {
   Loader2,
   ArrowLeft,
 } from 'lucide-react';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
-const BASE = () => `${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/payment-methods`;
+const BASE = () => `${API_BASE_URL}/admin/payment-methods`;
 
 const inputClass =
   'w-full border border-neutral-200 rounded-lg px-4 py-2.5 text-sm text-neutral-800 bg-white focus:border-[#0a4d2b] focus:ring-1 focus:ring-[#0a4d2b]/30 outline-none transition-colors';

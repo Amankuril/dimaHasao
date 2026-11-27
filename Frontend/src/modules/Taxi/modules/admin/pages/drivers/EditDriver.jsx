@@ -17,6 +17,7 @@ import {
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { adminService } from '../../services/adminService';
 import { useTaxiTransportTypes } from '../../../../shared/hooks/useTaxiTransportTypes';
+import { API_BASE_URL } from '../../../../shared/api/runtimeConfig';
 
 const serviceCategoryOptions = [
   { value: 'taxi', label: 'Taxi' },
@@ -120,7 +121,7 @@ const EditDriver = () => {
     const fetchInitialData = async () => {
       setIsFetching(true);
       try {
-        const locRes = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/service-locations', {
+        const locRes = await fetch(API_BASE_URL + '/admin/service-locations', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const locData = await locRes.json();
@@ -129,7 +130,7 @@ const EditDriver = () => {
           setLocations(Array.isArray(results) ? results : []);
         }
 
-        const zoneRes = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/admin/zones', {
+        const zoneRes = await fetch(API_BASE_URL + '/admin/zones', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const zoneData = await zoneRes.json();
@@ -138,7 +139,7 @@ const EditDriver = () => {
           setZones(Array.isArray(results) ? results : []);
         }
 
-        const countRes = await fetch(globalThis.__LEGACY_BACKEND_ORIGIN__ + '/api/v1/countries', {
+        const countRes = await fetch(API_BASE_URL + '/countries', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const countData = await countRes.json();
@@ -148,7 +149,7 @@ const EditDriver = () => {
         }
 
         // Fetching driver details
-        const response = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/admin/drivers/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
@@ -368,7 +369,7 @@ const EditDriver = () => {
         },
       };
 
-      const response = await fetch(`${globalThis.__LEGACY_BACKEND_ORIGIN__}/api/v1/admin/drivers/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/drivers/${id}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
