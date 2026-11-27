@@ -44,7 +44,6 @@ import {
   Star,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { adminService } from '../../services/adminService';
 import { BACKEND_LABEL } from '../../../../shared/api/runtimeConfig';
@@ -96,20 +95,46 @@ const MainDashboard = () => {
   const totalUsers = dashboard?.totalUsers || 0;
   const totalDrivers = dashboard?.totalDrivers?.total || 0;
   const approvedDrivers = dashboard?.totalDrivers?.approved || 0;
-  const declinedDrivers = dashboard?.totalDrivers?.declined || 0;
-  const totalOwners = dashboard?.totalOwners || 0;
 
   const todayEarnings = dashboard?.todayEarnings || {};
   const overallEarnings = dashboard?.overallEarnings || {};
-  const notifiedSos = dashboard?.notifiedSos || {};
   const todayTrips = dashboard?.todayTrips || {};
-  const overallTrips = dashboard?.overallTrips || {};
 
-  // Operational metrics calculations
-  const fleetUtilization = useMemo(() => {
-    if (totalDrivers === 0) return 0;
-    return Math.round((approvedDrivers / totalDrivers) * 100);
-  }, [totalDrivers, approvedDrivers]);
+  const live = dashboard?.live || {};
+  const periodEarnings = dashboard?.periodEarnings || {};
+  const leaderboard = dashboard?.leaderboard || [];
+  const sos = dashboard?.sos || {};
+  const attention = dashboard?.attention || {};
+  const health = dashboard?.health || {};
+  const driverPositions = dashboard?.driverPositions || [];
+  const selectedPeriod = periodEarnings[timeframe.toLowerCase()] || {};
+
+  const formatUptime = (seconds) => {
+    const total = Number(seconds || 0);
+    if (!total) return '—';
+    const d = Math.floor(total / 86400);
+    const h = Math.floor((total % 86400) / 3600);
+    const m = Math.floor((total % 3600) / 60);
+    return d ? `${d}d ${h}h` : h ? `${h}h ${m}m` : m ? `${m}m` : "<1m";
+  };
+
+  const attentionItems = [
+    { label: 'Drivers awaiting approval', value: attention.pendingApprovals, path: '/taxi/admin/drivers/pending', icon: UserPlus },
+    { label: 'Withdrawal requests', value: attention.pendingWithdrawals, extra: attention.pendingWithdrawals ? `₹${currency(attention.pendingWithdrawalAmount)}` : '', path: '/taxi/admin/drivers/wallet/withdrawals', icon: Wallet },
+    { label: 'Open support tickets', value: attention.openTickets, path: '/taxi/admin/support/tickets', icon: MessageSquare },
+    { label: 'Drivers with negative wallet', value: attention.negativeWalletDrivers, path: '/taxi/admin/drivers/wallet/negative', icon: CreditCard },
+    { label: 'Rides searching for a driver', value: attention.searchingTrips, path: '/taxi/admin/ongoing', icon: Search },
+  ];
+  const pendingAttention = attentionItems.filter((item) => Number(item.value || 0) > 0);
+
+  const healthRows = [
+    { name: 'API server', icon: Server, status: health.apiUptimeSeconds ? `Up ${formatUptime(health.apiUptimeSeconds)}` : 'Unknown', ok: Boolean(health.apiUptimeSeconds) },
+    { name: 'Database', icon: Database, status: health.database === 'connected' ? 'Connected' : (health.database ? 'Disconnected' : 'Unknown'), ok: health.database === 'connected' },
+    { name: 'Socket server', icon: Activity, status: health.socketClients == null ? 'Not running' : `${health.socketClients} connected`, ok: health.socketClients != null },
+    { name: 'Redis cache', icon: Cpu, status: health.redis === 'ok' ? 'Healthy' : health.redis === 'disabled' ? 'Not enabled' : (health.redis ? 'Unavailable' : 'Unknown'), ok: health.redis === 'ok' || health.redis === 'disabled' },
+    { name: 'Google Maps key', icon: Map, status: health.maps === 'configured' ? 'Configured' : (health.maps ? 'Missing' : 'Unknown'), ok: health.maps === 'configured' },
+  ];
+  const unhealthy = healthRows.filter((row) => !row.ok);
 
   // SVG Area Chart Points mapping for Revenue Trajectory
   const chartWidth = 500;
@@ -224,14 +249,14 @@ const MainDashboard = () => {
           {[
             { label: "Total customers", value: totalUsers, icon: Users, cardBg: "!bg-neutral-900" },
             { label: "Total drivers", value: totalDrivers, icon: Car, cardBg: "!bg-neutral-900" },
-            { label: "Active drivers", value: approvedDrivers, icon: UserCheck, cardBg: "!bg-emerald-500" },
-            { label: "Active vendors", value: totalOwners, icon: Building2, cardBg: "!bg-rose-500" },
-            { label: "Online customers", value: Math.max(1, Math.round(totalUsers * 0.15)), icon: Sparkles, cardBg: "!bg-orange-500" },
-            { label: "Ongoing trips", value: todayTrips.scheduled || 0, icon: Activity, cardBg: "!bg-neutral-900" },
+            { label: "Approved drivers", value: approvedDrivers, icon: UserCheck, cardBg: "!bg-emerald-500" },
+            { label: "Drivers online", value: live.onlineDrivers || 0, icon: Building2, cardBg: "!bg-rose-500" },
+            { label: "Riders on a trip", value: live.ridersOnTrip || 0, icon: Sparkles, cardBg: "!bg-orange-500" },
+            { label: "Ongoing trips", value: live.ongoingTrips || 0, icon: Activity, cardBg: "!bg-neutral-900" },
             { label: "Today's revenue", value: `₹${currency(todayEarnings.total)}`, icon: IndianRupee, cardBg: "!bg-emerald-500" },
-            { label: "Platform uptime", value: "99.98%", icon: Server, cardBg: "!bg-neutral-900" },
-            { label: "Fleet utilization", value: `${fleetUtilization}%`, icon: TrendingUp, cardBg: "!bg-teal-500" },
-            { label: "Pending approvals", value: declinedDrivers, icon: Clock, cardBg: "!bg-red-500" }
+            { label: "API uptime", value: formatUptime(health.apiUptimeSeconds), icon: Server, cardBg: "!bg-neutral-900" },
+            { label: "Fleet utilization", value: `${live.fleetUtilization || 0}%`, icon: TrendingUp, cardBg: "!bg-teal-500" },
+            { label: "Pending approvals", value: dashboard?.pendingApprovals || 0, icon: Clock, cardBg: "!bg-red-500" }
           ].map((kpi, idx) => (
             <div key={idx} className="rounded-xl border border-neutral-900/[0.08] bg-white p-4">
               <div className="flex items-center justify-between gap-2">
@@ -266,26 +291,26 @@ const MainDashboard = () => {
                   ))}
                 </div>
               </div>
-              <p className="text-xs text-neutral-500">Platform commission vs overall driver disbursements.</p>
+              <p className="text-xs text-neutral-500">{timeframe === 'Week' ? 'Last 7 days' : timeframe === 'Month' ? 'This month' : timeframe === 'Year' ? 'This year' : 'Today'}: completed-trip fares and platform commission. Chart: last 4 months.</p>
             </div>
 
             <div className="grid grid-cols-3 gap-2 my-3">
               <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-2 text-center">
                 <span className="text-xs text-neutral-500 block">Revenue</span>
                 <span className="text-xs font-medium text-neutral-900 block mt-0.5">
-                  ₹{currency(timeframe === 'Today' ? todayEarnings.total : overallEarnings.total)}
+                  ₹{currency(selectedPeriod.total)}
                 </span>
               </div>
               <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-2 text-center">
                 <span className="text-xs text-neutral-500 block font-medium text-[#0a4d2b]">Commission</span>
                 <span className="text-xs font-medium text-neutral-900 block mt-0.5">
-                  ₹{currency(timeframe === 'Today' ? todayEarnings.admin_commission : overallEarnings.admin_commission)}
+                  ₹{currency(selectedPeriod.admin_commission)}
                 </span>
               </div>
               <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-2 text-center">
                 <span className="text-xs text-neutral-500 block">Trips</span>
                 <span className="text-xs font-medium text-neutral-900 block mt-0.5">
-                  {timeframe === 'Today' ? todayTrips.total : overallTrips.total}
+                  {selectedPeriod.trips || 0}
                 </span>
               </div>
             </div>
@@ -405,32 +430,26 @@ const MainDashboard = () => {
           <div className="admin-card flex flex-col justify-between">
             <div>
               <h3 className="text-xs text-neutral-900 mb-1 font-medium">Platform diagnostic health</h3>
-              <p className="text-xs text-neutral-500 mb-3">Real-time gateway status checks.</p>
+              <p className="text-xs text-neutral-500 mb-3">Checked by the server on each refresh.</p>
             </div>
 
             <div className="space-y-2 text-xs text-neutral-600">
-              {[
-                { name: "Application Node API", icon: Server, status: "Active", color: "text-emerald-500" },
-                { name: "Database Cluster", icon: Database, status: "Operational", color: "text-emerald-500" },
-                { name: "Socket Connection", icon: Activity, status: "Connected", color: "text-emerald-500" },
-                { name: "Redis Memory Cache", icon: Cpu, status: "Healthy", color: "text-emerald-500" },
-                { name: "Google Map Services", icon: Map, status: "Operational", color: "text-emerald-500" }
-              ].map((item, idx) => (
+              {healthRows.map((item, idx) => (
                 <div key={idx} className="flex items-center justify-between border-b border-neutral-900/[0.06] pb-1.5">
                   <span className="flex items-center gap-1.5">
                     <item.icon size={11} className="text-neutral-500" />
                     <span>{item.name}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 text-neutral-700">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-600" />
-                    {item.status}
+                    <span className={`h-1.5 w-1.5 rounded-full ${item.ok ? 'bg-green-600' : 'bg-red-600'}`} />
+                    {isLoading ? '…' : item.status}
                   </span>
                 </div>
               ))}
             </div>
 
             <div className="bg-neutral-50 border border-neutral-900/[0.08] rounded-lg p-2 text-center text-xs text-neutral-500 mt-2.5">
-              All system channels operating under normal latency limits.
+              {isLoading ? 'Checking…' : unhealthy.length ? `${unhealthy.length} need${unhealthy.length === 1 ? 's' : ''} attention: ${unhealthy.map((row) => row.name).join(', ')}` : 'All checks passed.'}
             </div>
           </div>
         </div>
@@ -446,27 +465,35 @@ const MainDashboard = () => {
                 <span>Performance leaderboard</span>
               </h3>
               
+              <p className="-mt-2 mb-3 text-xs text-neutral-500">Trips completed in the last 30 days.</p>
+              {leaderboard.length === 0 ? (
+                <p className="py-6 text-center text-xs text-neutral-500">{isLoading ? 'Loading…' : 'No completed trips in the last 30 days.'}</p>
+              ) : (
               <div className="space-y-3.5">
-                {[
-                  { name: "Rydon Driver Node A", rating: "4.95", trips: 48, status: "Active", color: "bg-emerald-500" },
-                  { name: "City Fleet Partner B", rating: "4.89", trips: 42, status: "Active", color: "bg-emerald-500" },
-                  { name: "Rydon Courier Node C", rating: "4.82", trips: 36, status: "Active", color: "bg-emerald-500" },
-                  { name: "Partner Fleet Partner D", rating: "4.75", trips: 31, status: "Active", color: "bg-[#0a4d2b] text-white" }
-                ].map((lead, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs pb-2 border-b border-neutral-900/[0.06] last:border-0 last:pb-0">
+                {leaderboard.map((lead, i) => (
+                  <button
+                    type="button"
+                    key={lead.driverId}
+                    onClick={() => navigate(`/taxi/admin/drivers/${lead.driverId}`)}
+                    className="flex w-full items-center justify-between text-left text-xs pb-2 border-b border-neutral-900/[0.06] last:border-0 last:pb-0"
+                  >
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-full bg-neutral-50 flex items-center justify-center font-medium text-xs text-neutral-900 border">
                         {i + 1}
                       </div>
                       <div>
                         <span className="font-medium block text-neutral-900">{lead.name}</span>
-                        <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-neutral-500">Rating {lead.rating} <Star size={11} strokeWidth={1.5} className="text-amber-500" /></span>
+                        <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-neutral-500">
+                          {lead.ratingCount > 0 ? <>Rating {lead.rating.toFixed(1)} <Star size={11} strokeWidth={1.5} className="text-amber-500" /></> : 'No ratings yet'}
+                          {' · '}₹{currency(lead.earnings)} earned
+                        </span>
                       </div>
                     </div>
                     <span className="font-medium text-neutral-900">{lead.trips} trips</span>
-                  </div>
+                  </button>
                 ))}
               </div>
+              )}
             </div>
           </div>
 
@@ -478,7 +505,7 @@ const MainDashboard = () => {
                   <Shield size={14} className="text-rose-500" />
                   <span>SOS response center</span>
                 </h3>
-                {Number(notifiedSos.total || 0) > 0 && (
+                {Number(sos.active || 0) > 0 && (
                   <span className="inline-flex items-center gap-1.5 text-xs text-red-700"><span className="h-1.5 w-1.5 rounded-full bg-red-600" />
                     Active distress
                   </span>
@@ -487,24 +514,26 @@ const MainDashboard = () => {
 
               <div className="flex items-center justify-around py-4">
                 <div className="text-center">
-                  <span className="text-3xl font-medium text-rose-500 block leading-none">{notifiedSos.total || 0}</span>
-                  <span className="text-xs text-neutral-500 block mt-1.5 font-medium">Pending SOS</span>
+                  <span className="text-3xl font-medium text-rose-500 block leading-none">{sos.active || 0}</span>
+                  <span className="text-xs text-neutral-500 block mt-1.5 font-medium">Active SOS</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#E5E7EB]" />
                 <div className="text-center">
-                  <span className="text-3xl font-medium text-neutral-900 block leading-none">{notifiedSos.closed || 0}</span>
+                  <span className="text-3xl font-medium text-neutral-900 block leading-none">{sos.resolved || 0}</span>
                   <span className="text-xs text-neutral-500 block mt-1.5 font-medium">Resolved signals</span>
                 </div>
               </div>
 
               <div className="bg-neutral-50 border border-neutral-100 rounded-lg p-2.5 space-y-2 text-xs text-neutral-600 mt-2">
                 <div className="flex justify-between">
-                  <span>Assigned Security Officers:</span>
-                  <span className="font-medium text-neutral-900">{notifiedSos.assigned || 0}</span>
+                  <span>Last SOS alert:</span>
+                  <span className="font-medium text-neutral-900">
+                    {sos.lastAlertAt ? new Date(sos.lastAlertAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'None yet'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Target Response SLA:</span>
-                  <span className="font-medium text-emerald-600">&lt; 3 mins</span>
+                  <span>Open support tickets:</span>
+                  <span className="font-medium text-neutral-900">{attention.openTickets || 0}</span>
                 </div>
               </div>
             </div>
@@ -518,35 +547,42 @@ const MainDashboard = () => {
             </button>
           </div>
 
-          {/* AI Insights & Anomalies Panel */}
-          <div className="admin-card flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs text-neutral-900 flex items-center gap-1.5 font-medium">
-                  <Sparkles size={14} className="text-[#0a4d2b]" />
-                  <span>AI operations insights</span>
-                </h3>
-                <span className="font-mono text-xs text-neutral-500">
-                  Model v4
-                </span>
-              </div>
-
-              <div className="space-y-3 text-xs leading-relaxed text-neutral-600">
-                <p>
-                  <TrendingUp size={12} strokeWidth={1.5} className="mr-1 inline text-neutral-500" /><strong className="font-medium text-neutral-900">Demand Surge Identified:</strong> High session traffic recorded near core metro terminals. Recommend increasing driver incentives to support utilization.
-                </p>
-                <p>
-                  <ShieldCheck size={12} strokeWidth={1.5} className="mr-1 inline text-neutral-500" /><strong className="font-medium text-neutral-900">Security Posture:</strong> Platform authentication score stands at 92%. Active MFA validation verified across all Sub-admin tokens.
-                </p>
-              </div>
+          {/* Needs attention: real queues an admin has to act on */}
+          <div className="admin-card flex flex-col">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs text-neutral-900 flex items-center gap-1.5 font-medium">
+                <AlertTriangle size={14} className="text-[#0a4d2b]" />
+                <span>Needs attention</span>
+              </h3>
+              <span className="text-xs text-neutral-500">{isLoading ? '…' : `${pendingAttention.length} open`}</span>
             </div>
 
-            <button
-              onClick={() => toast.success('Dispatching operational targets to city hubs.')}
-              className="mt-4 h-9 w-full rounded-lg border border-neutral-900/[0.1] bg-white text-[13px] text-neutral-900 transition-colors hover:bg-neutral-50"
-            >
-              Dispatch system recommendations
-            </button>
+            {!isLoading && pendingAttention.length === 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
+                <CheckCircle size={20} strokeWidth={1.5} className="text-green-600" />
+                <p className="mt-2 text-xs text-neutral-600">Nothing waiting on you right now.</p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {pendingAttention.map((item) => (
+                  <button
+                    type="button"
+                    key={item.label}
+                    onClick={() => navigate(item.path)}
+                    className="flex w-full items-center justify-between rounded-lg border border-neutral-900/[0.06] px-3 py-2 text-left text-xs transition-colors hover:bg-neutral-50"
+                  >
+                    <span className="flex items-center gap-2 text-neutral-700">
+                      <item.icon size={13} strokeWidth={1.5} className="text-neutral-500" />
+                      {item.label}
+                    </span>
+                    <span className="flex items-center gap-1.5 font-medium text-neutral-900">
+                      {item.value}{item.extra ? <span className="font-normal text-neutral-500">· {item.extra}</span> : null}
+                      <ChevronRight size={13} className="text-neutral-400" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -554,16 +590,27 @@ const MainDashboard = () => {
         <div className="admin-card">
           <h3 className="text-xs text-neutral-900 mb-2 flex items-center gap-1.5 font-medium">
             <MapPin size={14} className="text-[#0a4d2b]" />
-            <span>Operational demand distribution</span>
+            <span>Live fleet positions</span>
           </h3>
-          <p className="text-xs text-neutral-500 mb-4">Live fleet positions and demand distribution maps.</p>
+          <p className="text-xs text-neutral-500 mb-4">
+            {driverPositions.length
+              ? `${driverPositions.length} online driver${driverPositions.length === 1 ? '' : 's'} · ${driverPositions.filter((d) => d.onTrip).length} on a trip (red) · refreshes every minute`
+              : 'No drivers online right now.'}
+          </p>
 
           <div className="w-full h-80 rounded-xl overflow-hidden border border-neutral-900/[0.08] bg-neutral-50 flex items-center justify-center relative shadow-sm">
             {isLoaded ? (
               <GoogleMap
                 mapContainerClassName="w-full h-full"
-                center={DISTRICT_CENTER}
-                zoom={5}
+                center={driverPositions[0] ? { lat: driverPositions[0].lat, lng: driverPositions[0].lng } : DISTRICT_CENTER}
+                zoom={driverPositions.length ? 12 : 9}
+                onLoad={(map) => {
+                  if (driverPositions.length > 1 && window.google?.maps) {
+                    const bounds = new window.google.maps.LatLngBounds();
+                    driverPositions.forEach((d) => bounds.extend({ lat: d.lat, lng: d.lng }));
+                    map.fitBounds(bounds, 60);
+                  }
+                }}
                 options={{
                   disableDefaultUI: true,
                   styles: [
@@ -582,8 +629,22 @@ const MainDashboard = () => {
                   ]
                 }}
               >
-                {/* Central operational coordinate */}
-                <MarkerF position={DISTRICT_CENTER} />
+                {driverPositions.map((d) => (
+                  <MarkerF
+                    key={d.id}
+                    position={{ lat: d.lat, lng: d.lng }}
+                    title={`${d.name}${d.onTrip ? ' · on a trip' : ' · available'}`}
+                    icon={window.google?.maps ? {
+                      path: window.google.maps.SymbolPath.CIRCLE,
+                      scale: 7,
+                      fillColor: d.onTrip ? '#DC2626' : '#16A34A',
+                      fillOpacity: 1,
+                      strokeColor: '#FFFFFF',
+                      strokeWeight: 2,
+                    } : undefined}
+                    onClick={() => navigate(`/taxi/admin/drivers/${d.id}`)}
+                  />
+                ))}
               </GoogleMap>
             ) : (
               <div className="text-center text-xs text-neutral-500 flex flex-col items-center gap-2">

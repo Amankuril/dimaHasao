@@ -33,6 +33,9 @@ import { PaymentGateway } from '../models/PaymentGateway.js';
 import { PaymentMethod } from '../models/PaymentMethod.js';
 import { OnboardingScreen } from '../models/OnboardingScreen.js';
 import { WithdrawalRequest } from '../models/WithdrawalRequest.js';
+import { SafetyAlert } from '../../common/models/SafetyAlert.js';
+import { healthCheck } from '../../../../config/health.js';
+import { isMapsConfigured } from '../../../../core/maps/googleMaps.service.js';
 import { SupportTicket } from '../../support/models/SupportTicket.js';
 import TaxiTransportType from '../models/TaxiTransportType.js';
 import { comparePassword, hashPassword } from '../../driver/services/authService.js';
@@ -44,6 +47,7 @@ import { RIDE_LIVE_STATUS, RIDE_STATUS } from "../../constants/index.js";
 
 import {
   cancelRideByAdmin,
+  getSocketServer,
   emitToDriver,
   notifyUserAccountDeleted,
 } from '../../services/dispatchService.js';
@@ -5134,6 +5138,162 @@ export const getAdminEarnings = async (query = {}) => {
   };
 };
 
+/*
+ * The dashboard's live figures. Each one is counted from stored data or a
+ * real check; nothing is estimated (the panels used to show a fixed 99.98%
+ * uptime, invented leaderboard drivers and canned "AI insights").
+ */
+const buildDashboardLiveExtras = async ({ rides, completedRides, getRideEventDate, sumFare, sumCommission, now }) => {
+  const activeDriver = { deletedAt: null, approve: true };
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const [
+    onlineDrivers,
+    driversOnTrip,
+    pendingApprovals,
+    negativeWalletDrivers,
+    activeSos,
+    resolvedSos,
+    latestSos,
+    withdrawalAgg,
+    openTickets,
+    driverPositions,
+    health,
+  ] = await Promise.all([
+    Driver.countDocuments({ ...activeDriver, isOnline: true }),
+    Driver.countDocuments({ ...activeDriver, isOnline: true, isOnRide: true }),
+    Driver.countDocuments({ deletedAt: null, approve: false }),
+    Driver.countDocuments({ deletedAt: null, 'wallet.balance': { $lt: 0 } }),
+    SafetyAlert.countDocuments({ status: 'active' }),
+    SafetyAlert.countDocuments({ status: 'resolved' }),
+    SafetyAlert.findOne({}).sort({ createdAt: -1 }).select('createdAt status').lean(),
+    WithdrawalRequest.aggregate([
+      { $match: { status: 'pending' } },
+      { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: '$amount' } } },
+    ]),
+    SupportTicket.countDocuments({ status: { $in: ['pending', 'assigned'] } }),
+    Driver.find({ ...activeDriver, isOnline: true, 'location.coordinates.1': { $exists: true } })
+      .select('name location isOnRide vehicleType')
+      .limit(300)
+      .lean(),
+    healthCheck().catch(() => ({ mongo: 'disconnected', redis: 'unavailable' })),
+  ]);
+
+  // Rides moving right now: accepted or under way, not a booking for later.
+  const ongoing = rides.filter((ride) => [RIDE_STATUS.ACCEPTED, RIDE_STATUS.ONGOING].includes(String(ride?.status || '').toLowerCase()));
+  const searching = rides.filter((ride) => String(ride?.status || '').toLowerCase() === RIDE_STATUS.SEARCHING
+    && !(ride?.scheduledAt && new Date(ride.scheduledAt) > now));
+
+  const startOf = (offsetDays = 0) => {
+    const d = new Date(now);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - offsetDays);
+    return d;
+  };
+  const periodStarts = {
+    today: startOf(0),
+    week: startOf(6),
+    month: new Date(now.getFullYear(), now.getMonth(), 1),
+    year: new Date(now.getFullYear(), 0, 1),
+  };
+  const periodEarnings = {};
+  for (const [key, start] of Object.entries(periodStarts)) {
+    const inPeriod = completedRides.filter((ride) => {
+      const at = getRideEventDate(ride);
+      return at && new Date(at) >= start;
+    });
+    const tripsInPeriod = rides.filter((ride) => {
+      const at = getRideEventDate(ride);
+      return at && new Date(at) >= start;
+    });
+    periodEarnings[key] = {
+      total: Number(sumFare(inPeriod).toFixed(2)),
+      admin_commission: Number(sumCommission(inPeriod).toFixed(2)),
+      trips: tripsInPeriod.length,
+      completed: inPeriod.length,
+    };
+  }
+
+  // Top drivers by trips completed in the last 30 days.
+  const tripsByDriver = new Map();
+  for (const ride of completedRides) {
+    const at = getRideEventDate(ride);
+    if (!ride?.driverId || !at || new Date(at) < thirtyDaysAgo) continue;
+    const key = String(ride.driverId);
+    const entry = tripsByDriver.get(key) || { trips: 0, earnings: 0 };
+    entry.trips += 1;
+    entry.earnings += Number(ride.driverEarnings || 0);
+    tripsByDriver.set(key, entry);
+  }
+  const topIds = [...tripsByDriver.entries()].sort((a, b) => b[1].trips - a[1].trips).slice(0, 5).map(([id]) => id);
+  const topDrivers = topIds.length
+    ? await Driver.find({ _id: { $in: topIds } }).select('name phone rating ratingCount isOnline').lean()
+    : [];
+  const leaderboard = topIds
+    .map((id) => {
+      const driver = topDrivers.find((d) => String(d._id) === id);
+      if (!driver) return null;
+      return {
+        driverId: id,
+        name: driver.name || 'Driver',
+        phone: driver.phone || '',
+        rating: Number(driver.rating || 0),
+        ratingCount: Number(driver.ratingCount || 0),
+        isOnline: Boolean(driver.isOnline),
+        trips: tripsByDriver.get(id).trips,
+        earnings: Number(tripsByDriver.get(id).earnings.toFixed(2)),
+      };
+    })
+    .filter(Boolean);
+
+  const io = getSocketServer();
+  const withdrawals = withdrawalAgg[0] || { count: 0, amount: 0 };
+
+  return {
+    live: {
+      onlineDrivers,
+      driversOnTrip,
+      fleetUtilization: onlineDrivers ? Math.round((driversOnTrip / onlineDrivers) * 100) : 0,
+      ongoingTrips: ongoing.length,
+      searchingTrips: searching.length,
+      ridersOnTrip: new Set(ongoing.map((ride) => String(ride.userId || ''))).size,
+    },
+    pendingApprovals,
+    periodEarnings,
+    leaderboard,
+    sos: {
+      active: activeSos,
+      resolved: resolvedSos,
+      lastAlertAt: latestSos?.createdAt || null,
+    },
+    attention: {
+      pendingApprovals,
+      pendingWithdrawals: withdrawals.count,
+      pendingWithdrawalAmount: Number(Number(withdrawals.amount || 0).toFixed(2)),
+      openTickets,
+      negativeWalletDrivers,
+      activeSos,
+      searchingTrips: searching.length,
+    },
+    health: {
+      apiUptimeSeconds: Math.round(process.uptime()),
+      database: health.mongo,
+      redis: health.redis,
+      socketClients: io?.engine?.clientsCount ?? null,
+      maps: isMapsConfigured() ? 'configured' : 'missing key',
+      checkedAt: now.toISOString(),
+    },
+    driverPositions: driverPositions.map((d) => ({
+      id: String(d._id),
+      name: d.name || '',
+      lat: d.location.coordinates[1],
+      lng: d.location.coordinates[0],
+      onTrip: Boolean(d.isOnRide),
+      vehicleType: d.vehicleType || '',
+    })),
+  };
+};
+
 export const getDashboardData = async () => {
   if (dashboardCache.value && dashboardCache.expiresAt > Date.now()) {
     return dashboardCache.value;
@@ -5144,7 +5304,7 @@ export const getDashboardData = async () => {
     Driver.countDocuments(),
     Driver.countDocuments({ approve: true }),
     Ride.find()
-      .select('status liveStatus fare paymentMethod commissionAmount driverEarnings driverId createdAt updatedAt completedAt')
+      .select('status liveStatus fare paymentMethod commissionAmount driverEarnings driverId userId scheduledAt createdAt updatedAt completedAt')
       .sort({ createdAt: -1 })
       .lean(),
     SupportTicket.aggregate([
@@ -5306,7 +5466,10 @@ export const getDashboardData = async () => {
     { pending: 0, assigned: 0, closed: 0 },
   );
 
+  const extras = await buildDashboardLiveExtras({ rides, completedRides, getRideEventDate, sumFare, sumCommission, now });
+
   const snapshot = {
+    ...extras,
     totalUsers,
     totalDrivers: {
       total: totalDrivers,
