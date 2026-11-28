@@ -73,7 +73,7 @@ export const QuickLinksGrid = () => {
     emergency: {
       title: 'Emergency Help & SOS',
       desc: 'Direct emergency hotlines for visitors in Dima Hasao district.',
-      items: ['Police Control Room: 112 / 03673-236224', 'Haflong Civil Hospital: 03673-236222', 'Tourist Police Helpline: +91 94350 99999', 'Disaster Management: 1077'],
+      items: ['Police Control Room: 112 / 03673-236224', 'Haflong Civil Hospital: 03673-236222', 'District Police Control Room: 8638389873', 'Disaster Management: 1077'],
       actionText: 'Call Emergency: 112',
       actionLink: 'tel:112',
       isEmergency: true

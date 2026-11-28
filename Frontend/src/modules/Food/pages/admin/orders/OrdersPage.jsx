@@ -10,7 +10,6 @@ import OrdersTable from "@food/components/admin/orders/OrdersTable"
 import FilterPanel from "@food/components/admin/orders/FilterPanel"
 import ViewOrderDialog from "@food/components/admin/orders/ViewOrderDialog"
 import SettingsDialog from "@food/components/admin/orders/SettingsDialog"
-import RefundModal from "@food/components/admin/orders/RefundModal"
 import { useOrdersManagement } from "@food/components/admin/orders/useOrdersManagement"
 import { Loader2 } from "lucide-react"
 import { OrdersDashboardSkeleton, TableSkeleton } from "@food/components/ui/loading-skeletons"
@@ -58,8 +57,6 @@ export default function OrdersPage({ statusKey = "all" }) {
   const [processingActionOrderId, setProcessingActionOrderId] = useState(null)
   const [actionLoadingType, setActionLoadingType] = useState(null) // 'accept' | 'reject'
   const [deletingOrderId, setDeletingOrderId] = useState(null)
-  const [refundModalOpen, setRefundModalOpen] = useState(false)
-  const [selectedOrderForRefund, setSelectedOrderForRefund] = useState(null)
   const seenOrderIdsRef = useRef(new Set())
   const isFirstLoadRef = useRef(true)
   const fallbackAudioRef = useRef(null)
@@ -956,142 +953,55 @@ export default function OrdersPage({ statusKey = "all" }) {
     }
   }
 
-  // Handle refund button click - show modal for wallet payments, confirm dialog for others
-  const handleRefund = (order) => {
-    const isWalletPayment = order.paymentType === "Wallet" || order.payment?.method === "wallet";
-    
-    if (isWalletPayment) {
-      // Show modal for wallet refunds
-      setSelectedOrderForRefund(order)
-      setRefundModalOpen(true)
-    } else {
-      // For non-wallet payments, use the old confirm dialog flow
-      const confirmMessage = `Are you sure you want to process refund for order ${order.orderId}?\n\nThis will initiate a Razorpay refund to the customer's original payment method.`;
-      
-      if (!confirm(confirmMessage)) {
-        return
-      }
-      
-      processRefund(order, null) // null amount means use default
-    }
+  // Refund a cancelled, paid order whose automatic refund failed or never ran.
+  // Always the full order total, same as every automatic cancel refund. A
+  // Razorpay order goes back to the card/bank first; if Razorpay refuses, the
+  // admin is offered the customer's wallet instead.
+  const requestRefund = async (order, destination) => {
+    const orderIdToUse = order.id || order._id || order.orderId
+    const response = await adminAPI.processRefund(orderIdToUse, { destination })
+    if (!response.data?.success) throw new Error(response.data?.message || "Failed to process refund")
   }
 
-  // Process refund with amount
-  const processRefund = async (order, refundAmount = null) => {
-    // Try using MongoDB _id first (more reliable for route matching), then fallback to orderId string
-    // Backend accepts either MongoDB ObjectId (24 chars) or orderId string
-    // Using MongoDB _id is more reliable for route matching (no dashes/special chars)
+  const handleRefund = async (order) => {
+    if (processingRefund) return
     const orderIdToUse = order.id || order._id || order.orderId
-    
     if (!orderIdToUse) {
-      debugError('? No orderId found in order object:', order)
-      toast.error('Order ID not found. Please refresh the page and try again.')
+      toast.error("Order ID not found. Refresh the page and try again.")
       return
     }
-    
-    debugLog('?? Order details for refund:', {
-      orderIdString: order.orderId,
-      mongoId: order.id,
-      orderIdToUse,
-      willUse: order.orderId ? 'orderId string' : 'MongoDB _id',
-      refundAmount
-    })
+    const isWalletPayment = order.paymentType === "Wallet" || order.payment?.method === "wallet"
+    const amount = `\u20B9${Number(order.totalAmount || 0).toFixed(2)}`
+    const question = isWalletPayment
+      ? `Refund ${amount} for order ${order.orderId} to the customer's wallet?`
+      : `Refund ${amount} for order ${order.orderId} to the customer's original payment method (Razorpay)?`
+    if (!window.confirm(question)) return
 
+    setProcessingRefund(orderIdToUse)
     try {
-      setProcessingRefund(orderIdToUse)
-      
-      debugLog('?? Processing refund for order:', {
-        orderId: order.orderId,
-        id: order.id,
-        _id: order._id,
-        orderIdToUse,
-        refundAmount,
-        url: `/api/admin/orders/${orderIdToUse}/refund`
-      })
-      
-      // Include refundAmount in request body if provided (ensure it's a number)
-      const requestData = refundAmount !== null ? { refundAmount: parseFloat(refundAmount) } : {}
-      debugLog('?? Request data being sent:', requestData)
-      const response = await adminAPI.processRefund(orderIdToUse, requestData)
-      
-      if (response.data?.success) {
-        const isWalletPayment = order.paymentType === "Wallet" || order.payment?.method === "wallet";
-        toast.success(response.data?.message || (isWalletPayment 
-          ? `Wallet refund of \u20B9${refundAmount || order.totalAmount} processed successfully for order ${order.orderId}`
-          : `Refund initiated successfully for order ${order.orderId}`))
-        // Update the order in the local state immediately to show "Refunded" status
-        setOrders(prevOrders => 
-          prevOrders.map(o => 
-            (o.id === order.id || o.orderId === order.orderId)
-              ? { ...o, refundStatus: 'processed' } // Wallet refunds are instant, so mark as processed
-              : o
-          )
-        )
-        // Refresh the orders list to get updated data
-        await fetchOrders({ silent: true, withRingCheck: false })
-      } else {
-        toast.error(response.data?.message || "Failed to process refund")
-      }
-    } catch (error) {
-      debugError("? Error processing refund:", error)
-      
-      // Log full error details for debugging
-      const errorDetails = {
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        url: error.config?.url,
-        baseURL: error.config?.baseURL,
-        fullURL: error.config?.baseURL + error.config?.url,
-        orderId: orderIdToUse,
-        refundAmount: refundAmount,
-        order: {
-          id: order.id,
-          orderId: order.orderId,
-          _id: order._id
-        },
-        stack: error.stack
-      }
-      debugError("? Error details:", JSON.stringify(errorDetails, null, 2))
-      
-      // Show more specific error message
-      let errorMessage = "Failed to process refund"
-      
-      if (error.response) {
-        // Server responded with error
-        if (error.response.status === 404) {
-          errorMessage = `Order not found (ID: ${orderIdToUse}). Please check if the order exists.`
-        } else if (error.response.status === 400) {
-          errorMessage = error.response.data?.message || "Invalid request. Please check the refund amount."
-        } else if (error.response.status === 500) {
-          errorMessage = error.response.data?.message || "Server error. Please try again later."
-        } else if (error.response.data?.message) {
-          errorMessage = error.response.data.message
-        } else {
-          errorMessage = `Error ${error.response.status}: ${error.response.statusText || "Unknown error"}`
+      try {
+        await requestRefund(order, isWalletPayment ? "wallet" : "source")
+        toast.success(isWalletPayment
+          ? `${amount} refunded to the customer's wallet`
+          : `Refund of ${amount} sent via Razorpay. It reaches the customer in 5-7 working days`)
+      } catch (error) {
+        const message = error.response?.data?.message || error.message || "Failed to process refund"
+        if (isWalletPayment || !window.confirm(`${message}\n\nRefund ${amount} to the customer's wallet instead?`)) {
+          toast.error(message)
+          return
         }
-      } else if (error.request) {
-        // Request was made but no response received
-        errorMessage = "Network error. Please check your internet connection and try again."
-      } else {
-        // Error in setting up the request
-        errorMessage = error.message || "Failed to process refund"
+        await requestRefund(order, "wallet")
+        toast.success(`${amount} refunded to the customer's wallet`)
       }
-      
-      debugError("? Final error message:", errorMessage)
-      toast.error(errorMessage)
+      setOrders(prev => prev.map(o =>
+        (o.id === order.id || o.orderId === order.orderId) ? { ...o, refundStatus: "processed" } : o
+      ))
+      await fetchOrders({ silent: true, withRingCheck: false })
+    } catch (error) {
+      debugError("Error processing refund:", error)
+      toast.error(error.response?.data?.message || error.message || "Failed to process refund")
     } finally {
       setProcessingRefund(null)
-      setRefundModalOpen(false)
-      setSelectedOrderForRefund(null)
-    }
-  }
-
-  // Handle refund confirmation from modal
-  const handleRefundConfirm = (amount) => {
-    if (selectedOrderForRefund) {
-      processRefund(selectedOrderForRefund, amount)
     }
   }
 
@@ -1161,13 +1071,6 @@ export default function OrdersPage({ statusKey = "all" }) {
               })
               fetchOrders({ silent: true, withRingCheck: false })
             }}
-          />
-          <RefundModal
-            isOpen={refundModalOpen}
-            onOpenChange={setRefundModalOpen}
-            order={selectedOrderForRefund}
-            onConfirm={handleRefundConfirm}
-            isProcessing={processingRefund !== null}
           />
           <OrdersTable 
             orders={filteredOrders} 

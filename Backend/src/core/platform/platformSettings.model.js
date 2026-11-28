@@ -56,12 +56,12 @@ const platformSettingsSchema = new mongoose.Schema(
             default: () => [
                 { label: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield' },
                 { label: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital' },
-                { label: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing' },
+                { label: 'District Police Control Room', number: '8638389873', icon: 'fa-solid fa-person-military-pointing' },
                 { label: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation' },
             ],
         },
         /** "Contact Tourism Desk" for local guides on the customer home screen. */
-        tourismDeskPhone: { type: String, default: '+91 94350 12345', trim: true },
+        tourismDeskPhone: { type: String, default: '+91 9101533127', trim: true },
         /** Hotel/restaurant partner support. Blank falls back to supportPhone / supportEmail. */
         partnerSupportPhone: { type: String, default: '', trim: true },
         partnerSupportEmail: { type: String, default: '', trim: true },
@@ -75,8 +75,25 @@ const platformSettingsSchema = new mongoose.Schema(
     { timestamps: true, collection: 'platform_settings' },
 );
 
+// Seeded placeholders that were never real numbers. Replaced in stored settings
+// the first time they are read; an admin's own edits are left alone.
+const PLACEHOLDER_HELPLINE = '+91 94350 99999';
+const POLICE_CONTROL_ROOM = { label: 'District Police Control Room', number: '8638389873', icon: 'fa-solid fa-person-military-pointing' };
+
 platformSettingsSchema.statics.getSettings = async function getSettings() {
-    return (await this.findOne({ key: 'platform' })) || this.create({ key: 'platform' });
+    const doc = (await this.findOne({ key: 'platform' })) || (await this.create({ key: 'platform' }));
+    const contacts = doc.emergencyContacts || [];
+    const i = contacts.findIndex((c) => String(c?.number || '').trim() === PLACEHOLDER_HELPLINE);
+    if (i !== -1) {
+        contacts.splice(i, 1, POLICE_CONTROL_ROOM);
+        doc.markModified('emergencyContacts');
+        await doc.save();
+    }
+    if (String(doc.tourismDeskPhone || '').trim() === '+91 94350 12345') {
+        doc.tourismDeskPhone = doc.supportPhone || '';
+        await doc.save();
+    }
+    return doc;
 };
 
 const DistrictSettings = mongoose.model('DistrictSettings', platformSettingsSchema, 'platform_settings');

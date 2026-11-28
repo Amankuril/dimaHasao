@@ -1478,37 +1478,10 @@ export async function deleteZone(req, res, next) {
 export async function processRefund(req, res, next) {
     try {
         const { orderId } = req.params;
-        const { refundAmount } = req.body;
-        if (!orderId || !mongoose.Types.ObjectId.isValid(orderId)) {
-            return res.status(400).json({ success: false, message: 'Invalid order id' });
-        }
-        
-        // This is a stub for the actual refund logic.
-        // We will assume adminService.processRefund exists and handles the refund.
-        const updated = await adminService.processRefund(orderId, refundAmount);
-        
-        // Let's add the push notification here if we have access to the user ID
-        // First we need to get the order to find the user ID
-        const order = await mongoose.model('FoodOrder').findById(orderId).lean();
-        
-        if (order && order.userId) {
-            const { notifyOwnersSafely } = await import('../../notifications/firebase.service.js');
-            await notifyOwnersSafely(
-                [{ ownerType: 'USER', ownerId: order.userId }],
-                {
-                    title: 'Refund Processed! 💸',
-                    body: `Your refund of ₹${refundAmount || order.totalAmount || order.total || 0} for Order #${order.orderId} has been processed successfully.`,
-                    image: '/logo.png',
-                    data: {
-                        type: 'refund_processed',
-                        orderId: String(order.orderId),
-                        orderMongoId: String(order._id)
-                    }
-                }
-            );
-        }
-        
-        res.status(200).json({ success: true, message: 'Refund processed successfully', data: updated });
+        const destination = String(req.body?.destination || 'source').toLowerCase() === 'wallet' ? 'wallet' : 'source';
+        const { retryCancelledOrderRefund } = await import('../../orders/services/order.service.js');
+        const order = await retryCancelledOrderRefund(orderId, { destination, adminId: req.user?.userId });
+        res.status(200).json({ success: true, message: 'Refund processed successfully', data: { order } });
     } catch (error) {
         next(error);
     }

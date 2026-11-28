@@ -87,7 +87,7 @@ export const MoreScreen = () => {
       desc: 'Expert local Dimasa eco-guides & trekking experts',
       icon: 'fa-solid fa-user-tie',
       color: 'text-green-600',
-      action: () => showToast('Connecting to Certified Dimasa Guides Desk (+91 94350 12345)')
+      action: () => showToast('Connecting to Certified Dimasa Guides Desk (+91 9101533127)')
     },
     {
       title: 'Events & Falcon Festival',

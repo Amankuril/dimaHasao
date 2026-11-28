@@ -347,10 +347,11 @@ async function refundCancelledOrderPayment(order, { destination = "source", desc
   const status = String(order?.payment?.status || "").toLowerCase();
   if (status !== "paid") return;
   if (method !== "razorpay" && method !== "wallet") return;
-  if (method === "razorpay" && !order.payment?.razorpay?.paymentId) return;
 
   const amount = Number(order.pricing?.total ?? 0);
   const refundTo = method === "wallet" || destination === "wallet" ? "wallet" : "source";
+  // A gateway refund needs the gateway payment id; a wallet refund does not.
+  if (refundTo === "source" && !order.payment?.razorpay?.paymentId) return;
 
   const claimed = await FoodOrder.findOneAndUpdate(
     {
@@ -982,6 +983,7 @@ export async function verifyPayment(userId, dto) {
   // Payment is verified, but the order stays "created" (Pending) so the
   // restaurant/admin still has to accept it — same flow as COD orders.
   order.payment.status = "paid";
+  order.payment.paidAt = new Date();
   if (!order.payment.razorpay) order.payment.razorpay = {};
   if (!order.payment.razorpay.orderId) order.payment.razorpay.orderId = clientOrderId;
   order.payment.razorpay.paymentId = dto.razorpayPaymentId;
@@ -2704,7 +2706,7 @@ export async function acceptOrderAdmin(orderId, adminId) {
   return normalizeOrderForClient(order);
 }
 
-export async function rejectOrderAdmin(orderId, reason, adminId) {
+export async function rejectOrderAdmin(orderId, reason, adminId, { byRole = "ADMIN" } = {}) {
   const identity = buildOrderIdentityFilter(orderId);
   // findOne(null) matches the first order in the collection.
   if (!identity) throw new NotFoundError("Order not found");
@@ -2723,7 +2725,7 @@ export async function rejectOrderAdmin(orderId, reason, adminId) {
   }
 
   const rejected = await transitionOrderStatus(order._id, from, "cancelled_by_admin", {
-    history: { byRole: "ADMIN", byId: adminId, note: reason || "Order rejected by admin" },
+    history: { byRole, byId: adminId, note: reason || "Order rejected by admin" },
   });
   if (!rejected) {
     throw new ValidationError("Order status changed in the meantime; please refresh and try again");
@@ -2741,7 +2743,7 @@ export async function rejectOrderAdmin(orderId, reason, adminId) {
     await foodTransactionService.updateTransactionStatus(order._id, 'cancelled_by_admin', {
         status: isOnlinePaid ? 'refunded' : 'failed',
         note: reason || `Order rejected by admin`,
-        recordedByRole: 'ADMIN',
+        recordedByRole: byRole,
         recordedById: adminId
     });
   } catch (_) {}
@@ -2980,3 +2982,190 @@ export async function updateOrderStatusesAdmin(orderId, adminId, { orderStatus, 
   return normalizeOrderForClient(order);
 }
 
+
+// ----- Unaccepted paid orders & admin refund retry -----
+
+// The restaurant app rejects an order itself when its accept timer runs out,
+// but only while the app is open. A restaurant that is offline never does, so
+// a paid order used to sit in "created" with the customer's money held
+// forever. The server now enforces the same admin-set window, plus a grace
+// period so it never races the app's own auto-reject.
+const DEFAULT_ACCEPT_WINDOW_MINUTES = 5; // matches the restaurant app default
+const UNACCEPTED_GRACE_MINUTES = 5;
+const UNACCEPTED_SWEEP_BATCH = 50;
+
+async function getAcceptWindowsMinutes() {
+  try {
+    const { resolveRestaurantSettings } = await import("../../admin/controllers/systemConfig.controller.js");
+    const s = await resolveRestaurantSettings();
+    return {
+      delivery: Number(s?.deliveryAcceptOrderTimeMinutes) || DEFAULT_ACCEPT_WINDOW_MINUTES,
+      takeaway: Number(s?.takeawayAcceptOrderTimeMinutes) || DEFAULT_ACCEPT_WINDOW_MINUTES,
+    };
+  } catch {
+    return { delivery: DEFAULT_ACCEPT_WINDOW_MINUTES, takeaway: DEFAULT_ACCEPT_WINDOW_MINUTES };
+  }
+}
+
+/**
+ * Cancel and refund paid orders that no restaurant accepted in time.
+ * COD orders are left alone: nothing is held, and cancelling them is a
+ * product decision of its own. Safe to run on several instances at once:
+ * rejectOrderAdmin wins the status change atomically and the refund claims
+ * itself, so an order is cancelled and refunded exactly once.
+ */
+export async function autoCancelUnacceptedPaidOrders() {
+  const windows = await getAcceptWindowsMinutes();
+  const now = Date.now();
+  const shortest = Math.min(windows.delivery, windows.takeaway) + UNACCEPTED_GRACE_MINUTES;
+
+  const candidates = await FoodOrder.find({
+    orderStatus: "created",
+    "payment.status": "paid",
+    "payment.method": { $in: ["razorpay", "wallet"] },
+    createdAt: { $lt: new Date(now - shortest * 60 * 1000) },
+  })
+    .select("_id orderType createdAt scheduledAt payment.paidAt")
+    .sort({ createdAt: 1 })
+    .limit(UNACCEPTED_SWEEP_BATCH)
+    .lean();
+
+  let cancelled = 0;
+  for (const c of candidates) {
+    // A scheduled order is only due at its slot; a late payment restarts the clock.
+    const startedAt = Math.max(
+      new Date(c.createdAt).getTime(),
+      c.payment?.paidAt ? new Date(c.payment.paidAt).getTime() : 0,
+      c.scheduledAt ? new Date(c.scheduledAt).getTime() : 0,
+    );
+    const windowMin = (c.orderType === "takeaway" ? windows.takeaway : windows.delivery) + UNACCEPTED_GRACE_MINUTES;
+    if (now - startedAt < windowMin * 60 * 1000) continue;
+
+    try {
+      const order = await rejectOrderAdmin(
+        c._id,
+        "Auto-cancelled: the restaurant did not accept the order in time",
+        null,
+        { byRole: "SYSTEM" },
+      );
+      if (!String(order?.orderStatus || "").includes("cancel")) continue;
+      cancelled += 1;
+      await notifyUnacceptedOrderCancelled(c._id);
+    } catch (err) {
+      // Accepted in the meantime, or a refund error: the next sweep sees the real state.
+      logger.warn(`Unaccepted-order sweep skipped ${c._id}: ${err?.message || err}`);
+    }
+  }
+  if (cancelled) logger.info(`Unaccepted-order sweep cancelled ${cancelled} paid order(s)`);
+  return { checked: candidates.length, cancelled };
+}
+
+async function notifyUnacceptedOrderCancelled(orderMongoId) {
+  try {
+    const order = await FoodOrder.findById(orderMongoId)
+      .select("_id order_id userId restaurantId pricing payment")
+      .lean();
+    if (!order) return;
+    const displayId = order.order_id || String(order._id);
+    const amount = Number(order.pricing?.total || 0);
+    const refund = order.payment?.refund || {};
+    let refundLine = "";
+    if (refund.status === "processed") {
+      refundLine = refund.destination === "wallet"
+        ? ` ₹${amount} has been refunded to your wallet.`
+        : ` ₹${amount} has been refunded to your original payment method and should reach you in 5-7 working days.`;
+    } else {
+      refundLine = ` Your refund of ₹${amount} is being processed by our team.`;
+    }
+    await notifyOwnersSafely(
+      [
+        { ownerType: "USER", ownerId: order.userId },
+        { ownerType: "RESTAURANT", ownerId: order.restaurantId },
+      ],
+      {
+        title: "Order cancelled",
+        body: `Order #${displayId} was cancelled because the restaurant did not accept it in time.${refundLine}`,
+        data: { type: "order_cancelled", orderId: String(displayId), orderMongoId: String(order._id) },
+      },
+    );
+  } catch (err) {
+    logger.warn(`notifyUnacceptedOrderCancelled failed for ${orderMongoId}: ${err?.message || err}`);
+  }
+}
+
+/**
+ * Admin "Refund" on a cancelled order whose automatic refund failed (or never
+ * ran). Goes through the same claim-first refund as every cancel, so it can
+ * never pay twice. `destination` 'wallet' is the fallback when the gateway
+ * keeps refusing.
+ */
+export async function retryCancelledOrderRefund(orderId, { destination = "source", adminId } = {}) {
+  const identity = buildOrderIdentityFilter(orderId);
+  if (!identity) throw new NotFoundError("Order not found");
+  const order = await FoodOrder.findOne(identity);
+  if (!order) throw new NotFoundError("Order not found");
+
+  if (!String(order.orderStatus || "").includes("cancelled")) {
+    throw new ValidationError("Only cancelled orders can be refunded here");
+  }
+  const method = String(order.payment?.method || "").toLowerCase();
+  const payStatus = String(order.payment?.status || "").toLowerCase();
+  const refundStatus = String(order.payment?.refund?.status || "none").toLowerCase();
+  if (payStatus === "refunded" || refundStatus === "processed") {
+    throw new ValidationError("This order has already been refunded");
+  }
+  if (refundStatus === "pending") {
+    throw new ValidationError("A refund for this order is already in progress");
+  }
+  if (payStatus !== "paid" || (method !== "razorpay" && method !== "wallet")) {
+    throw new ValidationError("This order was not paid online, so there is nothing to refund");
+  }
+  if (method === "razorpay" && destination !== "wallet" && !order.payment?.razorpay?.paymentId) {
+    throw new ValidationError("The Razorpay payment id is missing. Refund to the customer's wallet instead");
+  }
+
+  await refundCancelledOrderPayment(order, {
+    destination: destination === "wallet" ? "wallet" : "source",
+    description: `Refund for cancelled order #${order.order_id || order._id}`,
+  });
+
+  const refund = order.payment?.refund || {};
+  if (refund.status !== "processed") {
+    throw new ValidationError(
+      destination === "wallet"
+        ? "The wallet refund failed. Check the server logs"
+        : "Razorpay refused the refund again. You can refund to the customer's wallet instead",
+    );
+  }
+
+  try {
+    await FoodTransaction.updateOne(
+      { orderId: order._id },
+      {
+        $set: { "payment.status": "refunded" },
+        $push: {
+          history: {
+            kind: "refunded",
+            amount: refund.amount,
+            at: new Date(),
+            note: `Admin refund to ${refund.destination}${refund.refundId ? ` ${refund.refundId}` : ""}`,
+            recordedBy: { role: "ADMIN", ...(adminId ? { id: adminId } : {}) },
+          },
+        },
+      },
+    );
+  } catch (err) {
+    logger.warn(`retryCancelledOrderRefund ledger sync failed for ${order._id}: ${err?.message || err}`);
+  }
+
+  const displayId = order.order_id || String(order._id);
+  await notifyOwnersSafely([{ ownerType: "USER", ownerId: order.userId }], {
+    title: "Refund processed",
+    body: refund.destination === "wallet"
+      ? `₹${refund.amount} for order #${displayId} has been refunded to your wallet.`
+      : `₹${refund.amount} for order #${displayId} has been refunded to your original payment method. It should reach you in 5-7 working days.`,
+    data: { type: "refund_processed", orderId: String(displayId), orderMongoId: String(order._id) },
+  }).catch(() => {});
+
+  return normalizeOrderForClient(order);
+}

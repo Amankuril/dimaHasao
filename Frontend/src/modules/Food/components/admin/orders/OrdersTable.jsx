@@ -648,6 +648,7 @@ export default function OrdersTable({
                            const isCancelled = order.orderStatus === "Cancelled by Restaurant" || 
                                              order.orderStatus === "Cancelled" || 
                                              order.orderStatus === "Cancelled by User" ||
+                                             order.orderStatus === "Canceled" ||
                                              (order.status === "cancelled" && (order.cancelledBy === "user" || order.cancelledBy === "restaurant"));
                            const paymentMethod = order.payment?.method || order.paymentMethod;
                            const isOnlinePayment = order.paymentType === "Online" ||
@@ -712,6 +713,7 @@ export default function OrdersTable({
                           const isCancelled = order.orderStatus === "Cancelled by Restaurant" || 
                                             order.orderStatus === "Cancelled" || 
                                             order.orderStatus === "Cancelled by User" ||
+                                            order.orderStatus === "Canceled" ||
                                             (order.status === "cancelled" && (order.cancelledBy === "user" || order.cancelledBy === "restaurant"));
                           const paymentMethod = order.payment?.method || order.paymentMethod;
                           const isOnlinePayment = order.paymentType === "Online" ||
@@ -737,6 +739,10 @@ export default function OrdersTable({
                                   ? "Wallet Refunded" 
                                   : "Refunded"}
                               </span>
+                            ) : order.refundStatus === 'pending' ? (
+                              <span className="px-2.5 py-1.5 rounded-md text-xs font-medium bg-amber-50 text-amber-800">
+                                Refund pending
+                              </span>
                             ) : onRefund ? (
                               <button 
                                 onClick={() => onRefund(order)}
@@ -745,12 +751,14 @@ export default function OrdersTable({
                                     ? "bg-neutral-900 hover:bg-neutral-900"
                                     : "bg-neutral-900 hover:bg-neutral-900"
                                 }`}
-                                title={order.paymentType === "Wallet" || order.payment?.method === "wallet"
-                                  ? "Process Wallet Refund (Add to user wallet)"
-                                  : "Process Refund via Razorpay"}
+                                title={order.refundStatus === 'failed'
+                                  ? "The automatic refund failed. Refund this order now"
+                                  : order.paymentType === "Wallet" || order.payment?.method === "wallet"
+                                    ? "Refund to the customer's wallet"
+                                    : "Refund via Razorpay"}
                               >
                                 <span className="text-sm font-medium">₹</span>
-                                <span>Refund</span>
+                                <span>{order.refundStatus === 'failed' ? 'Retry refund' : 'Refund'}</span>
                               </button>
                             ) : null}
                           </>

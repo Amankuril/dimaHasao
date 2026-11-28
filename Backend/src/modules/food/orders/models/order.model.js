@@ -87,6 +87,9 @@ const paymentSchema = new mongoose.Schema(
             default: 'cod_pending'
         },
         amountDue: { type: Number, min: 0 },
+        // When the money arrived. The unaccepted-order sweep counts the
+        // restaurant's accept window from here, not from checkout start.
+        paidAt: { type: Date },
         razorpay: {
             orderId: { type: String },
             paymentId: { type: String },

@@ -16,11 +16,11 @@ import { localStore } from './storage';
 const SAVED_KEY = 'platform_contacts_v1';
 
 export const DEFAULT_SOS_NUMBER = '112';
-export const DEFAULT_TOURISM_DESK_PHONE = '+91 94350 12345';
+export const DEFAULT_TOURISM_DESK_PHONE = '+91 9101533127';
 export const DEFAULT_EMERGENCY_CONTACTS = [
   { label: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield' },
   { label: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital' },
-  { label: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing' },
+  { label: 'District Police Control Room', number: '8638389873', icon: 'fa-solid fa-person-military-pointing' },
   { label: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation' },
 ];
 

@@ -19,6 +19,7 @@ let server = null;
 let socketServer = null;
 let expireOffersInterval = null;
 let fssaiExpiryInterval = null;
+let unacceptedOrdersInterval = null;
 
 const gracefulShutdown = async (signal) => {
     logger.info(`${signal} received, starting graceful shutdown`);
@@ -37,6 +38,7 @@ const gracefulShutdown = async (signal) => {
             stopCredentialRefresh();
             if (expireOffersInterval) clearInterval(expireOffersInterval);
             if (fssaiExpiryInterval) clearInterval(fssaiExpiryInterval);
+            if (unacceptedOrdersInterval) clearInterval(unacceptedOrdersInterval);
             logger.info('Graceful shutdown complete');
             process.exit(0);
         } catch (err) {
@@ -140,6 +142,18 @@ const startServer = async () => {
         };
         runFssaiExpirySync();
         fssaiExpiryInterval = setInterval(runFssaiExpirySync, 60 * 60 * 1000);
+
+        // Paid food orders no restaurant accepted in time: cancel and refund.
+        const runUnacceptedSweep = async () => {
+            try {
+                const { autoCancelUnacceptedPaidOrders } = await import('./src/modules/food/orders/services/order.service.js');
+                await autoCancelUnacceptedPaidOrders();
+            } catch (err) {
+                logger.error(`Unaccepted-order sweep error: ${err.message}`);
+            }
+        };
+        runUnacceptedSweep();
+        unacceptedOrdersInterval = setInterval(runUnacceptedSweep, 60 * 1000);
 
         process.on('SIGINT', () => gracefulShutdown('SIGINT'));
         process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

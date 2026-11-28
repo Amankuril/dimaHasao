@@ -28,7 +28,7 @@ export const HelpSupportScreen = () => {
   const emergencyHelplines = [
     { title: 'Police Control Room', number: '112', icon: 'fa-solid fa-shield', bg: 'bg-red-600' },
     { title: 'Haflong Civil Hospital', number: '03673-236222', icon: 'fa-solid fa-hospital', bg: 'bg-emerald-700' },
-    { title: 'Tourist Police Helpline', number: '+91 94350 99999', icon: 'fa-solid fa-person-military-pointing', bg: 'bg-blue-600' },
+    { title: 'District Police Control Room', number: '8638389873', icon: 'fa-solid fa-person-military-pointing', bg: 'bg-blue-600' },
     { title: 'Disaster Emergency (DDMA)', number: '1077', icon: 'fa-solid fa-triangle-exclamation', bg: 'bg-amber-600' }
   ];
 
