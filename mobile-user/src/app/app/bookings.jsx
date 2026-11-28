@@ -163,7 +163,7 @@ export default function MyBookingsScreen() {
         <View style={styles.cardHead}>
           <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={styles.kicker} numberOfLines={1}>
-              {b.date} • ID: {b.id}
+              {b.date} • ID: {b.displayId ? `#${b.displayId}` : b.id}
             </Text>
             <Text style={styles.title} numberOfLines={2}>
               {b.placeName}
@@ -260,7 +260,7 @@ export default function MyBookingsScreen() {
         ))}
       </View>
       <View style={styles.cardFoot}>
-        <Total label="Total paid" amount={fo.totalAmount} />
+        <Total label={fo.isPaid ? 'Total paid' : 'Total'} amount={fo.totalAmount} />
         <SmallButton icon="fa-solid fa-location-crosshairs" title="Track order" onPress={() => router.push(`/food/user/orders/${fo.id}`)} />
       </View>
     </Panel>

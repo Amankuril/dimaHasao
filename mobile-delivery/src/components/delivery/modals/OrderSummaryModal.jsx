@@ -6,6 +6,7 @@ import { useAnimatedValue } from '../../../lib/useAnimatedValue';
 import { SoraMoney } from '../../kit';
 import { Button, StatusBadge } from '../../ds';
 import { color, elevation, radii, space, type } from '../../../theme';
+import { displayOrderRef } from '../../../delivery/utils/orderMapping';
 
 // Port of components/modals/OrderSummaryModal.jsx: full-screen brand-green success page after a delivery.
 
@@ -32,7 +33,7 @@ export function OrderSummaryModal({ order, onDone }) {
     Animated.spring(enter, { toValue: 1, stiffness: 100, damping: 10, useNativeDriver: true }).start();
   }, [enter]);
   const earnings = order?.earnings || order?.riderEarning || order?.orderAmount * 0.1 || 0;
-  const orderRef = order?.orderId || order?.displayOrderId;
+  const orderRef = displayOrderRef(order);
 
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={onDone}>

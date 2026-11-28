@@ -10,6 +10,7 @@ import { diningAPI } from '../../api/food';
 import { useProfile } from '../context/ProfileContext';
 import useAppBackNavigation from '../hooks/useAppBackNavigation';
 import { useLocation as useLocationHook } from '../hooks/useLocation';
+import { useZone } from '../hooks/useZone';
 import { getRestaurantAvailabilityStatus } from '../utils/restaurantAvailability';
 import { filterRestaurantsForVegMode } from '../utils/vegMode';
 import { navigateTo, useParams } from '../../lib/webRouter';
@@ -69,6 +70,9 @@ export default function DiningCategory() {
   const goBack = useAppBackNavigation();
   const { openLocationSelector } = useLocationSelector();
   const { location } = useLocationHook();
+  // The public dining list returns nothing without a zone (as on the Dining tab),
+  // so every category page used to say "No restaurants yet".
+  const { zoneId, loading: zoneLoading } = useZone(location);
   const { addFavorite, removeFavorite, isFavorite, vegMode, vegModeOption } = useProfile();
 
   const [restaurants, setRestaurants] = useState([]);
@@ -80,9 +84,10 @@ export default function DiningCategory() {
     const fetchRestaurants = async () => {
       try {
         setIsLoading(true);
-        const response = await diningAPI.getRestaurants(
-          category ? (location?.city ? { category, city: location.city } : { category }) : location?.city ? { city: location.city } : {},
-        );
+        if (zoneLoading) return;
+        const city = location?.city && location.city.toLowerCase() !== 'current location' ? location.city : '';
+        const query = { ...(category ? { category } : {}), ...(city ? { city } : {}), ...(zoneId ? { zoneId } : {}) };
+        const response = await diningAPI.getRestaurants(query);
         if (cancelled) return;
         if (response?.data?.success) {
           const mapped = (Array.isArray(response.data.data) ? response.data.data : []).map((restaurant) => {
@@ -115,14 +120,14 @@ export default function DiningCategory() {
         setError('Failed to load dining restaurants');
         setRestaurants([]);
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled && !zoneLoading) setIsLoading(false);
       }
     };
     fetchRestaurants();
     return () => {
       cancelled = true;
     };
-  }, [category, location?.city]);
+  }, [category, location?.city, zoneId, zoneLoading]);
 
   const cityName = location?.city || 'Select location';
   const heading = useMemo(() => formatCategoryHeading(category), [category]);

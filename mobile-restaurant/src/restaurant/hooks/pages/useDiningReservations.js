@@ -138,11 +138,13 @@ export function useDiningReservations() {
                             }
                         }
 
-                        const requestRes = await restaurantAPI.getPendingDiningRequest()
+                        const requestRes = await restaurantAPI.getPendingDiningRequest({ fresh: isPoll })
                         const newPendingRequest = requestRes.data.success && requestRes.data.data ? requestRes.data.data : null
 
                         if (pendingRequest && !newPendingRequest) {
-                            const updatedRes = await restaurantAPI.getCurrentRestaurant()
+                            // The profile is cached for 15 s; a stale copy would make an
+                            // approval look like a rejection.
+                            const updatedRes = await restaurantAPI.refreshCurrentRestaurant()
                             const updatedData = getRestaurantFromResponse(updatedRes)
                             
                             // Simple check: if isEnabled matches what we requested, it was likely approved

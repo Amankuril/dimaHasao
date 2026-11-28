@@ -4,6 +4,7 @@ import { resolveOrderKey, mapDeliveryPhaseToTripStatus, useDeliveryStore } from 
 import { Press } from '../../ui';
 import { StatusBadge } from '../../ds';
 import { color, elevation, radii, space, tone, type } from '../../../theme';
+import { displayOrderRef } from '../../../delivery/utils/orderMapping';
 
 /*
  * One accepted order in the Orders tab. The phase reads as a word + tone
@@ -29,7 +30,7 @@ const phaseInfo = (order, session) => {
 export default function AcceptedOrderCard({ order, focused = false, onSelect }) {
   const orderId = resolveOrderKey(order);
   const session = useDeliveryStore((state) => (orderId ? state.orderSessions[orderId] : null));
-  const displayId = order?.orderId || order?.displayOrderId || orderId;
+  const displayId = displayOrderRef(order) || orderId;
   const restaurantName = order?.restaurantName || order?.restaurantId?.restaurantName || order?.restaurantId?.name || 'Restaurant';
   const phase = phaseInfo(order, session);
   const isPickup = phase.leg === 'pickup';

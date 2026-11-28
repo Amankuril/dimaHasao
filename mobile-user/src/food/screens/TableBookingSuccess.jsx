@@ -73,7 +73,10 @@ export default function TableBookingSuccess() {
   const location = useLocation();
   const { width, height } = useWindowDimensions();
   const clearance = useNavClearance();
-  const { booking } = location.state || {};
+  // Keep the booking this screen opened with: usePathname() follows the focused
+  // route, so after "View my bookings" this screen re-read an empty state and its
+  // <Redirect> below pulled the guest back to the Dining home.
+  const [booking] = useState(() => (location.state || {}).booking);
   const [liveStatus, setLiveStatus] = useState(booking?.status || 'pending');
   const prevStatusRef = useRef(booking?.status || 'pending');
 

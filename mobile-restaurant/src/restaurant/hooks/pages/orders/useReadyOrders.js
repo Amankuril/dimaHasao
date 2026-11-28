@@ -165,13 +165,16 @@ export function useReadyOrders({ onSelectOrder, onVerifyTakeaway, refreshToken =
         if (response.data?.success && response.data.data?.orders) {
           // Filter orders with 'ready' status
           const readyOrders = response.data.data.orders.filter(
-            (order) => order.status === "ready" && String(order.orderType || "").toLowerCase() !== "dining",
+            // Restaurant orders carry orderStatus (ready_for_pickup), not
+            // status === "ready": the Ready tab was always empty.
+            (order) => ["ready", "ready_for_pickup"].includes(String(order.orderStatus ?? order.status ?? "").toLowerCase())
+              && String(order.orderType || "").toLowerCase() !== "dining",
           );
 
           const transformedOrders = readyOrders.map((order) => ({
             orderId: order.orderId || order._id,
             mongoId: order._id,
-            status: order.status || "ready",
+            status: order.orderStatus || order.status || "ready",
             customerName: order.userId?.name || "Customer",
             type:
               order.orderType === "takeaway"

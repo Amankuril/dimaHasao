@@ -1,3 +1,4 @@
+import { calendarDaysAgo } from '../../lib/format';
 import apiClient from '../client';
 import { normalizeImageUrl } from '../../lib/foodCommon';
 import { cachedRead, invalidate, keyFor, TTL } from '../../lib/apiCache';
@@ -117,6 +118,15 @@ const ORDER_STATUS = {
   out_for_delivery: 'On the way',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
+  // The backend's own statuses; without them the card printed the raw code
+  // ("cancelled_by_restaurant").
+  created: 'Placed',
+  ready_for_pickup: 'Ready',
+  reached_pickup: 'Preparing',
+  reached_drop: 'Arriving',
+  cancelled_by_user: 'Cancelled',
+  cancelled_by_restaurant: 'Cancelled by restaurant',
+  cancelled_by_admin: 'Cancelled',
 };
 
 const orderTime = (value) => {
@@ -124,7 +134,7 @@ const orderTime = (value) => {
   const then = new Date(value);
   if (Number.isNaN(then.getTime())) return '';
 
-  const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+  const days = calendarDaysAgo(then);
   const time = then.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
   if (days <= 0) return `Today, ${time}`;
   if (days === 1) return `Yesterday, ${time}`;
@@ -147,10 +157,13 @@ export const adaptOrder = (order = {}) => {
       price: Number(item.price) || 0,
       quantity: Number(item.quantity) || 1,
     })),
-    subtotal: Number(order.subtotal ?? order.itemsTotal) || 0,
-    deliveryFee: Number(order.deliveryFee) || 0,
-    gst: Number(order.taxAmount ?? order.gst) || 0,
-    totalAmount: Number(order.totalAmount ?? order.grandTotal) || 0,
+    // The order keeps its money under `pricing`; reading only the flat names
+    // showed "Total paid ₹0" on every order.
+    subtotal: Number(order.pricing?.subtotal ?? order.subtotal ?? order.itemsTotal) || 0,
+    deliveryFee: Number(order.pricing?.deliveryFee ?? order.deliveryFee) || 0,
+    gst: Number(order.pricing?.tax ?? order.taxAmount ?? order.gst) || 0,
+    totalAmount: Number(order.pricing?.total ?? order.totalAmount ?? order.grandTotal) || 0,
+    isPaid: String(order.payment?.status || '').toLowerCase() === 'paid',
     deliveryAddress:
       order.deliveryAddress?.fullAddress || order.deliveryAddress?.address || '',
     status: ORDER_STATUS[order.orderStatus ?? order.status] || order.orderStatus || order.status || 'Placed',

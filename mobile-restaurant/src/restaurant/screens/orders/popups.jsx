@@ -431,7 +431,7 @@ export function OrderSheet({ h }) {
           <StatusBadge label={pickedUp ? 'Picked up' : sentence(order.status)} tone={pickedUp ? 'success' : orderStatusTone(status)} />
         </View>
 
-        {order.type !== 'Takeaway' && order.type !== 'Dining' && (status === 'preparing' || status === 'ready') && !order.deliveryPartnerId ? (
+        {order.type !== 'Takeaway' && order.type !== 'Dining' && (status === 'preparing' || status === 'ready' || status === 'ready_for_pickup') && !order.deliveryPartnerId ? (
           <ResendNotificationButton orderId={order.orderId} mongoId={order.mongoId} onSuccess={close} />
         ) : null}
 

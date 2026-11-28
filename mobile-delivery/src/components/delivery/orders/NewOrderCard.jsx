@@ -10,6 +10,7 @@ import { Spinner } from '../../Loader';
 import { Press } from '../../ui';
 import { Button, IconButton, StatusBadge } from '../../ds';
 import { color, elevation, radii, space, type } from '../../../theme';
+import { displayOrderRef } from '../../../delivery/utils/orderMapping';
 
 /*
  * An incoming order offer. Collapsed: what, from where, how much, how far.
@@ -59,7 +60,7 @@ export default function NewOrderCard({
   // (pricing.total) or 10 % of it, which showed money the rider never gets.
   const earnings = Number(order.earnings ?? order.riderEarning ?? 0) || 0;
   const tripKm = Number(order.distanceKm);
-  const displayId = order?.orderId || order?.displayOrderId || order?._id;
+  const displayId = displayOrderRef(order);
   const restaurantName = order.restaurantName || order.restaurant_name || order.restaurantId?.restaurantName || order.restaurantId?.name || 'Restaurant';
   const restaurantAddress =
     order.restaurantAddress || order.restaurant_address || order.restaurantId?.addressLine1 || order.restaurantId?.location?.address || 'Address not available';
@@ -115,13 +116,14 @@ export default function NewOrderCard({
             <Text numberOfLines={1} style={styles.name}>
               {restaurantName}
             </Text>
-            <View style={styles.summaryRow}>
-              <Text style={styles.earn}>₹{Number(earnings || 0).toFixed(2)}</Text>
-              {Number.isFinite(tripKm) && tripKm > 0 ? <Text style={styles.summary}>· {tripKm.toFixed(1)} km trip</Text> : null}
-              <Text style={[styles.summary, { color: metrics.isReady ? color.textSecondary : color.textMuted }]} numberOfLines={1}>
-                · {routeSummary}
-              </Text>
-            </View>
+            <Text style={styles.earn}>₹{Number(earnings || 0).toFixed(2)}</Text>
+            {/* Two different distances: rider → restaurant (route summary) and
+                restaurant → customer (trip). One line, labelled, so they no longer
+                wrap into a column or read as the same number twice. */}
+            <Text style={[styles.summary, { color: metrics.isReady ? color.textSecondary : color.textMuted }]} numberOfLines={1}>
+              {metrics.isReady ? `${routeSummary} to pickup` : routeSummary}
+              {Number.isFinite(tripKm) && tripKm > 0 ? ` · ${tripKm.toFixed(1)} km trip` : ''}
+            </Text>
           </View>
         </Press>
         <View style={styles.topActions}>
@@ -236,9 +238,8 @@ const styles = StyleSheet.create({
   pkg: { width: 44, height: 44, borderRadius: radii.md, backgroundColor: color.primarySoft, alignItems: 'center', justifyContent: 'center' },
   kicker: { ...type.caption, color: color.textMuted },
   name: { ...type.subheading, color: color.text },
-  summaryRow: { flexDirection: 'row', alignItems: 'baseline', gap: space.xs, marginTop: 2 },
   earn: { ...type.bodyStrong, color: color.success },
-  summary: { ...type.small, flexShrink: 1 },
+  summary: { ...type.small, marginTop: 2 },
   topActions: { flexDirection: 'row', alignItems: 'center' },
   expanded: { paddingHorizontal: space.lg, paddingBottom: space.md, paddingTop: space.lg, gap: space.lg, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: color.border },
   stops: { flexDirection: 'row', gap: space.md },

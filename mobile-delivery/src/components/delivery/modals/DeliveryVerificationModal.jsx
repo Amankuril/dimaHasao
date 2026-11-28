@@ -71,12 +71,36 @@ function OtpStep({ order, onVerified, onClose }) {
 
   const orderId = order.orderId || order._id || 'ORD';
 
+  // Functional updates: quick typing fires several changes before a re-render,
+  // and a copy of `otp` from the last render would drop digits.
   const handleOtpChange = (index, value) => {
-    if (value && !/^\d+$/.test(value)) return;
-    const next = [...otp];
-    next[index] = value.substring(value.length - 1);
-    setOtp(next);
-    if (value && index < 3) inputRefs.current[index + 1]?.focus();
+    const digits = String(value || '').replace(/\D/g, '');
+    if (value && !digits) return;
+    if (!digits) {
+      setOtp((prev) => prev.map((d, i) => (i === index ? '' : d)));
+      return;
+    }
+    // A pasted or autofilled code arrives as several digits in one box.
+    // Typing into a filled box gives old+new or new+old depending on where the
+    // cursor was; keep the digit that isn't the old one.
+    const old = otp[index];
+    const typed = digits.length === 2 && old ? (digits[0] === old ? digits[1] : digits[0]) : digits.slice(-1);
+    const incoming = digits.length > 2 || (digits.length === 2 && !old) ? digits.slice(0, 4 - index) : typed;
+    setOtp((prev) => {
+      const next = [...prev];
+      incoming.split('').forEach((d, k) => {
+        next[index + k] = d;
+      });
+      return next;
+    });
+    const nextIndex = Math.min(index + incoming.length, 3);
+    if (index + incoming.length <= 3) inputRefs.current[nextIndex]?.focus();
+  };
+
+  const handleOtpBackspace = (index) => {
+    if (otp[index] || index === 0) return;
+    setOtp((prev) => prev.map((d, i) => (i === index - 1 ? '' : d)));
+    inputRefs.current[index - 1]?.focus();
   };
 
   const verifyOtp = async () => {
@@ -121,9 +145,12 @@ function OtpStep({ order, onVerified, onClose }) {
             value={digit}
             editable={!isOtpVerified}
             keyboardType="number-pad"
+            selectTextOnFocus
+            textContentType="oneTimeCode"
+            autoComplete={i === 0 ? 'sms-otp' : 'off'}
             onChangeText={(v) => handleOtpChange(i, v)}
             onKeyPress={(e) => {
-              if (e.nativeEvent.key === 'Backspace' && !otp[i] && i > 0) inputRefs.current[i - 1]?.focus();
+              if (e.nativeEvent.key === 'Backspace') handleOtpBackspace(i);
             }}
             onFocus={() => setFocused(i)}
             onBlur={() => setFocused(-1)}

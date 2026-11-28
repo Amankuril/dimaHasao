@@ -11,6 +11,7 @@ import { Press } from '../../ui';
 import { IconButton } from '../../ds';
 import { useAnimatedValue } from '../../../lib/useAnimatedValue';
 import { color, elevation, radii, space, type } from '../../../theme';
+import { displayOrderRef } from '../../../delivery/utils/orderMapping';
 
 /*
  * Top bar of the Feed, Pocket and Profile tabs: avatar, the online switch,
@@ -174,7 +175,7 @@ export default function HomeHeader() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.switcher}>
           {acceptedOrders.map((order) => {
             const orderId = resolveOrderKey(order);
-            const label = order?.orderId || order?.displayOrderId || orderId;
+            const label = displayOrderRef(order) || orderId;
             const isFocused = focusedOrderId === orderId;
             // Display only, not tappable (as before).
             return (

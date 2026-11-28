@@ -8,6 +8,7 @@
  * The full booking journey lives in the Taxi module at /taxi/user; this module
  * only needs to *show* what was booked there.
  */
+import { calendarDaysAgo } from '../../lib/format';
 import apiClient from '../client';
 
 const asArray = (value) => (Array.isArray(value) ? value : []);
@@ -30,7 +31,7 @@ const rideDate = (value) => {
   const then = new Date(value);
   if (Number.isNaN(then.getTime())) return '';
 
-  const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+  const days = calendarDaysAgo(then);
   const time = then.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' });
   if (days <= 0) return `Today, ${time}`;
   if (days === 1) return `Yesterday, ${time}`;
@@ -66,6 +67,9 @@ export const adaptRide = (ride = {}) => {
     // `_id` left every card with an empty id, so the row had nothing to
     // link to and rendered "ID:" with nothing after it.
     id: String(ride.rideId || ride._id || ''),
+    // Rides have no human code; the taxi admin lists them by the last 8 chars
+    // upper-cased, so the customer reads out the same reference to support.
+    displayId: String(ride.rideId || ride._id || '').slice(-8).toUpperCase(),
     rawStatus,
     isLive: LIVE_RIDE_STATUSES.has(rawStatus),
     date: rideDate(ride.createdAt),

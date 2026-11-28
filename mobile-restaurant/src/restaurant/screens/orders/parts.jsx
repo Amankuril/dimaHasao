@@ -83,7 +83,9 @@ export const OrderCard = memo(function OrderCard({
 }) {
   const normalizedStatus = String(status || '').toLowerCase();
   const normalizedType = String(type || '').toLowerCase();
-  const isReady = normalizedStatus === 'ready';
+  // The server's status is ready_for_pickup; checking only 'ready' hid the
+  // takeaway "Verify & complete" button, so pickups could never be closed.
+  const isReady = normalizedStatus === 'ready' || normalizedStatus === 'ready_for_pickup';
   const isPreparing = normalizedStatus === 'preparing';
   const isWaitingAcceptance = !acceptedAt && (normalizedStatus === 'confirmed' || normalizedStatus === 'pending' || normalizedStatus === 'created');
 

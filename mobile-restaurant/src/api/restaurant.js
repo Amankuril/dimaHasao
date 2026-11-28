@@ -141,8 +141,17 @@ export const restaurantAPI = {
   updateProfile: (body) => apiClient.patch('/food/restaurant/profile', body ?? {}).then(currentRestaurant.set),
   updateDiningSettings: (body) => apiClient.patch('/food/restaurant/dining-settings', body ?? {}).then(currentRestaurant.set),
   updateTakeawaySettings: (body) => apiClient.patch('/food/restaurant/takeaway-settings', body ?? {}).then(currentRestaurant.set),
-  requestDiningUpdate: (body) => apiClient.post('/food/restaurant/dining-settings/request', body ?? {}),
-  getPendingDiningRequest: () => pendingDining(),
+  // Creating a request makes the cached "no pending request" answer wrong; the
+  // dining screen then read it as an admin rejection and reset the form.
+  requestDiningUpdate: (body) =>
+    apiClient.post('/food/restaurant/dining-settings/request', body ?? {}).then((res) => {
+      pendingDining.reset();
+      return res;
+    }),
+  getPendingDiningRequest: ({ fresh = false } = {}) => {
+    if (fresh) pendingDining.reset();
+    return pendingDining();
+  },
   updateAcceptingOrders: (isAcceptingOrders) =>
     apiClient.patch('/food/restaurant/availability', { isAcceptingOrders: Boolean(isAcceptingOrders) }).then(currentRestaurant.set),
 

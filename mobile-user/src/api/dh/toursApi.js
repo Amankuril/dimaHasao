@@ -10,6 +10,7 @@
  * writes (booking, payment, reviews) and apiClient already attaches the bearer
  * token and handles refresh.
  */
+import { calendarDaysAgo } from '../../lib/format';
 import apiClient from '../client';
 import { cachedRead, invalidate, keyFor, TTL } from '../../lib/apiCache';
 
@@ -65,7 +66,7 @@ const relativeDate = (value) => {
   const then = new Date(value);
   if (Number.isNaN(then.getTime())) return '';
 
-  const days = Math.floor((Date.now() - then.getTime()) / 86400000);
+  const days = calendarDaysAgo(then);
   if (days <= 0) return 'Today';
   if (days === 1) return 'Yesterday';
   if (days < 7) return `${days} days ago`;

@@ -33,7 +33,11 @@ export default function TableBookingConfirmation() {
   const clearance = useNavClearance();
 
   const fallbackDraft = useMemo(() => readJson(sessionStore, BOOKING_DRAFT_KEY, null), []);
-  const resolvedState = location.state || fallbackDraft || {};
+  // Keep the state this screen opened with. usePathname() follows the focused
+  // route, so after "Confirm" pushed book-success this (still mounted) screen
+  // re-read the success page's state, lost `restaurant`, and its redirect below
+  // sent the guest to the Dining home instead of the confirmation.
+  const [resolvedState] = useState(() => location.state || fallbackDraft || {});
   const { restaurant, guests, date, timeSlot, discount } = resolvedState;
 
   const [specialRequest, setSpecialRequest] = useState('');
@@ -195,10 +199,10 @@ export default function TableBookingConfirmation() {
           <Card style={styles.detailsRow}>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={styles.strong} numberOfLines={1}>
-                {user?.name || 'Shailu'}
+                {user?.name || 'Name not set'}
               </Text>
               <Text style={styles.detailSub} numberOfLines={1}>
-                {user?.phone || user?.email || '8090512291'}
+                {user?.phone || user?.email || 'Add your phone in Profile'}
               </Text>
             </View>
             <Button

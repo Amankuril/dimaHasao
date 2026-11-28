@@ -116,3 +116,14 @@ export const mapOrderLocations = (serverData) => {
     customerAddress,
   };
 };
+
+// The human order code (FOD-…) for display. Socket and push payloads often put
+// the Mongo _id in `orderId`, which riders saw as "Order ref: 6b09…"; skip
+// 24-hex ids and fall back to them only when nothing readable exists.
+const MONGO_ID = /^[a-f0-9]{24}$/i;
+export function displayOrderRef(order) {
+  if (!order) return '';
+  const candidates = [order.displayOrderId, order.order_id, order.orderId, order.orderNumber];
+  const readable = candidates.find((v) => v && !MONGO_ID.test(String(v)));
+  return String(readable || order.orderId || order._id || '');
+}
